@@ -14,17 +14,7 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
 
 // Necessary for Next auth
 model Account {
@@ -60,9 +50,19 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
+
+    // NextAuth relations
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+
+    // Business relations
+    projects      Project[]
+    tasks         Task[]
+    notes         Note[]
+    journals      Journal[]
+    tags          Tag[]
+    timeEntries   TimeEntry[]
+    taskStatusHistory TaskStatusHistory[]
 }
 
 model VerificationToken {
@@ -71,4 +71,235 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+// Enums for business logic
+enum TaskStatus {
+    IDEA
+    TODO
+    IN_PROGRESS
+    WAITING
+    DONE
+    ARCHIVED
+}
+
+enum TaskType {
+    IDEA
+    ACTION
+}
+
+enum Priority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+}
+
+// Core business models
+model Project {
+    id          String   @id @default(cuid())
+    name        String
+    description String?
+    color       String?  // Hex color for UI display
+    isArchived  Boolean  @default(false)
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById String
+
+    // Relations
+    tasks       Task[]
+    notes       Note[]
+
+    @@index([createdById])
+    @@index([name])
+}
+
+model Task {
+    id              String     @id @default(cuid())
+    title           String
+    description     String?
+    status          TaskStatus @default(IDEA)
+    type            TaskType   @default(IDEA)
+    priority        Priority?
+
+    // Date and time management
+    dueDate         DateTime?
+    dueTime         String?    // Time in HH:MM format
+    completedAt     DateTime?
+    completedCount  Int        @default(0)
+
+    // Time tracking
+    totalTimeSpent  Int        @default(0) // Total seconds spent
+    isTimerActive   Boolean    @default(false)
+    timerStartedAt  DateTime?
+
+    // Recurring tasks
+    isRecurring     Boolean    @default(false)
+    recurringPattern String?   // JSON string for recurring rules
+    parentTaskId    String?    // Reference to original recurring task
+
+    createdAt       DateTime   @default(now())
+    updatedAt       DateTime   @updatedAt
+
+    // Relations
+    createdBy       User       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById     String
+
+    project         Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+    projectId       String?
+
+    // Self-reference for recurring tasks
+    parentTask      Task?      @relation("TaskRecurrence", fields: [parentTaskId], references: [id], onDelete: SetNull)
+    childTasks      Task[]     @relation("TaskRecurrence")
+
+    // Additional relations
+    tags            TaskTag[]
+    timeEntries     TimeEntry[]
+    statusHistory   TaskStatusHistory[]
+    linkedNotes     Note[]     @relation("TaskNoteLinks")
+
+    @@index([createdById])
+    @@index([status])
+    @@index([dueDate])
+    @@index([projectId])
+    @@index([type])
+    @@index([priority])
+}
+
+model Note {
+    id          String   @id @default(cuid())
+    title       String
+    content     String   // Markdown content
+    isArchived  Boolean  @default(false)
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById String
+
+    project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+    projectId   String?
+
+    // Additional relations
+    tags        NoteTag[]
+    linkedTasks Task[]   @relation("TaskNoteLinks")
+
+    @@index([createdById])
+    @@index([title])
+    @@index([projectId])
+    @@index([updatedAt])
+}
+
+model Journal {
+    id          String   @id @default(cuid())
+    date        DateTime @unique // Each user can have only one journal per date
+    content     String   // Markdown content
+    template    String?  // Template used for this journal
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relations
+    createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById String
+
+    @@unique([date, createdById]) // Ensure one journal per user per date
+    @@index([createdById])
+    @@index([date])
+}
+
+// Tag system
+model Tag {
+    id          String   @id @default(cuid())
+    name        String
+    color       String?  // Hex color for UI display
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById String
+
+    // Relations
+    taskTags    TaskTag[]
+    noteTags    NoteTag[]
+
+    @@unique([name, createdById]) // Unique tag name per user
+    @@index([createdById])
+    @@index([name])
+}
+
+// Many-to-many relationship tables
+model TaskTag {
+    id     String @id @default(cuid())
+    taskId String
+    tagId  String
+
+    task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+    tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+    @@unique([taskId, tagId])
+    @@index([taskId])
+    @@index([tagId])
+}
+
+model NoteTag {
+    id     String @id @default(cuid())
+    noteId String
+    tagId  String
+
+    note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+    tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+    @@unique([noteId, tagId])
+    @@index([noteId])
+    @@index([tagId])
+}
+
+// Time tracking
+model TimeEntry {
+    id          String    @id @default(cuid())
+    startTime   DateTime
+    endTime     DateTime?
+    duration    Int?      // Duration in seconds (calculated when endTime is set)
+    description String?
+
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    // Relations
+    task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+    taskId      String
+
+    createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById String
+
+    @@index([taskId])
+    @@index([createdById])
+    @@index([startTime])
+}
+
+// Task status change history
+model TaskStatusHistory {
+    id          String     @id @default(cuid())
+    fromStatus  TaskStatus?
+    toStatus    TaskStatus
+    changedAt   DateTime   @default(now())
+    note        String?    // Optional note about the change
+
+    // Relations
+    task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+    taskId      String
+
+    changedBy   User       @relation(fields: [changedById], references: [id], onDelete: Cascade)
+    changedById String
+
+    @@index([taskId])
+    @@index([changedById])
+    @@index([changedAt])
 }
