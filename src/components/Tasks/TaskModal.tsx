@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import React, { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, ClockIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
@@ -58,25 +58,27 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   // 获取任务详情（编辑模式）
   const { data: taskDetail } = api.task.getById.useQuery(
     { id: taskId! },
-    { 
+    {
       enabled: isEditing && isOpen,
-      onSuccess: (data) => {
-        if (data) {
-          setFormData({
-            title: data.title,
-            description: data.description || "",
-            type: data.type,
-            priority: data.priority || undefined,
-            status: data.status,
-            dueDate: data.dueDate ? data.dueDate.toISOString().split('T')[0] : undefined,
-            dueTime: data.dueTime || undefined,
-            projectId: data.projectId || undefined,
-            tagIds: data.tags.map(t => t.tag.id),
-          });
-        }
-      },
     }
   );
+
+  // 当任务详情加载完成时，更新表单数据
+  React.useEffect(() => {
+    if (taskDetail && isEditing) {
+      setFormData({
+        title: taskDetail.title,
+        description: taskDetail.description || "",
+        type: taskDetail.type,
+        priority: taskDetail.priority || undefined,
+        status: taskDetail.status,
+        dueDate: taskDetail.dueDate ? taskDetail.dueDate.toISOString().split('T')[0] : undefined,
+        dueTime: taskDetail.dueTime || undefined,
+        projectId: taskDetail.projectId || undefined,
+        tagIds: taskDetail.tags.map(t => t.tag.id),
+      });
+    }
+  }, [taskDetail, isEditing]);
 
   // 获取项目列表
   const { data: projects } = api.project.getAll.useQuery(
@@ -120,7 +122,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) return;
 
     try {
@@ -272,9 +274,9 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                         id="priority"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         value={formData.priority || ""}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          priority: e.target.value ? e.target.value as Priority : undefined 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          priority: e.target.value ? e.target.value as Priority : undefined
                         })}
                       >
                         <option value="">选择优先级</option>
@@ -294,9 +296,9 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                         id="project"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         value={formData.projectId || ""}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          projectId: e.target.value || undefined 
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          projectId: e.target.value || undefined
                         })}
                       >
                         <option value="">选择项目</option>

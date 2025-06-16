@@ -10,6 +10,24 @@ import {
   PlayIcon,
   PauseIcon,
 } from "@heroicons/react/24/outline";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -77,6 +95,16 @@ const KanbanPage: NextPage = () => {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // 拖拽传感器配置
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px 移动距离后才开始拖拽
+      },
+    })
+  );
 
   // 获取所有任务
   const { data: tasksData, isLoading, refetch } = api.task.getAll.useQuery(
@@ -196,6 +224,42 @@ const KanbanPage: NextPage = () => {
     void refetch();
   };
 
+  // 拖拽开始
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  // 拖拽结束
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const newStatus = over.id as TaskStatus;
+
+    // 如果状态没有改变，不执行任何操作
+    const currentTask = Object.values(tasksByStatus)
+      .flat()
+      .find((task: TaskWithRelations) => task.id === taskId);
+
+    if (!currentTask || currentTask.status === newStatus) return;
+
+    // 乐观更新：立即更新UI
+    try {
+      await handleStatusChange(taskId, newStatus);
+    } catch (error) {
+      console.error("拖拽更新状态失败:", error);
+      // 这里可以添加错误提示
+    }
+  };
+
+  // 获取当前拖拽的任务
+  const activeTask = activeId
+    ? Object.values(tasksByStatus).flat().find((task: TaskWithRelations) => task.id === activeId)
+    : null;
+
   if (isLoading) {
     return (
       <AuthGuard>
@@ -239,61 +303,52 @@ const KanbanPage: NextPage = () => {
           </div>
 
           {/* 看板列 */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
             {KANBAN_COLUMNS.map((column) => {
               const tasks = tasksByStatus[column.status] || [];
 
               return (
-                <div
+                <KanbanColumn
                   key={column.status}
-                  className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px]`}
-                >
-                  {/* 列标题 */}
-                  <div className={`${column.headerColor} rounded-t-lg px-4 py-3 border-b`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">
-                          {column.title}
-                        </h3>
-                        <p className="text-xs text-gray-500">
-                          {tasks.length} 个任务
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        <EllipsisVerticalIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 任务列表 */}
-                  <div className="p-3 space-y-3">
-                    {tasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onStatusChange={handleStatusChange}
-                        onStartTimer={handleStartTimer}
-                        onPauseTimer={handlePauseTimer}
-                        onEdit={handleEditTask}
-                        formatTimeSpent={formatTimeSpent}
-                        isTimerActive={isTimerActive(task)}
-                        isUpdating={updateTaskStatus.isPending}
-                      />
-                    ))}
-
-                    {tasks.length === 0 && (
-                      <div className="text-center py-8">
-                        <p className="text-sm text-gray-500">暂无任务</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  column={column}
+                  tasks={tasks}
+                  onStatusChange={handleStatusChange}
+                  onStartTimer={handleStartTimer}
+                  onPauseTimer={handlePauseTimer}
+                  onEdit={handleEditTask}
+                  formatTimeSpent={formatTimeSpent}
+                  isTimerActive={isTimerActive}
+                  isUpdating={updateTaskStatus.isPending}
+                />
               );
             })}
-          </div>
+            </div>
+
+            {/* 拖拽覆盖层 */}
+            <DragOverlay>
+              {activeTask ? (
+                <div className="transform rotate-3 opacity-90">
+                  <TaskCard
+                    task={activeTask}
+                    onStatusChange={() => {}}
+                    onStartTimer={() => {}}
+                    onPauseTimer={() => {}}
+                    onEdit={() => {}}
+                    formatTimeSpent={formatTimeSpent}
+                    isTimerActive={isTimerActive(activeTask)}
+                    isUpdating={false}
+                    isDragging={true}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </div>
 
         {/* 任务模态框 */}
@@ -308,8 +363,99 @@ const KanbanPage: NextPage = () => {
   );
 };
 
-// 任务卡片组件
-interface TaskCardProps {
+// 看板列组件
+interface KanbanColumnProps {
+  column: {
+    status: TaskStatus;
+    title: string;
+    description: string;
+    color: string;
+    headerColor: string;
+  };
+  tasks: TaskWithRelations[];
+  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStartTimer: (taskId: string) => void;
+  onPauseTimer: (taskId: string) => void;
+  onEdit: (taskId: string) => void;
+  formatTimeSpent: (seconds: number) => string;
+  isTimerActive: (task: TaskWithRelations) => boolean;
+  isUpdating: boolean;
+}
+
+function KanbanColumn({
+  column,
+  tasks,
+  onStatusChange,
+  onStartTimer,
+  onPauseTimer,
+  onEdit,
+  formatTimeSpent,
+  isTimerActive,
+  isUpdating,
+}: KanbanColumnProps) {
+  const { setNodeRef } = useSortable({
+    id: column.status,
+    data: {
+      type: "column",
+      status: column.status,
+    },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px]`}
+    >
+      {/* 列标题 */}
+      <div className={`${column.headerColor} rounded-t-lg px-4 py-3 border-b`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-900">
+              {column.title}
+            </h3>
+            <p className="text-xs text-gray-500">
+              {tasks.length} 个任务
+            </p>
+          </div>
+          <button
+            type="button"
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <EllipsisVerticalIcon className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* 任务列表 */}
+      <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+        <div className="p-3 space-y-3">
+          {tasks.map((task) => (
+            <DraggableTaskCard
+              key={task.id}
+              task={task}
+              onStatusChange={onStatusChange}
+              onStartTimer={onStartTimer}
+              onPauseTimer={onPauseTimer}
+              onEdit={onEdit}
+              formatTimeSpent={formatTimeSpent}
+              isTimerActive={isTimerActive(task)}
+              isUpdating={isUpdating}
+            />
+          ))}
+
+          {tasks.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-500">暂无任务</p>
+            </div>
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  );
+}
+
+// 可拖拽的任务卡片组件
+interface DraggableTaskCardProps {
   task: TaskWithRelations;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
   onStartTimer: (taskId: string) => void;
@@ -320,14 +466,63 @@ interface TaskCardProps {
   isUpdating: boolean;
 }
 
+function DraggableTaskCard(props: DraggableTaskCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: props.task.id,
+    data: {
+      type: "task",
+      task: props.task,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      <TaskCard {...props} isDragging={isDragging} />
+    </div>
+  );
+}
+
+// 任务卡片组件
+interface TaskCardProps {
+  task: TaskWithRelations;
+  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStartTimer: (taskId: string) => void;
+  onPauseTimer: (taskId: string) => void;
+  onEdit: (taskId: string) => void;
+  formatTimeSpent: (seconds: number) => string;
+  isTimerActive: boolean;
+  isUpdating: boolean;
+  isDragging?: boolean;
+}
+
 function TaskCard({
   task,
   onStatusChange,
   onStartTimer,
   onPauseTimer,
+  onEdit,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
+  isDragging = false,
 }: TaskCardProps) {
   const priorityColors = {
     LOW: "bg-gray-100 text-gray-800",
@@ -337,7 +532,14 @@ function TaskCard({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+    <div
+      className={`bg-white rounded-lg border p-4 shadow-sm transition-all cursor-pointer ${
+        isDragging
+          ? "border-blue-300 shadow-lg transform rotate-2"
+          : "border-gray-200 hover:shadow-md hover:border-gray-300"
+      }`}
+      onClick={() => !isDragging && onEdit(task.id)}
+    >
       {/* 任务标题 */}
       <div className="flex items-start justify-between mb-2">
         <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
@@ -345,6 +547,10 @@ function TaskCard({
         </h4>
         <button
           type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(task.id);
+          }}
           className="text-gray-400 hover:text-gray-600 ml-2"
         >
           <EllipsisVerticalIcon className="h-4 w-4" />
