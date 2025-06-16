@@ -17,8 +17,11 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  closestCenter,
+  pointerWithin,
+  rectIntersection,
   useDroppable,
+  type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -115,6 +118,24 @@ const KanbanPage: NextPage = () => {
       },
     })
   );
+
+  // 自定义碰撞检测：优先检测列
+  const customCollisionDetection: CollisionDetection = (args) => {
+    // 首先尝试检测列
+    const columnCollisions = pointerWithin({
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        container => container.data.current?.type === "column"
+      ),
+    });
+
+    if (columnCollisions.length > 0) {
+      return columnCollisions;
+    }
+
+    // 如果没有列碰撞，再检测任务
+    return pointerWithin(args);
+  };
 
   // 获取所有任务
   const { data: tasksData, isLoading, refetch } = api.task.getAll.useQuery(
@@ -326,7 +347,12 @@ const KanbanPage: NextPage = () => {
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over) return;
+    console.log("拖拽事件:", { active: active.id, over: over?.id, overData: over?.data?.current });
+
+    if (!over) {
+      console.log("没有拖拽目标");
+      return;
+    }
 
     const taskId = active.id as string;
 
@@ -337,15 +363,18 @@ const KanbanPage: NextPage = () => {
     if (over.data?.current?.type === "column") {
       // 拖拽到列上
       newStatus = over.data.current.status as TaskStatus;
+      console.log("拖拽到列:", newStatus);
     } else if (over.data?.current?.type === "task") {
       // 拖拽到任务上，获取该任务所在的状态
       const targetTask = over.data.current.task as TaskWithRelations;
       newStatus = targetTask.status;
+      console.log("拖拽到任务:", targetTask.title, "状态:", newStatus);
     } else {
       // 尝试直接使用over.id作为状态（向后兼容）
       const possibleStatus = over.id as string;
       if (Object.values(TaskStatus).includes(possibleStatus as TaskStatus)) {
         newStatus = possibleStatus as TaskStatus;
+        console.log("使用over.id作为状态:", newStatus);
       } else {
         console.warn("无法确定拖拽目标状态:", over);
         return;
@@ -413,7 +442,7 @@ const KanbanPage: NextPage = () => {
           {/* 看板列 */}
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={customCollisionDetection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
@@ -530,7 +559,7 @@ function KanbanColumn({
   isUpdating,
   optimisticUpdates,
 }: KanbanColumnProps) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: column.status,
     data: {
       type: "column",
@@ -541,7 +570,9 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px]`}
+      className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px] transition-colors ${
+        isOver ? "border-blue-500 bg-blue-50" : ""
+      }`}
     >
       {/* 列标题 */}
       <div className={`${column.headerColor} rounded-t-lg px-4 py-3 border-b`}>
@@ -557,7 +588,7 @@ function KanbanColumn({
 
       {/* 任务列表 */}
       <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-        <div className="p-3 space-y-3">
+        <div className="p-3 space-y-3 min-h-[500px] flex flex-col">
           {tasks.map((task) => (
             <DraggableTaskCard
               key={task.id}
@@ -572,11 +603,15 @@ function KanbanColumn({
             />
           ))}
 
-          {tasks.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-500">暂无任务</p>
-            </div>
-          )}
+          {/* 空白拖拽区域 */}
+          <div className="flex-1 min-h-[100px]">
+            {tasks.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-sm text-gray-500">暂无任务</p>
+                <p className="text-xs text-gray-400 mt-1">拖拽任务到此处</p>
+              </div>
+            )}
+          </div>
         </div>
       </SortableContext>
     </div>
