@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon, ClockIcon, CalendarIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
@@ -358,32 +358,26 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                       <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
                         截止日期
                       </label>
-                      <div className="mt-1 relative">
-                        <input
-                          type="date"
-                          id="dueDate"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                          value={formData.dueDate || ""}
-                          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value || undefined })}
-                        />
-                        <CalendarIcon className="absolute right-3 top-2 h-5 w-5 text-gray-400 pointer-events-none" />
-                      </div>
+                      <input
+                        type="date"
+                        id="dueDate"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={formData.dueDate || ""}
+                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value || undefined })}
+                      />
                     </div>
 
                     <div>
                       <label htmlFor="dueTime" className="block text-sm font-medium text-gray-700">
                         截止时间
                       </label>
-                      <div className="mt-1 relative">
-                        <input
-                          type="time"
-                          id="dueTime"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                          value={formData.dueTime || ""}
-                          onChange={(e) => setFormData({ ...formData, dueTime: e.target.value || undefined })}
-                        />
-                        <ClockIcon className="absolute right-3 top-2 h-5 w-5 text-gray-400 pointer-events-none" />
-                      </div>
+                      <input
+                        type="time"
+                        id="dueTime"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={formData.dueTime || ""}
+                        onChange={(e) => setFormData({ ...formData, dueTime: e.target.value || undefined })}
+                      />
                     </div>
                   </div>
 

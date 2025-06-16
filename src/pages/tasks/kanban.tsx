@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { TaskStatus, type Task } from "@prisma/client";
 import {
   PlusIcon,
-  EllipsisVerticalIcon,
   ClockIcon,
   PlayIcon,
   PauseIcon,
@@ -404,21 +403,13 @@ function KanbanColumn({
     >
       {/* 列标题 */}
       <div className={`${column.headerColor} rounded-t-lg px-4 py-3 border-b`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-gray-900">
-              {column.title}
-            </h3>
-            <p className="text-xs text-gray-500">
-              {tasks.length} 个任务
-            </p>
-          </div>
-          <button
-            type="button"
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <EllipsisVerticalIcon className="h-5 w-5" />
-          </button>
+        <div>
+          <h3 className="text-sm font-medium text-gray-900">
+            {column.title}
+          </h3>
+          <p className="text-xs text-gray-500">
+            {tasks.length} 个任务
+          </p>
         </div>
       </div>
 
@@ -537,20 +528,10 @@ function TaskCard({
       onClick={() => !isDragging && onEdit(task.id)}
     >
       {/* 任务标题 */}
-      <div className="flex items-start justify-between mb-2">
+      <div className="mb-2">
         <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
           {task.title}
         </h4>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(task.id);
-          }}
-          className="text-gray-400 hover:text-gray-600 ml-2"
-        >
-          <EllipsisVerticalIcon className="h-4 w-4" />
-        </button>
       </div>
 
       {/* 任务描述 */}
