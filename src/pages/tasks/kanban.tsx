@@ -98,6 +98,15 @@ const KanbanPage: NextPage = () => {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // 乐观更新状态
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
+  // 通知状态
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+    visible: boolean;
+  }>({ message: '', type: 'success', visible: false });
+
   // 拖拽传感器配置
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -117,7 +126,7 @@ const KanbanPage: NextPage = () => {
     }
   );
 
-  // 按状态分组任务
+  // 按状态分组任务（包含乐观更新）
   const tasksByStatus = useMemo(() => {
     if (!tasksData?.tasks) return {};
 
@@ -132,34 +141,114 @@ const KanbanPage: NextPage = () => {
 
     tasksData.tasks.forEach((task) => {
       if (task.status !== TaskStatus.ARCHIVED) {
-        grouped[task.status].push(task as TaskWithRelations);
+        // 检查是否有乐观更新
+        const optimisticStatus = optimisticUpdates[task.id];
+        const effectiveStatus = optimisticStatus || task.status;
+
+        grouped[effectiveStatus].push({
+          ...task,
+          status: effectiveStatus, // 使用乐观更新的状态
+        } as TaskWithRelations);
       }
     });
 
     return grouped;
-  }, [tasksData]);
+  }, [tasksData, optimisticUpdates]);
+
+  // 显示通知
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({ message, type, visible: true });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, visible: false }));
+    }, 3000);
+  };
+
+  // 获取tRPC utils用于缓存操作
+  const utils = api.useUtils();
 
   // 任务状态更新
   const updateTaskStatus = api.task.updateStatus.useMutation({
-    onSuccess: () => {
-      void refetch();
+    onSuccess: (updatedTask, variables) => {
+      const columnTitle = KANBAN_COLUMNS.find(col => col.status === variables.status)?.title;
+      showNotification(`任务已移动到"${columnTitle}"`, 'success');
+
+      // 清除乐观更新状态
+      setOptimisticUpdates(prev => {
+        const newState = { ...prev };
+        delete newState[variables.id];
+        return newState;
+      });
+
+      // 使用缓存更新而不是refetch，避免重新加载
+      utils.task.getAll.setData({ limit: 100 }, (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          tasks: oldData.tasks.map(task =>
+            task.id === variables.id
+              ? { ...task, status: variables.status }
+              : task
+          )
+        };
+      });
+    },
+    onError: (error, variables) => {
+      // 立即清除乐观更新状态（回滚）
+      setOptimisticUpdates(prev => {
+        const newState = { ...prev };
+        delete newState[variables.id];
+        return newState;
+      });
+
+      showNotification(`移动失败: ${error.message}`, 'error');
     },
   });
 
   // 时间追踪
   const startTimer = api.task.startTimer.useMutation({
-    onSuccess: () => {
-      void refetch();
+    onSuccess: (_, variables) => {
+      // 使用缓存更新
+      utils.task.getAll.setData({ limit: 100 }, (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          tasks: oldData.tasks.map(task =>
+            task.id === variables.id
+              ? { ...task, isTimerActive: true, timerStartedAt: new Date() }
+              : task
+          )
+        };
+      });
     },
   });
 
   const pauseTimer = api.task.pauseTimer.useMutation({
-    onSuccess: () => {
-      void refetch();
+    onSuccess: (_, variables) => {
+      // 使用缓存更新
+      utils.task.getAll.setData({ limit: 100 }, (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          tasks: oldData.tasks.map(task =>
+            task.id === variables.id
+              ? { ...task, isTimerActive: false, timerStartedAt: null }
+              : task
+          )
+        };
+      });
     },
   });
 
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    // 立即进行乐观更新
+    setOptimisticUpdates(prev => ({
+      ...prev,
+      [taskId]: newStatus,
+    }));
+
     try {
       await updateTaskStatus.mutateAsync({
         id: taskId,
@@ -168,6 +257,7 @@ const KanbanPage: NextPage = () => {
       });
     } catch (error) {
       console.error("状态更新失败:", error);
+      // 错误处理在mutation的onError中进行
     }
   };
 
@@ -222,7 +312,8 @@ const KanbanPage: NextPage = () => {
   };
 
   const handleTaskModalSuccess = () => {
-    void refetch();
+    // 任务模态框成功后，使用invalidate来确保数据最新
+    void utils.task.getAll.invalidate();
   };
 
   // 拖拽开始
@@ -342,6 +433,7 @@ const KanbanPage: NextPage = () => {
                   formatTimeSpent={formatTimeSpent}
                   isTimerActive={isTimerActive}
                   isUpdating={updateTaskStatus.isPending}
+                  optimisticUpdates={optimisticUpdates}
                 />
               );
             })}
@@ -375,6 +467,32 @@ const KanbanPage: NextPage = () => {
           taskId={editingTaskId || undefined}
           onSuccess={handleTaskModalSuccess}
         />
+
+        {/* 通知组件 */}
+        {notification.visible && (
+          <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 rounded-lg px-6 py-4 shadow-xl transition-all duration-300 backdrop-blur-sm ${
+            notification.type === 'success'
+              ? 'bg-green-500/95 text-white border border-green-400/20'
+              : 'bg-red-500/95 text-white border border-red-400/20'
+          }`}>
+            <div className="flex items-center gap-3">
+              {notification.type === 'success' ? (
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
+              <span className="text-sm font-medium">{notification.message}</span>
+            </div>
+          </div>
+        )}
       </MainLayout>
     </AuthGuard>
   );
@@ -397,6 +515,7 @@ interface KanbanColumnProps {
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: (task: TaskWithRelations) => boolean;
   isUpdating: boolean;
+  optimisticUpdates: Record<string, TaskStatus>;
 }
 
 function KanbanColumn({
@@ -409,6 +528,7 @@ function KanbanColumn({
   formatTimeSpent,
   isTimerActive,
   isUpdating,
+  optimisticUpdates,
 }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.status,
@@ -448,7 +568,7 @@ function KanbanColumn({
               onEdit={onEdit}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
-              isUpdating={isUpdating}
+              isUpdating={!!optimisticUpdates[task.id]}
             />
           ))}
 
@@ -542,13 +662,21 @@ function TaskCard({
 
   return (
     <div
-      className={`bg-white rounded-lg border p-4 shadow-sm transition-all cursor-pointer ${
+      className={`bg-white rounded-lg border p-4 shadow-sm transition-all cursor-pointer relative ${
         isDragging
           ? "border-blue-300 shadow-lg transform rotate-2"
+          : isUpdating
+          ? "border-blue-200 bg-blue-50"
           : "border-gray-200 hover:shadow-md hover:border-gray-300"
       }`}
       onClick={() => !isDragging && onEdit(task.id)}
     >
+      {/* 更新中的指示器 */}
+      {isUpdating && (
+        <div className="absolute top-2 right-2">
+          <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
+        </div>
+      )}
       {/* 任务标题 */}
       <div className="mb-2">
         <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
