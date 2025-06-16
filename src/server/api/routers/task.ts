@@ -232,13 +232,13 @@ export const taskRouter = createTRPCRouter({
   update: protectedProcedure
     .input(updateTaskSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, tagIds, ...updateData } = input;
+      const { id, tagIds, status, ...updateData } = input;
 
       try {
-        // 验证任务所有权
+        // 验证任务所有权并获取当前状态
         const existingTask = await ctx.db.task.findUnique({
           where: { id },
-          select: { createdById: true },
+          select: { createdById: true, status: true, title: true },
         });
 
         if (!existingTask || existingTask.createdById !== ctx.session.user.id) {
@@ -280,11 +280,32 @@ export const taskRouter = createTRPCRouter({
           }
         }
 
+        // 处理状态变更
+        const statusChanged = status !== undefined && status !== existingTask.status;
+        let finalUpdateData = { ...updateData };
+
+        if (statusChanged) {
+          // 如果状态变为已完成，记录完成时间并增加完成次数
+          if (status === TaskStatus.DONE) {
+            finalUpdateData.completedAt = new Date();
+            finalUpdateData.completedCount = { increment: 1 };
+            finalUpdateData.isTimerActive = false;
+            finalUpdateData.timerStartedAt = null;
+          }
+
+          // 如果从已完成状态变为其他状态，清除完成时间
+          if (existingTask.status === TaskStatus.DONE && status !== TaskStatus.DONE) {
+            finalUpdateData.completedAt = null;
+          }
+
+          finalUpdateData.status = status;
+        }
+
         // 更新任务
         const task = await ctx.db.task.update({
           where: { id },
           data: {
-            ...updateData,
+            ...finalUpdateData,
             ...(tagIds !== undefined && {
               tags: {
                 deleteMany: {},
@@ -303,6 +324,19 @@ export const taskRouter = createTRPCRouter({
             },
           },
         });
+
+        // 如果状态发生了变化，创建状态历史记录
+        if (statusChanged) {
+          await ctx.db.taskStatusHistory.create({
+            data: {
+              fromStatus: existingTask.status,
+              toStatus: status!,
+              taskId: id,
+              changedById: ctx.session.user.id,
+              note: "任务更新时状态变更",
+            },
+          });
+        }
 
         return task;
       } catch (error) {
