@@ -18,6 +18,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -237,7 +238,28 @@ const KanbanPage: NextPage = () => {
     if (!over) return;
 
     const taskId = active.id as string;
-    const newStatus = over.id as TaskStatus;
+
+    // 确定目标状态：可能是列ID或任务ID
+    let newStatus: TaskStatus;
+
+    // 检查over.data是否包含类型信息
+    if (over.data?.current?.type === "column") {
+      // 拖拽到列上
+      newStatus = over.data.current.status as TaskStatus;
+    } else if (over.data?.current?.type === "task") {
+      // 拖拽到任务上，获取该任务所在的状态
+      const targetTask = over.data.current.task as TaskWithRelations;
+      newStatus = targetTask.status;
+    } else {
+      // 尝试直接使用over.id作为状态（向后兼容）
+      const possibleStatus = over.id as string;
+      if (Object.values(TaskStatus).includes(possibleStatus as TaskStatus)) {
+        newStatus = possibleStatus as TaskStatus;
+      } else {
+        console.warn("无法确定拖拽目标状态:", over);
+        return;
+      }
+    }
 
     // 如果状态没有改变，不执行任何操作
     const currentTask = Object.values(tasksByStatus)
@@ -388,7 +410,7 @@ function KanbanColumn({
   isTimerActive,
   isUpdating,
 }: KanbanColumnProps) {
-  const { setNodeRef } = useSortable({
+  const { setNodeRef } = useDroppable({
     id: column.status,
     data: {
       type: "column",
