@@ -8,16 +8,21 @@ export function useSidebarState() {
 
   // 从 localStorage 加载初始状态
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-      if (stored !== null) {
-        setIsCollapsed(JSON.parse(stored));
+    // 使用 requestAnimationFrame 确保在下一帧更新状态，避免闪烁
+    const loadState = () => {
+      try {
+        const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+        if (stored !== null) {
+          setIsCollapsed(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.warn("Failed to load sidebar state from localStorage:", error);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (error) {
-      console.warn("Failed to load sidebar state from localStorage:", error);
-    } finally {
-      setIsLoaded(true);
-    }
+    };
+
+    requestAnimationFrame(loadState);
   }, []);
 
   // 保存状态到 localStorage
