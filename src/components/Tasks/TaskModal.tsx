@@ -64,22 +64,28 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
     }
   );
 
-  // 当任务详情加载完成时，更新表单数据
+  // 当模态框打开时，根据模式初始化表单数据
   React.useEffect(() => {
-    if (taskDetail && isEditing) {
-      setFormData({
-        title: taskDetail.title,
-        description: taskDetail.description || "",
-        type: taskDetail.type,
-        priority: taskDetail.priority || undefined,
-        status: taskDetail.status,
-        dueDate: taskDetail.dueDate ? taskDetail.dueDate.toISOString().split('T')[0] : undefined,
-        dueTime: taskDetail.dueTime || undefined,
-        projectId: taskDetail.projectId || undefined,
-        tagIds: taskDetail.tags.map(t => t.tag.id),
-      });
+    if (isOpen) {
+      if (isEditing && taskDetail) {
+        // 编辑模式：使用任务详情填充表单
+        setFormData({
+          title: taskDetail.title,
+          description: taskDetail.description || "",
+          type: taskDetail.type,
+          priority: taskDetail.priority || undefined,
+          status: taskDetail.status,
+          dueDate: taskDetail.dueDate ? taskDetail.dueDate.toISOString().split('T')[0] : undefined,
+          dueTime: taskDetail.dueTime || undefined,
+          projectId: taskDetail.projectId || undefined,
+          tagIds: taskDetail.tags.map(t => t.tag.id),
+        });
+      } else if (!isEditing) {
+        // 创建模式：重置表单为默认值
+        resetForm();
+      }
     }
-  }, [taskDetail, isEditing]);
+  }, [isOpen, isEditing, taskDetail]);
 
   // 获取项目列表
   const { data: projects, isLoading: isLoadingProjects, error: projectsError } = api.project.getAll.useQuery(
@@ -149,9 +155,6 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
 
   const handleClose = () => {
     onClose();
-    if (!isEditing) {
-      resetForm();
-    }
   };
 
   return (
