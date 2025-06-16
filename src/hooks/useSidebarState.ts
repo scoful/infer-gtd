@@ -3,26 +3,35 @@ import { useState, useEffect } from "react";
 const SIDEBAR_STORAGE_KEY = "smart-gtd-sidebar-collapsed";
 
 export function useSidebarState() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // 初始状态尝试从 localStorage 同步读取，避免状态跳跃
+  const getInitialState = () => {
+    if (typeof window === 'undefined') return false; // SSR 时默认展开
+    try {
+      const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+      return stored !== null ? JSON.parse(stored) : false;
+    } catch {
+      return false;
+    }
+  };
+
+  const [isCollapsed, setIsCollapsed] = useState(getInitialState);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 从 localStorage 加载初始状态
+  // 确保客户端状态同步，并在必要时重新同步 localStorage
   useEffect(() => {
-    // 使用 requestAnimationFrame 确保在下一帧更新状态，避免闪烁
-    const loadState = () => {
+    if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-        if (stored !== null) {
-          setIsCollapsed(JSON.parse(stored));
+        const storedValue = stored !== null ? JSON.parse(stored) : false;
+        // 只有当存储的值与当前状态不同时才更新
+        if (storedValue !== isCollapsed) {
+          setIsCollapsed(storedValue);
         }
       } catch (error) {
-        console.warn("Failed to load sidebar state from localStorage:", error);
-      } finally {
-        setIsLoaded(true);
+        console.warn("Failed to sync sidebar state from localStorage:", error);
       }
-    };
-
-    requestAnimationFrame(loadState);
+    }
+    setIsLoaded(true);
   }, []);
 
   // 保存状态到 localStorage

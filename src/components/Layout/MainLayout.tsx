@@ -98,8 +98,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     await signOut({ callbackUrl: "/" });
   };
 
-  // 使用默认展开状态防止闪烁，在客户端加载后应用实际状态
-  const sidebarCollapsed = isLoaded ? isCollapsed : false;
+  // 直接使用 isCollapsed 状态，Hook 已处理初始化逻辑
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -151,20 +150,20 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Desktop sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${
-        sidebarCollapsed ? "lg:w-16" : "lg:w-56"
+        isCollapsed ? "lg:w-16" : "lg:w-56"
       }`}>
         <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
           <div className="flex flex-shrink-0 items-center justify-between px-4">
-            {!sidebarCollapsed && (
+            {!isCollapsed && (
               <h1 className="text-xl font-bold text-gray-900">Smart GTD</h1>
             )}
             <button
               type="button"
               className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               onClick={toggleSidebar}
-              title={sidebarCollapsed ? "展开侧边栏" : "收缩侧边栏"}
+              title={isCollapsed ? "展开侧边栏" : "收缩侧边栏"}
             >
-              {sidebarCollapsed ? (
+              {isCollapsed ? (
                 <ChevronRightIcon className="h-5 w-5" />
               ) : (
                 <ChevronLeftIcon className="h-5 w-5" />
@@ -184,15 +183,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       isActive
                         ? "bg-blue-100 text-blue-900"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    } ${sidebarCollapsed ? "justify-center" : ""}`}
-                    title={sidebarCollapsed ? item.description : item.description}
+                    } ${isCollapsed ? "justify-center" : ""}`}
+                    title={isCollapsed ? item.description : item.description}
                   >
                     <Icon
                       className={`h-5 w-5 flex-shrink-0 ${
                         isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
-                      } ${sidebarCollapsed ? "" : "mr-3"}`}
+                      } ${isCollapsed ? "" : "mr-3"}`}
                     />
-                    {!sidebarCollapsed && (
+                    {!isCollapsed && (
                       <span className="truncate">{item.name}</span>
                     )}
                   </Link>
@@ -205,7 +204,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main content */}
       <div className={`transition-all duration-300 ease-in-out ${
-        sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
+        isCollapsed ? "lg:pl-16" : "lg:pl-56"
       }`}>
         {/* Top navigation */}
         <div className="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
