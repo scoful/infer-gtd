@@ -59,12 +59,36 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   const { showSuccess, showError } = useNotifications();
 
   // 获取任务详情（编辑模式）
-  const { data: taskDetail, isLoading: isLoadingTask, error: taskError } = api.task.getById.useQuery(
+  const {
+    data: taskDetail,
+    isLoading: isLoadingTask,
+    error: taskError,
+    isFetching: isFetchingTask,
+    refetch: refetchTask
+  } = api.task.getById.useQuery(
     { id: taskId! },
     {
       enabled: isEditing && isOpen,
+      // 每次打开模态框时重新获取数据
+      refetchOnMount: true,
+      // 设置较短的 staleTime，确保数据新鲜度
+      staleTime: 0,
+      // 确保每次打开都会重新验证数据
+      refetchOnWindowFocus: false,
+      // 重试配置
+      retry: 2,
     }
   );
+
+  // 当模态框打开时，强制重新获取任务数据
+  React.useEffect(() => {
+    if (isOpen && isEditing && taskId) {
+      // 重置表单数据，避免显示旧数据
+      resetForm();
+      // 强制重新获取任务数据，确保显示加载状态
+      void refetchTask();
+    }
+  }, [isOpen, isEditing, taskId, refetchTask]);
 
   // 当模态框打开时，根据模式初始化表单数据
   React.useEffect(() => {
@@ -208,11 +232,13 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                 </div>
 
                 {/* 编辑模式下的loading和错误处理 */}
-                {isEditing && isLoadingTask ? (
+                {isEditing && (isLoadingTask || isFetchingTask) ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-                      <p className="mt-4 text-sm text-gray-600">加载任务详情中...</p>
+                      <p className="mt-4 text-sm text-gray-600">
+                        {isLoadingTask ? "加载任务详情中..." : "刷新任务数据中..."}
+                      </p>
                     </div>
                   </div>
                 ) : isEditing && taskError ? (
