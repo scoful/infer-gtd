@@ -15,7 +15,11 @@ import {
   XMarkIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+
+import { useSidebarState } from "@/hooks";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -77,6 +81,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { data: sessionData } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isCollapsed, isLoaded, toggleSidebar } = useSidebarState();
 
   const isActivePath = (href: string) => {
     // 精确匹配路径，避免水合错误
@@ -92,6 +97,33 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
   };
+
+  // 防止水合错误，等待客户端状态加载完成
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-56 lg:flex-col">
+          <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
+            <div className="flex flex-shrink-0 items-center px-4">
+              <h1 className="text-xl font-bold text-gray-900">Smart GTD</h1>
+            </div>
+          </div>
+        </div>
+        <div className="lg:pl-56">
+          <div className="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+            <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+              <div className="relative flex flex-1"></div>
+            </div>
+          </div>
+          <main className="py-6">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -142,10 +174,26 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ${
+        isCollapsed ? "lg:w-16" : "lg:w-56"
+      }`}>
         <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
-          <div className="flex flex-shrink-0 items-center px-4">
-            <h1 className="text-xl font-bold text-gray-900">Smart GTD</h1>
+          <div className="flex flex-shrink-0 items-center justify-between px-4">
+            {!isCollapsed && (
+              <h1 className="text-xl font-bold text-gray-900">Smart GTD</h1>
+            )}
+            <button
+              type="button"
+              className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              onClick={toggleSidebar}
+              title={isCollapsed ? "展开侧边栏" : "收缩侧边栏"}
+            >
+              {isCollapsed ? (
+                <ChevronRightIcon className="h-5 w-5" />
+              ) : (
+                <ChevronLeftIcon className="h-5 w-5" />
+              )}
+            </button>
           </div>
           <div className="mt-5 flex flex-grow flex-col">
             <nav className="flex-1 space-y-1 px-2 pb-4">
@@ -160,15 +208,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       isActive
                         ? "bg-blue-100 text-blue-900"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                    title={item.description}
+                    } ${isCollapsed ? "justify-center" : ""}`}
+                    title={isCollapsed ? item.description : item.description}
                   >
                     <Icon
-                      className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                      className={`h-5 w-5 flex-shrink-0 ${
                         isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
-                      }`}
+                      } ${isCollapsed ? "" : "mr-3"}`}
                     />
-                    {item.name}
+                    {!isCollapsed && (
+                      <span className="truncate">{item.name}</span>
+                    )}
                   </Link>
                 );
               })}
@@ -178,7 +228,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={`transition-all duration-300 ${
+        isCollapsed ? "lg:pl-16" : "lg:pl-56"
+      }`}>
         {/* Top navigation */}
         <div className="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
