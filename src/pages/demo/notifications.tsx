@@ -1,0 +1,209 @@
+import { type NextPage } from "next";
+import Head from "next/head";
+import { useState } from "react";
+import MainLayout from "@/components/Layout/MainLayout";
+import AuthGuard from "@/components/Layout/AuthGuard";
+import { NotificationContainer } from "@/components/UI";
+import { useNotifications } from "@/hooks";
+
+const NotificationDemo: NextPage = () => {
+  const {
+    notifications,
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo,
+    removeNotification,
+    clearAll,
+    clearByType,
+  } = useNotifications();
+
+  const [position, setPosition] = useState<"top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left">("top-center");
+
+  const handleShowSuccess = () => {
+    showSuccess("操作成功完成！", {
+      title: "成功",
+      duration: 3000,
+    });
+  };
+
+  const handleShowError = () => {
+    showError("发生了一个错误，请重试", {
+      title: "错误",
+      duration: 5000,
+    });
+  };
+
+  const handleShowWarning = () => {
+    showWarning("这是一个警告消息", {
+      title: "警告",
+      duration: 4000,
+    });
+  };
+
+  const handleShowInfo = () => {
+    showInfo("这是一条信息提示", {
+      title: "信息",
+      duration: 3000,
+    });
+  };
+
+  const handleShowPersistent = () => {
+    showError("这是一个持久化通知，不会自动消失，但可以手动关闭", {
+      title: "持久化通知",
+      persistent: true,
+    });
+  };
+
+  const handleShowWithAction = () => {
+    showInfo("点击下方按钮执行操作", {
+      title: "带操作的通知",
+      action: {
+        label: "立即执行",
+        onClick: () => {
+          showSuccess("操作已执行！");
+        },
+      },
+    });
+  };
+
+  return (
+    <AuthGuard>
+      <MainLayout>
+        <Head>
+          <title>通知系统演示 | Smart GTD</title>
+          <meta name="description" content="通知系统功能演示" />
+        </Head>
+
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">通知系统演示</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              测试各种类型的通知和功能
+            </p>
+          </div>
+
+          {/* 位置选择 */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">通知位置</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {[
+                { value: "top-left", label: "左上角" },
+                { value: "top-center", label: "顶部居中" },
+                { value: "top-right", label: "右上角" },
+                { value: "bottom-left", label: "左下角" },
+                { value: "bottom-center", label: "底部居中" },
+                { value: "bottom-right", label: "右下角" },
+              ].map((pos) => (
+                <label key={pos.value} className="flex items-center">
+                  <input
+                    type="radio"
+                    name="position"
+                    value={pos.value}
+                    checked={position === pos.value}
+                    onChange={(e) => setPosition(e.target.value as any)}
+                    className="mr-2"
+                  />
+                  {pos.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 基础通知 */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">基础通知类型</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <button
+                onClick={handleShowSuccess}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                成功通知
+              </button>
+              <button
+                onClick={handleShowError}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                错误通知
+              </button>
+              <button
+                onClick={handleShowWarning}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+              >
+                警告通知
+              </button>
+              <button
+                onClick={handleShowInfo}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                信息通知
+              </button>
+            </div>
+          </div>
+
+          {/* 高级功能 */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">高级功能</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <button
+                  onClick={handleShowPersistent}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                >
+                  持久化通知
+                </button>
+                <button
+                  onClick={handleShowWithAction}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  带操作的通知
+                </button>
+              </div>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>• <strong>持久化通知</strong>：不会自动消失，但可以点击 ✕ 手动关闭</p>
+                <p>• <strong>带操作的通知</strong>：包含可点击的操作按钮</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 管理功能 */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">通知管理</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <button
+                onClick={() => clearByType("success")}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                清除成功通知
+              </button>
+              <button
+                onClick={() => clearByType("error")}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                清除错误通知
+              </button>
+              <button
+                onClick={clearAll}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                清除所有通知
+              </button>
+              <div className="text-sm text-gray-500 flex items-center">
+                当前通知数: {notifications.length}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 通知容器 */}
+        <NotificationContainer
+          notifications={notifications}
+          onClose={removeNotification}
+          position={position}
+        />
+      </MainLayout>
+    </AuthGuard>
+  );
+};
+
+export default NotificationDemo;

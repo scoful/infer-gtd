@@ -10,3 +10,11 @@ export {
   QueryLoading,
   MutationLoading,
 } from "./Loading";
+
+// Notification组件导出
+export {
+  Notification,
+  NotificationContainer,
+  type NotificationData,
+  type NotificationType,
+} from "./Notification";

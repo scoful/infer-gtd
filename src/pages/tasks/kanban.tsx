@@ -36,7 +36,8 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
-import { PageLoading } from "@/components/UI";
+import { PageLoading, NotificationContainer } from "@/components/UI";
+import { useNotifications } from "@/hooks";
 
 // 看板列配置
 const KANBAN_COLUMNS = [
@@ -103,12 +104,14 @@ const KanbanPage: NextPage = () => {
 
   // 乐观更新状态
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
-  // 通知状态
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-    visible: boolean;
-  }>({ message: '', type: 'success', visible: false });
+
+  // 通知系统
+  const {
+    notifications,
+    showSuccess,
+    showError,
+    removeNotification,
+  } = useNotifications();
 
   // 拖拽传感器配置
   const sensors = useSensors(
@@ -176,13 +179,7 @@ const KanbanPage: NextPage = () => {
     return grouped;
   }, [tasksData, optimisticUpdates]);
 
-  // 显示通知
-  const showNotification = (message: string, type: 'success' | 'error') => {
-    setNotification({ message, type, visible: true });
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, visible: false }));
-    }, 3000);
-  };
+
 
   // 获取tRPC utils用于缓存操作
   const utils = api.useUtils();
@@ -191,7 +188,7 @@ const KanbanPage: NextPage = () => {
   const updateTaskStatus = api.task.updateStatus.useMutation({
     onSuccess: (updatedTask, variables) => {
       const columnTitle = KANBAN_COLUMNS.find(col => col.status === variables.status)?.title;
-      showNotification(`任务已移动到"${columnTitle}"`, 'success');
+      showSuccess(`任务已移动到"${columnTitle}"`);
 
       // 清除乐观更新状态
       setOptimisticUpdates(prev => {
@@ -222,7 +219,7 @@ const KanbanPage: NextPage = () => {
         return newState;
       });
 
-      showNotification(`移动失败: ${error.message}`, 'error');
+      showError(`移动失败: ${error.message}`);
     },
   });
 
@@ -347,12 +344,7 @@ const KanbanPage: NextPage = () => {
     const { active, over } = event;
     setActiveId(null);
 
-    console.log("拖拽事件:", { active: active.id, over: over?.id, overData: over?.data?.current });
-
-    if (!over) {
-      console.log("没有拖拽目标");
-      return;
-    }
+    if (!over) return;
 
     const taskId = active.id as string;
 
@@ -363,18 +355,15 @@ const KanbanPage: NextPage = () => {
     if (over.data?.current?.type === "column") {
       // 拖拽到列上
       newStatus = over.data.current.status as TaskStatus;
-      console.log("拖拽到列:", newStatus);
     } else if (over.data?.current?.type === "task") {
       // 拖拽到任务上，获取该任务所在的状态
       const targetTask = over.data.current.task as TaskWithRelations;
       newStatus = targetTask.status;
-      console.log("拖拽到任务:", targetTask.title, "状态:", newStatus);
     } else {
       // 尝试直接使用over.id作为状态（向后兼容）
       const possibleStatus = over.id as string;
       if (Object.values(TaskStatus).includes(possibleStatus as TaskStatus)) {
         newStatus = possibleStatus as TaskStatus;
-        console.log("使用over.id作为状态:", newStatus);
       } else {
         console.warn("无法确定拖拽目标状态:", over);
         return;
@@ -497,31 +486,13 @@ const KanbanPage: NextPage = () => {
           onSuccess={handleTaskModalSuccess}
         />
 
-        {/* 通知组件 */}
-        {notification.visible && (
-          <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 rounded-lg px-6 py-4 shadow-xl transition-all duration-300 backdrop-blur-sm ${
-            notification.type === 'success'
-              ? 'bg-green-500/95 text-white border border-green-400/20'
-              : 'bg-red-500/95 text-white border border-red-400/20'
-          }`}>
-            <div className="flex items-center gap-3">
-              {notification.type === 'success' ? (
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              ) : (
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-              )}
-              <span className="text-sm font-medium">{notification.message}</span>
-            </div>
-          </div>
-        )}
+        {/* 通知容器 */}
+        <NotificationContainer
+          notifications={notifications}
+          onClose={removeNotification}
+          position="top-center"
+        />
+
       </MainLayout>
     </AuthGuard>
   );

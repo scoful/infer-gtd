@@ -5,6 +5,7 @@ import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import { ButtonLoading, QueryLoading } from "@/components/UI";
+import { useNotifications } from "@/hooks";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   });
 
   const isEditing = !!taskId;
+  const { showSuccess, showError } = useNotifications();
 
   // 获取任务详情（编辑模式）
   const { data: taskDetail, isLoading: isLoadingTask, error: taskError } = api.task.getById.useQuery(
@@ -103,17 +105,25 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   // 创建任务
   const createTask = api.task.create.useMutation({
     onSuccess: () => {
+      showSuccess("任务创建成功");
       onSuccess?.();
       onClose();
       resetForm();
+    },
+    onError: (error) => {
+      showError(`创建任务失败: ${error.message}`);
     },
   });
 
   // 更新任务
   const updateTask = api.task.update.useMutation({
     onSuccess: () => {
+      showSuccess("任务更新成功");
       onSuccess?.();
       onClose();
+    },
+    onError: (error) => {
+      showError(`更新任务失败: ${error.message}`);
     },
   });
 
