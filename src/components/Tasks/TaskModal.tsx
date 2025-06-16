@@ -4,7 +4,7 @@ import { XMarkIcon, ClockIcon, CalendarIcon } from "@heroicons/react/24/outline"
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
-import { ButtonLoading, QueryLoading, SectionLoading } from "@/components/UI";
+import { ButtonLoading, QueryLoading } from "@/components/UI";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -194,19 +194,37 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                   </button>
                 </div>
 
-                {/* 编辑模式下的任务加载状态 */}
-                {isEditing && (
-                  <QueryLoading
-                    isLoading={isLoadingTask}
-                    error={taskError}
-                    loadingMessage="加载任务详情中..."
-                    loadingComponent={<SectionLoading message="加载任务详情中..." />}
-                  >
-                    <div />
-                  </QueryLoading>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6">
+                {/* 编辑模式下的loading和错误处理 */}
+                {isEditing && isLoadingTask ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+                      <p className="mt-4 text-sm text-gray-600">加载任务详情中...</p>
+                    </div>
+                  </div>
+                ) : isEditing && taskError ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="text-red-600 mb-4">
+                        <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">加载失败</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        {taskError.message || "无法加载任务详情，请重试"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      >
+                        关闭
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
                   {/* 任务标题 */}
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -305,16 +323,15 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                       <label htmlFor="project" className="block text-sm font-medium text-gray-700">
                         所属项目
                       </label>
-                      <QueryLoading
-                        isLoading={isLoadingProjects}
-                        error={projectsError}
-                        loadingMessage="加载项目列表中..."
-                        loadingComponent={
-                          <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" disabled>
-                            <option>加载项目列表中...</option>
-                          </select>
-                        }
-                      >
+                      {isLoadingProjects ? (
+                        <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" disabled>
+                          <option>加载项目列表中...</option>
+                        </select>
+                      ) : projectsError ? (
+                        <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" disabled>
+                          <option>加载项目失败</option>
+                        </select>
+                      ) : (
                         <select
                           id="project"
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
@@ -331,7 +348,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                             </option>
                           ))}
                         </select>
-                      </QueryLoading>
+                      )}
                     </div>
                   </div>
 
@@ -392,6 +409,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                     </button>
                   </div>
                 </form>
+                )}
               </Dialog.Panel>
             </Transition.Child>
           </div>

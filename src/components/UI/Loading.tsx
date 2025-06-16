@@ -181,7 +181,7 @@ export function InlineLoading({
 // 智能查询Loading包装组件
 interface QueryLoadingProps {
   isLoading: boolean;
-  error?: TRPCClientError<AppRouter> | Error | null;
+  error?: any; // 使用any类型来兼容所有错误类型
   children: ReactNode;
   loadingComponent?: ReactNode;
   errorComponent?: ReactNode;
