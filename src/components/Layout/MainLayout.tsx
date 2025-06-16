@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   HomeIcon,
+  LightBulbIcon,
   ViewColumnsIcon,
   DocumentTextIcon,
   BookOpenIcon,
@@ -29,9 +30,15 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   {
+    name: "仪表盘",
+    href: "/",
+    icon: HomeIcon,
+    description: "总览和快速操作",
+  },
+  {
     name: "思绪流",
     href: "/stream",
-    icon: HomeIcon,
+    icon: LightBulbIcon,
     description: "想法捕捉和快速记录",
   },
   {
@@ -72,7 +79,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isActivePath = (href: string) => {
-    if (href === "/stream" && router.pathname === "/") return true;
+    // 精确匹配路径，避免水合错误
+    if (href === "/stream") {
+      return router.pathname === "/stream";
+    }
+    if (href === "/") {
+      return router.pathname === "/";
+    }
     return router.pathname.startsWith(href);
   };
 
