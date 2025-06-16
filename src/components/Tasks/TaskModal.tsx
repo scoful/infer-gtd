@@ -4,6 +4,7 @@ import { XMarkIcon, ClockIcon, CalendarIcon } from "@heroicons/react/24/outline"
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
+import { ButtonLoading, QueryLoading, SectionLoading } from "@/components/UI";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -56,7 +57,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   const isEditing = !!taskId;
 
   // 获取任务详情（编辑模式）
-  const { data: taskDetail } = api.task.getById.useQuery(
+  const { data: taskDetail, isLoading: isLoadingTask, error: taskError } = api.task.getById.useQuery(
     { id: taskId! },
     {
       enabled: isEditing && isOpen,
@@ -81,7 +82,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   }, [taskDetail, isEditing]);
 
   // 获取项目列表
-  const { data: projects } = api.project.getAll.useQuery(
+  const { data: projects, isLoading: isLoadingProjects, error: projectsError } = api.project.getAll.useQuery(
     { limit: 50 },
     { enabled: isOpen }
   );
@@ -193,6 +194,18 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                   </button>
                 </div>
 
+                {/* 编辑模式下的任务加载状态 */}
+                {isEditing && (
+                  <QueryLoading
+                    isLoading={isLoadingTask}
+                    error={taskError}
+                    loadingMessage="加载任务详情中..."
+                    loadingComponent={<SectionLoading message="加载任务详情中..." />}
+                  >
+                    <div />
+                  </QueryLoading>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* 任务标题 */}
                   <div>
@@ -292,22 +305,33 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                       <label htmlFor="project" className="block text-sm font-medium text-gray-700">
                         所属项目
                       </label>
-                      <select
-                        id="project"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        value={formData.projectId || ""}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          projectId: e.target.value || undefined
-                        })}
+                      <QueryLoading
+                        isLoading={isLoadingProjects}
+                        error={projectsError}
+                        loadingMessage="加载项目列表中..."
+                        loadingComponent={
+                          <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" disabled>
+                            <option>加载项目列表中...</option>
+                          </select>
+                        }
                       >
-                        <option value="">选择项目</option>
-                        {projects?.projects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
-                      </select>
+                        <select
+                          id="project"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          value={formData.projectId || ""}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            projectId: e.target.value || undefined
+                          })}
+                        >
+                          <option value="">选择项目</option>
+                          {projects?.projects.map((project) => (
+                            <option key={project.id} value={project.id}>
+                              {project.name}
+                            </option>
+                          ))}
+                        </select>
+                      </QueryLoading>
                     </div>
                   </div>
 
@@ -358,9 +382,13 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                     <button
                       type="submit"
                       disabled={createTask.isPending || updateTask.isPending}
-                      className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                      className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex items-center gap-2"
                     >
-                      {createTask.isPending || updateTask.isPending ? "保存中..." : (isEditing ? "更新" : "创建")}
+                      {createTask.isPending || updateTask.isPending ? (
+                        <ButtonLoading message="保存中..." size="sm" />
+                      ) : (
+                        isEditing ? "更新" : "创建"
+                      )}
                     </button>
                   </div>
                 </form>

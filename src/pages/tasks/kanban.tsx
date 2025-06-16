@@ -12,9 +12,9 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   DragOverlay,
-  DragStartEvent,
+  type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -33,6 +33,7 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
+import { PageLoading } from "@/components/UI";
 
 // 看板列配置
 const KANBAN_COLUMNS = [
@@ -264,12 +265,7 @@ const KanbanPage: NextPage = () => {
     return (
       <AuthGuard>
         <MainLayout>
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-              <p className="mt-4 text-sm text-gray-600">加载任务中...</p>
-            </div>
-          </div>
+          <PageLoading message="加载任务中..." />
         </MainLayout>
       </AuthGuard>
     );

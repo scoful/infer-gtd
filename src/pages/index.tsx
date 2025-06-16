@@ -14,6 +14,7 @@ import {
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
+import { QueryLoading, SectionLoading } from "@/components/UI";
 
 const Home: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -25,7 +26,7 @@ const Home: NextPage = () => {
     return date;
   }, []);
 
-  const { data: taskStats } = api.task.getStats.useQuery(
+  const { data: taskStats, isLoading: isLoadingStats, error: statsError } = api.task.getStats.useQuery(
     { startDate: thirtyDaysAgo },
     {
       enabled: !!sessionData,
@@ -34,7 +35,7 @@ const Home: NextPage = () => {
     }
   );
 
-  const { data: recentTasks } = api.task.getAll.useQuery(
+  const { data: recentTasks, isLoading: isLoadingTasks, error: tasksError } = api.task.getAll.useQuery(
     { limit: 5 },
     {
       enabled: !!sessionData,
@@ -43,7 +44,7 @@ const Home: NextPage = () => {
     }
   );
 
-  const { data: recentNotes } = api.note.getAll.useQuery(
+  const { data: recentNotes, isLoading: isLoadingNotes, error: notesError } = api.note.getAll.useQuery(
     { limit: 3, sortBy: "updatedAt", sortOrder: "desc" },
     {
       enabled: !!sessionData,
@@ -52,7 +53,7 @@ const Home: NextPage = () => {
     }
   );
 
-  const { data: recentJournals } = api.journal.getRecent.useQuery(
+  const { data: recentJournals, isLoading: isLoadingJournals, error: journalsError } = api.journal.getRecent.useQuery(
     { limit: 3 },
     {
       enabled: !!sessionData,
@@ -160,94 +161,100 @@ const Home: NextPage = () => {
           </div>
 
           {/* 统计概览 */}
-          {taskStats && (
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">本月统计</h2>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <ChartBarIcon className="h-6 w-6 text-gray-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            总任务数
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {taskStats.totalTasks}
-                          </dd>
-                        </dl>
+          <div>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">本月统计</h2>
+            <QueryLoading
+              isLoading={isLoadingStats}
+              error={statsError}
+              loadingMessage="加载统计数据中..."
+            >
+              {taskStats && (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <ChartBarIcon className="h-6 w-6 text-gray-400" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              总任务数
+                            </dt>
+                            <dd className="text-lg font-medium text-gray-900">
+                              {taskStats.totalTasks}
+                            </dd>
+                          </dl>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <ChartBarIcon className="h-6 w-6 text-green-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            已完成
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {taskStats.completedTasks}
-                          </dd>
-                        </dl>
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <ChartBarIcon className="h-6 w-6 text-green-400" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              已完成
+                            </dt>
+                            <dd className="text-lg font-medium text-gray-900">
+                              {taskStats.completedTasks}
+                            </dd>
+                          </dl>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <ClockIcon className="h-6 w-6 text-blue-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            总时长
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {Math.round(taskStats.totalTimeSpent / 3600)}h
-                          </dd>
-                        </dl>
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <ClockIcon className="h-6 w-6 text-blue-400" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              总时长
+                            </dt>
+                            <dd className="text-lg font-medium text-gray-900">
+                              {Math.round(taskStats.totalTimeSpent / 3600)}h
+                            </dd>
+                          </dl>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <ChartBarIcon className="h-6 w-6 text-purple-400" />
-                      </div>
-                      <div className="ml-5 w-0 flex-1">
-                        <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">
-                            完成率
-                          </dt>
-                          <dd className="text-lg font-medium text-gray-900">
-                            {taskStats.totalTasks > 0
-                              ? Math.round((taskStats.completedTasks / taskStats.totalTasks) * 100)
-                              : 0}%
-                          </dd>
-                        </dl>
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <ChartBarIcon className="h-6 w-6 text-purple-400" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              完成率
+                            </dt>
+                            <dd className="text-lg font-medium text-gray-900">
+                              {taskStats.totalTasks > 0
+                                ? Math.round((taskStats.completedTasks / taskStats.totalTasks) * 100)
+                                : 0}%
+                            </dd>
+                          </dl>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
+            </QueryLoading>
+          </div>
 
           {/* 最近活动 */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -255,31 +262,38 @@ const Home: NextPage = () => {
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">最近任务</h3>
-                {recentTasks?.tasks && recentTasks.tasks.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentTasks.tasks.slice(0, 5).map((task) => (
-                      <div key={task.id} className="flex items-center space-x-3">
-                        <div className={`flex-shrink-0 w-2 h-2 rounded-full ${
-                          task.status === 'DONE' ? 'bg-green-400' :
-                          task.status === 'IN_PROGRESS' ? 'bg-blue-400' :
-                          'bg-gray-400'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {task.title}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {task.status === 'DONE' ? '已完成' :
-                             task.status === 'IN_PROGRESS' ? '进行中' :
-                             task.status === 'TODO' ? '待办' : '想法'}
-                          </p>
+                <QueryLoading
+                  isLoading={isLoadingTasks}
+                  error={tasksError}
+                  loadingMessage="加载任务中..."
+                  loadingComponent={<SectionLoading size="sm" message="加载任务中..." />}
+                >
+                  {recentTasks?.tasks && recentTasks.tasks.length > 0 ? (
+                    <div className="space-y-3">
+                      {recentTasks.tasks.slice(0, 5).map((task) => (
+                        <div key={task.id} className="flex items-center space-x-3">
+                          <div className={`flex-shrink-0 w-2 h-2 rounded-full ${
+                            task.status === 'DONE' ? 'bg-green-400' :
+                            task.status === 'IN_PROGRESS' ? 'bg-blue-400' :
+                            'bg-gray-400'
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {task.title}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {task.status === 'DONE' ? '已完成' :
+                               task.status === 'IN_PROGRESS' ? '进行中' :
+                               task.status === 'TODO' ? '待办' : '想法'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">暂无任务</p>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">暂无任务</p>
+                  )}
+                </QueryLoading>
                 <div className="mt-4">
                   <Link
                     href="/tasks/kanban"
@@ -295,22 +309,29 @@ const Home: NextPage = () => {
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">最近笔记</h3>
-                {recentNotes?.notes && recentNotes.notes.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentNotes.notes.slice(0, 3).map((note) => (
-                      <div key={note.id}>
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {note.title}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(note.updatedAt).toLocaleDateString('zh-CN')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">暂无笔记</p>
-                )}
+                <QueryLoading
+                  isLoading={isLoadingNotes}
+                  error={notesError}
+                  loadingMessage="加载笔记中..."
+                  loadingComponent={<SectionLoading size="sm" message="加载笔记中..." />}
+                >
+                  {recentNotes?.notes && recentNotes.notes.length > 0 ? (
+                    <div className="space-y-3">
+                      {recentNotes.notes.slice(0, 3).map((note) => (
+                        <div key={note.id}>
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {note.title}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(note.updatedAt).toLocaleDateString('zh-CN')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">暂无笔记</p>
+                  )}
+                </QueryLoading>
                 <div className="mt-4">
                   <Link
                     href="/notes"
@@ -326,22 +347,29 @@ const Home: NextPage = () => {
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">最近日志</h3>
-                {recentJournals && recentJournals.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentJournals.slice(0, 3).map((journal) => (
-                      <div key={journal.id}>
-                        <p className="text-sm font-medium text-gray-900">
-                          {new Date(journal.date).toLocaleDateString('zh-CN')}
-                        </p>
-                        <p className="text-sm text-gray-500 truncate">
-                          {journal.preview}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">暂无日志</p>
-                )}
+                <QueryLoading
+                  isLoading={isLoadingJournals}
+                  error={journalsError}
+                  loadingMessage="加载日志中..."
+                  loadingComponent={<SectionLoading size="sm" message="加载日志中..." />}
+                >
+                  {recentJournals && recentJournals.length > 0 ? (
+                    <div className="space-y-3">
+                      {recentJournals.slice(0, 3).map((journal) => (
+                        <div key={journal.id}>
+                          <p className="text-sm font-medium text-gray-900">
+                            {new Date(journal.date).toLocaleDateString('zh-CN')}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {journal.preview}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">暂无日志</p>
+                  )}
+                </QueryLoading>
                 <div className="mt-4">
                   <Link
                     href="/journal"

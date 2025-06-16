@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
+import { PageLoading } from "@/components/UI";
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -12,14 +13,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   // 加载中状态
   if (status === "loading") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-4 text-sm text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading message="验证身份中..." />;
   }
 
   // 未认证状态

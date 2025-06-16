@@ -12,6 +12,7 @@ import {
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
+import { PageLoading } from "@/components/UI";
 
 const StreamPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -25,7 +26,7 @@ const StreamPage: NextPage = () => {
 
   // 获取想法流（IDEA状态的任务）
   const { data: ideasData, isLoading, refetch } = api.task.getAll.useQuery(
-    { 
+    {
       limit: 50,
       status: "IDEA", // 只获取想法状态的任务
     },
@@ -52,7 +53,6 @@ const StreamPage: NextPage = () => {
       await createIdea.mutateAsync({
         title: newIdea,
         type: "IDEA",
-        status: "IDEA",
       });
     } catch (error) {
       console.error("创建想法失败:", error);
@@ -109,12 +109,7 @@ const StreamPage: NextPage = () => {
     return (
       <AuthGuard>
         <MainLayout>
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-              <p className="mt-4 text-sm text-gray-600">加载想法流中...</p>
-            </div>
-          </div>
+          <PageLoading message="加载想法流中..." />
         </MainLayout>
       </AuthGuard>
     );
@@ -174,7 +169,7 @@ const StreamPage: NextPage = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 最近的想法
               </h3>
-              
+
               {ideasData?.tasks && ideasData.tasks.length > 0 ? (
                 <div className="space-y-4">
                   {ideasData.tasks.map((idea) => (
@@ -192,7 +187,7 @@ const StreamPage: NextPage = () => {
                               {idea.description}
                             </p>
                           )}
-                          
+
                           {/* 标签和项目 */}
                           <div className="flex flex-wrap gap-2 mb-3">
                             {idea.project && (
@@ -206,7 +201,7 @@ const StreamPage: NextPage = () => {
                                 {idea.project.name}
                               </span>
                             )}
-                            
+
                             {idea.tags.map((tagRelation) => (
                               <span
                                 key={tagRelation.tag.id}
