@@ -140,13 +140,16 @@ const KanbanPage: NextPage = () => {
     return pointerWithin(args);
   };
 
-  // 获取所有任务
-  const { data: tasksData, isLoading, refetch } = api.task.getAll.useQuery(
+  // 获取所有任务 - 看板需要较新的数据
+  const { data: tasksData, isLoading, refetch, isFetching } = api.task.getAll.useQuery(
     { limit: 100 }, // 获取更多任务用于看板显示
     {
       enabled: !!sessionData,
-      staleTime: 1 * 60 * 1000, // 1分钟缓存
-      refetchOnWindowFocus: false,
+      staleTime: 30 * 1000, // 30秒缓存，确保数据新鲜度
+      refetchOnWindowFocus: true, // 窗口聚焦时重新获取，适合工作流程管理
+      refetchOnMount: true, // 每次挂载时重新获取
+      // 网络重连时重新获取
+      refetchOnReconnect: true,
     }
   );
 
@@ -391,11 +394,12 @@ const KanbanPage: NextPage = () => {
     ? Object.values(tasksByStatus).flat().find((task: TaskWithRelations) => task.id === activeId)
     : null;
 
+  // 首次加载显示页面级loading
   if (isLoading) {
     return (
       <AuthGuard>
         <MainLayout>
-          <PageLoading message="加载任务中..." />
+          <PageLoading message="加载任务看板中..." />
         </MainLayout>
       </AuthGuard>
     );
@@ -413,19 +417,41 @@ const KanbanPage: NextPage = () => {
           {/* 页面标题和操作 */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
+                {isFetching && !isLoading && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                    刷新中...
+                  </div>
+                )}
+              </div>
               <p className="mt-1 text-sm text-gray-500">
                 拖拽任务卡片来更新状态，可视化管理您的工作流程
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleCreateTask}
-              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            >
-              <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
-              新建任务
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+                className="inline-flex items-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="手动刷新数据"
+              >
+                <svg className={`-ml-0.5 mr-1.5 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                刷新
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateTask}
+                className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+                新建任务
+              </button>
+            </div>
           </div>
 
           {/* 看板列 */}
