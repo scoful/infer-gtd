@@ -466,6 +466,8 @@ export const projectRouter = createTRPCRouter({
           take: limit + 1,
           cursor: cursor ? { id: cursor } : undefined,
           orderBy: [
+            { status: "asc" },
+            { sortOrder: "asc" },
             { priority: "desc" },
             { dueDate: "asc" },
             { createdAt: "desc" },

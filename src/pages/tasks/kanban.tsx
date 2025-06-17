@@ -22,10 +22,12 @@ import {
   rectIntersection,
   useDroppable,
   type CollisionDetection,
+  type DragOverEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
+  arrayMove,
 } from "@dnd-kit/sortable";
 import {
   useSortable,
@@ -106,6 +108,22 @@ const KanbanPage: NextPage = () => {
   // 乐观更新状态
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
 
+  // 排序相关状态
+  const [optimisticTaskOrder, setOptimisticTaskOrder] = useState<Record<TaskStatus, string[]>>({
+    [TaskStatus.IDEA]: [],
+    [TaskStatus.TODO]: [],
+    [TaskStatus.IN_PROGRESS]: [],
+    [TaskStatus.WAITING]: [],
+    [TaskStatus.DONE]: [],
+    [TaskStatus.ARCHIVED]: [],
+  });
+
+  // 拖拽过程中的状态
+  const [dragOverInfo, setDragOverInfo] = useState<{
+    overId: string | null;
+    overType: 'task' | 'column' | null;
+  }>({ overId: null, overType: null });
+
   // 通知系统
   const {
     notifications,
@@ -125,9 +143,21 @@ const KanbanPage: NextPage = () => {
     })
   );
 
-  // 自定义碰撞检测：优先检测列
+  // 自定义碰撞检测：优先检测任务，然后检测列
   const customCollisionDetection: CollisionDetection = (args) => {
-    // 首先尝试检测列
+    // 首先尝试检测任务
+    const taskCollisions = pointerWithin({
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        container => container.data.current?.type === "task"
+      ),
+    });
+
+    if (taskCollisions.length > 0) {
+      return taskCollisions;
+    }
+
+    // 如果没有任务碰撞，再检测列
     const columnCollisions = pointerWithin({
       ...args,
       droppableContainers: args.droppableContainers.filter(
@@ -135,12 +165,7 @@ const KanbanPage: NextPage = () => {
       ),
     });
 
-    if (columnCollisions.length > 0) {
-      return columnCollisions;
-    }
-
-    // 如果没有列碰撞，再检测任务
-    return pointerWithin(args);
+    return columnCollisions;
   };
 
   // 获取所有任务 - 看板需要较新的数据
@@ -187,8 +212,36 @@ const KanbanPage: NextPage = () => {
       }
     });
 
+    // 应用乐观排序更新
+    Object.keys(grouped).forEach((status) => {
+      const taskStatus = status as TaskStatus;
+      const optimisticOrder = optimisticTaskOrder[taskStatus];
+
+      if (optimisticOrder.length > 0) {
+        // 按照乐观更新的顺序重新排列任务
+        const taskMap = new Map(grouped[taskStatus].map(task => [task.id, task]));
+        const reorderedTasks: TaskWithRelations[] = [];
+
+        // 先添加按乐观顺序排列的任务
+        optimisticOrder.forEach(taskId => {
+          const task = taskMap.get(taskId);
+          if (task) {
+            reorderedTasks.push(task);
+            taskMap.delete(taskId);
+          }
+        });
+
+        // 再添加剩余的任务（新任务或未在乐观更新中的任务）
+        taskMap.forEach(task => {
+          reorderedTasks.push(task);
+        });
+
+        grouped[taskStatus] = reorderedTasks;
+      }
+    });
+
     return grouped;
-  }, [tasksData, optimisticUpdates]);
+  }, [tasksData, optimisticUpdates, optimisticTaskOrder]);
 
 
 
@@ -267,6 +320,26 @@ const KanbanPage: NextPage = () => {
               : task
           )
         };
+      });
+    },
+  });
+
+  // 重新排序任务
+  const reorderTasks = api.task.reorder.useMutation({
+    onSuccess: () => {
+      void refetch();
+      showSuccess("任务排序已更新");
+    },
+    onError: (error) => {
+      showError(error.message || "更新任务排序失败");
+      // 回滚乐观更新
+      setOptimisticTaskOrder({
+        [TaskStatus.IDEA]: [],
+        [TaskStatus.TODO]: [],
+        [TaskStatus.IN_PROGRESS]: [],
+        [TaskStatus.WAITING]: [],
+        [TaskStatus.DONE]: [],
+        [TaskStatus.ARCHIVED]: [],
       });
     },
   });
@@ -350,50 +423,121 @@ const KanbanPage: NextPage = () => {
     setActiveId(event.active.id as string);
   };
 
+  // 拖拽过程中
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+
+    if (!over) {
+      setDragOverInfo({ overId: null, overType: null });
+      return;
+    }
+
+    const overType = over.data?.current?.type as 'task' | 'column' | undefined;
+    setDragOverInfo({
+      overId: over.id as string,
+      overType: overType || null,
+    });
+  };
+
   // 拖拽结束
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    setDragOverInfo({ overId: null, overType: null });
 
     if (!over) return;
 
-    const taskId = active.id as string;
+    const draggedTaskId = active.id as string;
+    const overId = over.id as string;
 
-    // 确定目标状态：可能是列ID或任务ID
-    let newStatus: TaskStatus;
+    console.log('拖拽结束:', {
+      draggedTaskId,
+      overId,
+      overType: over.data?.current?.type,
+      overData: over.data?.current
+    });
 
-    // 检查over.data是否包含类型信息
+    // 如果拖拽到自己身上，不执行任何操作
+    if (draggedTaskId === overId) return;
+
+    const draggedTask = Object.values(tasksByStatus)
+      .flat()
+      .find((task: TaskWithRelations) => task.id === draggedTaskId);
+
+    if (!draggedTask) return;
+
+    const currentStatus = draggedTask.status;
+
+    // 确定目标状态
+    let targetStatus: TaskStatus;
     if (over.data?.current?.type === "column") {
-      // 拖拽到列上
-      newStatus = over.data.current.status as TaskStatus;
+      targetStatus = over.data.current.status as TaskStatus;
     } else if (over.data?.current?.type === "task") {
-      // 拖拽到任务上，获取该任务所在的状态
       const targetTask = over.data.current.task as TaskWithRelations;
-      newStatus = targetTask.status;
+      targetStatus = targetTask.status;
     } else {
-      // 尝试直接使用over.id作为状态（向后兼容）
-      const possibleStatus = over.id as string;
-      if (Object.values(TaskStatus).includes(possibleStatus as TaskStatus)) {
-        newStatus = possibleStatus as TaskStatus;
-      } else {
-        console.warn("无法确定拖拽目标状态:", over);
-        return;
-      }
+      return;
     }
 
-    // 如果状态没有改变，不执行任何操作
-    const currentTask = Object.values(tasksByStatus)
-      .flat()
-      .find((task: TaskWithRelations) => task.id === taskId);
+    // 处理跨状态拖拽
+    if (currentStatus !== targetStatus) {
+      try {
+        await handleStatusChange(draggedTaskId, targetStatus);
+      } catch (error) {
+        console.error("拖拽更新状态失败:", error);
+      }
+      return;
+    }
 
-    if (!currentTask || currentTask.status === newStatus) return;
+    // 处理同状态内的排序
+    const statusTasks = tasksByStatus[currentStatus] || [];
+    const currentIndex = statusTasks.findIndex(task => task.id === draggedTaskId);
 
-    // 乐观更新：立即更新UI
+    if (currentIndex === -1) return;
+
+    let newIndex: number;
+
+    if (over.data?.current?.type === "column") {
+      // 拖拽到列的空白区域，放到末尾
+      newIndex = statusTasks.length - 1;
+    } else {
+      // 拖拽到具体任务上
+      const targetTaskIndex = statusTasks.findIndex(task => task.id === overId);
+      if (targetTaskIndex === -1) return;
+
+      console.log('位置计算:', {
+        currentIndex,
+        targetTaskIndex,
+        draggedTaskId,
+        targetTaskId: overId,
+        statusTasks: statusTasks.map(t => ({ id: t.id, title: t.title }))
+      });
+
+      // 简化逻辑：直接使用目标任务的索引作为新位置
+      // arrayMove 会自动处理元素移动的细节
+      newIndex = targetTaskIndex;
+    }
+
+    // 如果位置没有变化，不执行操作
+    if (currentIndex === newIndex) return;
+
+    // 计算新的任务顺序
+    const reorderedTasks = arrayMove(statusTasks, currentIndex, newIndex);
+    const taskIds = reorderedTasks.map(task => task.id);
+
+    // 乐观更新UI
+    setOptimisticTaskOrder(prev => ({
+      ...prev,
+      [currentStatus]: taskIds,
+    }));
+
     try {
-      await handleStatusChange(taskId, newStatus);
+      await reorderTasks.mutateAsync({
+        taskIds,
+        status: currentStatus,
+      });
     } catch (error) {
-      console.error("拖拽更新状态失败:", error);
-      // 这里可以添加错误提示
+      console.error("拖拽排序失败:", error);
     }
   };
 
@@ -421,21 +565,31 @@ const KanbanPage: NextPage = () => {
           <meta name="description" content="可视化任务管理看板" />
         </Head>
 
-        <div className="space-y-6">
+        <div className={`space-y-6 transition-all duration-200 ${activeId ? 'bg-gray-50' : ''}`}>
+          {/* 拖拽状态指示器 */}
+          {activeId && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+              正在拖拽任务 - 拖拽到目标位置释放
+            </div>
+          )}
+
           {/* 页面标题和操作 */}
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
-                {isFetching && !isLoading && (
+                {(isFetching && !isLoading) || reorderTasks.isPending && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
-                    刷新中...
+                    {reorderTasks.isPending ? "更新排序中..." : "刷新中..."}
                   </div>
                 )}
               </div>
               <p className="mt-1 text-sm text-gray-500">
-                拖拽任务卡片来更新状态，可视化管理您的工作流程
+                {activeId
+                  ? "拖拽任务到目标位置或列来重新排序或更改状态"
+                  : "拖拽任务卡片来更新状态或调整顺序，可视化管理您的工作流程"
+                }
               </p>
             </div>
             <button
@@ -453,6 +607,7 @@ const KanbanPage: NextPage = () => {
             sensors={sensors}
             collisionDetection={customCollisionDetection}
             onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
@@ -480,7 +635,7 @@ const KanbanPage: NextPage = () => {
             {/* 拖拽覆盖层 */}
             <DragOverlay>
               {activeTask ? (
-                <div className="transform rotate-3 opacity-90">
+                <div className="transform rotate-2 opacity-95 scale-105 shadow-2xl">
                   <TaskCard
                     task={activeTask}
                     onStatusChange={() => {}}
@@ -561,8 +716,10 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px] transition-colors ${
-        isOver ? "border-blue-500 bg-blue-50" : ""
+      className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px] transition-all duration-200 ${
+        isOver
+          ? "border-blue-500 bg-blue-50 shadow-lg scale-[1.02] border-solid"
+          : "hover:border-gray-400"
       }`}
     >
       {/* 列标题 */}
@@ -688,12 +845,12 @@ function TaskCard({
 
   return (
     <div
-      className={`bg-white rounded-lg border p-4 shadow-sm transition-all cursor-pointer relative ${
+      className={`bg-white rounded-lg border p-4 shadow-sm transition-all duration-200 cursor-pointer relative ${
         isDragging
-          ? "border-blue-300 shadow-lg transform rotate-2"
+          ? "border-blue-400 shadow-xl bg-blue-50 scale-105 rotate-1 z-50"
           : isUpdating
-          ? "border-blue-200 bg-blue-50"
-          : "border-gray-200 hover:shadow-md hover:border-gray-300"
+          ? "border-blue-200 bg-blue-50 animate-pulse"
+          : "border-gray-200 hover:shadow-md hover:border-gray-300 hover:scale-[1.02]"
       }`}
       onClick={() => !isDragging && onEdit(task.id)}
     >

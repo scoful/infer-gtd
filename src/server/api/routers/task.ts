@@ -16,6 +16,7 @@ import {
   getTimeEntriesSchema,
   getTaskStatsSchema,
   batchUpdateTasksSchema,
+  reorderTasksSchema,
 } from "@/server/api/schemas/task";
 
 export const taskRouter = createTRPCRouter({
@@ -58,10 +59,23 @@ export const taskRouter = createTRPCRouter({
           }
         }
 
+        // 获取当前状态下的最大 sortOrder 值
+        const maxSortOrder = await ctx.db.task.findFirst({
+          where: {
+            createdById: ctx.session.user.id,
+            status: taskData.status || TaskStatus.IDEA,
+          },
+          select: { sortOrder: true },
+          orderBy: { sortOrder: "desc" },
+        });
+
+        const nextSortOrder = (maxSortOrder?.sortOrder ?? -1) + 1;
+
         // 创建任务
         const task = await ctx.db.task.create({
           data: {
             ...taskData,
+            sortOrder: nextSortOrder,
             createdById: ctx.session.user.id,
             tags: tagIds ? {
               create: tagIds.map(tagId => ({
@@ -130,6 +144,8 @@ export const taskRouter = createTRPCRouter({
           take: limit + 1,
           cursor: cursor ? { id: cursor } : undefined,
           orderBy: [
+            { status: "asc" },
+            { sortOrder: "asc" },
             { priority: "desc" },
             { dueDate: "asc" },
             { createdAt: "desc" },
@@ -1154,6 +1170,58 @@ export const taskRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "获取任务统计失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 重新排序任务
+  reorder: protectedProcedure
+    .input(reorderTasksSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { taskIds, status, projectId } = input;
+
+      try {
+        // 验证所有任务的所有权
+        const tasks = await ctx.db.task.findMany({
+          where: {
+            id: { in: taskIds },
+            createdById: ctx.session.user.id,
+            ...(status && { status }),
+            ...(projectId && { projectId }),
+          },
+          select: { id: true, title: true, status: true },
+        });
+
+        if (tasks.length !== taskIds.length) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "部分任务不存在或无权限操作",
+          });
+        }
+
+        // 批量更新任务的 sortOrder
+        const updatePromises = taskIds.map((taskId, index) =>
+          ctx.db.task.update({
+            where: { id: taskId },
+            data: { sortOrder: index },
+          })
+        );
+
+        await Promise.all(updatePromises);
+
+        return {
+          success: true,
+          message: `已重新排序 ${taskIds.length} 个任务`,
+          updatedCount: taskIds.length,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "重新排序任务失败",
           cause: error,
         });
       }

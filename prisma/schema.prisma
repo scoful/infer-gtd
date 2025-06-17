@@ -141,6 +141,9 @@ model Task {
     recurringPattern String?   // JSON string for recurring rules
     parentTaskId    String?    // Reference to original recurring task
 
+    // Sorting and ordering
+    sortOrder       Int        @default(0) // For custom ordering within same status
+
     createdAt       DateTime   @default(now())
     updatedAt       DateTime   @updatedAt
 
@@ -167,6 +170,8 @@ model Task {
     @@index([projectId])
     @@index([type])
     @@index([priority])
+    @@index([status, sortOrder])
+    @@index([sortOrder])
 }
 
 model Note {
