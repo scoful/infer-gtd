@@ -4,6 +4,7 @@ import { type AppType } from "next/app";
 import { Geist } from "next/font/google";
 
 import { api } from "@/utils/api";
+import { RefreshProvider } from "@/contexts/RefreshContext";
 
 import "@/styles/globals.css";
 
@@ -17,9 +18,11 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <div className={geist.className}>
-        <Component {...pageProps} />
-      </div>
+      <RefreshProvider>
+        <div className={geist.className}>
+          <Component {...pageProps} />
+        </div>
+      </RefreshProvider>
     </SessionProvider>
   );
 };

@@ -15,6 +15,7 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading } from "@/components/UI";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 const Home: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -26,7 +27,7 @@ const Home: NextPage = () => {
     return date;
   }, []);
 
-  const { data: taskStats, isLoading: isLoadingStats, error: statsError } = api.task.getStats.useQuery(
+  const { data: taskStats, isLoading: isLoadingStats, error: statsError, refetch: refetchStats } = api.task.getStats.useQuery(
     { startDate: thirtyDaysAgo },
     {
       enabled: !!sessionData,
@@ -35,7 +36,7 @@ const Home: NextPage = () => {
     }
   );
 
-  const { data: recentTasks, isLoading: isLoadingTasks, error: tasksError } = api.task.getAll.useQuery(
+  const { data: recentTasks, isLoading: isLoadingTasks, error: tasksError, refetch: refetchTasks } = api.task.getAll.useQuery(
     { limit: 5 },
     {
       enabled: !!sessionData,
@@ -44,7 +45,7 @@ const Home: NextPage = () => {
     }
   );
 
-  const { data: recentNotes, isLoading: isLoadingNotes, error: notesError } = api.note.getAll.useQuery(
+  const { data: recentNotes, isLoading: isLoadingNotes, error: notesError, refetch: refetchNotes } = api.note.getAll.useQuery(
     { limit: 3, sortBy: "updatedAt", sortOrder: "desc" },
     {
       enabled: !!sessionData,
@@ -53,7 +54,7 @@ const Home: NextPage = () => {
     }
   );
 
-  const { data: recentJournals, isLoading: isLoadingJournals, error: journalsError } = api.journal.getRecent.useQuery(
+  const { data: recentJournals, isLoading: isLoadingJournals, error: journalsError, refetch: refetchJournals } = api.journal.getRecent.useQuery(
     { limit: 3 },
     {
       enabled: !!sessionData,
@@ -61,6 +62,16 @@ const Home: NextPage = () => {
       refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
     }
   );
+
+  // 注册页面刷新函数
+  usePageRefresh(() => {
+    void Promise.all([
+      refetchStats(),
+      refetchTasks(),
+      refetchNotes(),
+      refetchJournals(),
+    ]);
+  }, [refetchStats, refetchTasks, refetchNotes, refetchJournals]);
 
   const quickActions = [
     {

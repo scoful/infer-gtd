@@ -13,11 +13,14 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { PageLoading } from "@/components/UI";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 const StreamPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const [newIdea, setNewIdea] = useState("");
   const [isClient, setIsClient] = useState(false);
+
+
 
   // 确保只在客户端渲染动态内容，避免水合错误
   useEffect(() => {
@@ -38,6 +41,11 @@ const StreamPage: NextPage = () => {
       refetchOnReconnect: true, // 网络重连时重新获取
     }
   );
+
+  // 注册页面刷新函数
+  usePageRefresh(() => {
+    void refetch();
+  }, [refetch]);
 
   // 创建新想法
   const createIdea = api.task.create.useMutation({
@@ -126,36 +134,20 @@ const StreamPage: NextPage = () => {
         </Head>
 
         <div className="space-y-6">
-          {/* 页面标题和操作 */}
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">思绪流</h1>
-                {isFetching && !isLoading && (
-                  <div className="flex items-center text-sm text-blue-600">
-                    <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
-                    刷新中...
-                  </div>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-gray-500">
-                快速捕捉灵感，随时记录想法，轻松转换为可执行任务
-              </p>
-            </div>
+          {/* 页面标题 */}
+          <div>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => void refetch()}
-                disabled={isFetching}
-                className="inline-flex items-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="手动刷新想法流"
-              >
-                <svg className={`-ml-0.5 mr-1.5 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                刷新
-              </button>
+              <h1 className="text-2xl font-bold text-gray-900">思绪流</h1>
+              {isFetching && !isLoading && (
+                <div className="flex items-center text-sm text-blue-600">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  刷新中...
+                </div>
+              )}
             </div>
+            <p className="mt-1 text-sm text-gray-500">
+              快速捕捉灵感，随时记录想法，轻松转换为可执行任务
+            </p>
           </div>
 
           {/* 快速添加想法 */}

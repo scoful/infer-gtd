@@ -1,6 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { TaskStatus, type Task } from "@prisma/client";
 import {
@@ -38,6 +38,7 @@ import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { PageLoading, NotificationContainer } from "@/components/UI";
 import { useNotifications } from "@/hooks";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 // 看板列配置
 const KANBAN_COLUMNS = [
@@ -113,6 +114,8 @@ const KanbanPage: NextPage = () => {
     removeNotification,
   } = useNotifications();
 
+
+
   // 拖拽传感器配置
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -152,6 +155,11 @@ const KanbanPage: NextPage = () => {
       refetchOnReconnect: true,
     }
   );
+
+  // 注册页面刷新函数
+  usePageRefresh(() => {
+    void refetch();
+  }, [refetch]);
 
   // 按状态分组任务（包含乐观更新）
   const tasksByStatus = useMemo(() => {
@@ -430,28 +438,14 @@ const KanbanPage: NextPage = () => {
                 拖拽任务卡片来更新状态，可视化管理您的工作流程
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => void refetch()}
-                disabled={isFetching}
-                className="inline-flex items-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="手动刷新数据"
-              >
-                <svg className={`-ml-0.5 mr-1.5 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                刷新
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateTask}
-                className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-              >
-                <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
-                新建任务
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleCreateTask}
+              className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+              新建任务
+            </button>
           </div>
 
           {/* 看板列 */}

@@ -83,7 +83,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed, isLoaded, toggleSidebar } = useSidebarState();
-  const { refreshKanban, refreshStream } = useRefresh();
+  const { refreshPage } = useRefresh();
 
   const isActivePath = (href: string) => {
     // 精确匹配路径，避免水合错误
@@ -100,24 +100,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
     await signOut({ callbackUrl: "/" });
   };
 
-  // 处理导航点击，触发对应页面的数据刷新
-  const handleNavigationClick = (href: string) => {
-    // 如果用户已经在目标页面，触发数据刷新
+  // 处理导航点击
+  const handleNavigationClick = (href: string, event: React.MouseEvent) => {
     const isCurrentPage = isActivePath(href);
 
     if (isCurrentPage) {
-      switch (href) {
-        case '/tasks/kanban':
-          refreshKanban();
-          break;
-        case '/stream':
-          refreshStream();
-          break;
-        // 其他页面可以在这里添加
-        default:
-          break;
-      }
+      // 阻止默认的链接跳转行为
+      event.preventDefault();
+      // 触发当前页面的数据刷新
+      refreshPage(href);
     }
+
+    // 关闭移动端侧边栏
+    setSidebarOpen(false);
   };
 
   // 直接使用 isCollapsed 状态，Hook 已处理初始化逻辑
@@ -155,10 +150,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       ? "bg-blue-100 text-blue-900"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                   }`}
-                  onClick={() => {
-                    setSidebarOpen(false);
-                    handleNavigationClick(item.href);
-                  }}
+                  onClick={(event) => handleNavigationClick(item.href, event)}
                 >
                   <Icon
                     className={`mr-3 h-5 w-5 flex-shrink-0 ${
@@ -210,7 +202,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                     } ${isCollapsed ? "justify-center" : ""}`}
                     title={isCollapsed ? item.description : item.description}
-                    onClick={() => handleNavigationClick(item.href)}
+                    onClick={(event) => handleNavigationClick(item.href, event)}
                   >
                     <Icon
                       className={`h-5 w-5 flex-shrink-0 ${
