@@ -124,6 +124,9 @@ const KanbanPage: NextPage = () => {
     overType: 'task' | 'column' | null;
   }>({ overId: null, overType: null });
 
+  // 正在更新状态和位置的任务
+  const [updatingTasks, setUpdatingTasks] = useState<Set<string>>(new Set());
+
   // 通知系统
   const {
     notifications,
@@ -344,6 +347,65 @@ const KanbanPage: NextPage = () => {
     },
   });
 
+  // 带位置的状态更新
+  const updateStatusWithPosition = api.task.updateStatusWithPosition.useMutation({
+    onSuccess: (_, variables) => {
+      // 立即清理更新状态，但保持乐观更新直到数据刷新
+      setUpdatingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
+
+      // 使用 invalidate 而不是 refetch，避免立即清理乐观更新
+      void utils.task.getAll.invalidate().then(() => {
+        // 数据更新完成后清理乐观更新
+        setOptimisticUpdates(prev => {
+          const newState = { ...prev };
+          delete newState[variables.id];
+          return newState;
+        });
+
+        setOptimisticTaskOrder({
+          [TaskStatus.IDEA]: [],
+          [TaskStatus.TODO]: [],
+          [TaskStatus.IN_PROGRESS]: [],
+          [TaskStatus.WAITING]: [],
+          [TaskStatus.DONE]: [],
+          [TaskStatus.ARCHIVED]: [],
+        });
+      });
+
+      showSuccess("任务状态和位置已更新");
+    },
+    onError: (error, variables) => {
+      showError(error.message || "更新任务状态和位置失败");
+
+      // 清理更新状态
+      setUpdatingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
+
+      // 回滚乐观更新
+      setOptimisticUpdates(prev => {
+        const newState = { ...prev };
+        delete newState[variables.id];
+        return newState;
+      });
+
+      setOptimisticTaskOrder({
+        [TaskStatus.IDEA]: [],
+        [TaskStatus.TODO]: [],
+        [TaskStatus.IN_PROGRESS]: [],
+        [TaskStatus.WAITING]: [],
+        [TaskStatus.DONE]: [],
+        [TaskStatus.ARCHIVED]: [],
+      });
+    },
+  });
+
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     // 立即进行乐观更新
     setOptimisticUpdates(prev => ({
@@ -481,10 +543,55 @@ const KanbanPage: NextPage = () => {
 
     // 处理跨状态拖拽
     if (currentStatus !== targetStatus) {
+      // 确定在目标状态中的插入位置
+      let targetInsertIndex: number | undefined;
+
+      if (over.data?.current?.type === "task") {
+        // 拖拽到具体任务上，插入到该任务之前
+        const targetStatusTasks = tasksByStatus[targetStatus] || [];
+        const targetTaskIndex = targetStatusTasks.findIndex(task => task.id === overId);
+        targetInsertIndex = targetTaskIndex !== -1 ? targetTaskIndex : undefined;
+      }
+
+      console.log('跨状态拖拽:', {
+        draggedTaskId,
+        currentStatus,
+        targetStatus,
+        targetInsertIndex,
+        overId
+      });
+
+      // 乐观更新UI - 同时更新状态和位置
+      setOptimisticUpdates(prev => ({
+        ...prev,
+        [draggedTaskId]: targetStatus,
+      }));
+
+      // 乐观更新排序 - 立即在目标位置显示任务
+      if (targetInsertIndex !== undefined) {
+        const targetStatusTasks = tasksByStatus[targetStatus] || [];
+        const newTaskIds = [...targetStatusTasks.map(t => t.id)];
+        newTaskIds.splice(targetInsertIndex, 0, draggedTaskId);
+
+        setOptimisticTaskOrder(prev => ({
+          ...prev,
+          [targetStatus]: newTaskIds,
+        }));
+      }
+
+      // 标记任务为更新中
+      setUpdatingTasks(prev => new Set(prev).add(draggedTaskId));
+
       try {
-        await handleStatusChange(draggedTaskId, targetStatus);
+        // 使用新的 API 一次性更新状态和位置
+        await updateStatusWithPosition.mutateAsync({
+          id: draggedTaskId,
+          status: targetStatus,
+          insertIndex: targetInsertIndex,
+          note: `拖拽到${KANBAN_COLUMNS.find(col => col.status === targetStatus)?.title}`,
+        });
       } catch (error) {
-        console.error("拖拽更新状态失败:", error);
+        console.error("跨状态拖拽失败:", error);
       }
       return;
     }
@@ -627,6 +734,7 @@ const KanbanPage: NextPage = () => {
                   isTimerActive={isTimerActive}
                   isUpdating={updateTaskStatus.isPending}
                   optimisticUpdates={optimisticUpdates}
+                  updatingTasks={updatingTasks}
                 />
               );
             })}
@@ -691,6 +799,7 @@ interface KanbanColumnProps {
   isTimerActive: (task: TaskWithRelations) => boolean;
   isUpdating: boolean;
   optimisticUpdates: Record<string, TaskStatus>;
+  updatingTasks: Set<string>;
 }
 
 function KanbanColumn({
@@ -704,6 +813,7 @@ function KanbanColumn({
   isTimerActive,
   isUpdating,
   optimisticUpdates,
+  updatingTasks,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.status,
@@ -747,7 +857,7 @@ function KanbanColumn({
               onEdit={onEdit}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
-              isUpdating={!!optimisticUpdates[task.id]}
+              isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
             />
           ))}
 

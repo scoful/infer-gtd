@@ -46,7 +46,7 @@ Database (PostgreSQL)
 - [x] **VerificationToken 模型** - 邮箱验证 ✅ *已完成*
 
 #### 1.1.2 核心业务模型
-- [x] **Task 模型** - 任务管理核心 ✅ *已完成* - 包含完整的任务管理字段、时间追踪、重复任务支持
+- [x] **Task 模型** - 任务管理核心 ✅ *已完成* - 包含完整的任务管理字段、时间追踪、重复任务支持、拖拽排序
   ```prisma
   model Task {
     id          String    @id @default(cuid())
@@ -62,6 +62,7 @@ Database (PostgreSQL)
     totalTimeSpent Int     @default(0) // 秒
     isRecurring Boolean   @default(false)
     recurringPattern String?
+    sortOrder   Int       @default(0) // 排序字段
 
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
@@ -184,6 +185,10 @@ Database (PostgreSQL)
     update: protectedProcedure.input().mutation(),
     delete: protectedProcedure.input().mutation(),
     updateStatus: protectedProcedure.input().mutation(),
+
+    // 排序操作
+    reorder: protectedProcedure.input().mutation(),
+    updateStatusWithPosition: protectedProcedure.input().mutation(),
   });
   ```
 
@@ -321,9 +326,10 @@ Database (PostgreSQL)
     tasks: Task[];
   }
   ```
-  - ✅ 拖拽排序功能 (@dnd-kit替代react-beautiful-dnd)
+  - ✅ 增强拖拽排序功能 (同列内排序 + 跨列精确位置控制)
   - ✅ 任务卡片组件（TaskCard）
   - ✅ 状态流转动画和视觉反馈
+  - ✅ 乐观更新机制，流畅无闪烁体验
 
 - [x] **任务详情模态框** (`src/components/Tasks/TaskModal.tsx`) ✅ *已完成*
   - ✅ 任务编辑表单（创建/编辑）
@@ -699,7 +705,7 @@ API基础已经非常完善，完全可以支撑前端界面的开发。建议�
 - ✅ **主布局系统**: MainLayout.tsx - 响应式导航，用户信息栏，移动端适配
 - ✅ **认证系统**: AuthGuard.tsx - 登录检查，GitHub OAuth集成
 - ✅ **首页仪表盘**: index.tsx - 统计概览，快速操作，最近活动展示
-- ✅ **任务看板**: tasks/kanban.tsx - @dnd-kit拖拽，状态管理，时间追踪
+- ✅ **任务看板**: tasks/kanban.tsx - 增强拖拽排序，跨列精确位置控制，乐观更新
 - ✅ **思绪流**: stream.tsx - 想法捕捉，一键转换任务，统计信息
 - ✅ **任务模态框**: TaskModal.tsx - 创建/编辑表单，项目标签关联
 

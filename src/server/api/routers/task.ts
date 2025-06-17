@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
+import { arrayMove } from "@dnd-kit/sortable";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -17,6 +18,7 @@ import {
   getTaskStatsSchema,
   batchUpdateTasksSchema,
   reorderTasksSchema,
+  updateTaskStatusWithPositionSchema,
 } from "@/server/api/schemas/task";
 
 export const taskRouter = createTRPCRouter({
@@ -1222,6 +1224,162 @@ export const taskRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "重新排序任务失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 带位置的状态更新
+  updateStatusWithPosition: protectedProcedure
+    .input(updateTaskStatusWithPositionSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, status: newStatus, insertIndex, note } = input;
+
+      try {
+        // 验证任务所有权并获取当前状态
+        const existingTask = await ctx.db.task.findUnique({
+          where: { id },
+          select: { createdById: true, status: true, title: true },
+        });
+
+        if (!existingTask || existingTask.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "任务不存在或无权限修改",
+          });
+        }
+
+        const fromStatus = existingTask.status;
+
+        // 如果状态没有变化，只处理排序
+        if (fromStatus === newStatus && insertIndex !== undefined) {
+          const statusTasks = await ctx.db.task.findMany({
+            where: {
+              createdById: ctx.session.user.id,
+              status: newStatus,
+            },
+            orderBy: [
+              { sortOrder: "asc" },
+              { createdAt: "desc" },
+            ],
+            select: { id: true },
+          });
+
+          const currentIndex = statusTasks.findIndex(task => task.id === id);
+          if (currentIndex !== -1 && currentIndex !== insertIndex) {
+            const taskIds = statusTasks.map(task => task.id);
+            const reorderedIds = arrayMove(taskIds, currentIndex, insertIndex);
+
+            // 批量更新 sortOrder
+            const updatePromises = reorderedIds.map((taskId, index) =>
+              ctx.db.task.update({
+                where: { id: taskId },
+                data: { sortOrder: index },
+              })
+            );
+
+            await Promise.all(updatePromises);
+          }
+
+          return {
+            success: true,
+            message: `任务 "${existingTask.title}" 位置已更新`,
+          };
+        }
+
+        // 处理状态变更
+        const updateData: any = { status: newStatus };
+
+        // 如果状态变为已完成，记录完成时间并增加完成次数
+        if (newStatus === TaskStatus.DONE) {
+          updateData.completedAt = new Date();
+          updateData.completedCount = { increment: 1 };
+          updateData.isTimerActive = false;
+          updateData.timerStartedAt = null;
+        }
+
+        // 如果从已完成状态变为其他状态，清除完成时间
+        if (fromStatus === TaskStatus.DONE && newStatus !== TaskStatus.DONE) {
+          updateData.completedAt = null;
+        }
+
+        // 获取目标状态的任务列表以确定 sortOrder
+        if (insertIndex !== undefined) {
+          const targetStatusTasks = await ctx.db.task.findMany({
+            where: {
+              createdById: ctx.session.user.id,
+              status: newStatus,
+            },
+            orderBy: [
+              { sortOrder: "asc" },
+              { createdAt: "desc" },
+            ],
+            select: { id: true },
+          });
+
+          // 在指定位置插入任务
+          const newTaskIds = [...targetStatusTasks.map(t => t.id)];
+          newTaskIds.splice(insertIndex, 0, id);
+
+          // 批量更新所有任务的 sortOrder
+          const updatePromises = newTaskIds.map((taskId, index) => {
+            if (taskId === id) {
+              // 更新当前任务的状态和位置
+              return ctx.db.task.update({
+                where: { id: taskId },
+                data: { ...updateData, sortOrder: index },
+              });
+            } else {
+              // 只更新其他任务的位置
+              return ctx.db.task.update({
+                where: { id: taskId },
+                data: { sortOrder: index },
+              });
+            }
+          });
+
+          await Promise.all(updatePromises);
+        } else {
+          // 没有指定位置，放到末尾
+          const maxSortOrder = await ctx.db.task.findFirst({
+            where: {
+              createdById: ctx.session.user.id,
+              status: newStatus,
+            },
+            select: { sortOrder: true },
+            orderBy: { sortOrder: "desc" },
+          });
+
+          updateData.sortOrder = (maxSortOrder?.sortOrder ?? -1) + 1;
+
+          await ctx.db.task.update({
+            where: { id },
+            data: updateData,
+          });
+        }
+
+        // 创建状态历史记录
+        await ctx.db.taskStatusHistory.create({
+          data: {
+            fromStatus,
+            toStatus: newStatus,
+            taskId: id,
+            changedById: ctx.session.user.id,
+            note: note || "拖拽更新状态和位置",
+          },
+        });
+
+        return {
+          success: true,
+          message: `任务 "${existingTask.title}" 状态已更新为 ${newStatus}`,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "更新任务状态和位置失败",
           cause: error,
         });
       }

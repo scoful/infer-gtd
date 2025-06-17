@@ -102,6 +102,14 @@ export const reorderTasksSchema = z.object({
   status: z.nativeEnum(TaskStatus).optional(),
 });
 
+// 带位置的状态更新 Schema
+export const updateTaskStatusWithPositionSchema = z.object({
+  id: z.string().cuid("无效的任务ID"),
+  status: z.nativeEnum(TaskStatus),
+  insertIndex: z.number().int().min(0).optional(), // 插入位置，undefined表示放到末尾
+  note: z.string().max(500, "备注过长").optional(),
+});
+
 // 导出类型
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
@@ -114,3 +122,4 @@ export type GetTimeEntriesInput = z.infer<typeof getTimeEntriesSchema>;
 export type GetTaskStatsInput = z.infer<typeof getTaskStatsSchema>;
 export type BatchUpdateTasksInput = z.infer<typeof batchUpdateTasksSchema>;
 export type ReorderTasksInput = z.infer<typeof reorderTasksSchema>;
+export type UpdateTaskStatusWithPositionInput = z.infer<typeof updateTaskStatusWithPositionSchema>;
