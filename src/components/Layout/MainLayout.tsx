@@ -13,6 +13,7 @@ import {
   BookOpenIcon,
   MagnifyingGlassIcon,
   ChartBarIcon,
+  TagIcon,
   Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon,
@@ -74,6 +75,12 @@ const navigation: NavigationItem[] = [
     description: "可视化任务管理",
   },
   {
+    name: "标签管理",
+    href: "/tags",
+    icon: TagIcon,
+    description: "管理和组织标签",
+  },
+  {
     name: "笔记",
     href: "/notes",
     icon: DocumentTextIcon,
@@ -125,6 +132,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
     if (href === "/tasks/kanban") {
       return router.pathname === "/tasks/kanban";
+    }
+    if (href === "/tags") {
+      return router.pathname === "/tags" || router.pathname.startsWith("/tags/");
     }
     return router.pathname.startsWith(href);
   };
