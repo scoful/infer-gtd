@@ -3,6 +3,7 @@ import { type DefaultSession, type NextAuthConfig } from "next-auth";
 
 import { db } from "@/server/db";
 import GitHubProvider from "next-auth/providers/github";
+import { createSystemTagsForUser } from "../../../prisma/seed-system-tags";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -52,5 +53,16 @@ export const authConfig = {
         id: user.id,
       },
     }),
+  },
+  events: {
+    createUser: async ({ user }) => {
+      // 为新用户创建系统预定义标签
+      try {
+        await createSystemTagsForUser(user.id);
+        console.log(`✅ 为新用户 ${user.email} 创建系统标签成功`);
+      } catch (error) {
+        console.error(`❌ 为新用户 ${user.email} 创建系统标签失败:`, error);
+      }
+    },
   },
 } satisfies NextAuthConfig;

@@ -43,6 +43,15 @@ export const getTasksSchema = z.object({
   limit: z.number().min(1).max(100).default(50),
   cursor: z.string().cuid().optional(),
   search: z.string().max(100).optional(),
+  // 日期筛选
+  createdAfter: z.date().optional(),
+  createdBefore: z.date().optional(),
+  updatedAfter: z.date().optional(),
+  updatedBefore: z.date().optional(),
+  completedAfter: z.date().optional(),
+  completedBefore: z.date().optional(),
+  dueAfter: z.date().optional(),
+  dueBefore: z.date().optional(),
 });
 
 // 任务ID Schema

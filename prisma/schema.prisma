@@ -63,6 +63,7 @@ model User {
     tags          Tag[]
     timeEntries   TimeEntry[]
     taskStatusHistory TaskStatusHistory[]
+    savedSearches SavedSearch[]
 }
 
 model VerificationToken {
@@ -93,6 +94,13 @@ enum Priority {
     MEDIUM
     HIGH
     URGENT
+}
+
+enum TagType {
+    CONTEXT    // @电脑、@电话等上下文
+    PROJECT    // 项目标签
+    CUSTOM     // 自定义标签
+    PRIORITY   // 优先级标签
 }
 
 // Core business models
@@ -223,6 +231,11 @@ model Tag {
     id          String   @id @default(cuid())
     name        String
     color       String?  // Hex color for UI display
+    type        TagType  @default(CUSTOM) // 新增字段
+    category    String?  // 新增字段，如 "context", "project", "custom"
+    isSystem    Boolean  @default(false) // 新增字段，系统预定义标签
+    description String?  // 标签描述
+    icon        String?  // 图标名称或emoji
 
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
@@ -237,6 +250,9 @@ model Tag {
     @@unique([name, createdById]) // Unique tag name per user
     @@index([createdById])
     @@index([name])
+    @@index([type])
+    @@index([category])
+    @@index([isSystem])
 }
 
 // Many-to-many relationship tables
@@ -307,4 +323,23 @@ model TaskStatusHistory {
     @@index([taskId])
     @@index([changedById])
     @@index([changedAt])
+}
+
+// Saved search system
+model SavedSearch {
+    id           String   @id @default(cuid())
+    name         String
+    description  String?
+    searchParams String   // JSON string of search parameters
+    isPublic     Boolean  @default(false)
+
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    createdBy    User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+    createdById  String
+
+    @@unique([name, createdById]) // Unique search name per user
+    @@index([createdById])
+    @@index([isPublic])
 }

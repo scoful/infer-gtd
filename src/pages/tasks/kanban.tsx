@@ -41,6 +41,7 @@ import TaskModal from "@/components/Tasks/TaskModal";
 import { PageLoading, NotificationContainer } from "@/components/UI";
 import { useNotifications } from "@/hooks";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { TagList, type TagData } from "@/components/Tags";
 
 // 看板列配置
 const KANBAN_COLUMNS = [
@@ -85,7 +86,7 @@ const KANBAN_COLUMNS = [
 type TaskWithRelations = Task & {
   project?: { id: string; name: string; color?: string | null } | null;
   tags: Array<{
-    tag: { id: string; name: string; color?: string | null };
+    tag: { id: string; name: string; color?: string | null; type: any; category?: string | null; isSystem: boolean; description?: string | null; icon?: string | null };
   }>;
   timeEntries: Array<{
     id: string;
@@ -998,23 +999,16 @@ function TaskCard({
           </span>
         )}
 
-        {task.tags.slice(0, 2).map((tagRelation) => (
-          <span
-            key={tagRelation.tag.id}
-            className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-            style={{
-              backgroundColor: tagRelation.tag.color ? `${tagRelation.tag.color}20` : '#f3f4f6',
-              color: tagRelation.tag.color || '#374151',
-            }}
-          >
-            {tagRelation.tag.name}
-          </span>
-        ))}
-
-        {task.tags.length > 2 && (
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-            +{task.tags.length - 2}
-          </span>
+        {/* 标签显示 */}
+        {task.tags.length > 0 && (
+          <TagList
+            tags={task.tags.map(tagRelation => tagRelation.tag as TagData)}
+            size="sm"
+            variant="default"
+            showIcon={true}
+            maxDisplay={2}
+            className="flex-wrap"
+          />
         )}
       </div>
 

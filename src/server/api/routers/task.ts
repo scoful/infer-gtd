@@ -127,10 +127,15 @@ export const taskRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getTasksSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, ...filters } = input;
+      const {
+        limit, cursor, search,
+        createdAfter, createdBefore, updatedAfter, updatedBefore,
+        completedAfter, completedBefore, dueAfter, dueBefore,
+        ...filters
+      } = input;
 
       try {
-        const where = {
+        const where: any = {
           createdById: ctx.session.user.id,
           ...filters,
           ...(search && {
@@ -139,6 +144,15 @@ export const taskRouter = createTRPCRouter({
               { description: { contains: search, mode: "insensitive" as const } },
             ],
           }),
+          // 日期筛选
+          ...(createdAfter && { createdAt: { gte: createdAfter } }),
+          ...(createdBefore && { createdAt: { ...where.createdAt, lte: createdBefore } }),
+          ...(updatedAfter && { updatedAt: { gte: updatedAfter } }),
+          ...(updatedBefore && { updatedAt: { ...where.updatedAt, lte: updatedBefore } }),
+          ...(completedAfter && { completedAt: { gte: completedAfter } }),
+          ...(completedBefore && { completedAt: { ...where.completedAt, lte: completedBefore } }),
+          ...(dueAfter && { dueDate: { gte: dueAfter } }),
+          ...(dueBefore && { dueDate: { ...where.dueDate, lte: dueBefore } }),
         };
 
         const tasks = await ctx.db.task.findMany({

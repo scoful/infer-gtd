@@ -6,6 +6,7 @@ import { TaskStatus, TaskType, Priority } from "@prisma/client";
 import { api } from "@/utils/api";
 import { ButtonLoading, QueryLoading } from "@/components/UI";
 import { useNotifications } from "@/hooks";
+import { TagSelector } from "@/components/Tags";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -119,12 +120,11 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
     { enabled: isOpen }
   );
 
-  // 获取标签列表
-  // 注意：这里需要一个获取标签的API，暂时注释掉
-  // const { data: tags } = api.tag.getAll.useQuery(
-  //   { limit: 50 },
-  //   { enabled: isOpen }
-  // );
+  // 获取标签列表 - 现在已经有了标签API
+  const { data: tags, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
+    { limit: 100 },
+    { enabled: isOpen }
+  );
 
   // 创建任务
   const createTask = api.task.create.useMutation({
@@ -418,6 +418,23 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                         onChange={(e) => setFormData({ ...formData, dueTime: e.target.value || undefined })}
                       />
                     </div>
+                  </div>
+
+                  {/* 标签选择 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      标签
+                    </label>
+                    <TagSelector
+                      selectedTagIds={formData.tagIds}
+                      onTagsChange={(tagIds) => setFormData({ ...formData, tagIds })}
+                      placeholder="选择或创建标签..."
+                      allowCreate={true}
+                      disabled={isLoadingTags}
+                    />
+                    {isLoadingTags && (
+                      <p className="mt-1 text-xs text-gray-500">加载标签列表中...</p>
+                    )}
                   </div>
 
                   {/* 提交按钮 */}

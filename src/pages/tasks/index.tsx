@@ -20,6 +20,7 @@ import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { TagList, type TagData } from "@/components/Tags";
 
 // 视图模式类型
 type ViewMode = "list" | "compact" | "detailed";
@@ -52,7 +53,7 @@ type TaskWithRelations = {
   updatedAt: Date;
   project?: { id: string; name: string; color?: string | null } | null;
   tags: Array<{
-    tag: { id: string; name: string; color?: string | null };
+    tag: { id: string; name: string; color?: string | null; type: any; category?: string | null; isSystem: boolean; description?: string | null; icon?: string | null };
   }>;
   timeEntries: Array<{
     id: string;
@@ -128,12 +129,13 @@ const TaskListPage: NextPage = () => {
     },
   });
 
-  const batchUpdateTasks = api.task.batchUpdate.useMutation({
-    onSuccess: () => {
-      void refetch();
-      setSelectedTasks(new Set());
-    },
-  });
+  // 注释掉暂时不可用的批量更新功能
+  // const batchUpdateTasks = api.task.batchUpdate.useMutation({
+  //   onSuccess: () => {
+  //     void refetch();
+  //     setSelectedTasks(new Set());
+  //   },
+  // });
 
   // 格式化时间显示
   const formatTimeSpent = useCallback((seconds: number): string => {
@@ -178,19 +180,19 @@ const TaskListPage: NextPage = () => {
     }
   }, [tasksData?.tasks, selectedTasks]);
 
-  // 处理批量状态更新
+  // 处理批量状态更新 - 暂时禁用
   const handleBatchStatusUpdate = useCallback(async (status: TaskStatus) => {
     if (selectedTasks.size === 0) return;
-
-    try {
-      await batchUpdateTasks.mutateAsync({
-        taskIds: Array.from(selectedTasks),
-        updates: { status },
-      });
-    } catch (error) {
-      console.error("批量更新失败:", error);
-    }
-  }, [selectedTasks, batchUpdateTasks]);
+    console.log("批量更新功能暂未实现", status);
+    // try {
+    //   await batchUpdateTasks.mutateAsync({
+    //     taskIds: Array.from(selectedTasks),
+    //     updates: { status },
+    //   });
+    // } catch (error) {
+    //   console.error("批量更新失败:", error);
+    // }
+  }, [selectedTasks]);
 
   // 处理任务编辑
   const handleEditTask = useCallback((taskId: string) => {
@@ -226,7 +228,7 @@ const TaskListPage: NextPage = () => {
 
   // 任务数据处理
   const tasks = tasksData?.tasks || [];
-  const hasNextPage = tasksData?.hasNextPage || false;
+  const hasNextPage = false; // 暂时禁用分页功能
 
   // 应用客户端排序（如果需要多状态筛选）
   const filteredAndSortedTasks = useMemo(() => {
@@ -267,7 +269,9 @@ const TaskListPage: NextPage = () => {
           bValue = new Date(b.createdAt).getTime();
           break;
         case "status":
-          const statusOrder = { IDEA: 1, TODO: 2, IN_PROGRESS: 3, WAITING: 4, DONE: 5 };
+          const statusOrder: Record<TaskStatus, number> = {
+            IDEA: 1, TODO: 2, IN_PROGRESS: 3, WAITING: 4, DONE: 5, ARCHIVED: 6
+          };
           aValue = statusOrder[a.status];
           bValue = statusOrder[b.status];
           break;
@@ -729,8 +733,9 @@ function TaskListCard({
             </p>
           )}
 
-          {/* 标签和项目 */}
-          <div className="flex flex-wrap gap-1 mb-3">
+          {/* 项目和标签 */}
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {/* 项目显示 */}
             {task.project && (
               <span
                 className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
@@ -739,27 +744,20 @@ function TaskListCard({
                   color: task.project.color || '#374151',
                 }}
               >
-                {task.project.name}
+                📁 {task.project.name}
               </span>
             )}
 
-            {task.tags.slice(0, viewMode === "compact" ? 1 : 2).map((tagRelation) => (
-              <span
-                key={tagRelation.tag.id}
-                className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                style={{
-                  backgroundColor: tagRelation.tag.color ? `${tagRelation.tag.color}20` : '#f3f4f6',
-                  color: tagRelation.tag.color || '#374151',
-                }}
-              >
-                {tagRelation.tag.name}
-              </span>
-            ))}
-
-            {task.tags.length > (viewMode === "compact" ? 1 : 2) && (
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                +{task.tags.length - (viewMode === "compact" ? 1 : 2)}
-              </span>
+            {/* 标签显示 */}
+            {task.tags.length > 0 && (
+              <TagList
+                tags={task.tags.map(tagRelation => tagRelation.tag as TagData)}
+                size="sm"
+                variant="default"
+                showIcon={true}
+                maxDisplay={viewMode === "compact" ? 2 : 3}
+                className="flex-wrap"
+              />
             )}
           </div>
 
