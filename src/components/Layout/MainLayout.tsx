@@ -5,6 +5,9 @@ import { useRouter } from "next/router";
 import {
   HomeIcon,
   LightBulbIcon,
+  ListBulletIcon,
+  BoltIcon,
+  ClockIcon,
   ViewColumnsIcon,
   DocumentTextIcon,
   BookOpenIcon,
@@ -45,6 +48,24 @@ const navigation: NavigationItem[] = [
     href: "/stream",
     icon: LightBulbIcon,
     description: "想法捕捉和快速记录",
+  },
+  {
+    name: "任务列表",
+    href: "/tasks",
+    icon: ListBulletIcon,
+    description: "任务管理和筛选",
+  },
+  {
+    name: "下一步行动",
+    href: "/tasks/next-actions",
+    icon: BoltIcon,
+    description: "GTD下一步行动列表",
+  },
+  {
+    name: "等待清单",
+    href: "/tasks/waiting",
+    icon: ClockIcon,
+    description: "等待他人回复的任务",
   },
   {
     name: "任务看板",
@@ -92,6 +113,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
     if (href === "/") {
       return router.pathname === "/";
+    }
+    if (href === "/tasks") {
+      return router.pathname === "/tasks";
+    }
+    if (href === "/tasks/next-actions") {
+      return router.pathname === "/tasks/next-actions";
+    }
+    if (href === "/tasks/waiting") {
+      return router.pathname === "/tasks/waiting";
+    }
+    if (href === "/tasks/kanban") {
+      return router.pathname === "/tasks/kanban";
     }
     return router.pathname.startsWith(href);
   };
