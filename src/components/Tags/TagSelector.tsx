@@ -234,18 +234,24 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
     const rect = containerRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    // 基础高度：搜索区域(约100px) + 标签列表(200-250px) + 创建表单(如果显示)
+
+    // 简化的Dialog检测：检查是否在模态框中
+    // 如果TagSelector距离视口底部的空间很少，很可能在Dialog中
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // 基础高度：搜索区域(约100px) + 标签列表(150-250px) + 创建表单(如果显示)
     const searchAreaHeight = 100;
-    const tagListHeight = showCreateForm ? 150 : 250;
-    const createFormHeight = showCreateForm ? 200 : 0;
+    const tagListHeight = showCreateForm ? 120 : 200;
+    const createFormHeight = showCreateForm ? 180 : 0;
     const totalDropdownHeight = searchAreaHeight + tagListHeight + createFormHeight;
 
-    // 检查下方和上方的可用空间
-    const spaceBelow = viewportHeight - rect.bottom - 20; // 留20px边距
-    const spaceAbove = rect.top - 20; // 留20px边距
+    // 如果下方空间不足300px，很可能在Dialog中，优先向上弹出
+    if (spaceBelow < 300) {
+      return 'top';
+    }
 
-    // 如果下方空间不足且上方空间更大，则向上显示
-    // 但要确保上方至少有200px的最小空间
+    // 否则使用标准逻辑
     if (spaceBelow < totalDropdownHeight && spaceAbove > Math.max(spaceBelow, 200)) {
       return 'top';
     } else {
@@ -364,13 +370,26 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
         <div
           ref={dropdownRef}
           className={`
-            absolute z-[60] w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden
+            absolute z-40 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden
             ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}
           `}
           style={{
-            maxHeight: dropdownPosition === 'top'
-              ? `${Math.min(400, Math.max(250, (containerRef.current?.getBoundingClientRect().top || 0) - 40))}px`
-              : `${Math.min(400, Math.max(200, window.innerHeight - (containerRef.current?.getBoundingClientRect().bottom || 0) - 80))}px`
+            maxHeight: (() => {
+              if (!containerRef.current) return '350px';
+
+              const rect = containerRef.current.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+
+              if (dropdownPosition === 'top') {
+                // 向上弹出时，使用可用的上方空间
+                const availableSpace = rect.top - 20; // 留20px边距
+                return `${Math.min(350, Math.max(200, availableSpace))}px`;
+              } else {
+                // 向下弹出时，使用可用的下方空间
+                const availableSpace = viewportHeight - rect.bottom - 20; // 留20px边距
+                return `${Math.min(350, Math.max(150, availableSpace))}px`;
+              }
+            })()
           }}
         >
           {/* 搜索和筛选 */}
@@ -402,11 +421,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
           {/* 标签列表 */}
           <div className="flex-1 overflow-y-auto" style={{
-            maxHeight: showCreateForm
-              ? '120px'
-              : (dropdownPosition === 'top'
-                ? `${Math.max(150, (containerRef.current?.getBoundingClientRect().top || 0) - 180)}px`
-                : '250px')
+            maxHeight: showCreateForm ? '100px' : '200px'
           }}>
             {isLoading ? (
               <div className="p-4">

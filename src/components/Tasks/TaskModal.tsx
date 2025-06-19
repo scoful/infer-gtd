@@ -217,7 +217,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-visible rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all relative">
                 <div className="flex items-center justify-between mb-6">
                   <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
                     {isEditing ? "编辑任务" : "创建新任务"}
