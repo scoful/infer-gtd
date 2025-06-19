@@ -20,6 +20,7 @@ import { QueryLoading, SectionLoading } from "@/components/UI";
 import { TagDisplay, TagList, TagGroupDisplay, type TagData } from "@/components/Tags";
 import TagModal from "@/components/Tags/TagModal";
 import { useNotifications } from "@/hooks";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 // 筛选状态接口
 interface FilterState {
@@ -86,10 +87,18 @@ const TagManagementPage: NextPage = () => {
   );
 
   // 获取标签统计
-  const { data: tagStats } = api.tag.getStats.useQuery(
+  const { data: tagStats, refetch: refetchStats } = api.tag.getStats.useQuery(
     undefined,
     { enabled: !!sessionData }
   );
+
+  // 注册页面刷新函数
+  usePageRefresh(() => {
+    void Promise.all([
+      refetch(),
+      refetchStats(),
+    ]);
+  }, [refetch, refetchStats]);
 
   // 删除标签的mutation
   const deleteTagMutation = api.tag.delete.useMutation({

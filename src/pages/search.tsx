@@ -22,6 +22,7 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading } from "@/components/UI";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 // 搜索结果类型
 interface SearchResults {
@@ -99,7 +100,7 @@ const SearchPage: NextPage = () => {
   ]);
 
   // 执行搜索
-  const { data: searchResults, isLoading, refetch } = api.search.advanced.useQuery(
+  const { data: searchResults, isLoading, isFetching, refetch } = api.search.advanced.useQuery(
     searchParams,
     {
       enabled: !!sessionData && (!!query.trim() || Object.keys(searchParams).length > 4),
@@ -108,21 +109,31 @@ const SearchPage: NextPage = () => {
   );
 
   // 获取标签和项目用于筛选
-  const { data: tags } = api.tag.getAll.useQuery(
+  const { data: tags, refetch: refetchTags } = api.tag.getAll.useQuery(
     { limit: 100 },
     { enabled: !!sessionData }
   );
 
-  const { data: projects } = api.project.getAll.useQuery(
+  const { data: projects, refetch: refetchProjects } = api.project.getAll.useQuery(
     { limit: 100 },
     { enabled: !!sessionData }
   );
 
   // 获取保存的搜索
-  const { data: savedSearches } = api.search.getSavedSearches.useQuery(
+  const { data: savedSearches, refetch: refetchSavedSearches } = api.search.getSavedSearches.useQuery(
     undefined,
     { enabled: !!sessionData }
   );
+
+  // 注册页面刷新函数
+  usePageRefresh(() => {
+    void Promise.all([
+      refetch(),
+      refetchTags(),
+      refetchProjects(),
+      refetchSavedSearches(),
+    ]);
+  }, [refetch, refetchTags, refetchProjects, refetchSavedSearches]);
 
   // 保存搜索
   const saveSearchMutation = api.search.saveSearch.useMutation({
@@ -186,7 +197,15 @@ const SearchPage: NextPage = () => {
         <div className="space-y-6">
           {/* 页面标题 */}
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">高级搜索</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">高级搜索</h1>
+              {isFetching && !isLoading && (
+                <div className="flex items-center text-sm text-blue-600">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  刷新中...
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowSavedSearches(!showSavedSearches)}

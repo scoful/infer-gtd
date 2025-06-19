@@ -4,8 +4,15 @@ import { BookOpenIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
+import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 const JournalPage: NextPage = () => {
+  // 注册页面刷新函数（占位符页面暂时无需刷新数据）
+  usePageRefresh(() => {
+    // 当日志功能实现后，这里将添加数据刷新逻辑
+    console.log("日志页面刷新");
+  }, []);
+
   return (
     <AuthGuard>
       <MainLayout>

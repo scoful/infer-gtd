@@ -686,7 +686,7 @@ const KanbanPage: NextPage = () => {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
-                {(isFetching && !isLoading) || reorderTasks.isPending && (
+                {((isFetching && !isLoading) || reorderTasks.isPending) && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
                     {reorderTasks.isPending ? "更新排序中..." : "刷新中..."}
