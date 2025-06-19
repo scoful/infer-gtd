@@ -69,16 +69,19 @@ function getSizeClasses(size: "sm" | "md" | "lg") {
     sm: {
       container: "px-2 py-1 text-xs",
       icon: "h-3 w-3",
+      iconContainer: "w-3 h-3 text-xs leading-none",
       removeButton: "h-3 w-3 ml-1",
     },
     md: {
       container: "px-3 py-1.5 text-sm",
       icon: "h-4 w-4",
+      iconContainer: "w-4 h-4 text-sm leading-none",
       removeButton: "h-4 w-4 ml-1.5",
     },
     lg: {
       container: "px-4 py-2 text-base",
       icon: "h-5 w-5",
+      iconContainer: "w-5 h-5 text-base leading-none",
       removeButton: "h-5 w-5 ml-2",
     },
   };
@@ -146,7 +149,11 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
         ${clickable ? "cursor-pointer hover:opacity-80" : ""}
         ${className}
       `}
-      style={variantClasses.style}
+      style={{
+        ...variantClasses.style,
+        alignItems: 'center',
+        lineHeight: 1
+      }}
       onClick={handleClick}
       title={tag.description || `${getTagTypeLabel(tag.type)}标签: ${tag.name}`}
     >
@@ -154,15 +161,24 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
       {showIcon && (
         <>
           {tag.icon ? (
-            <span className={`${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'} ${sizeClasses.icon}`}>{tag.icon}</span>
+            <span
+              className={`
+                inline-flex items-center justify-center flex-shrink-0
+                ${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'}
+                ${sizeClasses.iconContainer}
+              `}
+              style={{ lineHeight: 1 }}
+            >
+              {tag.icon}
+            </span>
           ) : (
-            <TagIcon className={`${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'} ${sizeClasses.icon}`} />
+            <TagIcon className={`flex-shrink-0 ${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'} ${sizeClasses.icon}`} />
           )}
         </>
       )}
       
       {/* 标签名称 */}
-      <span className="truncate">{tag.name}</span>
+      <span className="truncate leading-none flex items-center">{tag.name}</span>
       
       {/* 系统标签标识 */}
       {tag.isSystem && size !== "sm" && (

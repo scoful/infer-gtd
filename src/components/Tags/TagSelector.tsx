@@ -409,6 +409,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                     key={tag.id}
                     onClick={() => handleTagSelect(tag)}
                     className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer"
+                    style={{ alignItems: 'center' }}
                   >
                     <TagDisplay
                       tag={tag}
