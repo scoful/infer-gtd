@@ -43,6 +43,7 @@ const TagManagementPage: NextPage = () => {
   const [editingTag, setEditingTag] = useState<TagData | null>(null);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"list" | "grid" | "grouped">("list");
+  const [showFilters, setShowFilters] = useState(false);
   
   // 筛选和排序状态
   const [filters, setFilters] = useState<FilterState>({
@@ -244,11 +245,17 @@ const TagManagementPage: NextPage = () => {
         <div className="space-y-6">
           {/* 页面标题和统计 */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">标签管理</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                管理和组织您的标签，提高任务分类效率
-              </p>
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">标签管理</h1>
+
+              </div>
+              {isFetching && !isLoading && (
+                <div className="flex items-center text-sm text-blue-600">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  刷新中...
+                </div>
+              )}
             </div>
 
             {/* 统计信息 */}
@@ -316,21 +323,37 @@ const TagManagementPage: NextPage = () => {
               </div>
             </div>
 
-            {/* 搜索框 */}
-            <div className="relative max-w-md">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索标签..."
-                value={filters.search}
-                onChange={(e) => handleFilterUpdate({ search: e.target.value })}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div className="flex items-center gap-2">
+              {/* 筛选按钮 */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
+                  showFilters
+                    ? "border-blue-300 bg-blue-50 text-blue-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <FunnelIcon className="h-4 w-4 mr-2" />
+                筛选
+              </button>
+
+              {/* 搜索框 */}
+              <div className="relative max-w-md">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="搜索标签..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterUpdate({ search: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
 
           {/* 筛选面板 */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          {showFilters && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* 类型筛选 */}
               <div>
@@ -412,18 +435,13 @@ const TagManagementPage: NextPage = () => {
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-500">
                 {sortedTags.length} 个标签
-                {(filters.search || filters.type !== "ALL" || !filters.includeSystem) && 
+                {(filters.search || filters.type !== "ALL" || !filters.includeSystem) &&
                   ` (已筛选)`
                 }
               </div>
-              {isFetching && !isLoading && (
-                <div className="flex items-center text-sm text-blue-600">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
-                  刷新中...
-                </div>
-              )}
             </div>
           </div>
+          )}
 
           {/* 批量操作栏 */}
           {selectedTags.size > 0 && (
