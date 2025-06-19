@@ -138,9 +138,12 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedType, setSelectedType] = useState<TagType | "ALL">("ALL");
-  
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const [isPositionCalculated, setIsPositionCalculated] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 获取标签列表
   const { data: tagsData, isLoading } = api.tag.getAll.useQuery(
@@ -159,6 +162,11 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       onTagsChange([...selectedTagIds, newTag.id]);
       setShowCreateForm(false);
       setSearchQuery("");
+      // 重新计算位置，因为创建表单消失了
+      if (isOpen) {
+        const position = calculateDropdownPosition();
+        setDropdownPosition(position);
+      }
     },
   });
 
@@ -210,18 +218,70 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     createTagMutation.mutate(tagData);
   };
 
+  // 计算下拉菜单最佳位置
+  const calculateDropdownPosition = () => {
+    if (!containerRef.current) return 'bottom';
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    // 基础高度：搜索区域(约100px) + 标签列表(200-250px) + 创建表单(如果显示)
+    const searchAreaHeight = 100;
+    const tagListHeight = showCreateForm ? 150 : 250;
+    const createFormHeight = showCreateForm ? 200 : 0;
+    const totalDropdownHeight = searchAreaHeight + tagListHeight + createFormHeight;
+
+    // 检查下方和上方的可用空间
+    const spaceBelow = viewportHeight - rect.bottom - 20; // 留20px边距
+    const spaceAbove = rect.top - 20; // 留20px边距
+
+    // 如果下方空间不足且上方空间更大，则向上显示
+    // 但要确保上方至少有200px的最小空间
+    if (spaceBelow < totalDropdownHeight && spaceAbove > Math.max(spaceBelow, 200)) {
+      return 'top';
+    } else {
+      return 'bottom';
+    }
+  };
+
+  // 关闭下拉菜单的函数
+  const closeDropdown = () => {
+    setIsOpen(false);
+    setShowCreateForm(false);
+    setIsPositionCalculated(false);
+  };
+
   // 点击外部关闭下拉框
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setShowCreateForm(false);
+        closeDropdown();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 打开下拉菜单的函数
+  const openDropdown = () => {
+    if (!containerRef.current) return;
+
+    // 先计算位置
+    const position = calculateDropdownPosition();
+    setDropdownPosition(position);
+    setIsPositionCalculated(true);
+
+    // 然后打开下拉菜单
+    setIsOpen(true);
+  };
+
+  // 当创建表单显示状态变化时重新计算位置
+  useEffect(() => {
+    if (isOpen) {
+      const position = calculateDropdownPosition();
+      setDropdownPosition(position);
+    }
+  }, [showCreateForm]);
 
   // 获取尺寸相关的样式
   const sizeClasses = {
@@ -243,7 +303,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
         `}
         onClick={() => {
           if (!disabled) {
-            setIsOpen(true);
+            openDropdown();
             inputRef.current?.focus();
           }
         }}
@@ -268,7 +328,11 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
             placeholder={selectedTags.length === 0 ? placeholder : ""}
             className="flex-1 min-w-[120px] outline-none bg-transparent"
             disabled={disabled}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              if (!isOpen) {
+                openDropdown();
+              }
+            }}
           />
           
           {/* 下拉箭头 */}
@@ -286,8 +350,19 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       )}
 
       {/* 下拉选项 */}
-      {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-hidden">
+      {isOpen && !disabled && isPositionCalculated && (
+        <div
+          ref={dropdownRef}
+          className={`
+            absolute z-[60] w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden
+            ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}
+          `}
+          style={{
+            maxHeight: dropdownPosition === 'top'
+              ? `${Math.min(400, Math.max(250, (containerRef.current?.getBoundingClientRect().top || 0) - 40))}px`
+              : `${Math.min(400, Math.max(200, window.innerHeight - (containerRef.current?.getBoundingClientRect().bottom || 0) - 80))}px`
+          }}
+        >
           {/* 搜索和筛选 */}
           <div className="p-3 border-b border-gray-200">
             <div className="relative mb-2">
@@ -316,7 +391,13 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           </div>
 
           {/* 标签列表 */}
-          <div className="max-h-48 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" style={{
+            maxHeight: showCreateForm
+              ? '120px'
+              : (dropdownPosition === 'top'
+                ? `${Math.max(150, (containerRef.current?.getBoundingClientRect().top || 0) - 180)}px`
+                : '250px')
+          }}>
             {isLoading ? (
               <div className="p-4">
                 <SectionLoading />

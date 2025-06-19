@@ -154,9 +154,9 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
       {showIcon && (
         <>
           {tag.icon ? (
-            <span className={`mr-1 ${sizeClasses.icon}`}>{tag.icon}</span>
+            <span className={`${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'} ${sizeClasses.icon}`}>{tag.icon}</span>
           ) : (
-            <TagIcon className={`mr-1 ${sizeClasses.icon}`} />
+            <TagIcon className={`${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'} ${sizeClasses.icon}`} />
           )}
         </>
       )}
