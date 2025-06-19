@@ -375,7 +375,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           `}
           style={{
             maxHeight: (() => {
-              if (!containerRef.current) return '350px';
+              if (!containerRef.current) return '400px';
 
               const rect = containerRef.current.getBoundingClientRect();
               const viewportHeight = window.innerHeight;
@@ -383,11 +383,15 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               if (dropdownPosition === 'top') {
                 // 向上弹出时，使用可用的上方空间
                 const availableSpace = rect.top - 20; // 留20px边距
-                return `${Math.min(350, Math.max(200, availableSpace))}px`;
+                // 如果显示创建表单，需要更多空间
+                const minHeight = showCreateForm ? 300 : 200;
+                return `${Math.min(400, Math.max(minHeight, availableSpace))}px`;
               } else {
                 // 向下弹出时，使用可用的下方空间
                 const availableSpace = viewportHeight - rect.bottom - 20; // 留20px边距
-                return `${Math.min(350, Math.max(150, availableSpace))}px`;
+                // 如果显示创建表单，需要更多空间
+                const minHeight = showCreateForm ? 250 : 150;
+                return `${Math.min(400, Math.max(minHeight, availableSpace))}px`;
               }
             })()
           }}
@@ -421,7 +425,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
           {/* 标签列表 */}
           <div className="flex-1 overflow-y-auto" style={{
-            maxHeight: showCreateForm ? '100px' : '200px'
+            maxHeight: showCreateForm ? '80px' : '200px'
           }}>
             {isLoading ? (
               <div className="p-4">
@@ -505,11 +509,13 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
           {/* 创建标签表单 */}
           {showCreateForm && (
-            <TagCreateForm
-              onSubmit={handleCreateTag}
-              onCancel={() => setShowCreateForm(false)}
-              isLoading={createTagMutation.isPending}
-            />
+            <div className="border-t border-gray-200 max-h-40 overflow-y-auto">
+              <TagCreateForm
+                onSubmit={handleCreateTag}
+                onCancel={() => setShowCreateForm(false)}
+                isLoading={createTagMutation.isPending}
+              />
+            </div>
           )}
         </div>
       )}
