@@ -24,6 +24,7 @@ interface TagSelectorProps {
   disabled?: boolean;
   error?: string;
   gridLayout?: boolean; // 是否使用网格布局
+  closeOnSelect?: boolean; // 选择标签后是否关闭下拉菜单
 }
 
 // 标签创建表单的属性
@@ -135,6 +136,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   disabled = false,
   error,
   gridLayout = true, // 默认启用网格布局
+  closeOnSelect = false, // 默认不自动关闭
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -207,6 +209,12 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
         return; // 达到最大数量限制
       }
       onTagsChange([...selectedTagIds, tag.id]);
+      // 选择标签后清空搜索文字
+      setSearchQuery("");
+      // 如果设置了自动关闭，则关闭下拉菜单
+      if (closeOnSelect) {
+        closeDropdown();
+      }
     }
   };
 
