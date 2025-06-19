@@ -23,6 +23,7 @@ interface TagSelectorProps {
   className?: string;
   disabled?: boolean;
   error?: string;
+  gridLayout?: boolean; // 是否使用网格布局
 }
 
 // 标签创建表单的属性
@@ -133,6 +134,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   className = "",
   disabled = false,
   error,
+  gridLayout = true, // 默认启用网格布局
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -403,24 +405,60 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 <SectionLoading />
               </div>
             ) : unselectedTags.length > 0 ? (
-              <div className="p-2">
-                {unselectedTags.map((tag) => (
+              <div className="p-3">
+                {gridLayout ? (
+                  // 网格布局
                   <div
-                    key={tag.id}
-                    onClick={() => handleTagSelect(tag)}
-                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer"
-                    style={{ alignItems: 'center' }}
+                    className="grid gap-2"
+                    style={{
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(min(120px, 100%), 1fr))'
+                    }}
                   >
-                    <TagDisplay
-                      tag={tag}
-                      size="sm"
-                      clickable={false}
-                    />
-                    {maxTags && selectedTagIds.length >= maxTags && (
-                      <span className="text-xs text-gray-400">已达上限</span>
-                    )}
+                    {unselectedTags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        onClick={() => handleTagSelect(tag)}
+                        className={`
+                          flex items-center justify-center p-2 rounded-lg cursor-pointer transition-all duration-200
+                          hover:bg-gray-50 hover:shadow-sm border border-gray-100 hover:border-gray-300
+                          active:scale-95 active:bg-gray-100
+                          ${maxTags && selectedTagIds.length >= maxTags ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:shadow-none' : ''}
+                        `}
+                        style={{ alignItems: 'center', minHeight: '36px' }}
+                        title={maxTags && selectedTagIds.length >= maxTags ? '已达到最大标签数量限制' : `点击选择 ${tag.name}`}
+                      >
+                        <TagDisplay
+                          tag={tag}
+                          size="sm"
+                          clickable={false}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  // 列表布局（原始布局）
+                  <div className="space-y-1">
+                    {unselectedTags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        onClick={() => handleTagSelect(tag)}
+                        className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer transition-colors"
+                        style={{ alignItems: 'center' }}
+                      >
+                        <TagDisplay
+                          tag={tag}
+                          size="sm"
+                          clickable={false}
+                          className="flex-1 min-w-0"
+                        />
+                        {maxTags && selectedTagIds.length >= maxTags && (
+                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">已达上限</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-4 text-center text-gray-500 text-sm">
