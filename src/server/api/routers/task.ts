@@ -131,7 +131,7 @@ export const taskRouter = createTRPCRouter({
     .input(getTasksSchema)
     .query(async ({ ctx, input }) => {
       const {
-        limit, cursor, search,
+        limit, cursor, search, tagIds,
         createdAfter, createdBefore, updatedAfter, updatedBefore,
         completedAfter, completedBefore, dueAfter, dueBefore,
         ...filters
@@ -146,6 +146,16 @@ export const taskRouter = createTRPCRouter({
               { title: { contains: search, mode: "insensitive" as const } },
               { description: { contains: search, mode: "insensitive" as const } },
             ],
+          }),
+          // 标签筛选 - 使用包含关系（任务必须包含所有选中的标签）
+          ...(tagIds && tagIds.length > 0 && {
+            AND: tagIds.map(tagId => ({
+              tags: {
+                some: {
+                  tagId: tagId,
+                },
+              },
+            })),
           }),
           // 日期筛选
           ...(createdAfter && { createdAt: { gte: createdAfter } }),

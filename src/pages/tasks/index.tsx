@@ -33,6 +33,7 @@ type SortDirection = "asc" | "desc";
 interface FilterState {
   status: TaskStatus[];
   priority: Priority[];
+  tagIds: string[];
   search: string;
 }
 
@@ -82,6 +83,7 @@ const TaskListPage: NextPage = () => {
   const [filters, setFilters] = useState<FilterState>({
     status: [],
     priority: [],
+    tagIds: [],
     search: "",
   });
 
@@ -103,6 +105,10 @@ const TaskListPage: NextPage = () => {
       params.priority = filters.priority[0];
     }
 
+    if (filters.tagIds.length > 0) {
+      params.tagIds = filters.tagIds;
+    }
+
     return params;
   }, [filters]);
 
@@ -114,6 +120,15 @@ const TaskListPage: NextPage = () => {
       staleTime: 30 * 1000, // 30秒缓存
       refetchOnWindowFocus: true,
       refetchOnMount: true,
+    }
+  );
+
+  // 获取标签数据用于筛选
+  const { data: tagsData } = api.tag.getAll.useQuery(
+    { limit: 100 },
+    {
+      enabled: !!sessionData,
+      staleTime: 5 * 60 * 1000, // 5分钟缓存
     }
   );
 
@@ -222,6 +237,7 @@ const TaskListPage: NextPage = () => {
     setFilters({
       status: [],
       priority: [],
+      tagIds: [],
       search: "",
     });
   }, []);
@@ -234,15 +250,24 @@ const TaskListPage: NextPage = () => {
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks];
 
-    // 客户端筛选（当有多个状态或优先级筛选时）
+    // 客户端筛选（当有多个状态、优先级或标签筛选时）
     if (filters.status.length > 1) {
       result = result.filter(task => filters.status.includes(task.status));
     }
 
     if (filters.priority.length > 1) {
-      result = result.filter(task => 
+      result = result.filter(task =>
         task.priority && filters.priority.includes(task.priority)
       );
+    }
+
+    // 标签筛选（客户端处理多标签筛选）- 使用包含关系
+    if (filters.tagIds.length > 0) {
+      result = result.filter(task => {
+        const taskTagIds = task.tags.map(tagRelation => tagRelation.tag.id);
+        // 任务必须包含所有选中的标签
+        return filters.tagIds.every(tagId => taskTagIds.includes(tagId));
+      });
     }
 
     // 客户端排序
@@ -409,7 +434,7 @@ const TaskListPage: NextPage = () => {
           {/* 筛选面板 */}
           {showFilters && (
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* 搜索框 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -488,6 +513,42 @@ const TaskListPage: NextPage = () => {
                   </div>
                 </div>
 
+                {/* 标签筛选 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    标签
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">选择多个标签时，显示包含所有标签的任务</p>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {tagsData?.tags && tagsData.tags.length > 0 ? (
+                      tagsData.tags.map((tag) => (
+                        <label key={tag.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={filters.tagIds.includes(tag.id)}
+                            onChange={(e) => {
+                              const newTagIds = e.target.checked
+                                ? [...filters.tagIds, tag.id]
+                                : filters.tagIds.filter(id => id !== tag.id);
+                              handleFilterUpdate({ tagIds: newTagIds });
+                            }}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span
+                            className="ml-2 text-sm text-gray-700 flex items-center"
+                            style={{ color: tag.color || '#374151' }}
+                          >
+                            {tag.icon && <span className="mr-1">{tag.icon}</span>}
+                            {tag.name}
+                          </span>
+                        </label>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">暂无标签</div>
+                    )}
+                  </div>
+                </div>
+
                 {/* 排序 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -521,7 +582,7 @@ const TaskListPage: NextPage = () => {
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-500">
                   {filteredAndSortedTasks.length} 个任务
-                  {(filters.status.length > 0 || filters.priority.length > 0 || filters.search) && 
+                  {(filters.status.length > 0 || filters.priority.length > 0 || filters.tagIds.length > 0 || filters.search) &&
                     ` (已筛选)`
                   }
                 </div>
@@ -653,7 +714,7 @@ const TaskListPage: NextPage = () => {
                 </div>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">暂无任务</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {filters.search || filters.status.length > 0 || filters.priority.length > 0
+                  {filters.search || filters.status.length > 0 || filters.priority.length > 0 || filters.tagIds.length > 0
                     ? "没有找到符合条件的任务"
                     : "开始创建您的第一个任务吧"
                   }
