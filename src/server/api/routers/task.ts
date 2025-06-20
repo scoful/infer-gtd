@@ -61,17 +61,18 @@ export const taskRouter = createTRPCRouter({
           }
         }
 
-        // 获取当前状态下的最大 sortOrder 值
-        const maxSortOrder = await ctx.db.task.findFirst({
+        // 获取当前状态下的最小 sortOrder 值，新任务排在第一位
+        const minSortOrder = await ctx.db.task.findFirst({
           where: {
             createdById: ctx.session.user.id,
             status: taskData.status || TaskStatus.IDEA,
           },
           select: { sortOrder: true },
-          orderBy: { sortOrder: "desc" },
+          orderBy: { sortOrder: "asc" },
         });
 
-        const nextSortOrder = (maxSortOrder?.sortOrder ?? -1) + 1;
+        // 新任务的sortOrder比最小值小1，确保排在第一位
+        const nextSortOrder = (minSortOrder?.sortOrder ?? 1) - 1;
 
         // 创建任务
         const task = await ctx.db.task.create({
@@ -1009,6 +1010,18 @@ export const taskRouter = createTRPCRouter({
             break;
         }
 
+        // 获取TODO状态下的最小sortOrder值，新循环任务排在第一位
+        const minSortOrder = await ctx.db.task.findFirst({
+          where: {
+            createdById: ctx.session.user.id,
+            status: TaskStatus.TODO,
+          },
+          select: { sortOrder: true },
+          orderBy: { sortOrder: "asc" },
+        });
+
+        const nextSortOrder = (minSortOrder?.sortOrder ?? 1) - 1;
+
         // 创建新的任务实例
         const newTask = await ctx.db.task.create({
           data: {
@@ -1017,6 +1030,7 @@ export const taskRouter = createTRPCRouter({
             type: originalTask.type,
             priority: originalTask.priority,
             status: TaskStatus.TODO,
+            sortOrder: nextSortOrder, // 新循环任务排在第一位
             dueDate: nextDueDate,
             dueTime: pattern.time || originalTask.dueTime,
             isRecurring: true,
@@ -1362,17 +1376,17 @@ export const taskRouter = createTRPCRouter({
 
           await Promise.all(updatePromises);
         } else {
-          // 没有指定位置，放到末尾
-          const maxSortOrder = await ctx.db.task.findFirst({
+          // 没有指定位置，放到第一位（与新任务创建逻辑保持一致）
+          const minSortOrder = await ctx.db.task.findFirst({
             where: {
               createdById: ctx.session.user.id,
               status: newStatus,
             },
             select: { sortOrder: true },
-            orderBy: { sortOrder: "desc" },
+            orderBy: { sortOrder: "asc" },
           });
 
-          updateData.sortOrder = (maxSortOrder?.sortOrder ?? -1) + 1;
+          updateData.sortOrder = (minSortOrder?.sortOrder ?? 1) - 1;
 
           await ctx.db.task.update({
             where: { id },
