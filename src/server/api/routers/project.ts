@@ -477,6 +477,7 @@ export const projectRouter = createTRPCRouter({
               include: {
                 tag: true,
               },
+              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
             },
             timeEntries: {
               where: { endTime: null },

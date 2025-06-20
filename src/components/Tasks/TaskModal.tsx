@@ -96,6 +96,9 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
     if (isOpen) {
       if (isEditing && taskDetail) {
         // 编辑模式：使用任务详情填充表单
+        // 按照sortOrder排序标签
+        const sortedTags = [...taskDetail.tags].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
         setFormData({
           title: taskDetail.title,
           description: taskDetail.description || "",
@@ -105,7 +108,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
           dueDate: taskDetail.dueDate ? taskDetail.dueDate.toISOString().split('T')[0] : undefined,
           dueTime: taskDetail.dueTime || undefined,
           projectId: taskDetail.projectId || undefined,
-          tagIds: taskDetail.tags.map(t => t.tag.id),
+          tagIds: sortedTags.map(t => t.tag.id),
         });
       } else if (!isEditing) {
         // 创建模式：重置表单为默认值

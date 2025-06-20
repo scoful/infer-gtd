@@ -80,8 +80,9 @@ export const taskRouter = createTRPCRouter({
             sortOrder: nextSortOrder,
             createdById: ctx.session.user.id,
             tags: tagIds ? {
-              create: tagIds.map(tagId => ({
+              create: tagIds.map((tagId, index) => ({
                 tag: { connect: { id: tagId } },
+                sortOrder: index, // 按照数组顺序设置sortOrder
               })),
             } : undefined,
           },
@@ -91,6 +92,7 @@ export const taskRouter = createTRPCRouter({
               include: {
                 tag: true,
               },
+              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
             },
             statusHistory: {
               orderBy: { changedAt: "desc" },
@@ -172,6 +174,7 @@ export const taskRouter = createTRPCRouter({
               include: {
                 tag: true,
               },
+              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
             },
             timeEntries: {
               where: { endTime: null },
@@ -218,6 +221,7 @@ export const taskRouter = createTRPCRouter({
               include: {
                 tag: true,
               },
+              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
             },
             timeEntries: {
               orderBy: { startTime: "desc" },
@@ -341,8 +345,9 @@ export const taskRouter = createTRPCRouter({
             ...(tagIds !== undefined && {
               tags: {
                 deleteMany: {},
-                create: tagIds.map(tagId => ({
+                create: tagIds.map((tagId, index) => ({
                   tag: { connect: { id: tagId } },
+                  sortOrder: index, // 按照数组顺序设置sortOrder
                 })),
               },
             }),
@@ -353,6 +358,7 @@ export const taskRouter = createTRPCRouter({
               include: {
                 tag: true,
               },
+              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
             },
           },
         });
@@ -1021,6 +1027,7 @@ export const taskRouter = createTRPCRouter({
             tags: {
               create: originalTask.tags.map(taskTag => ({
                 tag: { connect: { id: taskTag.tag.id } },
+                sortOrder: taskTag.sortOrder || 0, // 保持原有的sortOrder
               })),
             },
           },
@@ -1030,6 +1037,7 @@ export const taskRouter = createTRPCRouter({
               include: {
                 tag: true,
               },
+              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
             },
           },
         });

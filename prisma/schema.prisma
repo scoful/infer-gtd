@@ -257,16 +257,18 @@ model Tag {
 
 // Many-to-many relationship tables
 model TaskTag {
-    id     String @id @default(cuid())
-    taskId String
-    tagId  String
+    id        String @id @default(cuid())
+    taskId    String
+    tagId     String
+    sortOrder Int    @default(0) // 标签在任务中的排序位置
 
-    task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
-    tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+    task      Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+    tag       Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
     @@unique([taskId, tagId])
     @@index([taskId])
     @@index([tagId])
+    @@index([taskId, sortOrder]) // 添加复合索引以优化排序查询
 }
 
 model NoteTag {
