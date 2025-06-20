@@ -2,7 +2,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   PlusIcon,
   ClockIcon,
@@ -16,9 +16,20 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import TaskModal from "@/components/Tasks/TaskModal";
+
+interface QuickAction {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+  color: string;
+  onClick?: () => void;
+}
 
 const Home: NextPage = () => {
   const { data: sessionData } = useSession();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   // 获取仪表盘数据 - 使用 useMemo 避免重复计算日期
   const thirtyDaysAgo = useMemo(() => {
@@ -76,10 +87,11 @@ const Home: NextPage = () => {
   const quickActions = [
     {
       name: "新建任务",
-      href: "/tasks/new",
+      href: "#",
       icon: PlusIcon,
       description: "快速创建新任务",
       color: "bg-blue-500 hover:bg-blue-600",
+      onClick: () => setIsTaskModalOpen(true),
     },
     {
       name: "开始计时",
@@ -252,6 +264,31 @@ const Home: NextPage = () => {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
+
+                // 如果有onClick事件，渲染为按钮
+                if (action.onClick) {
+                  return (
+                    <button
+                      key={action.name}
+                      onClick={action.onClick}
+                      className={`relative group ${action.color} rounded-lg p-6 text-white transition-colors text-left w-full`}
+                    >
+                      <div>
+                        <span className="rounded-lg inline-flex p-3 bg-white bg-opacity-20">
+                          <Icon className="h-6 w-6 text-gray-700" />
+                        </span>
+                      </div>
+                      <div className="mt-4">
+                        <h3 className="text-lg font-medium">{action.name}</h3>
+                        <p className="mt-2 text-sm text-white text-opacity-90">
+                          {action.description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                }
+
+                // 否则渲染为链接
                 return (
                   <Link
                     key={action.name}
@@ -403,6 +440,17 @@ const Home: NextPage = () => {
             </div>
           </div>
         </div>
+
+        {/* 任务模态框 */}
+        <TaskModal
+          isOpen={isTaskModalOpen}
+          onClose={() => setIsTaskModalOpen(false)}
+          onSuccess={() => {
+            // 刷新相关数据
+            void refetchStats();
+            void refetchTasks();
+          }}
+        />
       </MainLayout>
     </AuthGuard>
   );
