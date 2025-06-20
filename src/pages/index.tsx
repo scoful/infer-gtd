@@ -27,7 +27,7 @@ const Home: NextPage = () => {
     return date;
   }, []);
 
-  const { data: taskStats, isLoading: isLoadingStats, error: statsError, refetch: refetchStats } = api.task.getStats.useQuery(
+  const { data: taskStats, isLoading: isLoadingStats, error: statsError, refetch: refetchStats, isFetching: isFetchingStats } = api.task.getStats.useQuery(
     { startDate: thirtyDaysAgo },
     {
       enabled: !!sessionData,
@@ -144,7 +144,15 @@ const Home: NextPage = () => {
 
           {/* 统计概览 */}
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">本月统计</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-lg font-medium text-gray-900">本月统计</h2>
+              {isFetchingStats && !isLoadingStats && (
+                <div className="flex items-center text-sm text-blue-600">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  刷新中...
+                </div>
+              )}
+            </div>
             <QueryLoading
               isLoading={isLoadingStats}
               error={statsError}

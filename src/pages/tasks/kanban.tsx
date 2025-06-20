@@ -38,7 +38,7 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
-import { PageLoading, NotificationContainer, ResponsiveText } from "@/components/UI";
+import { PageLoading, NotificationContainer } from "@/components/UI";
 import { useNotifications } from "@/hooks";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { TagList, type TagData } from "@/components/Tags";
@@ -973,28 +973,22 @@ function TaskCard({
       )}
       {/* 任务标题 */}
       <div className="mb-2">
-        <ResponsiveText
-          text={task.title}
-          as="h4"
-          className="text-sm font-medium text-gray-900"
-          minLines={2}
-          maxLines={4}
-          showTooltip={true}
-        />
+        <h4
+          className="text-sm font-medium text-gray-900 line-clamp-3"
+          title={task.title}
+        >
+          {task.title}
+        </h4>
       </div>
 
       {/* 任务描述 */}
       {task.description && (
-        <div className="mb-3">
-          <ResponsiveText
-            text={task.description}
-            as="p"
-            className="text-xs text-gray-600"
-            minLines={1}
-            maxLines={3}
-            showTooltip={true}
-          />
-        </div>
+        <p
+          className="text-xs text-gray-600 mb-3 line-clamp-4"
+          title={task.description}
+        >
+          {task.description}
+        </p>
       )}
 
       {/* 标签和项目 */}
