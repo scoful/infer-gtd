@@ -142,35 +142,6 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {/* 快速操作 */}
-          <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">快速操作</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {quickActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <Link
-                    key={action.name}
-                    href={action.href}
-                    className={`relative group ${action.color} rounded-lg p-6 text-white transition-colors`}
-                  >
-                    <div>
-                      <span className="rounded-lg inline-flex p-3 bg-white bg-opacity-20">
-                        <Icon className="h-6 w-6" />
-                      </span>
-                    </div>
-                    <div className="mt-4">
-                      <h3 className="text-lg font-medium">{action.name}</h3>
-                      <p className="mt-2 text-sm text-white text-opacity-90">
-                        {action.description}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
           {/* 统计概览 */}
           <div>
             <h2 className="text-lg font-medium text-gray-900 mb-4">本月统计</h2>
@@ -266,6 +237,37 @@ const Home: NextPage = () => {
               )}
             </QueryLoading>
           </div>
+
+          {/* 快速操作 */}
+          <div>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">快速操作</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.name}
+                    href={action.href}
+                    className={`relative group ${action.color} rounded-lg p-6 text-white transition-colors`}
+                  >
+                    <div>
+                      <span className="rounded-lg inline-flex p-3 bg-white bg-opacity-20">
+                        <Icon className="h-6 w-6" />
+                      </span>
+                    </div>
+                    <div className="mt-4">
+                      <h3 className="text-lg font-medium">{action.name}</h3>
+                      <p className="mt-2 text-sm text-white text-opacity-90">
+                        {action.description}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+
 
           {/* 最近活动 */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
