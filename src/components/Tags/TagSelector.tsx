@@ -32,6 +32,7 @@ interface TagCreateFormProps {
   onSubmit: (tagData: { name: string; type: TagType; color?: string }) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  initialName?: string;
 }
 
 // 简单的标签创建表单
@@ -39,20 +40,32 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  initialName = "",
 }) => {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [type, setType] = useState<TagType>(TagType.CUSTOM);
   const [color, setColor] = useState("#6B7280");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // 当initialName改变时更新name状态
+  useEffect(() => {
+    setName(initialName);
+  }, [initialName]);
+
+  const handleSubmit = () => {
     if (name.trim()) {
       onSubmit({ name: name.trim(), type, color });
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
+    <div className="p-4 border-t border-gray-200">
       <div className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -62,6 +75,7 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="输入标签名称"
             className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             autoFocus
@@ -111,7 +125,8 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
             取消
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSubmit}
             disabled={!name.trim() || isLoading}
             className="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -119,7 +134,7 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
           </button>
         </div>
       </div>
-    </form>
+    </div>
   );
 };
 
@@ -514,6 +529,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 onSubmit={handleCreateTag}
                 onCancel={() => setShowCreateForm(false)}
                 isLoading={createTagMutation.isPending}
+                initialName={searchQuery.trim()}
               />
             </div>
           )}
