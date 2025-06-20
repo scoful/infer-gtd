@@ -203,9 +203,12 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     return tags;
   }, [tagsData?.tags, filterTypes]);
 
-  // 获取已选中的标签
+  // 获取已选中的标签（按选择顺序排列）
   const selectedTags = useMemo(() => {
-    return availableTags.filter(tag => selectedTagIds.includes(tag.id));
+    // 按照 selectedTagIds 的顺序来排列标签，保持用户选择的顺序
+    return selectedTagIds
+      .map(id => availableTags.find(tag => tag.id === id))
+      .filter(Boolean) as TagData[];
   }, [availableTags, selectedTagIds]);
 
   // 获取未选中的标签（用于下拉列表）
