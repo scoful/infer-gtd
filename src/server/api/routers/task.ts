@@ -1420,4 +1420,121 @@ export const taskRouter = createTRPCRouter({
         });
       }
     }),
+
+  // 批量更新任务
+  batchUpdate: protectedProcedure
+    .input(batchUpdateTasksSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { taskIds, updates } = input;
+
+      try {
+        // 验证所有任务的所有权
+        const tasks = await ctx.db.task.findMany({
+          where: {
+            id: { in: taskIds },
+            createdById: ctx.session.user.id,
+          },
+          select: { id: true, title: true, status: true },
+        });
+
+        if (tasks.length !== taskIds.length) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "部分任务不存在或无权限修改",
+          });
+        }
+
+        // 准备更新数据
+        const updateData: any = {};
+
+        if (updates.status !== undefined) {
+          updateData.status = updates.status;
+
+          // 如果状态变为已完成，记录完成时间
+          if (updates.status === TaskStatus.DONE) {
+            updateData.completedAt = new Date();
+            updateData.completedCount = { increment: 1 };
+            updateData.isTimerActive = false;
+            updateData.timerStartedAt = null;
+          }
+
+          // 如果从已完成状态变为其他状态，清除完成时间
+          if (updates.status !== TaskStatus.DONE) {
+            updateData.completedAt = null;
+          }
+        }
+
+        if (updates.priority !== undefined) {
+          updateData.priority = updates.priority;
+        }
+
+        if (updates.projectId !== undefined) {
+          updateData.projectId = updates.projectId;
+        }
+
+        // 批量更新任务
+        const updatedTasks = await ctx.db.task.updateMany({
+          where: {
+            id: { in: taskIds },
+            createdById: ctx.session.user.id,
+          },
+          data: updateData,
+        });
+
+        // 如果状态发生了变化，为每个任务创建状态历史记录
+        if (updates.status !== undefined) {
+          const statusHistoryData = tasks.map(task => ({
+            fromStatus: task.status,
+            toStatus: updates.status!,
+            taskId: task.id,
+            changedById: ctx.session.user.id,
+            note: "批量状态更新",
+          }));
+
+          await ctx.db.taskStatusHistory.createMany({
+            data: statusHistoryData,
+          });
+        }
+
+        // 处理标签更新（如果需要）
+        if (updates.tagIds !== undefined) {
+          // 先删除所有选中任务的现有标签关联
+          await ctx.db.taskTag.deleteMany({
+            where: {
+              taskId: { in: taskIds },
+            },
+          });
+
+          // 为每个任务创建新的标签关联
+          if (updates.tagIds.length > 0) {
+            const tagRelations = taskIds.flatMap(taskId =>
+              updates.tagIds!.map((tagId, index) => ({
+                taskId,
+                tagId,
+                sortOrder: index,
+              }))
+            );
+
+            await ctx.db.taskTag.createMany({
+              data: tagRelations,
+            });
+          }
+        }
+
+        return {
+          success: true,
+          message: `成功更新 ${updatedTasks.count} 个任务`,
+          updatedCount: updatedTasks.count,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "批量更新任务失败",
+          cause: error,
+        });
+      }
+    }),
 });

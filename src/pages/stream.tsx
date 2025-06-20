@@ -19,6 +19,7 @@ const StreamPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const [newIdea, setNewIdea] = useState("");
   const [isClient, setIsClient] = useState(false);
+  const [convertingTaskId, setConvertingTaskId] = useState<string | null>(null);
 
 
 
@@ -73,10 +74,15 @@ const StreamPage: NextPage = () => {
   const convertToTask = api.task.updateStatus.useMutation({
     onSuccess: () => {
       void refetch();
+      setConvertingTaskId(null); // 清除loading状态
+    },
+    onError: () => {
+      setConvertingTaskId(null); // 清除loading状态
     },
   });
 
   const handleConvertToTask = async (ideaId: string) => {
+    setConvertingTaskId(ideaId); // 设置当前转换的任务ID
     try {
       await convertToTask.mutateAsync({
         id: ideaId,
@@ -85,6 +91,7 @@ const StreamPage: NextPage = () => {
       });
     } catch (error) {
       console.error("转换任务失败:", error);
+      setConvertingTaskId(null); // 出错时也要清除loading状态
     }
   };
 
@@ -313,10 +320,10 @@ const StreamPage: NextPage = () => {
                           <button
                             type="button"
                             onClick={() => handleConvertToTask(idea.id)}
-                            disabled={convertToTask.isPending}
+                            disabled={convertingTaskId === idea.id}
                             className="inline-flex items-center rounded-md bg-green-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:opacity-50"
                           >
-                            转为任务
+                            {convertingTaskId === idea.id ? "转换中..." : "转为任务"}
                           </button>
                         </div>
                       </div>

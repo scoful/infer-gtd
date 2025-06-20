@@ -129,13 +129,13 @@ const TaskListPage: NextPage = () => {
     },
   });
 
-  // 注释掉暂时不可用的批量更新功能
-  // const batchUpdateTasks = api.task.batchUpdate.useMutation({
-  //   onSuccess: () => {
-  //     void refetch();
-  //     setSelectedTasks(new Set());
-  //   },
-  // });
+  // 批量更新任务
+  const batchUpdateTasks = api.task.batchUpdate.useMutation({
+    onSuccess: () => {
+      void refetch();
+      setSelectedTasks(new Set());
+    },
+  });
 
   // 格式化时间显示
   const formatTimeSpent = useCallback((seconds: number): string => {
@@ -180,19 +180,19 @@ const TaskListPage: NextPage = () => {
     }
   }, [tasksData?.tasks, selectedTasks]);
 
-  // 处理批量状态更新 - 暂时禁用
+  // 处理批量状态更新
   const handleBatchStatusUpdate = useCallback(async (status: TaskStatus) => {
     if (selectedTasks.size === 0) return;
-    console.log("批量更新功能暂未实现", status);
-    // try {
-    //   await batchUpdateTasks.mutateAsync({
-    //     taskIds: Array.from(selectedTasks),
-    //     updates: { status },
-    //   });
-    // } catch (error) {
-    //   console.error("批量更新失败:", error);
-    // }
-  }, [selectedTasks]);
+
+    try {
+      await batchUpdateTasks.mutateAsync({
+        taskIds: Array.from(selectedTasks),
+        updates: { status },
+      });
+    } catch (error) {
+      console.error("批量更新失败:", error);
+    }
+  }, [selectedTasks, batchUpdateTasks]);
 
   // 处理任务编辑
   const handleEditTask = useCallback((taskId: string) => {
