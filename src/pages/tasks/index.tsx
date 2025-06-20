@@ -796,7 +796,8 @@ function TaskListCard({
                 size="sm"
                 variant="default"
                 showIcon={true}
-                maxDisplay={viewMode === "compact" ? 2 : 3}
+                maxDisplay={viewMode === "compact" ? 3 : 5} // 默认显示数量
+                expandable={true} // 启用点击展开
                 className="flex-wrap"
               />
             )}

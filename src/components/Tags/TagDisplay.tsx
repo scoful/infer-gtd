@@ -39,6 +39,7 @@ interface TagListProps {
   maxDisplay?: number;
   clickable?: boolean;
   onTagClick?: (tag: TagData) => void;
+  expandable?: boolean; // 是否支持点击"+N"展开
 }
 
 // 获取标签类型的默认颜色
@@ -215,13 +216,25 @@ export const TagList: React.FC<TagListProps> = ({
   maxDisplay,
   clickable = false,
   onTagClick,
+  expandable = true,
 }) => {
-  const displayTags = maxDisplay ? tags.slice(0, maxDisplay) : tags;
-  const remainingCount = maxDisplay && tags.length > maxDisplay ? tags.length - maxDisplay : 0;
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  // 如果没有设置maxDisplay或者已经展开，显示所有标签
+  const shouldShowAll = !maxDisplay || isExpanded;
+  const displayTags = shouldShowAll ? tags : tags.slice(0, maxDisplay);
+  const remainingCount = maxDisplay && tags.length > maxDisplay && !isExpanded ? tags.length - maxDisplay : 0;
 
   if (tags.length === 0) {
     return null;
   }
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止事件冒泡
+    if (expandable) {
+      setIsExpanded(!isExpanded);
+    }
+  };
 
   return (
     <div className={`flex flex-wrap gap-1.5 ${className}`}>
@@ -238,18 +251,37 @@ export const TagList: React.FC<TagListProps> = ({
           onClick={onTagClick}
         />
       ))}
-      
-      {/* 显示剩余标签数量 */}
+
+      {/* 可点击的"+N"展开按钮 */}
       {remainingCount > 0 && (
-        <span
+        <button
+          type="button"
+          onClick={handleExpandClick}
           className={`
             inline-flex items-center rounded-full bg-gray-200 text-gray-600 font-medium
+            hover:bg-gray-300 transition-colors cursor-pointer
             ${getSizeClasses(size).container}
           `}
-          title={`还有 ${remainingCount} 个标签`}
+          title={expandable ? `点击查看全部 ${tags.length} 个标签` : `还有 ${remainingCount} 个标签`}
         >
           +{remainingCount}
-        </span>
+        </button>
+      )}
+
+      {/* 收起按钮 */}
+      {isExpanded && maxDisplay && tags.length > maxDisplay && (
+        <button
+          type="button"
+          onClick={handleExpandClick}
+          className={`
+            inline-flex items-center rounded-full bg-blue-100 text-blue-600 font-medium
+            hover:bg-blue-200 transition-colors cursor-pointer
+            ${getSizeClasses(size).container}
+          `}
+          title="收起标签"
+        >
+          收起
+        </button>
       )}
     </div>
   );

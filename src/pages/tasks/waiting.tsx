@@ -23,6 +23,7 @@ import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { TagList, type TagData } from "@/components/Tags";
 
 // 等待类型定义
 interface WaitingGroup {
@@ -572,23 +573,17 @@ function WaitingTaskCard({
                   </span>
                 )}
 
-                {task.tags.slice(0, 3).map((tagRelation) => (
-                  <span
-                    key={tagRelation.tag.id}
-                    className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-                    style={{
-                      backgroundColor: tagRelation.tag.color ? `${tagRelation.tag.color}20` : '#f3f4f6',
-                      color: tagRelation.tag.color || '#374151',
-                    }}
-                  >
-                    {tagRelation.tag.name}
-                  </span>
-                ))}
-
-                {task.tags.length > 3 && (
-                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                    +{task.tags.length - 3}
-                  </span>
+                {/* 标签显示 */}
+                {task.tags.length > 0 && (
+                  <TagList
+                    tags={task.tags.map(tagRelation => tagRelation.tag as TagData)}
+                    size="sm"
+                    variant="default"
+                    showIcon={true}
+                    maxDisplay={4} // 默认显示4个
+                    expandable={true} // 启用点击展开
+                    className="flex-wrap"
+                  />
                 )}
               </div>
 

@@ -18,3 +18,6 @@ export {
   type NotificationData,
   type NotificationType,
 } from "./Notification";
+
+// 响应式文字组件导出
+export { ResponsiveText } from "./ResponsiveText";
