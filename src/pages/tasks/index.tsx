@@ -26,7 +26,7 @@ import { TagList, type TagData } from "@/components/Tags";
 type ViewMode = "list" | "compact" | "detailed";
 
 // 排序字段类型
-type SortField = "dueDate" | "priority" | "createdAt" | "title" | "status";
+type SortField = "dueDate" | "priority" | "createdAt" | "title" | "status" | "sortOrder";
 type SortDirection = "asc" | "desc";
 
 // 筛选状态接口
@@ -71,7 +71,7 @@ const TaskListPage: NextPage = () => {
 
   // 状态管理
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [sortField, setSortField] = useState<SortField>("dueDate");
+  const [sortField, setSortField] = useState<SortField>("sortOrder");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -275,13 +275,53 @@ const TaskListPage: NextPage = () => {
           aValue = statusOrder[a.status];
           bValue = statusOrder[b.status];
           break;
+        case "sortOrder":
+          aValue = a.sortOrder ?? 0;
+          bValue = b.sortOrder ?? 0;
+          break;
         default:
           return 0;
       }
 
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+      // 主排序字段比较
+      let primaryResult = 0;
+      if (aValue < bValue) primaryResult = -1;
+      else if (aValue > bValue) primaryResult = 1;
+
+      // 应用排序方向到主排序字段
+      if (primaryResult !== 0) {
+        return sortDirection === "asc" ? primaryResult : -primaryResult;
+      }
+
+      // 多级排序 - 与看板页面API排序逻辑保持一致
+      // 次级排序：按状态升序
+      const statusOrder: Record<TaskStatus, number> = {
+        IDEA: 1, TODO: 2, IN_PROGRESS: 3, WAITING: 4, DONE: 5, ARCHIVED: 6
+      };
+      const statusResult = statusOrder[a.status] - statusOrder[b.status];
+      if (statusResult !== 0) return statusResult;
+
+      // 三级排序：按sortOrder升序（保持用户拖拽的顺序）
+      const sortOrderResult = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      if (sortOrderResult !== 0) return sortOrderResult;
+
+      // 四级排序：按优先级降序
+      const priorityOrder = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const aPriority = a.priority ? priorityOrder[a.priority] : 0;
+      const bPriority = b.priority ? priorityOrder[b.priority] : 0;
+      const priorityResult = bPriority - aPriority;
+      if (priorityResult !== 0) return priorityResult;
+
+      // 五级排序：按截止日期升序
+      const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      const dateResult = aDate - bDate;
+      if (dateResult !== 0) return dateResult;
+
+      // 最后排序：按创建时间降序
+      const aCreated = new Date(a.createdAt).getTime();
+      const bCreated = new Date(b.createdAt).getTime();
+      return bCreated - aCreated;
     });
 
     return result;
@@ -459,6 +499,7 @@ const TaskListPage: NextPage = () => {
                       onChange={(e) => setSortField(e.target.value as SortField)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     >
+                      <option value="sortOrder">自定义顺序</option>
                       <option value="dueDate">截止日期</option>
                       <option value="priority">优先级</option>
                       <option value="status">状态</option>
