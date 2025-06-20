@@ -260,7 +260,7 @@ const Home: NextPage = () => {
                   >
                     <div>
                       <span className="rounded-lg inline-flex p-3 bg-white bg-opacity-20">
-                        <Icon className="h-6 w-6" />
+                        <Icon className="h-6 w-6 text-gray-700" />
                       </span>
                     </div>
                     <div className="mt-4">
