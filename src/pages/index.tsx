@@ -328,7 +328,15 @@ const Home: NextPage = () => {
                 >
                   {recentTasks?.tasks && recentTasks.tasks.length > 0 ? (
                     <div className="space-y-3">
-                      {recentTasks.tasks.slice(0, 5).map((task) => (
+                      {recentTasks.tasks
+                        .sort((a, b) => {
+                          // 按更新时间降序排序（最近更新的在前）
+                          const aTime = new Date(a.updatedAt).getTime();
+                          const bTime = new Date(b.updatedAt).getTime();
+                          return bTime - aTime;
+                        })
+                        .slice(0, 5)
+                        .map((task) => (
                         <div key={task.id} className="flex items-center space-x-3">
                           <div className={`flex-shrink-0 w-2 h-2 rounded-full ${
                             task.status === 'DONE' ? 'bg-green-400' :
