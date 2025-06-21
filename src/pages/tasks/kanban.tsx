@@ -41,9 +41,10 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
-import { PageLoading } from "@/components/UI";
+import { PageLoading, ConfirmModal } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { useConfirm } from "@/hooks";
 import { TagList, type TagData } from "@/components/Tags";
 
 // 看板列配置
@@ -136,6 +137,9 @@ const KanbanPage: NextPage = () => {
     showSuccess,
     showError,
   } = useGlobalNotifications();
+
+  // 确认对话框
+  const { confirmState, showConfirm, hideConfirm } = useConfirm();
 
 
 
@@ -495,7 +499,18 @@ const KanbanPage: NextPage = () => {
 
   // 处理删除任务
   const handleDeleteTask = async (taskId: string) => {
-    if (confirm("确定要删除这个任务吗？此操作无法撤销。")) {
+    const task = tasksData?.tasks.find(t => t.id === taskId);
+    const taskTitle = task?.title || "此任务";
+
+    const confirmed = await showConfirm({
+      title: "确认删除任务",
+      message: `确定要删除任务"${taskTitle}"吗？\n\n此操作无法撤销，任务的所有相关数据（包括时间记录、状态历史等）都将被永久删除。`,
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (confirmed) {
       try {
         await deleteTask.mutateAsync({ id: taskId });
       } catch (error) {
@@ -823,6 +838,19 @@ const KanbanPage: NextPage = () => {
           onClose={handleTaskModalClose}
           taskId={editingTaskId || undefined}
           onSuccess={handleTaskModalSuccess}
+        />
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
         />
 
       </MainLayout>
