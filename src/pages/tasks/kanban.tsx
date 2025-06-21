@@ -491,10 +491,30 @@ const KanbanPage: NextPage = () => {
   };
 
   const formatTimeSpent = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    }
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  // 紧凑的时间格式化（用于空间受限的地方）
+  const formatTimeCompact = (seconds: number) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0) {
+      return `${days}d`;
+    }
+    if (hours > 0) {
+      return `${hours}h`;
     }
     return `${minutes}m`;
   };
@@ -1100,6 +1120,21 @@ function TaskCard({
     URGENT: "bg-red-100 text-red-800",
   };
 
+  // 紧凑的时间格式化（用于空间受限的地方）
+  const formatTimeCompact = (seconds: number) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0) {
+      return `${days}d`;
+    }
+    if (hours > 0) {
+      return `${hours}h`;
+    }
+    return `${minutes}m`;
+  };
+
   return (
     <div
       className={`group bg-white rounded-lg border p-4 shadow-sm transition-all duration-200 cursor-pointer relative ${
@@ -1217,79 +1252,82 @@ function TaskCard({
         )}
       </div>
 
-      {/* 底部信息 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {/* 优先级 */}
-          {task.priority && (
+      {/* 底部信息 - 重新设计为垂直布局 */}
+      <div className="space-y-2">
+        {/* 第一行：优先级（仅在有优先级时显示） */}
+        {task.priority && (
+          <div className="flex items-center">
             <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}>
               {task.priority}
             </span>
-          )}
+          </div>
+        )}
 
-          {/* 时间信息 */}
-          {task.totalTimeSpent > 0 && (
+        {/* 第二行：累计时间信息 */}
+        {task.totalTimeSpent > 0 && (
+          <div className="flex items-center">
             <span className="text-xs text-gray-500 flex items-center">
               <ClockIcon className="h-3 w-3 mr-1" />
-              {formatTimeSpent(task.totalTimeSpent)}
+              累计用时 {formatTimeSpent(task.totalTimeSpent)}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* 计时器控制 */}
-        <div className="flex items-center space-x-1">
-          {task.status === TaskStatus.IN_PROGRESS && (
-            <div className="flex items-center space-x-1">
-              {/* 计时状态指示 */}
-              {isTimerActive && (
-                <div className="flex items-center text-xs text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></div>
-                  <span className="font-medium">
-                    {formatTimeSpent(currentSessionTime)}
-                  </span>
-                </div>
+        {/* 第三行：计时器控制 */}
+        {task.status === TaskStatus.IN_PROGRESS && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-600">工作计时</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isTimerActive) {
+                  onPauseTimer(task.id);
+                } else {
+                  onStartTimer(task.id);
+                }
+              }}
+              disabled={isUpdating}
+              className={`relative p-1 rounded-full transition-all duration-200 ${
+                isTimerActive
+                  ? "text-red-600 hover:bg-red-50 bg-red-50/50"
+                  : "text-green-600 hover:bg-green-50 bg-green-50/50"
+              } disabled:opacity-50 border ${
+                isTimerActive
+                  ? "border-red-200 hover:border-red-300"
+                  : "border-green-200 hover:border-green-300"
+              }`}
+              title={isTimerActive
+                ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
+                : `开始计时 - 开始专注工作计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
+              }
+            >
+              {isTimerActive ? (
+                <PauseIcon className="h-3.5 w-3.5" />
+              ) : (
+                <PlayIcon className="h-3.5 w-3.5" />
               )}
 
-              {/* 计时器按钮 */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isTimerActive) {
-                    onPauseTimer(task.id);
-                  } else {
-                    onStartTimer(task.id);
-                  }
-                }}
-                disabled={isUpdating}
-                className={`relative p-1.5 rounded-full transition-all duration-200 ${
-                  isTimerActive
-                    ? "text-red-600 hover:bg-red-50 bg-red-50/50"
-                    : "text-green-600 hover:bg-green-50 bg-green-50/50"
-                } disabled:opacity-50 border ${
-                  isTimerActive
-                    ? "border-red-200 hover:border-red-300"
-                    : "border-green-200 hover:border-green-300"
-                }`}
-                title={isTimerActive
-                  ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
-                  : `开始计时 - 开始专注工作计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
-                }
-              >
-                {isTimerActive ? (
-                  <PauseIcon className="h-4 w-4" />
-                ) : (
-                  <PlayIcon className="h-4 w-4" />
-                )}
+              {/* 计时动画环 */}
+              {isTimerActive && (
+                <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-20"></div>
+              )}
+            </button>
+          </div>
+        )}
 
-                {/* 计时动画环 */}
-                {isTimerActive && (
-                  <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-20"></div>
-                )}
-              </button>
+        {/* 第四行：当前计时状态（仅在计时时显示） */}
+        {task.status === TaskStatus.IN_PROGRESS && isTimerActive && (
+          <div className="flex items-center justify-between bg-green-50 rounded-md px-2 py-1.5 border border-green-200">
+            <div className="flex items-center text-xs text-green-700">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+              <span className="font-medium">正在计时</span>
             </div>
-          )}
-        </div>
+            <div className="text-xs font-mono text-green-800 font-semibold">
+              {formatTimeSpent(currentSessionTime)}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
