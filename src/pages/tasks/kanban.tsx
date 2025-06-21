@@ -1276,7 +1276,7 @@ function TaskCard({
         {/* 第三行：计时器控制 */}
         {task.status === TaskStatus.IN_PROGRESS && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">工作计时</span>
+            <span className="text-xs text-gray-600">计时状态：</span>
             <button
               type="button"
               onClick={(e) => {
@@ -1299,7 +1299,7 @@ function TaskCard({
               }`}
               title={isTimerActive
                 ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
-                : `开始计时 - 开始专注工作计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
+                : `开始计时 - 开始专注计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
               }
             >
               {isTimerActive ? (

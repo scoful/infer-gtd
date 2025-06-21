@@ -685,17 +685,60 @@ export const taskRouter = createTRPCRouter({
 
         const now = new Date();
 
-        // 停止用户的其他活跃计时器
-        await ctx.db.task.updateMany({
+        // 停止用户的其他活跃计时器并正确处理时间累计
+        const activeTimerTasks = await ctx.db.task.findMany({
           where: {
             createdById: ctx.session.user.id,
             isTimerActive: true,
           },
-          data: {
-            isTimerActive: false,
-            timerStartedAt: null,
+          select: {
+            id: true,
+            title: true,
+            timerStartedAt: true,
+            totalTimeSpent: true,
           },
         });
+
+        // 为每个活跃的计时器任务处理时间累计
+        for (const activeTask of activeTimerTasks) {
+          if (activeTask.timerStartedAt) {
+            // 计算本次会话时长
+            const sessionDuration = Math.floor(
+              (now.getTime() - activeTask.timerStartedAt.getTime()) / 1000
+            );
+
+            // 查找当前活跃的时间记录
+            const activeTimeEntry = await ctx.db.timeEntry.findFirst({
+              where: {
+                taskId: activeTask.id,
+                endTime: null,
+              },
+              orderBy: { startTime: "desc" },
+            });
+
+            // 结束时间记录
+            if (activeTimeEntry) {
+              await ctx.db.timeEntry.update({
+                where: { id: activeTimeEntry.id },
+                data: {
+                  endTime: now,
+                  duration: sessionDuration,
+                  description: activeTimeEntry.description || "被其他任务计时中断",
+                },
+              });
+            }
+
+            // 更新任务的总时长和计时状态
+            await ctx.db.task.update({
+              where: { id: activeTask.id },
+              data: {
+                isTimerActive: false,
+                timerStartedAt: null,
+                totalTimeSpent: activeTask.totalTimeSpent + sessionDuration,
+              },
+            });
+          }
+        }
 
         // 开始新的计时
         const updatedTask = await ctx.db.task.update({
