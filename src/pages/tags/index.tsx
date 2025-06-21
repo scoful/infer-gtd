@@ -115,6 +115,8 @@ const TagManagementPage: NextPage = () => {
     },
   });
 
+
+
   // 处理标签删除
   const handleDeleteTag = useCallback(async (tagId: string) => {
     const confirmed = await showConfirm({
@@ -132,13 +134,33 @@ const TagManagementPage: NextPage = () => {
     try {
       setLoading(true);
       await deleteTagMutation.mutateAsync({ id: tagId });
-    } catch (error) {
-      console.error("删除标签失败:", error);
+      // 删除成功，不需要额外处理，mutation的onSuccess会处理
+    } catch (error: any) {
+      // 不要在这里console.error，避免开发环境的Runtime Error
+
+      // 如果是标签被引用的错误，显示友好的提示信息
+      if (error?.data?.code === "CONFLICT") {
+        const errorMessage = error.message || "标签正在被使用，无法删除";
+
+        // 延迟显示确认框，确保当前的确认框先关闭
+        setTimeout(async () => {
+          await showConfirm({
+            title: "无法删除标签",
+            message: errorMessage,
+            confirmText: "我知道了",
+            cancelText: "",
+            type: "warning",
+          });
+        }, 100);
+      } else {
+        // 其他错误显示通用错误信息
+        showError(`删除标签失败: ${error.message || "未知错误"}`);
+      }
     } finally {
       setLoading(false);
       hideConfirm();
     }
-  }, [deleteTagMutation, showConfirm, setLoading, hideConfirm]);
+  }, [deleteTagMutation, showConfirm, setLoading, hideConfirm, showError]);
 
   // 处理标签编辑
   const handleEditTag = useCallback((tag: TagData) => {

@@ -43,6 +43,8 @@ const batchCreateTagsSchema = z.object({
   tags: z.array(createTagSchema).min(1, "至少需要一个标签").max(20, "一次最多创建20个标签"),
 });
 
+
+
 export const tagRouter = createTRPCRouter({
   // 创建标签
   create: protectedProcedure
@@ -414,9 +416,27 @@ export const tagRouter = createTRPCRouter({
 
         // 检查是否有关联的任务或笔记
         if (tag._count.taskTags > 0 || tag._count.noteTags > 0) {
+          // 获取具体的引用信息
+          const taskCount = tag._count.taskTags;
+          const noteCount = tag._count.noteTags;
+
+          let message = "标签正在被使用，无法删除。\n\n";
+          if (taskCount > 0) {
+            message += `• 被 ${taskCount} 个任务使用\n`;
+          }
+          if (noteCount > 0) {
+            message += `• 被 ${noteCount} 个笔记使用\n`;
+          }
+          message += "\n请先移除这些引用，然后再删除标签。";
+
           throw new TRPCError({
             code: "CONFLICT",
-            message: "标签正在被使用，无法删除",
+            message,
+            cause: {
+              taskCount,
+              noteCount,
+              totalCount: taskCount + noteCount,
+            },
           });
         }
 
@@ -482,4 +502,6 @@ export const tagRouter = createTRPCRouter({
         });
       }
     }),
+
+
 });
