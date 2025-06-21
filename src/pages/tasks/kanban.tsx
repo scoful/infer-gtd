@@ -1,6 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { TaskStatus, type Task } from "@prisma/client";
 import {
@@ -8,6 +8,9 @@ import {
   ClockIcon,
   PlayIcon,
   PauseIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
+  ArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import {
   DndContext,
@@ -346,6 +349,17 @@ const KanbanPage: NextPage = () => {
     },
   });
 
+  // 删除任务
+  const deleteTask = api.task.delete.useMutation({
+    onSuccess: (result) => {
+      showSuccess(result.message);
+      void utils.task.getAll.invalidate();
+    },
+    onError: (error) => {
+      showError(error.message || "删除任务失败");
+    },
+  });
+
   // 带位置的状态更新
   const updateStatusWithPosition = api.task.updateStatusWithPosition.useMutation({
     onSuccess: (_, variables) => {
@@ -477,6 +491,45 @@ const KanbanPage: NextPage = () => {
   const handleTaskModalSuccess = () => {
     // 任务模态框成功后，使用invalidate来确保数据最新
     void utils.task.getAll.invalidate();
+  };
+
+  // 处理删除任务
+  const handleDeleteTask = async (taskId: string) => {
+    if (confirm("确定要删除这个任务吗？此操作无法撤销。")) {
+      try {
+        await deleteTask.mutateAsync({ id: taskId });
+      } catch (error) {
+        console.error("删除任务失败:", error);
+      }
+    }
+  };
+
+  // 处理快速上浮到第一位
+  const handleMoveToTop = async (taskId: string) => {
+    const task = tasksData?.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const currentStatusTasks = tasksByStatus[task.status] || [];
+    if (currentStatusTasks.length <= 1) return; // 如果只有一个任务或没有任务，无需移动
+
+    // 乐观更新：立即将任务移动到第一位
+    const newOrder = [taskId, ...currentStatusTasks.filter(t => t.id !== taskId).map(t => t.id)];
+    setOptimisticTaskOrder(prev => ({
+      ...prev,
+      [task.status]: newOrder,
+    }));
+
+    try {
+      await updateStatusWithPosition.mutateAsync({
+        id: taskId,
+        status: task.status,
+        insertIndex: 0, // 插入到第一位
+        note: "快速上浮到第一位",
+      });
+    } catch (error) {
+      console.error("移动任务失败:", error);
+      // 错误处理在mutation的onError中进行
+    }
   };
 
   // 拖拽开始
@@ -729,6 +782,8 @@ const KanbanPage: NextPage = () => {
                   onStartTimer={handleStartTimer}
                   onPauseTimer={handlePauseTimer}
                   onEdit={handleEditTask}
+                  onDelete={handleDeleteTask}
+                  onMoveToTop={handleMoveToTop}
                   formatTimeSpent={formatTimeSpent}
                   isTimerActive={isTimerActive}
                   isUpdating={updateTaskStatus.isPending}
@@ -749,6 +804,8 @@ const KanbanPage: NextPage = () => {
                     onStartTimer={() => {}}
                     onPauseTimer={() => {}}
                     onEdit={() => {}}
+                    onDelete={() => {}}
+                    onMoveToTop={() => {}}
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive(activeTask)}
                     isUpdating={false}
@@ -787,6 +844,8 @@ interface KanbanColumnProps {
   onStartTimer: (taskId: string) => void;
   onPauseTimer: (taskId: string) => void;
   onEdit: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
+  onMoveToTop: (taskId: string) => void;
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: (task: TaskWithRelations) => boolean;
   isUpdating: boolean;
@@ -801,6 +860,8 @@ function KanbanColumn({
   onStartTimer,
   onPauseTimer,
   onEdit,
+  onDelete,
+  onMoveToTop,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -847,6 +908,8 @@ function KanbanColumn({
               onStartTimer={onStartTimer}
               onPauseTimer={onPauseTimer}
               onEdit={onEdit}
+              onDelete={onDelete}
+              onMoveToTop={onMoveToTop}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
               isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
@@ -875,6 +938,8 @@ interface DraggableTaskCardProps {
   onStartTimer: (taskId: string) => void;
   onPauseTimer: (taskId: string) => void;
   onEdit: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
+  onMoveToTop: (taskId: string) => void;
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -921,6 +986,8 @@ interface TaskCardProps {
   onStartTimer: (taskId: string) => void;
   onPauseTimer: (taskId: string) => void;
   onEdit: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
+  onMoveToTop: (taskId: string) => void;
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -933,11 +1000,30 @@ function TaskCard({
   onStartTimer,
   onPauseTimer,
   onEdit,
+  onDelete,
+  onMoveToTop,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
   isDragging = false,
 }: TaskCardProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMenu]);
+
   const priorityColors = {
     LOW: "bg-gray-100 text-gray-800",
     MEDIUM: "bg-blue-100 text-blue-800",
@@ -956,12 +1042,62 @@ function TaskCard({
       }`}
       onClick={() => !isDragging && onEdit(task.id)}
     >
-      {/* 更新中的指示器 */}
-      {isUpdating && (
-        <div className="absolute top-2 right-2">
+      {/* 右上角区域：更新指示器和菜单 */}
+      <div className="absolute top-2 right-2 flex items-center space-x-1">
+        {/* 更新中的指示器 */}
+        {isUpdating && (
           <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
-        </div>
-      )}
+        )}
+
+        {/* 菜单按钮 */}
+        {!isDragging && (
+          <div ref={menuRef} className="relative">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              title="更多操作"
+            >
+              <EllipsisVerticalIcon className="h-4 w-4" />
+            </button>
+
+            {/* 下拉菜单 */}
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                      onMoveToTop(task.id);
+                    }}
+                    className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <ArrowUpIcon className="h-4 w-4 mr-2" />
+                    置顶
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                      onDelete(task.id);
+                    }}
+                    className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <TrashIcon className="h-4 w-4 mr-2" />
+                    删除
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       {/* 任务标题 */}
       <div className="mb-2">
         <h4
