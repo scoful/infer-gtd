@@ -437,6 +437,9 @@ const KanbanPage: NextPage = () => {
   };
 
   const handleStartTimer = async (taskId: string) => {
+    const task = tasksData?.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
     // 乐观更新：立即更新UI状态
     utils.task.getAll.setData({ limit: 100 }, (oldData) => {
       if (!oldData) return oldData;
@@ -451,10 +454,27 @@ const KanbanPage: NextPage = () => {
       };
     });
 
+    // 乐观更新：将开始计时的任务移动到第一位
+    const currentStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] || [];
+    const newOrder = [taskId, ...currentStatusTasks.filter((t: TaskWithRelations) => t.id !== taskId).map((t: TaskWithRelations) => t.id)];
+    setOptimisticTaskOrder(prev => ({
+      ...prev,
+      [task.status]: newOrder,
+    }));
+
     try {
+      // 先开始计时
       await startTimer.mutateAsync({
         id: taskId,
         description: "开始工作",
+      });
+
+      // 然后移动到第一位
+      await updateStatusWithPosition.mutateAsync({
+        id: taskId,
+        status: task.status,
+        insertIndex: 0, // 插入到第一位
+        note: "开始计时，自动置顶",
       });
     } catch (error) {
       console.error("开始计时失败:", error);
