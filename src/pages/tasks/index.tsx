@@ -11,6 +11,8 @@ import {
   MagnifyingGlassIcon,
   CheckIcon,
   XMarkIcon,
+  ClockIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
@@ -19,12 +21,13 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
+import TimeEntryModal from "@/components/TimeEntryModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useConfirm } from "@/hooks";
 import { TagList, type TagData } from "@/components/Tags";
 
 // 视图模式类型
-type ViewMode = "list" | "compact" | "detailed";
+type ViewMode = "list" | "compact" | "detailed" | "timeTracking";
 
 // 排序字段类型
 type SortField = "dueDate" | "priority" | "createdAt" | "title" | "status" | "sortOrder";
@@ -79,6 +82,11 @@ const TaskListPage: NextPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // 计时明细模态框状态
+  const [isTimeEntryModalOpen, setIsTimeEntryModalOpen] = useState(false);
+  const [timeEntryTaskId, setTimeEntryTaskId] = useState<string | null>(null);
+  const [timeEntryTaskTitle, setTimeEntryTaskTitle] = useState<string>("");
 
   // 确认模态框状态
   const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
@@ -293,6 +301,16 @@ const TaskListPage: NextPage = () => {
   const tasks = tasksData?.tasks || [];
   const hasNextPage = false; // 暂时禁用分页功能
 
+  // 打开计时明细
+  const handleViewTimeEntries = useCallback((taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    setTimeEntryTaskId(taskId);
+    setTimeEntryTaskTitle(task.title);
+    setIsTimeEntryModalOpen(true);
+  }, [tasks]);
+
   // 应用客户端排序（如果需要多状态筛选）
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks];
@@ -439,6 +457,7 @@ const TaskListPage: NextPage = () => {
                       ? "bg-blue-50 border-blue-200 text-blue-700"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
+                  title="列表视图"
                 >
                   <ListBulletIcon className="h-4 w-4" />
                 </button>
@@ -449,8 +468,20 @@ const TaskListPage: NextPage = () => {
                       ? "bg-blue-50 border-blue-200 text-blue-700"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
+                  title="紧凑视图"
                 >
                   <Squares2X2Icon className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("timeTracking")}
+                  className={`px-3 py-2 text-sm font-medium border-t border-b ${
+                    viewMode === "timeTracking"
+                      ? "bg-blue-50 border-blue-200 text-blue-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                  title="计时视图"
+                >
+                  <ClockIcon className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => {
@@ -628,7 +659,7 @@ const TaskListPage: NextPage = () => {
               {/* 筛选操作 */}
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-500">
-                  {filteredAndSortedTasks.length} 个任务
+                  {tasks.length} 个任务
                   {(filters.status.length > 0 || filters.priority.length > 0 || filters.tagIds.length > 0 || filters.search) &&
                     ` (已筛选)`
                   }
@@ -709,7 +740,15 @@ const TaskListPage: NextPage = () => {
             loadingMessage="加载任务列表中..."
             loadingComponent={<SectionLoading message="加载任务列表中..." />}
           >
-            {filteredAndSortedTasks.length > 0 ? (
+            {viewMode === "timeTracking" ? (
+              <TimeTrackingView
+                tasks={filteredAndSortedTasks}
+                formatTimeSpent={formatTimeSpent}
+                isTimerActive={isTimerActive}
+                onViewTimeEntries={handleViewTimeEntries}
+                onEditTask={handleEditTask}
+              />
+            ) : filteredAndSortedTasks.length > 0 ? (
               <div className="space-y-4">
                 {/* 全选控制 */}
                 <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
@@ -797,6 +836,14 @@ const TaskListPage: NextPage = () => {
             )}
           </QueryLoading>
         </div>
+
+        {/* 计时明细模态框 */}
+        <TimeEntryModal
+          isOpen={isTimeEntryModalOpen}
+          onClose={() => setIsTimeEntryModalOpen(false)}
+          taskId={timeEntryTaskId || ""}
+          taskTitle={timeEntryTaskTitle}
+        />
 
         {/* 任务模态框 */}
         <TaskModal
@@ -980,6 +1027,193 @@ function TaskListCard({
               {new Date(task.createdAt).toLocaleDateString('zh-CN')}
             </span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 计时视图组件
+interface TimeTrackingViewProps {
+  tasks: TaskWithRelations[];
+  formatTimeSpent: (seconds: number) => string;
+  isTimerActive: (task: TaskWithRelations) => boolean;
+  onViewTimeEntries: (taskId: string) => void;
+  onEditTask: (taskId: string) => void;
+}
+
+function TimeTrackingView({
+  tasks,
+  formatTimeSpent,
+  isTimerActive,
+  onViewTimeEntries,
+  onEditTask,
+}: TimeTrackingViewProps) {
+  // 筛选有计时记录的任务
+  const tasksWithTimeEntries = tasks.filter(task => task.totalTimeSpent > 0 || isTimerActive(task));
+
+  // 按总计时长排序
+  const sortedTasks = [...tasksWithTimeEntries].sort((a, b) => b.totalTimeSpent - a.totalTimeSpent);
+
+  // 计算统计信息
+  const totalTimeSpent = tasksWithTimeEntries.reduce((sum, task) => sum + task.totalTimeSpent, 0);
+  const activeTimers = tasksWithTimeEntries.filter(task => isTimerActive(task)).length;
+  const totalSessions = tasksWithTimeEntries.reduce((sum, task) => sum + task._count.timeEntries, 0);
+
+  if (tasksWithTimeEntries.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto h-12 w-12 text-gray-400">
+          <ClockIcon className="h-12 w-12" />
+        </div>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">暂无计时记录</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          开始为任务计时后，这里将显示详细的时间统计信息
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 统计概览 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">时间统计概览</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {tasksWithTimeEntries.length}
+            </div>
+            <div className="text-sm text-gray-500">有计时记录的任务</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {formatTimeSpent(totalTimeSpent)}
+            </div>
+            <div className="text-sm text-gray-500">总计时长</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {totalSessions}
+            </div>
+            <div className="text-sm text-gray-500">计时会话</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">
+              {activeTimers}
+            </div>
+            <div className="text-sm text-gray-500">正在计时</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 任务时间列表 */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">任务计时详情</h3>
+          <p className="text-sm text-gray-500 mt-1">按总计时长排序</p>
+        </div>
+        <div className="divide-y divide-gray-200">
+          {sortedTasks.map((task) => (
+            <TimeTrackingTaskCard
+              key={task.id}
+              task={task}
+              formatTimeSpent={formatTimeSpent}
+              isTimerActive={isTimerActive(task)}
+              onViewTimeEntries={() => onViewTimeEntries(task.id)}
+              onEditTask={() => onEditTask(task.id)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 计时任务卡片组件
+interface TimeTrackingTaskCardProps {
+  task: TaskWithRelations;
+  formatTimeSpent: (seconds: number) => string;
+  isTimerActive: boolean;
+  onViewTimeEntries: () => void;
+  onEditTask: () => void;
+}
+
+function TimeTrackingTaskCard({
+  task,
+  formatTimeSpent,
+  isTimerActive,
+  onViewTimeEntries,
+  onEditTask,
+}: TimeTrackingTaskCardProps) {
+  const statusColors = {
+    IDEA: "bg-gray-100 text-gray-800",
+    TODO: "bg-blue-100 text-blue-800",
+    IN_PROGRESS: "bg-yellow-100 text-yellow-800",
+    WAITING: "bg-purple-100 text-purple-800",
+    DONE: "bg-green-100 text-green-800",
+    ARCHIVED: "bg-gray-100 text-gray-800",
+  };
+
+  return (
+    <div className="p-6 hover:bg-gray-50 transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          {/* 任务标题和状态 */}
+          <div className="flex items-center gap-3 mb-2">
+            <h4
+              className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 truncate"
+              onClick={onEditTask}
+            >
+              {task.title}
+            </h4>
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status]}`}>
+              {getStatusLabel(task.status)}
+            </span>
+            {isTimerActive && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                🟢 计时中
+              </span>
+            )}
+          </div>
+
+          {/* 项目信息 */}
+          {task.project && (
+            <div className="flex items-center gap-1 mb-2">
+              <span
+                className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                style={{
+                  backgroundColor: task.project.color ? `${task.project.color}20` : '#f3f4f6',
+                  color: task.project.color || '#374151',
+                }}
+              >
+                📁 {task.project.name}
+              </span>
+            </div>
+          )}
+
+          {/* 时间统计 */}
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span className="flex items-center gap-1">
+              <ClockIcon className="h-4 w-4" />
+              总时长: {formatTimeSpent(task.totalTimeSpent)}
+            </span>
+            <span className="flex items-center gap-1">
+              <ChartBarIcon className="h-4 w-4" />
+              {task._count.timeEntries} 个会话
+            </span>
+          </div>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="flex items-center gap-2 ml-4">
+          <button
+            onClick={onViewTimeEntries}
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <ChartBarIcon className="h-3 w-3 mr-1" />
+            查看明细
+          </button>
         </div>
       </div>
     </div>
