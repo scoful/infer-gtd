@@ -760,10 +760,26 @@ export const taskRouter = createTRPCRouter({
           },
         });
 
+        // 收集被中断任务的更新信息
+        const interruptedTasksInfo = [];
+        for (const activeTask of activeTimerTasks) {
+          if (activeTask.timerStartedAt) {
+            const sessionDuration = Math.floor(
+              (now.getTime() - activeTask.timerStartedAt.getTime()) / 1000
+            );
+            interruptedTasksInfo.push({
+              id: activeTask.id,
+              title: activeTask.title,
+              totalTimeSpent: activeTask.totalTimeSpent + sessionDuration,
+            });
+          }
+        }
+
         return {
           success: true,
           message: `开始为任务 "${task.title}" 计时`,
           task: updatedTask,
+          interruptedTasks: interruptedTasksInfo, // 返回被中断任务的信息
         };
       } catch (error) {
         if (error instanceof TRPCError) {

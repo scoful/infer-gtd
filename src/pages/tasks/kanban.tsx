@@ -292,8 +292,31 @@ const KanbanPage: NextPage = () => {
 
   // 时间追踪
   const startTimer = api.task.startTimer.useMutation({
-    onSuccess: () => {
-      // 乐观更新已在handleStartTimer中处理，这里只需要确保数据同步
+    onSuccess: (result) => {
+      // 更新所有任务的状态，特别是被中断任务的totalTimeSpent
+      utils.task.getAll.setData({ limit: 100 }, (oldData) => {
+        if (!oldData || !result.interruptedTasks) return oldData;
+
+        return {
+          ...oldData,
+          tasks: oldData.tasks.map(task => {
+            // 更新被中断任务的totalTimeSpent
+            const interruptedTask = result.interruptedTasks?.find(
+              (interrupted: any) => interrupted.id === task.id
+            );
+            if (interruptedTask) {
+              return {
+                ...task,
+                totalTimeSpent: interruptedTask.totalTimeSpent,
+                isTimerActive: false,
+                timerStartedAt: null,
+              };
+            }
+            return task;
+          })
+        };
+      });
+
       showSuccess("计时已开始");
     },
     onError: () => {
@@ -444,13 +467,28 @@ const KanbanPage: NextPage = () => {
     utils.task.getAll.setData({ limit: 100 }, (oldData) => {
       if (!oldData) return oldData;
 
+      const now = new Date();
+
       return {
         ...oldData,
-        tasks: oldData.tasks.map(task =>
-          task.id === taskId
-            ? { ...task, isTimerActive: true, timerStartedAt: new Date() }
-            : { ...task, isTimerActive: false, timerStartedAt: null } // 停止其他任务的计时器
-        )
+        tasks: oldData.tasks.map(currentTask => {
+          if (currentTask.id === taskId) {
+            // 开始新的计时
+            return { ...currentTask, isTimerActive: true, timerStartedAt: now };
+          } else if (currentTask.isTimerActive && currentTask.timerStartedAt) {
+            // 停止其他正在计时的任务，并立即计算累计时间
+            const sessionDuration = Math.floor(
+              (now.getTime() - new Date(currentTask.timerStartedAt).getTime()) / 1000
+            );
+            return {
+              ...currentTask,
+              isTimerActive: false,
+              timerStartedAt: null,
+              totalTimeSpent: currentTask.totalTimeSpent + sessionDuration, // 立即更新累计时间
+            };
+          }
+          return currentTask;
+        })
       };
     });
 
