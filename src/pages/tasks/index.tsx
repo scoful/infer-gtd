@@ -152,6 +152,19 @@ const TaskListPage: NextPage = () => {
     },
   });
 
+  // 批量删除任务
+  const batchDeleteTasks = api.task.batchDelete.useMutation({
+    onSuccess: (result) => {
+      void refetch();
+      setSelectedTasks(new Set());
+      // 显示删除成功消息
+      console.log(`成功删除 ${result.deletedCount} 个任务`);
+    },
+    onError: (error) => {
+      console.error("批量删除失败:", error);
+    },
+  });
+
   // 格式化时间显示
   const formatTimeSpent = useCallback((seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -208,6 +221,26 @@ const TaskListPage: NextPage = () => {
       console.error("批量更新失败:", error);
     }
   }, [selectedTasks, batchUpdateTasks]);
+
+  // 处理批量删除
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedTasks.size === 0) return;
+
+    const taskCount = selectedTasks.size;
+    const confirmMessage = `确定要删除选中的 ${taskCount} 个任务吗？\n\n删除后无法恢复，请谨慎操作。`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await batchDeleteTasks.mutateAsync({
+        taskIds: Array.from(selectedTasks),
+      });
+    } catch (error) {
+      console.error("批量删除失败:", error);
+    }
+  }, [selectedTasks, batchDeleteTasks]);
 
   // 处理任务编辑
   const handleEditTask = useCallback((taskId: string) => {
@@ -625,13 +658,31 @@ const TaskListPage: NextPage = () => {
                     defaultValue=""
                   >
                     <option value="" disabled>更改状态</option>
+                    <option value={TaskStatus.IDEA}>想法</option>
                     <option value={TaskStatus.TODO}>待办</option>
                     <option value={TaskStatus.IN_PROGRESS}>进行中</option>
                     <option value={TaskStatus.WAITING}>等待中</option>
                     <option value={TaskStatus.DONE}>已完成</option>
                   </select>
 
-                  {/* 更多批量操作可以在这里添加 */}
+                  {/* 批量删除按钮 */}
+                  <button
+                    onClick={handleBatchDelete}
+                    disabled={batchDeleteTasks.isPending}
+                    className="px-3 py-1 border border-red-300 rounded text-sm bg-white text-red-600 hover:bg-red-50 hover:border-red-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    title={`删除选中的 ${selectedTasks.size} 个任务`}
+                  >
+                    {batchDeleteTasks.isPending ? (
+                      <>
+                        <div className="animate-spin h-3 w-3 border border-red-600 border-t-transparent rounded-full"></div>
+                        删除中...
+                      </>
+                    ) : (
+                      <>
+                        🗑️ 删除 ({selectedTasks.size})
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

@@ -105,6 +105,11 @@ export const batchUpdateTasksSchema = z.object({
   }),
 });
 
+// 批量删除 Schema
+export const batchDeleteTasksSchema = z.object({
+  taskIds: z.array(z.string().cuid("无效的任务ID")).min(1, "至少选择一个任务"),
+});
+
 // 任务排序 Schema
 export const reorderTasksSchema = z.object({
   taskIds: z.array(z.string().cuid("无效的任务ID")),
@@ -131,5 +136,6 @@ export type TimeTrackingInput = z.infer<typeof timeTrackingSchema>;
 export type GetTimeEntriesInput = z.infer<typeof getTimeEntriesSchema>;
 export type GetTaskStatsInput = z.infer<typeof getTaskStatsSchema>;
 export type BatchUpdateTasksInput = z.infer<typeof batchUpdateTasksSchema>;
+export type BatchDeleteTasksInput = z.infer<typeof batchDeleteTasksSchema>;
 export type ReorderTasksInput = z.infer<typeof reorderTasksSchema>;
 export type UpdateTaskStatusWithPositionInput = z.infer<typeof updateTaskStatusWithPositionSchema>;

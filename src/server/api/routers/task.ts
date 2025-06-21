@@ -17,6 +17,7 @@ import {
   getTimeEntriesSchema,
   getTaskStatsSchema,
   batchUpdateTasksSchema,
+  batchDeleteTasksSchema,
   reorderTasksSchema,
   updateTaskStatusWithPositionSchema,
 } from "@/server/api/schemas/task";
@@ -1543,6 +1544,54 @@ export const taskRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "批量更新任务失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 批量删除任务
+  batchDelete: protectedProcedure
+    .input(batchDeleteTasksSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { taskIds } = input;
+
+      try {
+        // 验证所有任务的所有权
+        const tasks = await ctx.db.task.findMany({
+          where: {
+            id: { in: taskIds },
+            createdById: ctx.session.user.id,
+          },
+          select: { id: true, title: true },
+        });
+
+        if (tasks.length !== taskIds.length) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "部分任务不存在或无权限删除",
+          });
+        }
+
+        // 批量删除任务（级联删除相关数据）
+        const deletedTasks = await ctx.db.task.deleteMany({
+          where: {
+            id: { in: taskIds },
+            createdById: ctx.session.user.id,
+          },
+        });
+
+        return {
+          success: true,
+          message: `成功删除 ${deletedTasks.count} 个任务`,
+          deletedCount: deletedTasks.count,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "批量删除任务失败",
           cause: error,
         });
       }
