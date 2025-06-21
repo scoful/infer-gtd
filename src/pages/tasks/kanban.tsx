@@ -597,7 +597,18 @@ const KanbanPage: NextPage = () => {
 
   // 拖拽开始
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const taskId = event.active.id as string;
+    const task = (Object.values(tasksByStatus) as TaskWithRelations[][])
+      .flat()
+      .find((t) => t.id === taskId);
+
+    // 检查是否正在计时
+    if (task && isTimerActive(task)) {
+      showError("正在计时的任务无法移动，请先暂停计时");
+      return;
+    }
+
+    setActiveId(taskId);
   };
 
   // 拖拽过程中
@@ -631,6 +642,12 @@ const KanbanPage: NextPage = () => {
       .find((task) => task.id === draggedTaskId);
 
     if (!draggedTask) return;
+
+    // 🚫 检查任务是否正在计时，如果是则禁止移动
+    if (isTimerActive(draggedTask)) {
+      showError("正在计时的任务无法移动，请先暂停计时");
+      return;
+    }
 
     const currentStatus = draggedTask.status;
 
@@ -1011,6 +1028,8 @@ interface DraggableTaskCardProps {
 }
 
 function DraggableTaskCard(props: DraggableTaskCardProps) {
+  const isTaskTimerActive = props.isTimerActive;
+
   const {
     attributes,
     listeners,
@@ -1024,6 +1043,8 @@ function DraggableTaskCard(props: DraggableTaskCardProps) {
       type: "task",
       task: props.task,
     },
+    // 禁用正在计时任务的拖拽
+    disabled: isTaskTimerActive,
   });
 
   const style = {
@@ -1036,8 +1057,10 @@ function DraggableTaskCard(props: DraggableTaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(isTaskTimerActive ? {} : attributes)}
+      {...(isTaskTimerActive ? {} : listeners)}
+      className={isTaskTimerActive ? "cursor-not-allowed" : ""}
+      title={isTaskTimerActive ? "正在计时的任务无法移动，请先暂停计时" : ""}
     >
       <TaskCard {...props} isDragging={isDragging} />
     </div>
@@ -1137,15 +1160,21 @@ function TaskCard({
 
   return (
     <div
-      className={`group bg-white rounded-lg border p-4 shadow-sm transition-all duration-200 cursor-pointer relative ${
+      className={`group bg-white rounded-lg border p-4 shadow-sm transition-all duration-200 relative ${
         isDragging
-          ? "border-blue-400 shadow-xl bg-blue-50 scale-105 rotate-1 z-50"
+          ? "border-blue-400 shadow-xl bg-blue-50 scale-105 rotate-1 z-50 cursor-grabbing"
           : isUpdating
-          ? "border-blue-200 bg-blue-50 animate-pulse"
-          : "border-gray-200 hover:shadow-md hover:border-gray-300 hover:scale-[1.02]"
+          ? "border-blue-200 bg-blue-50 animate-pulse cursor-pointer"
+          : isTimerActive
+          ? "border-green-300 bg-green-50 shadow-md cursor-not-allowed"
+          : "border-gray-200 hover:shadow-md hover:border-gray-300 hover:scale-[1.02] cursor-pointer"
       }`}
       onClick={() => !isDragging && onEdit(task.id)}
     >
+      {/* 正在计时的视觉标识 */}
+      {isTimerActive && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-white shadow-sm"></div>
+      )}
       {/* 任务标题和菜单 */}
       <div className="mb-2 flex items-start justify-between">
         <h4
