@@ -18,3 +18,9 @@ export {
   type NotificationData,
   type NotificationType,
 } from "./Notification";
+
+// ConfirmModal组件导出
+export {
+  default as ConfirmModal,
+  type ConfirmModalProps,
+} from "./ConfirmModal";

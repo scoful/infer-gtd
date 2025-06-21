@@ -491,11 +491,19 @@ export function useExampleManagement() {
     updateMutation.mutate(data);
   }, [updateMutation]);
 
-  const handleDelete = useCallback((id: string) => {
-    if (confirm("确定要删除这个项目吗？")) {
+  const handleDelete = useCallback(async (id: string) => {
+    const confirmed = await showConfirm({
+      title: "确认删除",
+      message: "确定要删除这个项目吗？删除后无法恢复。",
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (confirmed) {
       deleteMutation.mutate({ id });
     }
-  }, [deleteMutation]);
+  }, [deleteMutation, showConfirm]);
 
   return {
     // 数据

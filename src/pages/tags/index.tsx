@@ -16,10 +16,10 @@ import { TagType } from "@prisma/client";
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading } from "@/components/UI";
+import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import { TagDisplay, TagList, TagGroupDisplay, type TagData } from "@/components/Tags";
 import TagModal from "@/components/Tags/TagModal";
-import { useNotifications } from "@/hooks";
+import { useNotifications, useConfirm } from "@/hooks";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 // 筛选状态接口
@@ -44,6 +44,9 @@ const TagManagementPage: NextPage = () => {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"list" | "grid" | "grouped">("list");
   const [showFilters, setShowFilters] = useState(false);
+
+  // 确认模态框状态
+  const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
   
   // 筛选和排序状态
   const [filters, setFilters] = useState<FilterState>({
@@ -114,14 +117,28 @@ const TagManagementPage: NextPage = () => {
 
   // 处理标签删除
   const handleDeleteTag = useCallback(async (tagId: string) => {
-    if (confirm("确定要删除这个标签吗？删除后无法恢复。")) {
-      try {
-        await deleteTagMutation.mutateAsync({ id: tagId });
-      } catch (error) {
-        console.error("删除标签失败:", error);
-      }
+    const confirmed = await showConfirm({
+      title: "确认删除标签",
+      message: "确定要删除这个标签吗？删除后无法恢复。",
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (!confirmed) {
+      return;
     }
-  }, [deleteTagMutation]);
+
+    try {
+      setLoading(true);
+      await deleteTagMutation.mutateAsync({ id: tagId });
+    } catch (error) {
+      console.error("删除标签失败:", error);
+    } finally {
+      setLoading(false);
+      hideConfirm();
+    }
+  }, [deleteTagMutation, showConfirm, setLoading, hideConfirm]);
 
   // 处理标签编辑
   const handleEditTag = useCallback((tag: TagData) => {
@@ -461,9 +478,17 @@ const TagManagementPage: NextPage = () => {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       // 批量删除功能
-                      if (confirm(`确定要删除选中的 ${selectedTags.size} 个标签吗？`)) {
+                      const confirmed = await showConfirm({
+                        title: "确认批量删除标签",
+                        message: `确定要删除选中的 ${selectedTags.size} 个标签吗？\n\n删除后无法恢复，请谨慎操作。`,
+                        confirmText: "删除",
+                        cancelText: "取消",
+                        type: "danger",
+                      });
+
+                      if (confirmed) {
                         console.log("批量删除功能待实现");
                       }
                     }}
@@ -565,6 +590,19 @@ const TagManagementPage: NextPage = () => {
           onClose={handleModalClose}
           tag={editingTag}
           onSuccess={handleModalSuccess}
+        />
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
         />
       </MainLayout>
     </AuthGuard>

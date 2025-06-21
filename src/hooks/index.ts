@@ -14,3 +14,6 @@ export { useNotifications } from "./useNotifications";
 
 // 页面刷新管理
 export { usePageRefresh } from "./usePageRefresh";
+
+// 确认对话框管理
+export { useConfirm } from "./useConfirm";

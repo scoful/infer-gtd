@@ -17,9 +17,10 @@ import { TaskStatus, TaskType, Priority } from "@prisma/client";
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading } from "@/components/UI";
+import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { useConfirm } from "@/hooks";
 import { TagList, type TagData } from "@/components/Tags";
 
 // 视图模式类型
@@ -78,6 +79,9 @@ const TaskListPage: NextPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // 确认模态框状态
+  const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
 
   // 筛选状态
   const [filters, setFilters] = useState<FilterState>({
@@ -227,20 +231,30 @@ const TaskListPage: NextPage = () => {
     if (selectedTasks.size === 0) return;
 
     const taskCount = selectedTasks.size;
-    const confirmMessage = `确定要删除选中的 ${taskCount} 个任务吗？\n\n删除后无法恢复，请谨慎操作。`;
+    const confirmed = await showConfirm({
+      title: "确认删除任务",
+      message: `确定要删除选中的 ${taskCount} 个任务吗？\n\n删除后无法恢复，请谨慎操作。`,
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
 
-    if (!confirm(confirmMessage)) {
+    if (!confirmed) {
       return;
     }
 
     try {
+      setLoading(true);
       await batchDeleteTasks.mutateAsync({
         taskIds: Array.from(selectedTasks),
       });
     } catch (error) {
       console.error("批量删除失败:", error);
+    } finally {
+      setLoading(false);
+      hideConfirm();
     }
-  }, [selectedTasks, batchDeleteTasks]);
+  }, [selectedTasks, batchDeleteTasks, showConfirm, setLoading, hideConfirm]);
 
   // 处理任务编辑
   const handleEditTask = useCallback((taskId: string) => {
@@ -790,6 +804,19 @@ const TaskListPage: NextPage = () => {
           onClose={handleTaskModalClose}
           taskId={editingTaskId || undefined}
           onSuccess={handleTaskModalSuccess}
+        />
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
         />
       </MainLayout>
     </AuthGuard>
