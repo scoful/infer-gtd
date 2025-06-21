@@ -1,6 +1,25 @@
 import React from "react";
 import { TagIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { TagType } from "@prisma/client";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // 标签数据类型
 export interface TagData {
@@ -40,6 +59,8 @@ interface TagListProps {
   clickable?: boolean;
   onTagClick?: (tag: TagData) => void;
   expandable?: boolean; // 是否支持点击"+N"展开
+  sortable?: boolean; // 是否支持拖拽排序
+  onReorder?: (newOrder: string[]) => void; // 拖拽排序回调
 }
 
 // 获取标签类型的默认颜色
@@ -111,6 +132,41 @@ function getVariantClasses(variant: "default" | "outline" | "minimal", color: st
       };
   }
 }
+
+// 可拖拽的标签组件
+interface SortableTagProps extends TagDisplayProps {
+  id: string;
+  isDragging?: boolean;
+}
+
+const SortableTag: React.FC<SortableTagProps> = ({ id, isDragging, ...props }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="touch-none" // 防止移动端滚动冲突
+    >
+      <TagDisplay {...props} />
+    </div>
+  );
+};
 
 // 单个标签显示组件
 export const TagDisplay: React.FC<TagDisplayProps> = ({
@@ -217,8 +273,39 @@ export const TagList: React.FC<TagListProps> = ({
   clickable = false,
   onTagClick,
   expandable = true,
+  sortable = false,
+  onReorder,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
+
+  // 拖拽传感器配置
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 需要拖拽8px才激活，避免误触
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 处理拖拽结束
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = tags.findIndex((tag) => tag.id === active.id);
+      const newIndex = tags.findIndex((tag) => tag.id === over?.id);
+
+      const newTags = arrayMove(tags, oldIndex, newIndex);
+      const newOrder = newTags.map(tag => tag.id);
+
+      if (onReorder) {
+        onReorder(newOrder);
+      }
+    }
+  };
 
   // 如果没有设置maxDisplay或者已经展开，显示所有标签
   const shouldShowAll = !maxDisplay || isExpanded;
@@ -236,9 +323,40 @@ export const TagList: React.FC<TagListProps> = ({
     }
   };
 
-  return (
-    <div className={`flex flex-wrap gap-1.5 ${className}`}>
-      {displayTags.map((tag) => (
+  // 渲染标签内容
+  const renderTagContent = () => {
+    if (sortable && onReorder) {
+      // 可拖拽模式
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={displayTags.map(tag => tag.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {displayTags.map((tag) => (
+              <SortableTag
+                key={tag.id}
+                id={tag.id}
+                tag={tag}
+                size={size}
+                variant={variant}
+                showIcon={showIcon}
+                showRemove={showRemove}
+                onRemove={onRemove}
+                clickable={clickable}
+                onClick={onTagClick}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      );
+    } else {
+      // 普通模式
+      return displayTags.map((tag) => (
         <TagDisplay
           key={tag.id}
           tag={tag}
@@ -250,7 +368,13 @@ export const TagList: React.FC<TagListProps> = ({
           clickable={clickable}
           onClick={onTagClick}
         />
-      ))}
+      ));
+    }
+  };
+
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${className}`}>
+      {renderTagContent()}
 
       {/* 可点击的"+N"展开按钮 */}
       {remainingCount > 0 && (

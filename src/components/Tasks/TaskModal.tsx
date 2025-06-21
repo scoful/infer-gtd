@@ -434,6 +434,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                       placeholder="选择或创建标签..."
                       allowCreate={true}
                       disabled={isLoadingTags}
+                      sortable={true}
                     />
                     {isLoadingTags && (
                       <p className="mt-1 text-xs text-gray-500">加载标签列表中...</p>

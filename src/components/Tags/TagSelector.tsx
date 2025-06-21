@@ -26,6 +26,7 @@ interface TagSelectorProps {
   error?: string;
   gridLayout?: boolean; // 是否使用网格布局
   closeOnSelect?: boolean; // 选择标签后是否关闭下拉菜单
+  sortable?: boolean; // 是否支持拖拽排序已选中的标签
 }
 
 // 标签创建表单的属性
@@ -153,6 +154,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   error,
   gridLayout = true, // 默认启用网格布局
   closeOnSelect = false, // 默认不自动关闭
+  sortable = false, // 默认不启用拖拽排序
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -248,6 +250,11 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   // 处理标签移除
   const handleTagRemove = (tagId: string) => {
     onTagsChange(selectedTagIds.filter(id => id !== tagId));
+  };
+
+  // 处理标签重新排序
+  const handleTagReorder = (newOrder: string[]) => {
+    onTagsChange(newOrder);
   };
 
   // 处理创建新标签
@@ -359,6 +366,8 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               size="sm"
               showRemove={!disabled}
               onRemove={handleTagRemove}
+              sortable={sortable}
+              onReorder={handleTagReorder}
             />
           )}
           
