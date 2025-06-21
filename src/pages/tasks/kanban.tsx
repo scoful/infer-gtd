@@ -20,9 +20,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
   pointerWithin,
-  rectIntersection,
   useDroppable,
   type CollisionDetection,
   type DragOverEvent,
@@ -105,7 +103,7 @@ type TaskWithRelations = Task & {
 
 const KanbanPage: NextPage = () => {
   const { data: sessionData } = useSession();
-  const [selectedTask, setSelectedTask] = useState<string | null>(null);
+
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -123,11 +121,7 @@ const KanbanPage: NextPage = () => {
     [TaskStatus.ARCHIVED]: [],
   });
 
-  // 拖拽过程中的状态
-  const [dragOverInfo, setDragOverInfo] = useState<{
-    overId: string | null;
-    overType: 'task' | 'column' | null;
-  }>({ overId: null, overType: null });
+
 
   // 正在更新状态和位置的任务
   const [updatingTasks, setUpdatingTasks] = useState<Set<string>>(new Set());
@@ -259,7 +253,7 @@ const KanbanPage: NextPage = () => {
 
   // 任务状态更新
   const updateTaskStatus = api.task.updateStatus.useMutation({
-    onSuccess: (updatedTask, variables) => {
+    onSuccess: (_, variables) => {
       const columnTitle = KANBAN_COLUMNS.find(col => col.status === variables.status)?.title;
       showSuccess(`任务已移动到"${columnTitle}"`);
 
@@ -298,26 +292,18 @@ const KanbanPage: NextPage = () => {
 
   // 时间追踪
   const startTimer = api.task.startTimer.useMutation({
-    onSuccess: (_, variables) => {
-      // 使用缓存更新
-      utils.task.getAll.setData({ limit: 100 }, (oldData) => {
-        if (!oldData) return oldData;
-
-        return {
-          ...oldData,
-          tasks: oldData.tasks.map(task =>
-            task.id === variables.id
-              ? { ...task, isTimerActive: true, timerStartedAt: new Date() }
-              : task
-          )
-        };
-      });
+    onSuccess: () => {
+      // 乐观更新已在handleStartTimer中处理，这里只需要确保数据同步
+      showSuccess("计时已开始");
+    },
+    onError: () => {
+      showError("开始计时失败");
     },
   });
 
   const pauseTimer = api.task.pauseTimer.useMutation({
-    onSuccess: (_, variables) => {
-      // 使用缓存更新
+    onSuccess: (result, variables) => {
+      // 更新总时长（乐观更新已在handlePauseTimer中处理状态）
       utils.task.getAll.setData({ limit: 100 }, (oldData) => {
         if (!oldData) return oldData;
 
@@ -325,11 +311,19 @@ const KanbanPage: NextPage = () => {
           ...oldData,
           tasks: oldData.tasks.map(task =>
             task.id === variables.id
-              ? { ...task, isTimerActive: false, timerStartedAt: null }
+              ? {
+                  ...task,
+                  totalTimeSpent: result.task?.totalTimeSpent || task.totalTimeSpent
+                }
               : task
           )
         };
       });
+
+      showSuccess("计时已暂停");
+    },
+    onError: () => {
+      showError("暂停计时失败");
     },
   });
 
@@ -443,6 +437,20 @@ const KanbanPage: NextPage = () => {
   };
 
   const handleStartTimer = async (taskId: string) => {
+    // 乐观更新：立即更新UI状态
+    utils.task.getAll.setData({ limit: 100 }, (oldData) => {
+      if (!oldData) return oldData;
+
+      return {
+        ...oldData,
+        tasks: oldData.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, isTimerActive: true, timerStartedAt: new Date() }
+            : { ...task, isTimerActive: false, timerStartedAt: null } // 停止其他任务的计时器
+        )
+      };
+    });
+
     try {
       await startTimer.mutateAsync({
         id: taskId,
@@ -450,10 +458,26 @@ const KanbanPage: NextPage = () => {
       });
     } catch (error) {
       console.error("开始计时失败:", error);
+      // 错误时回滚乐观更新
+      void utils.task.getAll.invalidate();
     }
   };
 
   const handlePauseTimer = async (taskId: string) => {
+    // 乐观更新：立即更新UI状态
+    utils.task.getAll.setData({ limit: 100 }, (oldData) => {
+      if (!oldData) return oldData;
+
+      return {
+        ...oldData,
+        tasks: oldData.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, isTimerActive: false, timerStartedAt: null }
+            : task
+        )
+      };
+    });
+
     try {
       await pauseTimer.mutateAsync({
         id: taskId,
@@ -461,6 +485,8 @@ const KanbanPage: NextPage = () => {
       });
     } catch (error) {
       console.error("暂停计时失败:", error);
+      // 错误时回滚乐观更新
+      void utils.task.getAll.invalidate();
     }
   };
 
@@ -474,7 +500,9 @@ const KanbanPage: NextPage = () => {
   };
 
   const isTimerActive = (task: TaskWithRelations) => {
-    return task.isTimerActive && task.timeEntries.some(entry => !entry.endTime);
+    // 简化逻辑：只依赖 task.isTimerActive 字段
+    // 这个字段在开始/暂停计时时会立即更新
+    return task.isTimerActive;
   };
 
   const handleCreateTask = () => {
@@ -524,11 +552,11 @@ const KanbanPage: NextPage = () => {
     const task = tasksData?.tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const currentStatusTasks = tasksByStatus[task.status] || [];
+    const currentStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] || [];
     if (currentStatusTasks.length <= 1) return; // 如果只有一个任务或没有任务，无需移动
 
     // 乐观更新：立即将任务移动到第一位
-    const newOrder = [taskId, ...currentStatusTasks.filter(t => t.id !== taskId).map(t => t.id)];
+    const newOrder = [taskId, ...currentStatusTasks.filter((t: TaskWithRelations) => t.id !== taskId).map((t: TaskWithRelations) => t.id)];
     setOptimisticTaskOrder(prev => ({
       ...prev,
       [task.status]: newOrder,
@@ -553,26 +581,15 @@ const KanbanPage: NextPage = () => {
   };
 
   // 拖拽过程中
-  const handleDragOver = (event: DragOverEvent) => {
-    const { over } = event;
-
-    if (!over) {
-      setDragOverInfo({ overId: null, overType: null });
-      return;
-    }
-
-    const overType = over.data?.current?.type as 'task' | 'column' | undefined;
-    setDragOverInfo({
-      overId: over.id as string,
-      overType: overType || null,
-    });
+  const handleDragOver = (_: DragOverEvent) => {
+    // 可以在这里添加拖拽过程中的视觉反馈逻辑
   };
 
   // 拖拽结束
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
-    setDragOverInfo({ overId: null, overType: null });
+
 
     if (!over) return;
 
@@ -589,9 +606,9 @@ const KanbanPage: NextPage = () => {
     // 如果拖拽到自己身上，不执行任何操作
     if (draggedTaskId === overId) return;
 
-    const draggedTask = Object.values(tasksByStatus)
+    const draggedTask = (Object.values(tasksByStatus) as TaskWithRelations[][])
       .flat()
-      .find((task: TaskWithRelations) => task.id === draggedTaskId);
+      .find((task) => task.id === draggedTaskId);
 
     if (!draggedTask) return;
 
@@ -615,8 +632,8 @@ const KanbanPage: NextPage = () => {
 
       if (over.data?.current?.type === "task") {
         // 拖拽到具体任务上，插入到该任务之前
-        const targetStatusTasks = tasksByStatus[targetStatus] || [];
-        const targetTaskIndex = targetStatusTasks.findIndex(task => task.id === overId);
+        const targetStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[targetStatus] || [];
+        const targetTaskIndex = targetStatusTasks.findIndex((task: TaskWithRelations) => task.id === overId);
         targetInsertIndex = targetTaskIndex !== -1 ? targetTaskIndex : undefined;
       }
 
@@ -636,8 +653,8 @@ const KanbanPage: NextPage = () => {
 
       // 乐观更新排序 - 立即在目标位置显示任务
       if (targetInsertIndex !== undefined) {
-        const targetStatusTasks = tasksByStatus[targetStatus] || [];
-        const newTaskIds = [...targetStatusTasks.map(t => t.id)];
+        const targetStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[targetStatus] || [];
+        const newTaskIds = [...targetStatusTasks.map((t: TaskWithRelations) => t.id)];
         newTaskIds.splice(targetInsertIndex, 0, draggedTaskId);
 
         setOptimisticTaskOrder(prev => ({
@@ -664,8 +681,8 @@ const KanbanPage: NextPage = () => {
     }
 
     // 处理同状态内的排序
-    const statusTasks = tasksByStatus[currentStatus] || [];
-    const currentIndex = statusTasks.findIndex(task => task.id === draggedTaskId);
+    const statusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[currentStatus] || [];
+    const currentIndex = statusTasks.findIndex((task: TaskWithRelations) => task.id === draggedTaskId);
 
     if (currentIndex === -1) return;
 
@@ -676,7 +693,7 @@ const KanbanPage: NextPage = () => {
       newIndex = statusTasks.length - 1;
     } else {
       // 拖拽到具体任务上
-      const targetTaskIndex = statusTasks.findIndex(task => task.id === overId);
+      const targetTaskIndex = statusTasks.findIndex((task: TaskWithRelations) => task.id === overId);
       if (targetTaskIndex === -1) return;
 
       console.log('位置计算:', {
@@ -697,7 +714,7 @@ const KanbanPage: NextPage = () => {
 
     // 计算新的任务顺序
     const reorderedTasks = arrayMove(statusTasks, currentIndex, newIndex);
-    const taskIds = reorderedTasks.map(task => task.id);
+    const taskIds = reorderedTasks.map((task: TaskWithRelations) => task.id);
 
     // 乐观更新UI
     setOptimisticTaskOrder(prev => ({
@@ -717,7 +734,7 @@ const KanbanPage: NextPage = () => {
 
   // 获取当前拖拽的任务
   const activeTask = activeId
-    ? Object.values(tasksByStatus).flat().find((task: TaskWithRelations) => task.id === activeId)
+    ? (Object.values(tasksByStatus) as TaskWithRelations[][]).flat().find((task) => task.id === activeId)
     : null;
 
   // 首次加载显示页面级loading
@@ -786,7 +803,7 @@ const KanbanPage: NextPage = () => {
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
             {KANBAN_COLUMNS.map((column) => {
-              const tasks = tasksByStatus[column.status] || [];
+              const tasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[column.status] || [];
 
               return (
                 <KanbanColumn
@@ -1036,7 +1053,31 @@ function TaskCard({
   isDragging = false,
 }: TaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [currentSessionTime, setCurrentSessionTime] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // 实时计时器 - 计算当前会话时长
+  useEffect(() => {
+    if (!isTimerActive || !task.timerStartedAt) {
+      setCurrentSessionTime(0);
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date();
+      const startTime = new Date(task.timerStartedAt!);
+      const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      setCurrentSessionTime(elapsed);
+    };
+
+    // 立即更新一次
+    updateTimer();
+
+    // 每秒更新
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTimerActive, task.timerStartedAt]);
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -1061,7 +1102,7 @@ function TaskCard({
 
   return (
     <div
-      className={`bg-white rounded-lg border p-4 shadow-sm transition-all duration-200 cursor-pointer relative ${
+      className={`group bg-white rounded-lg border p-4 shadow-sm transition-all duration-200 cursor-pointer relative ${
         isDragging
           ? "border-blue-400 shadow-xl bg-blue-50 scale-105 rotate-1 z-50"
           : isUpdating
@@ -1070,76 +1111,78 @@ function TaskCard({
       }`}
       onClick={() => !isDragging && onEdit(task.id)}
     >
-      {/* 右上角区域：更新指示器和菜单 */}
-      <div className="absolute top-2 right-2 flex items-center space-x-1">
-        {/* 更新中的指示器 */}
-        {isUpdating && (
-          <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
-        )}
-
-        {/* 菜单按钮 */}
-        {!isDragging && (
-          <div ref={menuRef} className="relative">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMenu(!showMenu);
-              }}
-              className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-              title="更多操作"
-            >
-              <EllipsisVerticalIcon className="h-4 w-4" />
-            </button>
-
-            {/* 下拉菜单 */}
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                <div className="py-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowMenu(false);
-                      onMoveToTop(task.id);
-                    }}
-                    className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <ArrowUpIcon className="h-4 w-4 mr-2" />
-                    置顶
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowMenu(false);
-                      onDelete(task.id);
-                    }}
-                    className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <TrashIcon className="h-4 w-4 mr-2" />
-                    删除
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      {/* 任务标题 */}
-      <div className="mb-2">
+      {/* 任务标题和菜单 */}
+      <div className="mb-2 flex items-start justify-between">
         <h4
-          className="text-sm font-medium text-gray-900 line-clamp-3"
+          className="text-sm font-medium text-gray-900 line-clamp-3 flex-1 min-w-0 pr-1"
           title={task.title}
         >
           {task.title}
         </h4>
+
+        {/* 右侧区域：更新指示器和菜单 */}
+        <div className="flex items-center flex-shrink-0 -mr-1">
+          {/* 更新中的指示器 */}
+          {isUpdating && (
+            <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent mr-1"></div>
+          )}
+
+          {/* 菜单按钮 */}
+          {!isDragging && (
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu(!showMenu);
+                }}
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                title="更多操作"
+              >
+                <EllipsisVerticalIcon className="h-4 w-4" />
+              </button>
+
+              {/* 下拉菜单 */}
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-[60]">
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        onMoveToTop(task.id);
+                      }}
+                      className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <ArrowUpIcon className="h-4 w-4 mr-2 text-blue-500" />
+                      置顶
+                    </button>
+                    <div className="border-t border-gray-100"></div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        onDelete(task.id);
+                      }}
+                      className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <TrashIcon className="h-4 w-4 mr-2" />
+                      删除
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 任务描述 */}
       {task.description && (
         <p
-          className="text-xs text-gray-600 mb-3 line-clamp-4"
+          className="text-xs text-gray-600 mb-3 line-clamp-4 pr-8"
           title={task.description}
         >
           {task.description}
@@ -1196,29 +1239,55 @@ function TaskCard({
         {/* 计时器控制 */}
         <div className="flex items-center space-x-1">
           {task.status === TaskStatus.IN_PROGRESS && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isTimerActive) {
-                  onPauseTimer(task.id);
-                } else {
-                  onStartTimer(task.id);
-                }
-              }}
-              disabled={isUpdating}
-              className={`p-1 rounded-full ${
-                isTimerActive
-                  ? "text-red-600 hover:bg-red-50"
-                  : "text-green-600 hover:bg-green-50"
-              } disabled:opacity-50`}
-            >
-              {isTimerActive ? (
-                <PauseIcon className="h-4 w-4" />
-              ) : (
-                <PlayIcon className="h-4 w-4" />
+            <div className="flex items-center space-x-1">
+              {/* 计时状态指示 */}
+              {isTimerActive && (
+                <div className="flex items-center text-xs text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></div>
+                  <span className="font-medium">
+                    {formatTimeSpent(currentSessionTime)}
+                  </span>
+                </div>
               )}
-            </button>
+
+              {/* 计时器按钮 */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isTimerActive) {
+                    onPauseTimer(task.id);
+                  } else {
+                    onStartTimer(task.id);
+                  }
+                }}
+                disabled={isUpdating}
+                className={`relative p-1.5 rounded-full transition-all duration-200 ${
+                  isTimerActive
+                    ? "text-red-600 hover:bg-red-50 bg-red-50/50"
+                    : "text-green-600 hover:bg-green-50 bg-green-50/50"
+                } disabled:opacity-50 border ${
+                  isTimerActive
+                    ? "border-red-200 hover:border-red-300"
+                    : "border-green-200 hover:border-green-300"
+                }`}
+                title={isTimerActive
+                  ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
+                  : `开始计时 - 开始专注工作计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
+                }
+              >
+                {isTimerActive ? (
+                  <PauseIcon className="h-4 w-4" />
+                ) : (
+                  <PlayIcon className="h-4 w-4" />
+                )}
+
+                {/* 计时动画环 */}
+                {isTimerActive && (
+                  <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-20"></div>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </div>
