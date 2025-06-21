@@ -11,6 +11,7 @@ import {
   EllipsisVerticalIcon,
   TrashIcon,
   ArrowUpIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import {
   DndContext,
@@ -39,6 +40,7 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
+import TimeEntryModal from "@/components/TimeEntryModal";
 import { PageLoading, ConfirmModal } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
@@ -107,6 +109,11 @@ const KanbanPage: NextPage = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // 计时明细模态框状态
+  const [isTimeEntryModalOpen, setIsTimeEntryModalOpen] = useState(false);
+  const [timeEntryTaskId, setTimeEntryTaskId] = useState<string | null>(null);
+  const [timeEntryTaskTitle, setTimeEntryTaskTitle] = useState<string>("");
 
   // 乐观更新状态
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
@@ -625,6 +632,16 @@ const KanbanPage: NextPage = () => {
     }
   };
 
+  // 打开计时明细
+  const handleViewTimeEntries = (taskId: string) => {
+    const task = tasksData?.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    setTimeEntryTaskId(taskId);
+    setTimeEntryTaskTitle(task.title);
+    setIsTimeEntryModalOpen(true);
+  };
+
   // 处理快速上浮到第一位
   const handleMoveToTop = async (taskId: string) => {
     const task = tasksData?.tasks.find(t => t.id === taskId);
@@ -911,6 +928,7 @@ const KanbanPage: NextPage = () => {
                   onEdit={handleEditTask}
                   onDelete={handleDeleteTask}
                   onMoveToTop={handleMoveToTop}
+                  onViewTimeEntries={handleViewTimeEntries}
                   formatTimeSpent={formatTimeSpent}
                   isTimerActive={isTimerActive}
                   isUpdating={updateTaskStatus.isPending}
@@ -933,6 +951,7 @@ const KanbanPage: NextPage = () => {
                     onEdit={() => {}}
                     onDelete={() => {}}
                     onMoveToTop={() => {}}
+                    onViewTimeEntries={() => {}}
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive(activeTask)}
                     isUpdating={false}
@@ -950,6 +969,14 @@ const KanbanPage: NextPage = () => {
           onClose={handleTaskModalClose}
           taskId={editingTaskId || undefined}
           onSuccess={handleTaskModalSuccess}
+        />
+
+        {/* 计时明细模态框 */}
+        <TimeEntryModal
+          isOpen={isTimeEntryModalOpen}
+          onClose={() => setIsTimeEntryModalOpen(false)}
+          taskId={timeEntryTaskId || ""}
+          taskTitle={timeEntryTaskTitle}
         />
 
         {/* 确认模态框 */}
@@ -986,6 +1013,7 @@ interface KanbanColumnProps {
   onEdit: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onMoveToTop: (taskId: string) => void;
+  onViewTimeEntries: (taskId: string) => void;
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: (task: TaskWithRelations) => boolean;
   isUpdating: boolean;
@@ -1002,6 +1030,7 @@ function KanbanColumn({
   onEdit,
   onDelete,
   onMoveToTop,
+  onViewTimeEntries,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -1050,6 +1079,7 @@ function KanbanColumn({
               onEdit={onEdit}
               onDelete={onDelete}
               onMoveToTop={onMoveToTop}
+              onViewTimeEntries={onViewTimeEntries}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
               isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
@@ -1080,6 +1110,7 @@ interface DraggableTaskCardProps {
   onEdit: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onMoveToTop: (taskId: string) => void;
+  onViewTimeEntries: (taskId: string) => void;
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -1134,6 +1165,7 @@ interface TaskCardProps {
   onEdit: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onMoveToTop: (taskId: string) => void;
+  onViewTimeEntries: (taskId: string) => void;
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -1148,6 +1180,7 @@ function TaskCard({
   onEdit,
   onDelete,
   onMoveToTop,
+  onViewTimeEntries,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -1280,6 +1313,23 @@ function TaskCard({
                       <ArrowUpIcon className="h-4 w-4 mr-2 text-blue-500" />
                       置顶
                     </button>
+
+                    {/* 计时明细选项 */}
+                    {task.totalTimeSpent > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onViewTimeEntries(task.id);
+                        }}
+                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <ChartBarIcon className="h-4 w-4 mr-2 text-green-500" />
+                        计时明细
+                      </button>
+                    )}
+
                     <div className="border-t border-gray-100"></div>
                     <button
                       type="button"
