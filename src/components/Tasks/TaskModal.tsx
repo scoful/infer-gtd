@@ -5,7 +5,7 @@ import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import { ButtonLoading, QueryLoading } from "@/components/UI";
-import { useNotifications } from "@/hooks";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { TagSelector } from "@/components/Tags";
 
 interface TaskModalProps {
@@ -57,7 +57,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   });
 
   const isEditing = !!taskId;
-  const { showSuccess, showError } = useNotifications();
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 获取任务详情（编辑模式）
   const {

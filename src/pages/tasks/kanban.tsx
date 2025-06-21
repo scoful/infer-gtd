@@ -38,8 +38,8 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
-import { PageLoading, NotificationContainer } from "@/components/UI";
-import { useNotifications } from "@/hooks";
+import { PageLoading } from "@/components/UI";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { TagList, type TagData } from "@/components/Tags";
 
@@ -130,11 +130,9 @@ const KanbanPage: NextPage = () => {
 
   // 通知系统
   const {
-    notifications,
     showSuccess,
     showError,
-    removeNotification,
-  } = useNotifications();
+  } = useGlobalNotifications();
 
 
 
@@ -768,13 +766,6 @@ const KanbanPage: NextPage = () => {
           onClose={handleTaskModalClose}
           taskId={editingTaskId || undefined}
           onSuccess={handleTaskModalSuccess}
-        />
-
-        {/* 通知容器 */}
-        <NotificationContainer
-          notifications={notifications}
-          onClose={removeNotification}
-          position="top-center"
         />
 
       </MainLayout>

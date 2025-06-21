@@ -3,22 +3,20 @@ import Head from "next/head";
 import { useState } from "react";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { NotificationContainer } from "@/components/UI";
-import { useNotifications } from "@/hooks";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 
 const NotificationDemo: NextPage = () => {
   const {
-    notifications,
     showSuccess,
     showError,
     showWarning,
     showInfo,
-    removeNotification,
     clearAll,
     clearByType,
-  } = useNotifications();
+  } = useGlobalNotifications();
 
-  const [position, setPosition] = useState<"top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left">("top-center");
+  // 注意：由于使用全局通知系统，位置设置功能在此演示页面中不再可用
+  // 位置设置需要在应用级别的 NotificationProvider 中配置
 
   const handleShowSuccess = () => {
     showSuccess("操作成功完成！", {
@@ -83,30 +81,13 @@ const NotificationDemo: NextPage = () => {
             </p>
           </div>
 
-          {/* 位置选择 */}
+          {/* 全局通知系统说明 */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">通知位置</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {[
-                { value: "top-left", label: "左上角" },
-                { value: "top-center", label: "顶部居中" },
-                { value: "top-right", label: "右上角" },
-                { value: "bottom-left", label: "左下角" },
-                { value: "bottom-center", label: "底部居中" },
-                { value: "bottom-right", label: "右下角" },
-              ].map((pos) => (
-                <label key={pos.value} className="flex items-center">
-                  <input
-                    type="radio"
-                    name="position"
-                    value={pos.value}
-                    checked={position === pos.value}
-                    onChange={(e) => setPosition(e.target.value as any)}
-                    className="mr-2"
-                  />
-                  {pos.label}
-                </label>
-              ))}
+            <h2 className="text-lg font-medium text-gray-900 mb-4">全局通知系统</h2>
+            <div className="text-sm text-gray-600 space-y-2">
+              <p>• 当前使用全局通知系统，所有通知都会显示在页面顶部居中位置</p>
+              <p>• 通知位置在应用级别的 NotificationProvider 中统一配置</p>
+              <p>• 所有页面和组件共享同一个通知实例，确保用户体验一致</p>
             </div>
           </div>
 
@@ -189,18 +170,11 @@ const NotificationDemo: NextPage = () => {
                 清除所有通知
               </button>
               <div className="text-sm text-gray-500 flex items-center">
-                当前通知数: {notifications.length}
+                通知管理功能已集成到全局系统
               </div>
             </div>
           </div>
         </div>
-
-        {/* 通知容器 */}
-        <NotificationContainer
-          notifications={notifications}
-          onClose={removeNotification}
-          position={position}
-        />
       </MainLayout>
     </AuthGuard>
   );
