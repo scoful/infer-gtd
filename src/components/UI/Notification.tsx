@@ -101,12 +101,12 @@ interface NotificationContainerProps {
 }
 
 const positionStyles = {
-  "top-right": "fixed top-6 right-6 z-50",
-  "top-center": "fixed top-6 left-1/2 transform -translate-x-1/2 z-50",
-  "top-left": "fixed top-6 left-6 z-50",
-  "bottom-right": "fixed bottom-6 right-6 z-50",
-  "bottom-center": "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50",
-  "bottom-left": "fixed bottom-6 left-6 z-50",
+  "top-right": "fixed top-6 right-6 z-[60]",
+  "top-center": "fixed top-6 left-1/2 transform -translate-x-1/2 z-[60]",
+  "top-left": "fixed top-6 left-6 z-[60]",
+  "bottom-right": "fixed bottom-6 right-6 z-[60]",
+  "bottom-center": "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60]",
+  "bottom-left": "fixed bottom-6 left-6 z-[60]",
 };
 
 export function NotificationContainer({

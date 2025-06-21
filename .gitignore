@@ -48,3 +48,7 @@ yarn-error.log*
 .cursor
 .augment-guidelines
 .cursorignore
+
+.vscode
+
+test*

@@ -19,7 +19,8 @@ import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import { TagDisplay, TagList, TagGroupDisplay, type TagData } from "@/components/Tags";
 import TagModal from "@/components/Tags/TagModal";
-import { useNotifications, useConfirm } from "@/hooks";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
+import { useConfirm } from "@/hooks";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 // 筛选状态接口
@@ -36,7 +37,7 @@ type SortDirection = "asc" | "desc";
 
 const TagManagementPage: NextPage = () => {
   const { data: sessionData } = useSession();
-  const { showSuccess, showError } = useNotifications();
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 状态管理
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -115,6 +116,18 @@ const TagManagementPage: NextPage = () => {
     },
   });
 
+  // 批量删除标签的mutation
+  const batchDeleteTagsMutation = api.tag.batchDelete.useMutation({
+    onSuccess: (result) => {
+      showSuccess(result.message);
+      setSelectedTags(new Set());
+      void refetch();
+    },
+    onError: (error) => {
+      showError(`批量删除标签失败: ${error.message}`);
+    },
+  });
+
 
 
   // 处理标签删除
@@ -161,6 +174,52 @@ const TagManagementPage: NextPage = () => {
       hideConfirm();
     }
   }, [deleteTagMutation, showConfirm, setLoading, hideConfirm, showError]);
+
+  // 处理批量删除标签
+  const handleBatchDeleteTags = useCallback(async () => {
+    if (selectedTags.size === 0) return;
+
+    const confirmed = await showConfirm({
+      title: "确认批量删除标签",
+      message: `确定要删除选中的 ${selectedTags.size} 个标签吗？\n\n删除后无法恢复，请谨慎操作。`,
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await batchDeleteTagsMutation.mutateAsync({
+        tagIds: Array.from(selectedTags),
+      });
+    } catch (error: any) {
+      // 如果是标签被引用的错误，显示友好的提示信息
+      if (error?.data?.code === "CONFLICT") {
+        const errorMessage = error.message || "部分标签正在被使用，无法删除";
+
+        // 延迟显示确认框，确保当前的确认框先关闭
+        setTimeout(async () => {
+          await showConfirm({
+            title: "无法删除标签",
+            message: errorMessage,
+            confirmText: "我知道了",
+            cancelText: "",
+            type: "warning",
+          });
+        }, 100);
+      } else {
+        // 其他错误显示通用错误信息
+        showError(`批量删除标签失败: ${error.message || "未知错误"}`);
+      }
+    } finally {
+      setLoading(false);
+      hideConfirm();
+    }
+  }, [selectedTags, batchDeleteTagsMutation, showConfirm, setLoading, hideConfirm, showError]);
 
   // 处理标签编辑
   const handleEditTag = useCallback((tag: TagData) => {
@@ -500,23 +559,21 @@ const TagManagementPage: NextPage = () => {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={async () => {
-                      // 批量删除功能
-                      const confirmed = await showConfirm({
-                        title: "确认批量删除标签",
-                        message: `确定要删除选中的 ${selectedTags.size} 个标签吗？\n\n删除后无法恢复，请谨慎操作。`,
-                        confirmText: "删除",
-                        cancelText: "取消",
-                        type: "danger",
-                      });
-
-                      if (confirmed) {
-                        console.log("批量删除功能待实现");
-                      }
-                    }}
-                    className="px-3 py-1 text-sm text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100"
+                    onClick={handleBatchDeleteTags}
+                    disabled={batchDeleteTagsMutation.isPending}
+                    className="px-3 py-1 text-sm text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    title={`删除选中的 ${selectedTags.size} 个标签`}
                   >
-                    批量删除
+                    {batchDeleteTagsMutation.isPending ? (
+                      <>
+                        <div className="animate-spin h-3 w-3 border border-red-600 border-t-transparent rounded-full"></div>
+                        删除中...
+                      </>
+                    ) : (
+                      <>
+                        批量删除 ({selectedTags.size})
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

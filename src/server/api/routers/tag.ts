@@ -43,6 +43,10 @@ const batchCreateTagsSchema = z.object({
   tags: z.array(createTagSchema).min(1, "至少需要一个标签").max(20, "一次最多创建20个标签"),
 });
 
+const batchDeleteTagsSchema = z.object({
+  tagIds: z.array(z.string().cuid("无效的标签ID")).min(1, "至少选择一个标签").max(50, "一次最多删除50个标签"),
+});
+
 
 
 export const tagRouter = createTRPCRouter({
@@ -503,5 +507,89 @@ export const tagRouter = createTRPCRouter({
       }
     }),
 
+  // 批量删除标签
+  batchDelete: protectedProcedure
+    .input(batchDeleteTagsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { tagIds } = input;
 
+      try {
+        // 验证所有标签的所有权和状态
+        const tags = await ctx.db.tag.findMany({
+          where: {
+            id: { in: tagIds },
+            createdById: ctx.session.user.id,
+          },
+          select: {
+            id: true,
+            name: true,
+            isSystem: true,
+            _count: {
+              select: {
+                taskTags: true,
+                noteTags: true,
+              },
+            },
+          },
+        });
+
+        if (tags.length !== tagIds.length) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "部分标签不存在或无权限删除",
+          });
+        }
+
+        // 检查系统标签
+        const systemTags = tags.filter(tag => tag.isSystem);
+        if (systemTags.length > 0) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `系统标签不允许删除: ${systemTags.map(tag => tag.name).join(", ")}`,
+          });
+        }
+
+        // 检查被引用的标签
+        const referencedTags = tags.filter(tag =>
+          tag._count.taskTags > 0 || tag._count.noteTags > 0
+        );
+
+        if (referencedTags.length > 0) {
+          const referencedNames = referencedTags.map(tag => {
+            const taskCount = tag._count.taskTags;
+            const noteCount = tag._count.noteTags;
+            const totalCount = taskCount + noteCount;
+            return `${tag.name} (${totalCount}处引用)`;
+          }).join(", ");
+
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `以下标签正在被使用，无法删除:\n\n${referencedNames}\n\n请先移除这些引用，然后再删除标签。`,
+          });
+        }
+
+        // 批量删除标签
+        const deletedTags = await ctx.db.tag.deleteMany({
+          where: {
+            id: { in: tagIds },
+            createdById: ctx.session.user.id,
+          },
+        });
+
+        return {
+          success: true,
+          message: `成功删除 ${deletedTags.count} 个标签`,
+          deletedCount: deletedTags.count,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "批量删除标签失败",
+          cause: error,
+        });
+      }
+    }),
 });

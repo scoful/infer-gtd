@@ -5,7 +5,7 @@ import { TagType } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import { ButtonLoading } from "@/components/UI";
-import { useNotifications } from "@/hooks";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { TagDisplay, type TagData } from "./TagDisplay";
 
 interface TagModalProps {
@@ -58,7 +58,7 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
   });
 
   const isEditing = !!tag;
-  const { showSuccess, showError } = useNotifications();
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 当模态框打开时，根据模式初始化表单数据
   useEffect(() => {
@@ -90,6 +90,7 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
     },
     onError: (error) => {
       showError(`创建标签失败: ${error.message}`);
+      // 错误时不关闭Modal，让用户可以修改后重试
     },
   });
 
@@ -102,6 +103,7 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
     },
     onError: (error) => {
       showError(`更新标签失败: ${error.message}`);
+      // 错误时不关闭Modal，让用户可以修改后重试
     },
   });
 
@@ -116,31 +118,27 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) return;
 
-    try {
-      const submitData = {
-        name: formData.name.trim(),
-        color: formData.color,
-        type: formData.type,
-        category: formData.category.trim() || undefined,
-        description: formData.description.trim() || undefined,
-        icon: formData.icon.trim() || undefined,
-      };
+    const submitData = {
+      name: formData.name.trim(),
+      color: formData.color,
+      type: formData.type,
+      category: formData.category.trim() || undefined,
+      description: formData.description.trim() || undefined,
+      icon: formData.icon.trim() || undefined,
+    };
 
-      if (isEditing && tag) {
-        await updateTag.mutateAsync({
-          id: tag.id,
-          ...submitData,
-        });
-      } else {
-        await createTag.mutateAsync(submitData);
-      }
-    } catch (error) {
-      console.error("保存标签失败:", error);
+    if (isEditing && tag) {
+      updateTag.mutate({
+        id: tag.id,
+        ...submitData,
+      });
+    } else {
+      createTag.mutate(submitData);
     }
   };
 

@@ -10,6 +10,7 @@ import { TagType } from "@prisma/client";
 import { api } from "@/utils/api";
 import { TagDisplay, TagList, type TagData } from "./TagDisplay";
 import { SectionLoading } from "@/components/UI";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 
 // 标签选择器组件的属性
 interface TagSelectorProps {
@@ -164,6 +165,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // 通知系统
+  const { showSuccess, showError } = useGlobalNotifications();
+
   // 获取标签列表
   const { data: tagsData, isLoading } = api.tag.getAll.useQuery(
     {
@@ -177,6 +181,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   // 创建标签的mutation
   const createTagMutation = api.tag.create.useMutation({
     onSuccess: (newTag) => {
+      showSuccess("标签创建成功");
       // 添加新创建的标签到选中列表
       onTagsChange([...selectedTagIds, newTag.id]);
       setShowCreateForm(false);
@@ -186,6 +191,10 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
         const position = calculateDropdownPosition();
         setDropdownPosition(position);
       }
+    },
+    onError: (error) => {
+      showError(`创建标签失败: ${error.message}`);
+      // 错误时不关闭创建表单，让用户可以修改后重试
     },
   });
 
