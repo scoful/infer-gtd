@@ -133,6 +133,13 @@ export const updateTaskFeedbackSchema = z.object({
   feedback: z.string().max(1000, "反馈内容过长").optional(),
 });
 
+// 按状态获取任务 Schema
+export const getTasksByStatusSchema = z.object({
+  status: z.nativeEnum(TaskStatus, { required_error: "状态不能为空" }),
+  limit: z.number().min(1).max(100).default(20),
+  cursor: z.string().cuid().optional(),
+});
+
 // 导出类型
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;

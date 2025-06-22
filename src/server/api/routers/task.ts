@@ -21,6 +21,7 @@ import {
   reorderTasksSchema,
   updateTaskStatusWithPositionSchema,
   updateTaskFeedbackSchema,
+  getTasksByStatusSchema,
 } from "@/server/api/schemas/task";
 
 export const taskRouter = createTRPCRouter({
@@ -188,6 +189,68 @@ export const taskRouter = createTRPCRouter({
                 tag: true,
               },
               orderBy: { sortOrder: "asc" }, // 按sortOrder排序
+            },
+            timeEntries: {
+              where: { endTime: null },
+              take: 1,
+            },
+            _count: {
+              select: {
+                timeEntries: true,
+                statusHistory: true,
+              },
+            },
+          },
+        });
+
+        let nextCursor: typeof cursor | undefined = undefined;
+        if (tasks.length > limit) {
+          const nextItem = tasks.pop();
+          nextCursor = nextItem!.id;
+        }
+
+        return {
+          tasks,
+          nextCursor,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "获取任务列表失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 按状态获取任务列表
+  getByStatus: protectedProcedure
+    .input(getTasksByStatusSchema)
+    .query(async ({ ctx, input }) => {
+      const { status, limit, cursor } = input;
+
+      try {
+        const where = {
+          createdById: ctx.session.user.id,
+          status: status,
+        };
+
+        const tasks = await ctx.db.task.findMany({
+          where,
+          take: limit + 1,
+          cursor: cursor ? { id: cursor } : undefined,
+          orderBy: [
+            { sortOrder: "asc" },
+            { priority: "desc" },
+            { dueDate: "asc" },
+            { createdAt: "desc" },
+          ],
+          include: {
+            project: true,
+            tags: {
+              include: {
+                tag: true,
+              },
+              orderBy: { sortOrder: "asc" },
             },
             timeEntries: {
               where: { endTime: null },

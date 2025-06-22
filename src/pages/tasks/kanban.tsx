@@ -184,28 +184,75 @@ const KanbanPage: NextPage = () => {
     return columnCollisions;
   };
 
-  // 获取所有任务 - 看板需要较新的数据
-  const { data: tasksData, isLoading, refetch, isFetching } = api.task.getAll.useQuery(
-    { limit: 100 }, // 获取更多任务用于看板显示
-    {
-      enabled: !!sessionData,
-      staleTime: 30 * 1000, // 30秒缓存，确保数据新鲜度
-      refetchOnWindowFocus: true, // 窗口聚焦时重新获取，适合工作流程管理
-      refetchOnMount: true, // 每次挂载时重新获取
-      // 网络重连时重新获取
-      refetchOnReconnect: true,
-    }
+  // 为每个状态管理分页状态
+  const [statusLimits, setStatusLimits] = useState<Record<TaskStatus, number>>({
+    [TaskStatus.IDEA]: 20,
+    [TaskStatus.TODO]: 20,
+    [TaskStatus.IN_PROGRESS]: 20,
+    [TaskStatus.WAITING]: 20,
+    [TaskStatus.DONE]: 20,
+    [TaskStatus.ARCHIVED]: 20,
+  });
+
+  // 为每个状态单独获取任务数据
+  const ideaTasks = api.task.getByStatus.useQuery(
+    { status: TaskStatus.IDEA, limit: statusLimits[TaskStatus.IDEA] },
+    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
   );
+
+  const todoTasks = api.task.getByStatus.useQuery(
+    { status: TaskStatus.TODO, limit: statusLimits[TaskStatus.TODO] },
+    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  );
+
+  const inProgressTasks = api.task.getByStatus.useQuery(
+    { status: TaskStatus.IN_PROGRESS, limit: statusLimits[TaskStatus.IN_PROGRESS] },
+    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  );
+
+  const waitingTasks = api.task.getByStatus.useQuery(
+    { status: TaskStatus.WAITING, limit: statusLimits[TaskStatus.WAITING] },
+    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  );
+
+  const doneTasks = api.task.getByStatus.useQuery(
+    { status: TaskStatus.DONE, limit: statusLimits[TaskStatus.DONE] },
+    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  );
+
+  // 合并加载状态
+  const isLoading = ideaTasks.isLoading || todoTasks.isLoading || inProgressTasks.isLoading || waitingTasks.isLoading || doneTasks.isLoading;
+  const isFetching = ideaTasks.isFetching || todoTasks.isFetching || inProgressTasks.isFetching || waitingTasks.isFetching || doneTasks.isFetching;
+
+  // 获取所有任务的helper函数
+  const getAllTasks = (): TaskWithRelations[] => {
+    return [
+      ...(ideaTasks.data?.tasks || []),
+      ...(todoTasks.data?.tasks || []),
+      ...(inProgressTasks.data?.tasks || []),
+      ...(waitingTasks.data?.tasks || []),
+      ...(doneTasks.data?.tasks || []),
+    ];
+  };
+
+  // 刷新所有状态的任务数据
+  const refetchAll = async () => {
+    await Promise.all([
+      ideaTasks.refetch(),
+      todoTasks.refetch(),
+      inProgressTasks.refetch(),
+      waitingTasks.refetch(),
+      doneTasks.refetch(),
+    ]);
+  };
 
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void refetch();
-  }, [refetch]);
+    void refetchAll();
+  }, [ideaTasks.refetch, todoTasks.refetch, inProgressTasks.refetch, waitingTasks.refetch, doneTasks.refetch]);
 
   // 按状态分组任务（包含乐观更新）
   const tasksByStatus = useMemo(() => {
-    if (!tasksData?.tasks) return {};
-
     const grouped: Record<TaskStatus, TaskWithRelations[]> = {
       [TaskStatus.IDEA]: [],
       [TaskStatus.TODO]: [],
@@ -215,8 +262,11 @@ const KanbanPage: NextPage = () => {
       [TaskStatus.ARCHIVED]: [],
     };
 
-    tasksData.tasks.forEach((task) => {
-      if (task.status !== TaskStatus.ARCHIVED) {
+    // 处理每个状态的任务数据
+    const processStatusTasks = (tasks: TaskWithRelations[] | undefined, originalStatus: TaskStatus) => {
+      if (!tasks) return;
+
+      tasks.forEach((task) => {
         // 检查是否有乐观更新
         const optimisticStatus = optimisticUpdates[task.id];
         const effectiveStatus = optimisticStatus || task.status;
@@ -225,8 +275,15 @@ const KanbanPage: NextPage = () => {
           ...task,
           status: effectiveStatus, // 使用乐观更新的状态
         } as TaskWithRelations);
-      }
-    });
+      });
+    };
+
+    // 处理各状态的任务
+    processStatusTasks(ideaTasks.data?.tasks, TaskStatus.IDEA);
+    processStatusTasks(todoTasks.data?.tasks, TaskStatus.TODO);
+    processStatusTasks(inProgressTasks.data?.tasks, TaskStatus.IN_PROGRESS);
+    processStatusTasks(waitingTasks.data?.tasks, TaskStatus.WAITING);
+    processStatusTasks(doneTasks.data?.tasks, TaskStatus.DONE);
 
     // 应用乐观排序更新
     Object.keys(grouped).forEach((status) => {
@@ -257,7 +314,15 @@ const KanbanPage: NextPage = () => {
     });
 
     return grouped;
-  }, [tasksData, optimisticUpdates, optimisticTaskOrder]);
+  }, [
+    ideaTasks.data,
+    todoTasks.data,
+    inProgressTasks.data,
+    waitingTasks.data,
+    doneTasks.data,
+    optimisticUpdates,
+    optimisticTaskOrder
+  ]);
 
 
 
@@ -293,8 +358,8 @@ const KanbanPage: NextPage = () => {
 
       // 如果状态变为已完成，触发反馈收集
       if (variables.status === TaskStatus.DONE) {
-        // 从当前任务数据中查找任务信息
-        const task = tasksData?.tasks.find(t => t.id === variables.id);
+        // 从所有任务数据中查找任务信息
+        const task = getAllTasks().find(t => t.id === variables.id);
         if (task) {
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle(task.title);
@@ -403,7 +468,7 @@ const KanbanPage: NextPage = () => {
   const deleteTask = api.task.delete.useMutation({
     onSuccess: (result) => {
       showSuccess(result.message);
-      void utils.task.getAll.invalidate();
+      void refetchAll();
     },
     onError: (error) => {
       showError(error.message || "删除任务失败");
@@ -420,8 +485,8 @@ const KanbanPage: NextPage = () => {
         return newSet;
       });
 
-      // 使用 invalidate 而不是 refetch，避免立即清理乐观更新
-      void utils.task.getAll.invalidate().then(() => {
+      // 刷新数据并清理乐观更新
+      void refetchAll().then(() => {
         // 数据更新完成后清理乐观更新
         setOptimisticUpdates(prev => {
           const newState = { ...prev };
@@ -441,8 +506,15 @@ const KanbanPage: NextPage = () => {
 
       // 如果状态变为已完成，触发反馈收集
       if (variables.status === TaskStatus.DONE) {
-        // 从当前任务数据中查找任务信息
-        const task = tasksData?.tasks.find(t => t.id === variables.id);
+        // 从所有任务数据中查找任务信息
+        const allTasks = [
+          ...(ideaTasks.data?.tasks || []),
+          ...(todoTasks.data?.tasks || []),
+          ...(inProgressTasks.data?.tasks || []),
+          ...(waitingTasks.data?.tasks || []),
+          ...(doneTasks.data?.tasks || []),
+        ];
+        const task = allTasks.find(t => t.id === variables.id);
         if (task) {
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle(task.title);
@@ -505,7 +577,7 @@ const KanbanPage: NextPage = () => {
   };
 
   const handleStartTimer = async (taskId: string) => {
-    const task = tasksData?.tasks.find(t => t.id === taskId);
+    const task = getAllTasks().find(t => t.id === taskId);
     if (!task) return;
 
     // 乐观更新：立即更新UI状态
@@ -562,7 +634,7 @@ const KanbanPage: NextPage = () => {
     } catch (error) {
       console.error("开始计时失败:", error);
       // 错误时回滚乐观更新
-      void utils.task.getAll.invalidate();
+      void refetchAll();
     }
   };
 
@@ -589,7 +661,7 @@ const KanbanPage: NextPage = () => {
     } catch (error) {
       console.error("暂停计时失败:", error);
       // 错误时回滚乐观更新
-      void utils.task.getAll.invalidate();
+      void refetchAll();
     }
   };
 
@@ -644,8 +716,8 @@ const KanbanPage: NextPage = () => {
   };
 
   const handleTaskModalSuccess = () => {
-    // 任务模态框成功后，使用invalidate来确保数据最新
-    void utils.task.getAll.invalidate();
+    // 任务模态框成功后，刷新所有数据
+    void refetchAll();
   };
 
   // 处理反馈模态框关闭
@@ -657,13 +729,58 @@ const KanbanPage: NextPage = () => {
 
   // 处理反馈保存成功
   const handleFeedbackSuccess = () => {
-    void utils.task.getAll.invalidate();
+    // 刷新所有状态的数据
+    void refetchAll();
     handleFeedbackModalClose();
+  };
+
+  // 为特定状态加载更多任务
+  const handleLoadMoreForStatus = (status: TaskStatus) => {
+    setStatusLimits(prev => ({
+      ...prev,
+      [status]: prev[status] + 20,
+    }));
+  };
+
+  // 获取特定状态是否有更多任务
+  const getHasMoreTasksForStatus = (status: TaskStatus) => {
+    switch (status) {
+      case TaskStatus.IDEA:
+        return !!ideaTasks.data?.nextCursor;
+      case TaskStatus.TODO:
+        return !!todoTasks.data?.nextCursor;
+      case TaskStatus.IN_PROGRESS:
+        return !!inProgressTasks.data?.nextCursor;
+      case TaskStatus.WAITING:
+        return !!waitingTasks.data?.nextCursor;
+      case TaskStatus.DONE:
+        return !!doneTasks.data?.nextCursor;
+      default:
+        return false;
+    }
+  };
+
+  // 获取特定状态的加载状态
+  const getIsLoadingForStatus = (status: TaskStatus) => {
+    switch (status) {
+      case TaskStatus.IDEA:
+        return ideaTasks.isFetching;
+      case TaskStatus.TODO:
+        return todoTasks.isFetching;
+      case TaskStatus.IN_PROGRESS:
+        return inProgressTasks.isFetching;
+      case TaskStatus.WAITING:
+        return waitingTasks.isFetching;
+      case TaskStatus.DONE:
+        return doneTasks.isFetching;
+      default:
+        return false;
+    }
   };
 
   // 处理删除任务
   const handleDeleteTask = async (taskId: string) => {
-    const task = tasksData?.tasks.find(t => t.id === taskId);
+    const task = getAllTasks().find(t => t.id === taskId);
     const taskTitle = task?.title || "此任务";
 
     const confirmed = await showConfirm({
@@ -685,7 +802,7 @@ const KanbanPage: NextPage = () => {
 
   // 打开计时明细
   const handleViewTimeEntries = (taskId: string) => {
-    const task = tasksData?.tasks.find(t => t.id === taskId);
+    const task = getAllTasks().find(t => t.id === taskId);
     if (!task) return;
 
     setTimeEntryTaskId(taskId);
@@ -695,7 +812,7 @@ const KanbanPage: NextPage = () => {
 
   // 处理快速上浮到第一位
   const handleMoveToTop = async (taskId: string) => {
-    const task = tasksData?.tasks.find(t => t.id === taskId);
+    const task = getAllTasks().find(t => t.id === taskId);
     if (!task) return;
 
     const currentStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] || [];
@@ -985,6 +1102,9 @@ const KanbanPage: NextPage = () => {
                   isUpdating={updateTaskStatus.isPending}
                   optimisticUpdates={optimisticUpdates}
                   updatingTasks={updatingTasks}
+                  hasMoreTasks={getHasMoreTasksForStatus(column.status)}
+                  isLoadingMore={getIsLoadingForStatus(column.status)}
+                  onLoadMore={() => handleLoadMoreForStatus(column.status)}
                 />
               );
             })}
@@ -1079,6 +1199,11 @@ interface KanbanColumnProps {
   isUpdating: boolean;
   optimisticUpdates: Record<string, TaskStatus>;
   updatingTasks: Set<string>;
+  // 分页相关
+  hasMoreTasks: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
+  totalTaskCount?: number;
 }
 
 function KanbanColumn({
@@ -1096,6 +1221,10 @@ function KanbanColumn({
   isUpdating,
   optimisticUpdates,
   updatingTasks,
+  hasMoreTasks,
+  isLoadingMore,
+  onLoadMore,
+  totalTaskCount,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.status,
@@ -1121,7 +1250,10 @@ function KanbanColumn({
             {column.title}
           </h3>
           <p className="text-xs text-gray-500">
-            {tasks.length} 个任务
+            {totalTaskCount !== undefined
+              ? `显示 ${tasks.length} 个，共 ${totalTaskCount} 个任务`
+              : `${tasks.length} 个任务`
+            }
           </p>
         </div>
       </div>
@@ -1145,6 +1277,31 @@ function KanbanColumn({
               isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
             />
           ))}
+
+          {/* 加载更多按钮 */}
+          {hasMoreTasks && (
+            <div className="flex justify-center py-3">
+              <button
+                onClick={onLoadMore}
+                disabled={isLoadingMore}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full mr-2"></div>
+                    加载中...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    加载更多
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* 空白拖拽区域 */}
           <div className="flex-1 min-h-[100px]">
