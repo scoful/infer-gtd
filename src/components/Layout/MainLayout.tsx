@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -21,6 +21,8 @@ import {
   ArrowRightOnRectangleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 
 import { useSidebarState } from "@/hooks";
@@ -35,6 +37,7 @@ interface NavigationItem {
   href: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   description: string;
+  children?: NavigationItem[];
 }
 
 const navigation: NavigationItem[] = [
@@ -51,28 +54,36 @@ const navigation: NavigationItem[] = [
     description: "想法捕捉和快速记录",
   },
   {
-    name: "任务列表",
+    name: "任务管理",
     href: "/tasks",
     icon: ListBulletIcon,
     description: "任务管理和筛选",
-  },
-  {
-    name: "下一步行动",
-    href: "/tasks/next-actions",
-    icon: BoltIcon,
-    description: "GTD下一步行动列表",
-  },
-  {
-    name: "等待清单",
-    href: "/tasks/waiting",
-    icon: ClockIcon,
-    description: "等待他人回复的任务",
-  },
-  {
-    name: "任务看板",
-    href: "/tasks/kanban",
-    icon: ViewColumnsIcon,
-    description: "可视化任务管理",
+    children: [
+      {
+        name: "任务列表",
+        href: "/tasks",
+        icon: ListBulletIcon,
+        description: "任务管理和筛选",
+      },
+      {
+        name: "下一步行动",
+        href: "/tasks/next-actions",
+        icon: BoltIcon,
+        description: "GTD下一步行动列表",
+      },
+      {
+        name: "等待清单",
+        href: "/tasks/waiting",
+        icon: ClockIcon,
+        description: "等待他人回复的任务",
+      },
+      {
+        name: "任务看板",
+        href: "/tasks/kanban",
+        icon: ViewColumnsIcon,
+        description: "可视化任务管理",
+      },
+    ],
   },
   {
     name: "标签管理",
@@ -110,8 +121,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { data: sessionData } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
+    // 初始化时，如果当前路径是任务相关页面，自动展开任务管理菜单
+    const initialExpanded = new Set<string>();
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/tasks')) {
+      initialExpanded.add('任务管理');
+    }
+    return initialExpanded;
+  });
   const { isCollapsed, isLoaded, toggleSidebar } = useSidebarState();
   const { refreshPage } = useRefresh();
+
+  // 监听路由变化，自动展开相关菜单
+  useEffect(() => {
+    if (router.pathname.startsWith('/tasks')) {
+      setExpandedItems(prev => new Set(prev).add('任务管理'));
+    }
+  }, [router.pathname]);
 
   const isActivePath = (href: string) => {
     // 精确匹配路径，避免水合错误
@@ -122,7 +148,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname === "/";
     }
     if (href === "/tasks") {
-      return router.pathname === "/tasks";
+      return router.pathname === "/tasks"; // 只匹配精确路径
     }
     if (href === "/tasks/next-actions") {
       return router.pathname === "/tasks/next-actions";
@@ -137,6 +163,33 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname === "/tags" || router.pathname.startsWith("/tags/");
     }
     return router.pathname.startsWith(href);
+  };
+
+  // 检查是否有子项处于激活状态
+  const hasActiveChild = (item: NavigationItem) => {
+    if (!item.children) return false;
+    return item.children.some(child => isActivePath(child.href));
+  };
+
+  // 检查父菜单是否应该激活（当任何子页面激活时）
+  const isParentActive = (item: NavigationItem) => {
+    if (item.name === "任务管理") {
+      return router.pathname.startsWith("/tasks");
+    }
+    return isActivePath(item.href);
+  };
+
+  // 切换展开状态
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemName)) {
+        newSet.delete(itemName);
+      } else {
+        newSet.add(itemName);
+      }
+      return newSet;
+    });
   };
 
   const handleSignOut = async () => {
@@ -184,24 +237,84 @@ export default function MainLayout({ children }: MainLayoutProps) {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.href);
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedItems.has(item.name);
+              const hasActiveChildItem = hasActiveChild(item);
+              const parentActive = isParentActive(item);
+
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
-                    isActive
-                      ? "bg-blue-100 text-blue-900"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                  onClick={(event) => handleNavigationClick(item.href, event)}
-                >
-                  <Icon
-                    className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                      isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
-                    }`}
-                  />
-                  {item.name}
-                </Link>
+                <div key={item.name}>
+                  {hasChildren ? (
+                    <button
+                      className={`group flex w-full items-center justify-between rounded-md px-2 py-2 text-sm font-medium ${
+                        parentActive
+                          ? "bg-blue-100 text-blue-900"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                      onClick={() => toggleExpanded(item.name)}
+                    >
+                      <div className="flex items-center">
+                        <Icon
+                          className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                            parentActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                          }`}
+                        />
+                        {item.name}
+                      </div>
+                      {isExpanded ? (
+                        <ChevronUpIcon className="h-4 w-4" />
+                      ) : (
+                        <ChevronDownIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
+                        isActive
+                          ? "bg-blue-100 text-blue-900"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                      onClick={(event) => handleNavigationClick(item.href, event)}
+                    >
+                      <Icon
+                        className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                          isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                        }`}
+                      />
+                      {item.name}
+                    </Link>
+                  )}
+
+                  {/* 子导航项 */}
+                  {hasChildren && isExpanded && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      {item.children!.map((child) => {
+                        const ChildIcon = child.icon;
+                        const isChildActive = isActivePath(child.href);
+                        return (
+                          <Link
+                            key={child.name}
+                            href={child.href}
+                            className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
+                              isChildActive
+                                ? "bg-blue-100 text-blue-900"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            }`}
+                            onClick={(event) => handleNavigationClick(child.href, event)}
+                          >
+                            <ChildIcon
+                              className={`mr-3 h-4 w-4 flex-shrink-0 ${
+                                isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                              }`}
+                            />
+                            {child.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -235,27 +348,102 @@ export default function MainLayout({ children }: MainLayoutProps) {
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.href);
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedItems.has(item.name);
+                const hasActiveChildItem = hasActiveChild(item);
+                const parentActive = isParentActive(item);
+
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
-                      isActive
-                        ? "bg-blue-100 text-blue-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    } ${isCollapsed ? "justify-center" : ""}`}
-                    title={isCollapsed ? item.description : item.description}
-                    onClick={(event) => handleNavigationClick(item.href, event)}
-                  >
-                    <Icon
-                      className={`h-5 w-5 flex-shrink-0 ${
-                        isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
-                      } ${isCollapsed ? "" : "mr-3"}`}
-                    />
-                    {!isCollapsed && (
-                      <span className="truncate">{item.name}</span>
+                  <div key={item.name}>
+                    {hasChildren ? (
+                      <div>
+                        <button
+                          className={`group flex w-full items-center rounded-md px-2 py-2 text-sm font-medium ${
+                            parentActive
+                              ? "bg-blue-100 text-blue-900"
+                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          } ${isCollapsed ? "justify-center" : "justify-between"}`}
+                          title={isCollapsed ? item.description : item.description}
+                          onClick={() => {
+                            if (isCollapsed) {
+                              // 在收缩状态下，点击直接跳转到主页面
+                              window.location.href = item.href;
+                            } else {
+                              toggleExpanded(item.name);
+                            }
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <Icon
+                              className={`h-5 w-5 flex-shrink-0 ${
+                                parentActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                              } ${isCollapsed ? "" : "mr-3"}`}
+                            />
+                            {!isCollapsed && (
+                              <span className="truncate">{item.name}</span>
+                            )}
+                          </div>
+                          {!isCollapsed && (
+                            isExpanded ? (
+                              <ChevronUpIcon className="h-4 w-4" />
+                            ) : (
+                              <ChevronDownIcon className="h-4 w-4" />
+                            )
+                          )}
+                        </button>
+
+                        {/* 子导航项 - 只在展开且非收缩状态下显示 */}
+                        {hasChildren && isExpanded && !isCollapsed && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {item.children!.map((child) => {
+                              const ChildIcon = child.icon;
+                              const isChildActive = isActivePath(child.href);
+                              return (
+                                <Link
+                                  key={child.name}
+                                  href={child.href}
+                                  className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
+                                    isChildActive
+                                      ? "bg-blue-100 text-blue-900"
+                                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  }`}
+                                  title={child.description}
+                                  onClick={(event) => handleNavigationClick(child.href, event)}
+                                >
+                                  <ChildIcon
+                                    className={`mr-3 h-4 w-4 flex-shrink-0 ${
+                                      isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                                    }`}
+                                  />
+                                  {child.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className={`group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
+                          isActive
+                            ? "bg-blue-100 text-blue-900"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        } ${isCollapsed ? "justify-center" : ""}`}
+                        title={isCollapsed ? item.description : item.description}
+                        onClick={(event) => handleNavigationClick(item.href, event)}
+                      >
+                        <Icon
+                          className={`h-5 w-5 flex-shrink-0 ${
+                            isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                          } ${isCollapsed ? "" : "mr-3"}`}
+                        />
+                        {!isCollapsed && (
+                          <span className="truncate">{item.name}</span>
+                        )}
+                      </Link>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </nav>
