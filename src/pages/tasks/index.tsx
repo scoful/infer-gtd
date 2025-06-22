@@ -709,6 +709,7 @@ const TaskListPage: NextPage = () => {
                     <option value={TaskStatus.IN_PROGRESS}>进行中</option>
                     <option value={TaskStatus.WAITING}>等待中</option>
                     <option value={TaskStatus.DONE}>已完成</option>
+                    <option value={TaskStatus.ARCHIVED}>已归档</option>
                   </select>
 
                   {/* 批量删除按钮 */}
