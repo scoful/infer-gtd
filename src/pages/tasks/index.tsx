@@ -21,6 +21,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
+import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useConfirm } from "@/hooks";
@@ -87,6 +88,11 @@ const TaskListPage: NextPage = () => {
   const [isTimeEntryModalOpen, setIsTimeEntryModalOpen] = useState(false);
   const [timeEntryTaskId, setTimeEntryTaskId] = useState<string | null>(null);
   const [timeEntryTaskTitle, setTimeEntryTaskTitle] = useState<string>("");
+
+  // 任务反馈模态框状态
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackTaskId, setFeedbackTaskId] = useState<string | null>(null);
+  const [feedbackTaskTitle, setFeedbackTaskTitle] = useState<string>("");
 
   // 确认模态框状态
   const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
@@ -310,6 +316,42 @@ const TaskListPage: NextPage = () => {
     setTimeEntryTaskTitle(task.title);
     setIsTimeEntryModalOpen(true);
   }, [tasks]);
+
+  // 处理任务状态变更
+  const handleTaskStatusChange = useCallback(async (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    try {
+      await updateTaskStatus.mutateAsync({
+        id: taskId,
+        status: newStatus,
+        note: `状态变更为${getStatusLabel(newStatus)}`,
+      });
+
+      // 如果状态变为已完成，触发反馈收集
+      if (newStatus === TaskStatus.DONE) {
+        setFeedbackTaskId(taskId);
+        setFeedbackTaskTitle(task.title);
+        setIsFeedbackModalOpen(true);
+      }
+    } catch (error) {
+      console.error("状态更新失败:", error);
+    }
+  }, [tasks, updateTaskStatus]);
+
+  // 处理反馈模态框关闭
+  const handleFeedbackModalClose = useCallback(() => {
+    setIsFeedbackModalOpen(false);
+    setFeedbackTaskId(null);
+    setFeedbackTaskTitle("");
+  }, []);
+
+  // 处理反馈保存成功
+  const handleFeedbackSuccess = useCallback(() => {
+    void refetch();
+    handleFeedbackModalClose();
+  }, [refetch, handleFeedbackModalClose]);
 
   // 应用客户端排序（如果需要多状态筛选）
   const filteredAndSortedTasks = useMemo(() => {
@@ -785,11 +827,7 @@ const TaskListPage: NextPage = () => {
                       onSelect={(selected) => handleTaskSelect(task.id, selected)}
                       onEdit={() => handleEditTask(task.id)}
                       onStatusChange={(status) => {
-                        void updateTaskStatus.mutateAsync({
-                          id: task.id,
-                          status,
-                          note: `状态变更为${getStatusLabel(status)}`,
-                        });
+                        void handleTaskStatusChange(task.id, status);
                       }}
                       formatTimeSpent={formatTimeSpent}
                       isTimerActive={isTimerActive(task)}
@@ -853,6 +891,15 @@ const TaskListPage: NextPage = () => {
           onClose={handleTaskModalClose}
           taskId={editingTaskId || undefined}
           onSuccess={handleTaskModalSuccess}
+        />
+
+        {/* 任务反馈模态框 */}
+        <TaskFeedbackModal
+          isOpen={isFeedbackModalOpen}
+          onClose={handleFeedbackModalClose}
+          taskId={feedbackTaskId || ""}
+          taskTitle={feedbackTaskTitle}
+          onSuccess={handleFeedbackSuccess}
         />
 
         {/* 确认模态框 */}

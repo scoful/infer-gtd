@@ -20,6 +20,7 @@ import {
   batchDeleteTasksSchema,
   reorderTasksSchema,
   updateTaskStatusWithPositionSchema,
+  updateTaskFeedbackSchema,
 } from "@/server/api/schemas/task";
 
 export const taskRouter = createTRPCRouter({
@@ -1651,6 +1652,100 @@ export const taskRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "批量删除任务失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 更新任务反馈
+  updateFeedback: protectedProcedure
+    .input(updateTaskFeedbackSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...feedbackData } = input;
+
+      try {
+        // 验证任务所有权
+        const existingTask = await ctx.db.task.findUnique({
+          where: { id },
+          select: { createdById: true, title: true, status: true },
+        });
+
+        if (!existingTask || existingTask.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "任务不存在或无权限修改",
+          });
+        }
+
+        // 更新任务反馈
+        const task = await ctx.db.task.update({
+          where: { id },
+          data: {
+            ...feedbackData,
+            feedbackAt: new Date(),
+          },
+          include: {
+            project: true,
+            tags: {
+              include: {
+                tag: true,
+              },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        });
+
+        return {
+          success: true,
+          message: `任务 "${existingTask.title}" 反馈已保存`,
+          task,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "保存任务反馈失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 获取任务反馈
+  getFeedback: protectedProcedure
+    .input(taskIdSchema)
+    .query(async ({ ctx, input }) => {
+      try {
+        const task = await ctx.db.task.findUnique({
+          where: { id: input.id },
+          select: {
+            id: true,
+            title: true,
+            reflection: true,
+            lessons: true,
+            feedback: true,
+            rating: true,
+            feedbackAt: true,
+            createdById: true,
+          },
+        });
+
+        if (!task || task.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "任务不存在或无权限访问",
+          });
+        }
+
+        return task;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "获取任务反馈失败",
           cause: error,
         });
       }

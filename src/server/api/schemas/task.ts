@@ -26,6 +26,11 @@ export const updateTaskSchema = z.object({
   dueTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效").optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
+  // 反馈相关字段
+  reflection: z.string().max(1000, "心得反思过长").optional(),
+  lessons: z.string().max(1000, "经验教训过长").optional(),
+  feedback: z.string().max(1000, "反馈内容过长").optional(),
+  rating: z.number().int().min(1).max(5).optional(),
 });
 
 // 任务状态更新 Schema
@@ -125,6 +130,15 @@ export const updateTaskStatusWithPositionSchema = z.object({
   note: z.string().max(500, "备注过长").optional(),
 });
 
+// 任务反馈 Schema
+export const updateTaskFeedbackSchema = z.object({
+  id: z.string().cuid("无效的任务ID"),
+  reflection: z.string().max(1000, "心得反思过长").optional(),
+  lessons: z.string().max(1000, "经验教训过长").optional(),
+  feedback: z.string().max(1000, "反馈内容过长").optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+});
+
 // 导出类型
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
@@ -139,3 +153,4 @@ export type BatchUpdateTasksInput = z.infer<typeof batchUpdateTasksSchema>;
 export type BatchDeleteTasksInput = z.infer<typeof batchDeleteTasksSchema>;
 export type ReorderTasksInput = z.infer<typeof reorderTasksSchema>;
 export type UpdateTaskStatusWithPositionInput = z.infer<typeof updateTaskStatusWithPositionSchema>;
+export type UpdateTaskFeedbackInput = z.infer<typeof updateTaskFeedbackSchema>;

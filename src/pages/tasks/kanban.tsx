@@ -40,6 +40,7 @@ import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
+import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
 import { PageLoading, ConfirmModal } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
@@ -114,6 +115,11 @@ const KanbanPage: NextPage = () => {
   const [isTimeEntryModalOpen, setIsTimeEntryModalOpen] = useState(false);
   const [timeEntryTaskId, setTimeEntryTaskId] = useState<string | null>(null);
   const [timeEntryTaskTitle, setTimeEntryTaskTitle] = useState<string>("");
+
+  // 任务反馈模态框状态
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackTaskId, setFeedbackTaskId] = useState<string | null>(null);
+  const [feedbackTaskTitle, setFeedbackTaskTitle] = useState<string>("");
 
   // 乐观更新状态
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
@@ -284,6 +290,22 @@ const KanbanPage: NextPage = () => {
           )
         };
       });
+
+      // 如果状态变为已完成，触发反馈收集
+      if (variables.status === TaskStatus.DONE) {
+        // 从当前任务数据中查找任务信息
+        const task = tasksData?.tasks.find(t => t.id === variables.id);
+        if (task) {
+          setFeedbackTaskId(variables.id);
+          setFeedbackTaskTitle(task.title);
+          setIsFeedbackModalOpen(true);
+        } else {
+          // 如果找不到任务，使用默认标题
+          setFeedbackTaskId(variables.id);
+          setFeedbackTaskTitle("任务");
+          setIsFeedbackModalOpen(true);
+        }
+      }
     },
     onError: (error, variables) => {
       // 立即清除乐观更新状态（回滚）
@@ -416,6 +438,22 @@ const KanbanPage: NextPage = () => {
           [TaskStatus.ARCHIVED]: [],
         });
       });
+
+      // 如果状态变为已完成，触发反馈收集
+      if (variables.status === TaskStatus.DONE) {
+        // 从当前任务数据中查找任务信息
+        const task = tasksData?.tasks.find(t => t.id === variables.id);
+        if (task) {
+          setFeedbackTaskId(variables.id);
+          setFeedbackTaskTitle(task.title);
+          setIsFeedbackModalOpen(true);
+        } else {
+          // 如果找不到任务，使用默认标题
+          setFeedbackTaskId(variables.id);
+          setFeedbackTaskTitle("任务");
+          setIsFeedbackModalOpen(true);
+        }
+      }
 
       showSuccess("任务状态和位置已更新");
     },
@@ -608,6 +646,19 @@ const KanbanPage: NextPage = () => {
   const handleTaskModalSuccess = () => {
     // 任务模态框成功后，使用invalidate来确保数据最新
     void utils.task.getAll.invalidate();
+  };
+
+  // 处理反馈模态框关闭
+  const handleFeedbackModalClose = () => {
+    setIsFeedbackModalOpen(false);
+    setFeedbackTaskId(null);
+    setFeedbackTaskTitle("");
+  };
+
+  // 处理反馈保存成功
+  const handleFeedbackSuccess = () => {
+    void utils.task.getAll.invalidate();
+    handleFeedbackModalClose();
   };
 
   // 处理删除任务
@@ -977,6 +1028,15 @@ const KanbanPage: NextPage = () => {
           onClose={() => setIsTimeEntryModalOpen(false)}
           taskId={timeEntryTaskId || ""}
           taskTitle={timeEntryTaskTitle}
+        />
+
+        {/* 任务反馈模态框 */}
+        <TaskFeedbackModal
+          isOpen={isFeedbackModalOpen}
+          onClose={handleFeedbackModalClose}
+          taskId={feedbackTaskId || ""}
+          taskTitle={feedbackTaskTitle}
+          onSuccess={handleFeedbackSuccess}
         />
 
         {/* 确认模态框 */}

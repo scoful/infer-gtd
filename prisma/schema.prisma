@@ -152,6 +152,13 @@ model Task {
     // Sorting and ordering
     sortOrder       Int        @default(0) // For custom ordering within same status
 
+    // Task feedback and reflection
+    reflection      String?    // Task completion reflection/insights
+    lessons         String?    // Lessons learned from this task
+    feedback        String?    // General feedback about the task
+    rating          Int?       // Task rating (1-5 scale)
+    feedbackAt      DateTime?  // When feedback was provided
+
     createdAt       DateTime   @default(now())
     updatedAt       DateTime   @updatedAt
 

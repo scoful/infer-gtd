@@ -15,6 +15,7 @@ import {
   ChevronRightIcon,
   DocumentTextIcon,
   LightBulbIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { TaskStatus, Priority } from "@prisma/client";
 
@@ -141,11 +142,20 @@ const WeeklyReviewPage: NextPage = () => {
     }, {} as Record<string, number>);
 
     // 逾期任务
-    const overdueTasks = tasks.filter(task => 
-      task.dueDate && 
-      new Date(task.dueDate) < new Date() && 
+    const overdueTasks = tasks.filter(task =>
+      task.dueDate &&
+      new Date(task.dueDate) < new Date() &&
       task.status !== TaskStatus.DONE
     );
+
+    // 反馈统计
+    const tasksWithFeedback = completed.filter(task =>
+      task.reflection || task.lessons || task.feedback || task.rating
+    );
+    const feedbackRate = completedCount > 0 ? (tasksWithFeedback.length / completedCount) * 100 : 0;
+    const averageRating = tasksWithFeedback.length > 0
+      ? tasksWithFeedback.reduce((sum, task) => sum + (task.rating || 0), 0) / tasksWithFeedback.length
+      : 0;
 
     return {
       totalTasks,
@@ -158,6 +168,10 @@ const WeeklyReviewPage: NextPage = () => {
       overdueCount: overdueTasks.length,
       averageTasksPerDay: totalTasks / 7,
       averageCompletionPerDay: completedCount / 7,
+      // 反馈统计
+      tasksWithFeedback: tasksWithFeedback.length,
+      feedbackRate,
+      averageRating,
     };
   }, [weeklyTasks, completedTasks, timeEntries]);
 
@@ -232,7 +246,7 @@ const WeeklyReviewPage: NextPage = () => {
           {weekStats && (
             <>
               {/* 关键指标卡片 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {/* 任务完成率 */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <div className="flex items-center">
@@ -300,6 +314,24 @@ const WeeklyReviewPage: NextPage = () => {
                       </p>
                       <p className="text-xs text-gray-500">
                         需要关注
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 反馈统计 */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <ChatBubbleLeftRightIcon className="h-8 w-8 text-purple-500" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">反馈率</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {weekStats.feedbackRate.toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {weekStats.tasksWithFeedback}/{weekStats.completedCount} 个任务
                       </p>
                     </div>
                   </div>
@@ -392,32 +424,64 @@ const WeeklyReviewPage: NextPage = () => {
                 <CheckCircleIcon className="h-5 w-5 mr-2 text-green-500" />
                 本周完成的任务
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {completedTasks.tasks.slice(0, 10).map((task) => (
-                  <div key={task.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
-                      {task.description && (
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-1">
-                          {task.description}
-                        </p>
-                      )}
+                  <div key={task.id} className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
+                        {task.description && (
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-1">
+                            {task.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        {task.priority && (
+                          <span className={`px-2 py-1 rounded-full ${getPriorityBgColor(task.priority)}`}>
+                            {getPriorityLabel(task.priority)}
+                          </span>
+                        )}
+                        {task.rating && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-yellow-500">★</span>
+                            <span>{task.rating}</span>
+                          </div>
+                        )}
+                        {task.completedAt && (
+                          <span>
+                            {new Date(task.completedAt).toLocaleDateString('zh-CN', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      {task.priority && (
-                        <span className={`px-2 py-1 rounded-full ${getPriorityBgColor(task.priority)}`}>
-                          {getPriorityLabel(task.priority)}
-                        </span>
-                      )}
-                      {task.completedAt && (
-                        <span>
-                          {new Date(task.completedAt).toLocaleDateString('zh-CN', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </span>
-                      )}
-                    </div>
+
+                    {/* 显示反馈内容 */}
+                    {(task.reflection || task.lessons || task.feedback) && (
+                      <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                        {task.reflection && (
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-700">心得反思：</span>
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.reflection}</p>
+                          </div>
+                        )}
+                        {task.lessons && (
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-700">经验教训：</span>
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.lessons}</p>
+                          </div>
+                        )}
+                        {task.feedback && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-700">其他反馈：</span>
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.feedback}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
