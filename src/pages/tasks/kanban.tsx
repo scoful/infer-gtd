@@ -221,16 +221,36 @@ const KanbanPage: NextPage = () => {
   );
 
   // 合并加载状态
-  // 只有在初始加载时才显示全屏loading（isLoading表示首次加载，isFetching表示后续刷新）
-  const isInitialLoading = ideaTasks.isLoading || todoTasks.isLoading || inProgressTasks.isLoading || waitingTasks.isLoading || doneTasks.isLoading;
+  // 只有在真正的初始加载时才显示全屏loading
+  // 需要区分初始加载和加载更多操作
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+  // 检查是否是真正的初始加载（第一次访问页面且没有任何数据）
+  const isRealInitialLoading = !sessionData || (!hasInitiallyLoaded && (
+    ideaTasks.isLoading || todoTasks.isLoading || inProgressTasks.isLoading || waitingTasks.isLoading || doneTasks.isLoading
+  ));
+
   const isFetching = ideaTasks.isFetching || todoTasks.isFetching || inProgressTasks.isFetching || waitingTasks.isFetching || doneTasks.isFetching;
+
+  // 跟踪初始加载完成状态
+  useEffect(() => {
+    if (sessionData && !hasInitiallyLoaded) {
+      // 检查是否所有查询都已完成初始加载（有数据或加载完成）
+      const allQueriesReady = [ideaTasks, todoTasks, inProgressTasks, waitingTasks, doneTasks]
+        .every(query => !query.isLoading);
+
+      if (allQueriesReady) {
+        setHasInitiallyLoaded(true);
+      }
+    }
+  }, [sessionData, hasInitiallyLoaded, ideaTasks.isLoading, todoTasks.isLoading, inProgressTasks.isLoading, waitingTasks.isLoading, doneTasks.isLoading]);
 
   // 跟踪不同类型的刷新状态
   const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
   const [loadingMoreStatuses, setLoadingMoreStatuses] = useState<Set<TaskStatus>>(new Set()); // 正在加载更多的状态
 
   // 检查是否是手动数据刷新（导航栏点击触发的刷新）
-  const isDataRefreshing = isFetching && !isInitialLoading && isManualRefreshing;
+  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
 
   // 监听查询状态变化，在刷新完成后重置标志
   useEffect(() => {
@@ -1047,7 +1067,7 @@ const KanbanPage: NextPage = () => {
     : null;
 
   // 首次加载显示页面级loading
-  if (isInitialLoading) {
+  if (isRealInitialLoading) {
     return (
       <AuthGuard>
         <MainLayout>
