@@ -23,6 +23,7 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 
 import { useSidebarState } from "@/hooks";
@@ -56,7 +57,7 @@ const navigation: NavigationItem[] = [
   {
     name: "任务管理",
     href: "/tasks",
-    icon: ListBulletIcon,
+    icon: ViewColumnsIcon,
     description: "任务管理和筛选",
     children: [
       {
@@ -80,7 +81,7 @@ const navigation: NavigationItem[] = [
       {
         name: "任务看板",
         href: "/tasks/kanban",
-        icon: ViewColumnsIcon,
+        icon: Squares2X2Icon,
         description: "可视化任务管理",
       },
     ],
@@ -129,6 +130,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
     return initialExpanded;
   });
+  // 收缩状态下的子菜单展开状态
+  const [collapsedExpandedItems, setCollapsedExpandedItems] = useState<Set<string>>(new Set());
   const { isCollapsed, isLoaded, toggleSidebar } = useSidebarState();
   const { refreshPage } = useRefresh();
 
@@ -138,6 +141,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
       setExpandedItems(prev => new Set(prev).add('任务管理'));
     }
   }, [router.pathname]);
+
+  // 点击外部区域关闭收缩状态下的展开菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (collapsedExpandedItems.size > 0) {
+        const target = event.target as Element;
+        if (!target.closest('.collapsed-submenu-container')) {
+          setCollapsedExpandedItems(new Set());
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [collapsedExpandedItems]);
 
   const isActivePath = (href: string) => {
     // 精确匹配路径，避免水合错误
@@ -182,6 +202,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 切换展开状态
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemName)) {
+        newSet.delete(itemName);
+      } else {
+        newSet.add(itemName);
+      }
+      return newSet;
+    });
+  };
+
+  // 切换收缩状态下的展开状态
+  const toggleCollapsedExpanded = (itemName: string) => {
+    setCollapsedExpandedItems(prev => {
       const newSet = new Set(prev);
       if (newSet.has(itemName)) {
         newSet.delete(itemName);
@@ -323,7 +356,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Desktop sidebar */}
       <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${
-        isCollapsed ? "lg:w-16" : "lg:w-56"
+        isCollapsed && collapsedExpandedItems.size === 0
+          ? "lg:w-16"
+          : isCollapsed && collapsedExpandedItems.size > 0
+          ? "lg:w-20"
+          : "lg:w-56"
       }`}>
         <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
           <div className="flex flex-shrink-0 items-center justify-between px-4">
@@ -350,24 +387,25 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 const isActive = isActivePath(item.href);
                 const hasChildren = item.children && item.children.length > 0;
                 const isExpanded = expandedItems.has(item.name);
+                const isCollapsedExpanded = collapsedExpandedItems.has(item.name);
                 const hasActiveChildItem = hasActiveChild(item);
                 const parentActive = isParentActive(item);
 
                 return (
                   <div key={item.name}>
                     {hasChildren ? (
-                      <div>
+                      <div className="relative collapsed-submenu-container">
                         <button
-                          className={`group flex w-full items-center rounded-md px-2 py-2 text-sm font-medium ${
+                          className={`flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors ${
                             parentActive
                               ? "bg-blue-100 text-blue-900"
                               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                           } ${isCollapsed ? "justify-center" : "justify-between"}`}
-                          title={isCollapsed ? item.description : item.description}
+                          title={isCollapsed ? `${item.description} (点击展开子菜单)` : item.description}
                           onClick={() => {
                             if (isCollapsed) {
-                              // 在收缩状态下，点击直接跳转到主页面
-                              window.location.href = item.href;
+                              // 在收缩状态下，点击切换子菜单展开状态
+                              toggleCollapsedExpanded(item.name);
                             } else {
                               toggleExpanded(item.name);
                             }
@@ -376,11 +414,21 @@ export default function MainLayout({ children }: MainLayoutProps) {
                           <div className="flex items-center">
                             <Icon
                               className={`h-5 w-5 flex-shrink-0 ${
-                                parentActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                                parentActive ? "text-blue-500" : "text-gray-400 group-hover/parent:text-gray-500"
                               } ${isCollapsed ? "" : "mr-3"}`}
                             />
                             {!isCollapsed && (
                               <span className="truncate">{item.name}</span>
+                            )}
+                            {/* 收缩状态下的多级菜单指示器 */}
+                            {isCollapsed && (
+                              <div className="absolute -right-0.5 -top-0.5 bg-blue-500 rounded-full p-0.5">
+                                {isCollapsedExpanded ? (
+                                  <ChevronDownIcon className="h-2.5 w-2.5 text-white" />
+                                ) : (
+                                  <ChevronRightIcon className="h-2.5 w-2.5 text-white" />
+                                )}
+                              </div>
                             )}
                           </div>
                           {!isCollapsed && (
@@ -392,7 +440,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                           )}
                         </button>
 
-                        {/* 子导航项 - 只在展开且非收缩状态下显示 */}
+                        {/* 子导航项 - 展开状态下显示 */}
                         {hasChildren && isExpanded && !isCollapsed && (
                           <div className="ml-6 mt-1 space-y-1">
                             {item.children!.map((child) => {
@@ -416,6 +464,44 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                     }`}
                                   />
                                   {child.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* 收缩状态下的展开子菜单 */}
+                        {hasChildren && isCollapsed && isCollapsedExpanded && (
+                          <div className="mt-1 space-y-0.5 border-l-2 border-blue-200 ml-2">
+                            {item.children!.map((child) => {
+                              const ChildIcon = child.icon;
+                              const isChildActive = isActivePath(child.href);
+                              return (
+                                <Link
+                                  key={child.name}
+                                  href={child.href}
+                                  className={`group flex items-center justify-center rounded-md mx-1 py-1.5 text-sm font-medium ${
+                                    isChildActive
+                                      ? "bg-blue-100 text-blue-900"
+                                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  }`}
+                                  title={child.description}
+                                  onClick={(event) => {
+                                    handleNavigationClick(child.href, event);
+                                    // 点击后关闭展开状态
+                                    setCollapsedExpandedItems(prev => {
+                                      const newSet = new Set(prev);
+                                      newSet.delete(item.name);
+                                      return newSet;
+                                    });
+                                  }}
+                                >
+                                  <ChildIcon
+                                    className={`h-5 w-5 flex-shrink-0 ${
+                                      isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                                    }`}
+                                    title={child.name}
+                                  />
                                 </Link>
                               );
                             })}
@@ -453,7 +539,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main content */}
       <div className={`transition-all duration-300 ease-in-out ${
-        isCollapsed ? "lg:pl-16" : "lg:pl-56"
+        isCollapsed && collapsedExpandedItems.size === 0
+          ? "lg:pl-16"
+          : isCollapsed && collapsedExpandedItems.size > 0
+          ? "lg:pl-20"
+          : "lg:pl-56"
       }`}>
         {/* Top navigation */}
         <div className="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">

@@ -291,13 +291,22 @@ const KanbanPage: NextPage = () => {
       return pages.flatMap(page => page.tasks || []);
     };
 
-    return [
+    const allTasks = [
       ...flattenPages(ideaTasks.data?.pages),
       ...flattenPages(todoTasks.data?.pages),
       ...flattenPages(inProgressTasks.data?.pages),
       ...flattenPages(waitingTasks.data?.pages),
       ...flattenPages(doneTasks.data?.pages),
     ];
+
+    // 应用乐观更新状态
+    return allTasks.map(task => {
+      const optimisticStatus = optimisticUpdates[task.id];
+      if (optimisticStatus) {
+        return { ...task, status: optimisticStatus };
+      }
+      return task;
+    });
   };
 
   // 刷新所有状态的任务数据
@@ -427,12 +436,14 @@ const KanbanPage: NextPage = () => {
       if (variables.status === TaskStatus.DONE) {
         // 从所有任务数据中查找任务信息
         const task = getAllTasks().find(t => t.id === variables.id);
+        console.log('查找任务反馈信息:', { taskId: variables.id, task: task, allTasksCount: getAllTasks().length });
         if (task) {
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle(task.title);
           setIsFeedbackModalOpen(true);
         } else {
           // 如果找不到任务，使用默认标题
+          console.warn('未找到任务，使用默认标题:', variables.id);
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle("任务");
           setIsFeedbackModalOpen(true);
@@ -573,21 +584,31 @@ const KanbanPage: NextPage = () => {
 
       // 如果状态变为已完成，触发反馈收集
       if (variables.status === TaskStatus.DONE) {
-        // 从所有任务数据中查找任务信息
-        const allTasks = [
-          ...(ideaTasks.data?.tasks || []),
-          ...(todoTasks.data?.tasks || []),
-          ...(inProgressTasks.data?.tasks || []),
-          ...(waitingTasks.data?.tasks || []),
-          ...(doneTasks.data?.tasks || []),
-        ];
-        const task = allTasks.find(t => t.id === variables.id);
+        // 从所有任务数据中查找任务信息，优先从tasksByStatus中查找
+        let task = (Object.values(tasksByStatus) as TaskWithRelations[][])
+          .flat()
+          .find(t => t.id === variables.id);
+
+        // 如果在tasksByStatus中找不到，再从getAllTasks中查找
+        if (!task) {
+          task = getAllTasks().find(t => t.id === variables.id);
+        }
+
+        console.log('拖拽完成查找任务反馈信息:', {
+          taskId: variables.id,
+          task: task,
+          taskTitle: task?.title,
+          allTasksCount: getAllTasks().length,
+          tasksByStatusCount: (Object.values(tasksByStatus) as TaskWithRelations[][]).flat().length
+        });
+
         if (task) {
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle(task.title);
           setIsFeedbackModalOpen(true);
         } else {
           // 如果找不到任务，使用默认标题
+          console.warn('拖拽完成未找到任务，使用默认标题:', variables.id);
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle("任务");
           setIsFeedbackModalOpen(true);
