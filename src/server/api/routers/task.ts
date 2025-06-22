@@ -1680,10 +1680,7 @@ export const taskRouter = createTRPCRouter({
         // 更新任务反馈
         const task = await ctx.db.task.update({
           where: { id },
-          data: {
-            ...feedbackData,
-            feedbackAt: new Date(),
-          },
+          data: feedbackData,
           include: {
             project: true,
             tags: {
@@ -1722,11 +1719,7 @@ export const taskRouter = createTRPCRouter({
           select: {
             id: true,
             title: true,
-            reflection: true,
-            lessons: true,
             feedback: true,
-            rating: true,
-            feedbackAt: true,
             createdById: true,
           },
         });

@@ -1038,6 +1038,18 @@ function TaskListCard({
             )}
           </div>
 
+          {/* 任务反馈（仅在已完成且有反馈时显示） */}
+          {task.status === TaskStatus.DONE && task.feedback && (
+            <div className="bg-blue-50 rounded-md px-3 py-2 mb-3 border border-blue-200">
+              <div className="flex items-start">
+                <span className="text-sm text-blue-600 font-medium mr-2">💭</span>
+                <p className="text-sm text-blue-700 line-clamp-2" title={task.feedback}>
+                  {task.feedback}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* 底部信息 */}
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-2">
@@ -1238,6 +1250,18 @@ function TimeTrackingTaskCard({
               >
                 📁 {task.project.name}
               </span>
+            </div>
+          )}
+
+          {/* 任务反馈（仅在已完成且有反馈时显示） */}
+          {task.status === TaskStatus.DONE && task.feedback && (
+            <div className="bg-blue-50 rounded-md px-3 py-2 mb-2 border border-blue-200">
+              <div className="flex items-start">
+                <span className="text-sm text-blue-600 font-medium mr-2">💭</span>
+                <p className="text-sm text-blue-700 line-clamp-2" title={task.feedback}>
+                  {task.feedback}
+                </p>
+              </div>
             </div>
           )}
 

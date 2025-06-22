@@ -1525,6 +1525,18 @@ function TaskCard({
             </div>
           </div>
         )}
+
+        {/* 任务反馈（仅在已完成且有反馈时显示） */}
+        {task.status === TaskStatus.DONE && task.feedback && (
+          <div className="bg-blue-50 rounded-md px-2 py-1.5 border border-blue-200">
+            <div className="flex items-start">
+              <span className="text-xs text-blue-600 font-medium mr-1">💭</span>
+              <p className="text-xs text-blue-700 line-clamp-3" title={task.feedback}>
+                {task.feedback}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

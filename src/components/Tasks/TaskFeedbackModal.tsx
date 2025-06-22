@@ -1,7 +1,6 @@
 import React, { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon, StarIcon } from "@heroicons/react/24/outline";
-import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";
 import { ButtonLoading } from "@/components/UI";
@@ -16,10 +15,7 @@ interface TaskFeedbackModalProps {
 }
 
 interface FeedbackFormData {
-  reflection: string;
-  lessons: string;
   feedback: string;
-  rating: number;
 }
 
 export default function TaskFeedbackModal({ 
@@ -30,13 +26,19 @@ export default function TaskFeedbackModal({
   onSuccess 
 }: TaskFeedbackModalProps) {
   const [formData, setFormData] = useState<FeedbackFormData>({
-    reflection: "",
-    lessons: "",
     feedback: "",
-    rating: 0,
   });
 
   const { showSuccess, showError } = useGlobalNotifications();
+
+  // 当taskId变化时重置表单
+  useEffect(() => {
+    if (isOpen && taskId) {
+      setFormData({
+        feedback: "",
+      });
+    }
+  }, [taskId, isOpen]);
 
   // 获取现有反馈数据
   const { data: existingFeedback, isLoading: isLoadingFeedback, error: feedbackError } = api.task.getFeedback.useQuery(
@@ -44,28 +46,25 @@ export default function TaskFeedbackModal({
     {
       enabled: isOpen && !!taskId,
       retry: 1, // 只重试一次
-      onSuccess: (data) => {
-        if (data) {
-          setFormData({
-            reflection: data.reflection || "",
-            lessons: data.lessons || "",
-            feedback: data.feedback || "",
-            rating: data.rating || 0,
-          });
-        }
-      },
-      onError: (error) => {
-        console.warn("获取任务反馈失败，使用默认值:", error.message);
-        // 如果获取失败，使用默认值，不阻止用户填写反馈
-        setFormData({
-          reflection: "",
-          lessons: "",
-          feedback: "",
-          rating: 0,
-        });
-      }
+      refetchOnMount: true, // 每次挂载时重新获取
+      refetchOnWindowFocus: false, // 避免窗口聚焦时重新获取
+      staleTime: 0, // 立即过期，确保获取最新数据
     }
   );
+
+  // 当获取到反馈数据时更新表单
+  useEffect(() => {
+    if (existingFeedback) {
+      setFormData({
+        feedback: existingFeedback.feedback || "",
+      });
+    } else if (feedbackError) {
+      console.warn("获取任务反馈失败，使用默认值:", feedbackError.message);
+      setFormData({
+        feedback: "",
+      });
+    }
+  }, [existingFeedback, feedbackError]);
 
   // 保存反馈
   const updateFeedback = api.task.updateFeedback.useMutation({
@@ -79,15 +78,7 @@ export default function TaskFeedbackModal({
     },
   });
 
-  // 重置表单
-  const resetForm = () => {
-    setFormData({
-      reflection: "",
-      lessons: "",
-      feedback: "",
-      rating: 0,
-    });
-  };
+
 
   // 处理关闭
   const handleClose = () => {
@@ -101,14 +92,10 @@ export default function TaskFeedbackModal({
     updateFeedback.mutate({
       id: taskId,
       ...formData,
-      rating: formData.rating > 0 ? formData.rating : undefined,
     });
   };
 
-  // 处理评分点击
-  const handleRatingClick = (rating: number) => {
-    setFormData(prev => ({ ...prev, rating }));
-  };
+
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -162,72 +149,16 @@ export default function TaskFeedbackModal({
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* 任务评分 */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        任务评分
-                      </label>
-                      <div className="flex items-center space-x-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => handleRatingClick(star)}
-                            className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            {star <= formData.rating ? (
-                              <StarIconSolid className="h-6 w-6 text-yellow-400" />
-                            ) : (
-                              <StarIcon className="h-6 w-6 text-gray-300" />
-                            )}
-                          </button>
-                        ))}
-                        <span className="ml-2 text-sm text-gray-600">
-                          {formData.rating > 0 ? `${formData.rating} 星` : "未评分"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 心得反思 */}
-                    <div>
-                      <label htmlFor="reflection" className="block text-sm font-medium text-gray-700 mb-2">
-                        心得反思
-                      </label>
-                      <textarea
-                        id="reflection"
-                        rows={4}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder="完成这个任务后，你有什么心得体会？学到了什么？"
-                        value={formData.reflection}
-                        onChange={(e) => setFormData({ ...formData, reflection: e.target.value })}
-                      />
-                    </div>
-
-                    {/* 经验教训 */}
-                    <div>
-                      <label htmlFor="lessons" className="block text-sm font-medium text-gray-700 mb-2">
-                        经验教训
-                      </label>
-                      <textarea
-                        id="lessons"
-                        rows={3}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder="遇到了什么困难？下次如何改进？有什么经验可以分享？"
-                        value={formData.lessons}
-                        onChange={(e) => setFormData({ ...formData, lessons: e.target.value })}
-                      />
-                    </div>
-
-                    {/* 其他反馈 */}
+                    {/* 任务反馈 */}
                     <div>
                       <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-2">
-                        其他反馈
+                        任务反馈
                       </label>
                       <textarea
                         id="feedback"
-                        rows={3}
+                        rows={4}
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder="还有其他想记录的内容吗？"
+                        placeholder="完成这个任务后，有什么想记录的反馈吗？"
                         value={formData.feedback}
                         onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
                       />

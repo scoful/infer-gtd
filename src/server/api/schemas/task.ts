@@ -27,10 +27,7 @@ export const updateTaskSchema = z.object({
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
   // 反馈相关字段
-  reflection: z.string().max(1000, "心得反思过长").optional(),
-  lessons: z.string().max(1000, "经验教训过长").optional(),
   feedback: z.string().max(1000, "反馈内容过长").optional(),
-  rating: z.number().int().min(1).max(5).optional(),
 });
 
 // 任务状态更新 Schema
@@ -133,10 +130,7 @@ export const updateTaskStatusWithPositionSchema = z.object({
 // 任务反馈 Schema
 export const updateTaskFeedbackSchema = z.object({
   id: z.string().cuid("无效的任务ID"),
-  reflection: z.string().max(1000, "心得反思过长").optional(),
-  lessons: z.string().max(1000, "经验教训过长").optional(),
   feedback: z.string().max(1000, "反馈内容过长").optional(),
-  rating: z.number().int().min(1).max(5).optional(),
 });
 
 // 导出类型
