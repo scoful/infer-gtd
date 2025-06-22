@@ -542,6 +542,7 @@ const TaskListPage: NextPage = () => {
                       { value: TaskStatus.IN_PROGRESS, label: "进行中" },
                       { value: TaskStatus.WAITING, label: "等待中" },
                       { value: TaskStatus.DONE, label: "已完成" },
+                      { value: TaskStatus.ARCHIVED, label: "已归档" },
                     ].map((status) => (
                       <label key={status.value} className="flex items-center">
                         <input

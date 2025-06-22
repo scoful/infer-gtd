@@ -38,6 +38,7 @@ const TASK_STATUSES = [
   { value: TaskStatus.IN_PROGRESS, label: "进行中" },
   { value: TaskStatus.WAITING, label: "等待中" },
   { value: TaskStatus.DONE, label: "已完成" },
+  { value: TaskStatus.ARCHIVED, label: "已归档" },
 ];
 
 const PRIORITIES = [
