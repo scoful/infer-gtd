@@ -186,12 +186,12 @@ const KanbanPage: NextPage = () => {
 
   // 为每个状态管理分页状态
   const [statusLimits, setStatusLimits] = useState<Record<TaskStatus, number>>({
-    [TaskStatus.IDEA]: 20,
-    [TaskStatus.TODO]: 20,
-    [TaskStatus.IN_PROGRESS]: 20,
-    [TaskStatus.WAITING]: 20,
-    [TaskStatus.DONE]: 20,
-    [TaskStatus.ARCHIVED]: 20,
+    [TaskStatus.IDEA]: 5,
+    [TaskStatus.TODO]: 5,
+    [TaskStatus.IN_PROGRESS]: 5,
+    [TaskStatus.WAITING]: 5,
+    [TaskStatus.DONE]: 5,
+    [TaskStatus.ARCHIVED]: 5,
   });
 
   // 为每个状态单独获取任务数据
@@ -221,8 +221,30 @@ const KanbanPage: NextPage = () => {
   );
 
   // 合并加载状态
-  const isLoading = ideaTasks.isLoading || todoTasks.isLoading || inProgressTasks.isLoading || waitingTasks.isLoading || doneTasks.isLoading;
+  // 只有在初始加载时才显示全屏loading（isLoading表示首次加载，isFetching表示后续刷新）
+  const isInitialLoading = ideaTasks.isLoading || todoTasks.isLoading || inProgressTasks.isLoading || waitingTasks.isLoading || doneTasks.isLoading;
   const isFetching = ideaTasks.isFetching || todoTasks.isFetching || inProgressTasks.isFetching || waitingTasks.isFetching || doneTasks.isFetching;
+
+  // 跟踪不同类型的刷新状态
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
+  const [loadingMoreStatuses, setLoadingMoreStatuses] = useState<Set<TaskStatus>>(new Set()); // 正在加载更多的状态
+
+  // 检查是否是手动数据刷新（导航栏点击触发的刷新）
+  const isDataRefreshing = isFetching && !isInitialLoading && isManualRefreshing;
+
+  // 监听查询状态变化，在刷新完成后重置标志
+  useEffect(() => {
+    if (isManualRefreshing && !isFetching) {
+      setIsManualRefreshing(false);
+    }
+  }, [isManualRefreshing, isFetching]);
+
+  // 监听加载更多状态变化，在完成后清理对应状态
+  useEffect(() => {
+    if (loadingMoreStatuses.size > 0 && !isFetching) {
+      setLoadingMoreStatuses(new Set());
+    }
+  }, [loadingMoreStatuses.size, isFetching]);
 
   // 获取所有任务的helper函数
   const getAllTasks = (): TaskWithRelations[] => {
@@ -237,6 +259,7 @@ const KanbanPage: NextPage = () => {
 
   // 刷新所有状态的任务数据
   const refetchAll = async () => {
+    setIsManualRefreshing(true); // 标记为手动刷新
     await Promise.all([
       ideaTasks.refetch(),
       todoTasks.refetch(),
@@ -736,9 +759,10 @@ const KanbanPage: NextPage = () => {
 
   // 为特定状态加载更多任务
   const handleLoadMoreForStatus = (status: TaskStatus) => {
+    setLoadingMoreStatuses(prev => new Set(prev).add(status)); // 记录正在加载更多的状态
     setStatusLimits(prev => ({
       ...prev,
-      [status]: prev[status] + 20,
+      [status]: prev[status] + 5,
     }));
   };
 
@@ -760,8 +784,13 @@ const KanbanPage: NextPage = () => {
     }
   };
 
-  // 获取特定状态的加载状态
+  // 获取特定状态的加载状态（只有在加载更多时才显示loading）
   const getIsLoadingForStatus = (status: TaskStatus) => {
+    // 只有在该状态正在加载更多时才显示loading
+    if (!loadingMoreStatuses.has(status)) {
+      return false;
+    }
+
     switch (status) {
       case TaskStatus.IDEA:
         return ideaTasks.isFetching;
@@ -1018,11 +1047,14 @@ const KanbanPage: NextPage = () => {
     : null;
 
   // 首次加载显示页面级loading
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <AuthGuard>
         <MainLayout>
-          <PageLoading message="加载任务看板中..." />
+          <PageLoading
+            message="加载任务看板中..."
+            className="!min-h-[calc(100vh-12rem)] !bg-transparent"
+          />
         </MainLayout>
       </AuthGuard>
     );
@@ -1049,7 +1081,7 @@ const KanbanPage: NextPage = () => {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
-                {((isFetching && !isLoading) || reorderTasks.isPending) && (
+                {(isDataRefreshing || reorderTasks.isPending) && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
                     {reorderTasks.isPending ? "更新排序中..." : "刷新中..."}
