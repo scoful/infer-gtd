@@ -95,18 +95,14 @@ export default function TaskFeedbackModal({
   };
 
   // 处理提交
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      await updateFeedback.mutateAsync({
-        id: taskId,
-        ...formData,
-        rating: formData.rating > 0 ? formData.rating : undefined,
-      });
-    } catch (error) {
-      console.error("保存反馈失败:", error);
-    }
+    updateFeedback.mutate({
+      id: taskId,
+      ...formData,
+      rating: formData.rating > 0 ? formData.rating : undefined,
+    });
   };
 
   // 处理评分点击
@@ -246,13 +242,17 @@ export default function TaskFeedbackModal({
                       >
                         跳过
                       </button>
-                      <ButtonLoading
+                      <button
                         type="submit"
-                        isLoading={updateFeedback.isPending}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={updateFeedback.isPending}
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
                       >
-                        保存反馈
-                      </ButtonLoading>
+                        {updateFeedback.isPending ? (
+                          <ButtonLoading message="保存中..." size="sm" />
+                        ) : (
+                          "保存反馈"
+                        )}
+                      </button>
                     </div>
                   </form>
                 )}
