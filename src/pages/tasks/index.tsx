@@ -1101,10 +1101,35 @@ function TaskListCard({
               )}
             </div>
 
-            {/* 创建时间 */}
-            <span>
-              {new Date(task.createdAt).toLocaleDateString('zh-CN')}
-            </span>
+            {/* 创建时间和完成时间 */}
+            <div className="text-right">
+              {/* 创建时间 */}
+              <div className="text-xs text-gray-500">
+                📅 {new Date(task.createdAt).toLocaleString('zh-CN', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                })}
+              </div>
+              {/* 完成时间（仅在已完成时显示） */}
+              {task.status === TaskStatus.DONE && task.completedAt && (
+                <div className="text-xs text-green-600 mt-1">
+                  ✅ {new Date(task.completedAt).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
