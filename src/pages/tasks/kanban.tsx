@@ -184,40 +184,58 @@ const KanbanPage: NextPage = () => {
     return columnCollisions;
   };
 
-  // 为每个状态管理分页状态
-  const [statusLimits, setStatusLimits] = useState<Record<TaskStatus, number>>({
-    [TaskStatus.IDEA]: 5,
-    [TaskStatus.TODO]: 5,
-    [TaskStatus.IN_PROGRESS]: 5,
-    [TaskStatus.WAITING]: 5,
-    [TaskStatus.DONE]: 5,
-    [TaskStatus.ARCHIVED]: 5,
-  });
+
 
   // 为每个状态单独获取任务数据
-  const ideaTasks = api.task.getByStatus.useQuery(
-    { status: TaskStatus.IDEA, limit: statusLimits[TaskStatus.IDEA] },
-    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  // 使用 useInfiniteQuery 来实现真正的分页加载，避免数据清空
+  const ideaTasks = api.task.getByStatus.useInfiniteQuery(
+    { status: TaskStatus.IDEA, limit: 5 },
+    {
+      enabled: !!sessionData,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
   );
 
-  const todoTasks = api.task.getByStatus.useQuery(
-    { status: TaskStatus.TODO, limit: statusLimits[TaskStatus.TODO] },
-    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  const todoTasks = api.task.getByStatus.useInfiniteQuery(
+    { status: TaskStatus.TODO, limit: 5 },
+    {
+      enabled: !!sessionData,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
   );
 
-  const inProgressTasks = api.task.getByStatus.useQuery(
-    { status: TaskStatus.IN_PROGRESS, limit: statusLimits[TaskStatus.IN_PROGRESS] },
-    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  const inProgressTasks = api.task.getByStatus.useInfiniteQuery(
+    { status: TaskStatus.IN_PROGRESS, limit: 5 },
+    {
+      enabled: !!sessionData,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
   );
 
-  const waitingTasks = api.task.getByStatus.useQuery(
-    { status: TaskStatus.WAITING, limit: statusLimits[TaskStatus.WAITING] },
-    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  const waitingTasks = api.task.getByStatus.useInfiniteQuery(
+    { status: TaskStatus.WAITING, limit: 5 },
+    {
+      enabled: !!sessionData,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
   );
 
-  const doneTasks = api.task.getByStatus.useQuery(
-    { status: TaskStatus.DONE, limit: statusLimits[TaskStatus.DONE] },
-    { enabled: !!sessionData, staleTime: 30 * 1000, refetchOnWindowFocus: true }
+  const doneTasks = api.task.getByStatus.useInfiniteQuery(
+    { status: TaskStatus.DONE, limit: 5 },
+    {
+      enabled: !!sessionData,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
   );
 
   // 合并加载状态
@@ -268,12 +286,17 @@ const KanbanPage: NextPage = () => {
 
   // 获取所有任务的helper函数
   const getAllTasks = (): TaskWithRelations[] => {
+    const flattenPages = (pages: any[] | undefined) => {
+      if (!pages) return [];
+      return pages.flatMap(page => page.tasks || []);
+    };
+
     return [
-      ...(ideaTasks.data?.tasks || []),
-      ...(todoTasks.data?.tasks || []),
-      ...(inProgressTasks.data?.tasks || []),
-      ...(waitingTasks.data?.tasks || []),
-      ...(doneTasks.data?.tasks || []),
+      ...flattenPages(ideaTasks.data?.pages),
+      ...flattenPages(todoTasks.data?.pages),
+      ...flattenPages(inProgressTasks.data?.pages),
+      ...flattenPages(waitingTasks.data?.pages),
+      ...flattenPages(doneTasks.data?.pages),
     ];
   };
 
@@ -306,9 +329,10 @@ const KanbanPage: NextPage = () => {
     };
 
     // 处理每个状态的任务数据
-    const processStatusTasks = (tasks: TaskWithRelations[] | undefined, originalStatus: TaskStatus) => {
-      if (!tasks) return;
+    const processStatusTasks = (pages: any[] | undefined, originalStatus: TaskStatus) => {
+      if (!pages) return;
 
+      const tasks = pages.flatMap(page => page.tasks || []);
       tasks.forEach((task) => {
         // 检查是否有乐观更新
         const optimisticStatus = optimisticUpdates[task.id];
@@ -322,11 +346,11 @@ const KanbanPage: NextPage = () => {
     };
 
     // 处理各状态的任务
-    processStatusTasks(ideaTasks.data?.tasks, TaskStatus.IDEA);
-    processStatusTasks(todoTasks.data?.tasks, TaskStatus.TODO);
-    processStatusTasks(inProgressTasks.data?.tasks, TaskStatus.IN_PROGRESS);
-    processStatusTasks(waitingTasks.data?.tasks, TaskStatus.WAITING);
-    processStatusTasks(doneTasks.data?.tasks, TaskStatus.DONE);
+    processStatusTasks(ideaTasks.data?.pages, TaskStatus.IDEA);
+    processStatusTasks(todoTasks.data?.pages, TaskStatus.TODO);
+    processStatusTasks(inProgressTasks.data?.pages, TaskStatus.IN_PROGRESS);
+    processStatusTasks(waitingTasks.data?.pages, TaskStatus.WAITING);
+    processStatusTasks(doneTasks.data?.pages, TaskStatus.DONE);
 
     // 应用乐观排序更新
     Object.keys(grouped).forEach((status) => {
@@ -358,11 +382,11 @@ const KanbanPage: NextPage = () => {
 
     return grouped;
   }, [
-    ideaTasks.data,
-    todoTasks.data,
-    inProgressTasks.data,
-    waitingTasks.data,
-    doneTasks.data,
+    ideaTasks.data?.pages,
+    todoTasks.data?.pages,
+    inProgressTasks.data?.pages,
+    waitingTasks.data?.pages,
+    doneTasks.data?.pages,
     optimisticUpdates,
     optimisticTaskOrder
   ]);
@@ -780,25 +804,40 @@ const KanbanPage: NextPage = () => {
   // 为特定状态加载更多任务
   const handleLoadMoreForStatus = (status: TaskStatus) => {
     setLoadingMoreStatuses(prev => new Set(prev).add(status)); // 记录正在加载更多的状态
-    setStatusLimits(prev => ({
-      ...prev,
-      [status]: prev[status] + 5,
-    }));
+
+    // 根据状态调用对应的 fetchNextPage
+    switch (status) {
+      case TaskStatus.IDEA:
+        void ideaTasks.fetchNextPage();
+        break;
+      case TaskStatus.TODO:
+        void todoTasks.fetchNextPage();
+        break;
+      case TaskStatus.IN_PROGRESS:
+        void inProgressTasks.fetchNextPage();
+        break;
+      case TaskStatus.WAITING:
+        void waitingTasks.fetchNextPage();
+        break;
+      case TaskStatus.DONE:
+        void doneTasks.fetchNextPage();
+        break;
+    }
   };
 
   // 获取特定状态是否有更多任务
   const getHasMoreTasksForStatus = (status: TaskStatus) => {
     switch (status) {
       case TaskStatus.IDEA:
-        return !!ideaTasks.data?.nextCursor;
+        return ideaTasks.hasNextPage;
       case TaskStatus.TODO:
-        return !!todoTasks.data?.nextCursor;
+        return todoTasks.hasNextPage;
       case TaskStatus.IN_PROGRESS:
-        return !!inProgressTasks.data?.nextCursor;
+        return inProgressTasks.hasNextPage;
       case TaskStatus.WAITING:
-        return !!waitingTasks.data?.nextCursor;
+        return waitingTasks.hasNextPage;
       case TaskStatus.DONE:
-        return !!doneTasks.data?.nextCursor;
+        return doneTasks.hasNextPage;
       default:
         return false;
     }
@@ -813,15 +852,15 @@ const KanbanPage: NextPage = () => {
 
     switch (status) {
       case TaskStatus.IDEA:
-        return ideaTasks.isFetching;
+        return ideaTasks.isFetchingNextPage;
       case TaskStatus.TODO:
-        return todoTasks.isFetching;
+        return todoTasks.isFetchingNextPage;
       case TaskStatus.IN_PROGRESS:
-        return inProgressTasks.isFetching;
+        return inProgressTasks.isFetchingNextPage;
       case TaskStatus.WAITING:
-        return waitingTasks.isFetching;
+        return waitingTasks.isFetchingNextPage;
       case TaskStatus.DONE:
-        return doneTasks.isFetching;
+        return doneTasks.isFetchingNextPage;
       default:
         return false;
     }
