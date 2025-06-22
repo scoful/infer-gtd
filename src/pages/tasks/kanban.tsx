@@ -189,7 +189,7 @@ const KanbanPage: NextPage = () => {
   // 为每个状态单独获取任务数据
   // 使用 useInfiniteQuery 来实现真正的分页加载，避免数据清空
   const ideaTasks = api.task.getByStatus.useInfiniteQuery(
-    { status: TaskStatus.IDEA, limit: 5 },
+    { status: TaskStatus.IDEA, limit: 10 },
     {
       enabled: !!sessionData,
       staleTime: 30 * 1000,
@@ -199,7 +199,7 @@ const KanbanPage: NextPage = () => {
   );
 
   const todoTasks = api.task.getByStatus.useInfiniteQuery(
-    { status: TaskStatus.TODO, limit: 5 },
+    { status: TaskStatus.TODO, limit: 10 },
     {
       enabled: !!sessionData,
       staleTime: 30 * 1000,
@@ -209,7 +209,7 @@ const KanbanPage: NextPage = () => {
   );
 
   const inProgressTasks = api.task.getByStatus.useInfiniteQuery(
-    { status: TaskStatus.IN_PROGRESS, limit: 5 },
+    { status: TaskStatus.IN_PROGRESS, limit: 10 },
     {
       enabled: !!sessionData,
       staleTime: 30 * 1000,
@@ -219,7 +219,7 @@ const KanbanPage: NextPage = () => {
   );
 
   const waitingTasks = api.task.getByStatus.useInfiniteQuery(
-    { status: TaskStatus.WAITING, limit: 5 },
+    { status: TaskStatus.WAITING, limit: 10 },
     {
       enabled: !!sessionData,
       staleTime: 30 * 1000,
@@ -229,7 +229,7 @@ const KanbanPage: NextPage = () => {
   );
 
   const doneTasks = api.task.getByStatus.useInfiniteQuery(
-    { status: TaskStatus.DONE, limit: 5 },
+    { status: TaskStatus.DONE, limit: 10 },
     {
       enabled: !!sessionData,
       staleTime: 30 * 1000,
@@ -843,6 +843,24 @@ const KanbanPage: NextPage = () => {
     }
   };
 
+  // 获取特定状态的总任务数
+  const getTotalTaskCountForStatus = (status: TaskStatus) => {
+    switch (status) {
+      case TaskStatus.IDEA:
+        return ideaTasks.data?.pages?.[0]?.totalCount || 0;
+      case TaskStatus.TODO:
+        return todoTasks.data?.pages?.[0]?.totalCount || 0;
+      case TaskStatus.IN_PROGRESS:
+        return inProgressTasks.data?.pages?.[0]?.totalCount || 0;
+      case TaskStatus.WAITING:
+        return waitingTasks.data?.pages?.[0]?.totalCount || 0;
+      case TaskStatus.DONE:
+        return doneTasks.data?.pages?.[0]?.totalCount || 0;
+      default:
+        return 0;
+    }
+  };
+
   // 获取特定状态的加载状态（只有在加载更多时才显示loading）
   const getIsLoadingForStatus = (status: TaskStatus) => {
     // 只有在该状态正在加载更多时才显示loading
@@ -1196,6 +1214,7 @@ const KanbanPage: NextPage = () => {
                   hasMoreTasks={getHasMoreTasksForStatus(column.status)}
                   isLoadingMore={getIsLoadingForStatus(column.status)}
                   onLoadMore={() => handleLoadMoreForStatus(column.status)}
+                  totalTaskCount={getTotalTaskCountForStatus(column.status)}
                 />
               );
             })}
@@ -1342,7 +1361,7 @@ function KanbanColumn({
           </h3>
           <p className="text-xs text-gray-500">
             {totalTaskCount !== undefined
-              ? `显示 ${tasks.length} 个，共 ${totalTaskCount} 个任务`
+              ? `${tasks.length}/${totalTaskCount} 个任务`
               : `${tasks.length} 个任务`
             }
           </p>

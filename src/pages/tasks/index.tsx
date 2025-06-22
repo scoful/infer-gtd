@@ -108,7 +108,7 @@ const TaskListPage: NextPage = () => {
   // 构建查询参数
   const queryParams = useMemo(() => {
     const params: any = {
-      limit: 50,
+      limit: 10, // 改为10条方便测试
     };
 
     if (filters.search.trim()) {
@@ -130,14 +130,23 @@ const TaskListPage: NextPage = () => {
     return params;
   }, [filters]);
 
-  // 获取任务数据
-  const { data: tasksData, isLoading, refetch, isFetching } = api.task.getAll.useQuery(
+  // 获取任务数据 - 使用无限查询支持分页
+  const {
+    data: tasksData,
+    isLoading,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = api.task.getAll.useInfiniteQuery(
     queryParams,
     {
       enabled: !!sessionData,
       staleTime: 30 * 1000, // 30秒缓存
       refetchOnWindowFocus: true,
       refetchOnMount: true,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
     }
   );
 
@@ -303,9 +312,11 @@ const TaskListPage: NextPage = () => {
     });
   }, []);
 
-  // 任务数据处理
-  const tasks = tasksData?.tasks || [];
-  const hasNextPage = false; // 暂时禁用分页功能
+  // 任务数据处理 - 合并所有页面的数据
+  const tasks = tasksData?.pages.flatMap(page => page.tasks) || [];
+  const hasMorePages = hasNextPage;
+  // 获取总数（从第一页获取，因为总数在所有页面都是一样的）
+  const totalCount = tasksData?.pages[0]?.totalCount || 0;
 
   // 打开计时明细
   const handleViewTimeEntries = useCallback((taskId: string) => {
@@ -804,7 +815,7 @@ const TaskListPage: NextPage = () => {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">
-                      全选 ({filteredAndSortedTasks.length} 个任务)
+                      全选 ({filteredAndSortedTasks.length}/{totalCount} 个任务)
                     </span>
                   </label>
 
@@ -837,16 +848,23 @@ const TaskListPage: NextPage = () => {
                 </div>
 
                 {/* 加载更多 */}
-                {hasNextPage && (
+                {hasMorePages && (
                   <div className="text-center py-4">
                     <button
                       onClick={() => {
-                        // TODO: 实现加载更多功能
-                        console.log("加载更多");
+                        void fetchNextPage();
                       }}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      disabled={isFetchingNextPage}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      加载更多
+                      {isFetchingNextPage ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full mr-2"></div>
+                          加载中...
+                        </>
+                      ) : (
+                        "加载更多"
+                      )}
                     </button>
                   </div>
                 )}

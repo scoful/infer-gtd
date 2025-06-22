@@ -171,37 +171,41 @@ export const taskRouter = createTRPCRouter({
           ...(dueBefore && { dueDate: { ...where.dueDate, lte: dueBefore } }),
         };
 
-        const tasks = await ctx.db.task.findMany({
-          where,
-          take: limit + 1,
-          cursor: cursor ? { id: cursor } : undefined,
-          orderBy: [
-            { status: "asc" },
-            { sortOrder: "asc" },
-            { priority: "desc" },
-            { dueDate: "asc" },
-            { createdAt: "desc" },
-          ],
-          include: {
-            project: true,
-            tags: {
-              include: {
-                tag: true,
+        // 并行获取任务列表和总数
+        const [tasks, totalCount] = await Promise.all([
+          ctx.db.task.findMany({
+            where,
+            take: limit + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: [
+              { status: "asc" },
+              { sortOrder: "asc" },
+              { priority: "desc" },
+              { dueDate: "asc" },
+              { createdAt: "desc" },
+            ],
+            include: {
+              project: true,
+              tags: {
+                include: {
+                  tag: true,
+                },
+                orderBy: { sortOrder: "asc" }, // 按sortOrder排序
               },
-              orderBy: { sortOrder: "asc" }, // 按sortOrder排序
-            },
-            timeEntries: {
-              where: { endTime: null },
-              take: 1,
-            },
-            _count: {
-              select: {
-                timeEntries: true,
-                statusHistory: true,
+              timeEntries: {
+                where: { endTime: null },
+                take: 1,
+              },
+              _count: {
+                select: {
+                  timeEntries: true,
+                  statusHistory: true,
+                },
               },
             },
-          },
-        });
+          }),
+          ctx.db.task.count({ where }),
+        ]);
 
         let nextCursor: typeof cursor | undefined = undefined;
         if (tasks.length > limit) {
@@ -212,6 +216,7 @@ export const taskRouter = createTRPCRouter({
         return {
           tasks,
           nextCursor,
+          totalCount,
         };
       } catch (error) {
         throw new TRPCError({
@@ -234,36 +239,40 @@ export const taskRouter = createTRPCRouter({
           status: status,
         };
 
-        const tasks = await ctx.db.task.findMany({
-          where,
-          take: limit + 1,
-          cursor: cursor ? { id: cursor } : undefined,
-          orderBy: [
-            { sortOrder: "asc" },
-            { priority: "desc" },
-            { dueDate: "asc" },
-            { createdAt: "desc" },
-          ],
-          include: {
-            project: true,
-            tags: {
-              include: {
-                tag: true,
+        // 并行获取任务列表和总数
+        const [tasks, totalCount] = await Promise.all([
+          ctx.db.task.findMany({
+            where,
+            take: limit + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy: [
+              { sortOrder: "asc" },
+              { priority: "desc" },
+              { dueDate: "asc" },
+              { createdAt: "desc" },
+            ],
+            include: {
+              project: true,
+              tags: {
+                include: {
+                  tag: true,
+                },
+                orderBy: { sortOrder: "asc" },
               },
-              orderBy: { sortOrder: "asc" },
-            },
-            timeEntries: {
-              where: { endTime: null },
-              take: 1,
-            },
-            _count: {
-              select: {
-                timeEntries: true,
-                statusHistory: true,
+              timeEntries: {
+                where: { endTime: null },
+                take: 1,
+              },
+              _count: {
+                select: {
+                  timeEntries: true,
+                  statusHistory: true,
+                },
               },
             },
-          },
-        });
+          }),
+          ctx.db.task.count({ where }),
+        ]);
 
         let nextCursor: typeof cursor | undefined = undefined;
         if (tasks.length > limit) {
@@ -274,6 +283,7 @@ export const taskRouter = createTRPCRouter({
         return {
           tasks,
           nextCursor,
+          totalCount,
         };
       } catch (error) {
         throw new TRPCError({
