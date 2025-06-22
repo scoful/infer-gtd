@@ -24,6 +24,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   Squares2X2Icon,
+  CalendarIcon,
 } from "@heroicons/react/24/outline";
 
 import { useSidebarState } from "@/hooks";
@@ -111,10 +112,24 @@ const navigation: NavigationItem[] = [
     description: "全局内容搜索",
   },
   {
-    name: "统计",
+    name: "统计分析",
     href: "/analytics",
     icon: ChartBarIcon,
     description: "数据分析和洞察",
+    children: [
+      {
+        name: "数据统计",
+        href: "/analytics",
+        icon: ChartBarIcon,
+        description: "任务和时间统计",
+      },
+      {
+        name: "每周回顾",
+        href: "/review/weekly",
+        icon: CalendarIcon,
+        description: "GTD每周回顾和分析",
+      },
+    ],
   },
 ];
 
@@ -123,10 +138,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
-    // 初始化时，如果当前路径是任务相关页面，自动展开任务管理菜单
+    // 初始化时，如果当前路径是相关页面，自动展开对应菜单
     const initialExpanded = new Set<string>();
-    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/tasks')) {
-      initialExpanded.add('任务管理');
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname.startsWith('/tasks')) {
+        initialExpanded.add('任务管理');
+      }
+      if (window.location.pathname.startsWith('/analytics') || window.location.pathname.startsWith('/review')) {
+        initialExpanded.add('统计分析');
+      }
     }
     return initialExpanded;
   });
@@ -139,6 +159,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     if (router.pathname.startsWith('/tasks')) {
       setExpandedItems(prev => new Set(prev).add('任务管理'));
+    }
+    if (router.pathname.startsWith('/analytics') || router.pathname.startsWith('/review')) {
+      setExpandedItems(prev => new Set(prev).add('统计分析'));
     }
   }, [router.pathname]);
 
@@ -182,6 +205,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (href === "/tags") {
       return router.pathname === "/tags" || router.pathname.startsWith("/tags/");
     }
+    if (href === "/analytics") {
+      return router.pathname === "/analytics";
+    }
+    if (href === "/review/weekly") {
+      return router.pathname === "/review/weekly";
+    }
     return router.pathname.startsWith(href);
   };
 
@@ -195,6 +224,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const isParentActive = (item: NavigationItem) => {
     if (item.name === "任务管理") {
       return router.pathname.startsWith("/tasks");
+    }
+    if (item.name === "统计分析") {
+      return router.pathname.startsWith("/analytics") || router.pathname.startsWith("/review");
     }
     return isActivePath(item.href);
   };

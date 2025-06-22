@@ -139,6 +139,9 @@ const KanbanPage: NextPage = () => {
   // 正在更新状态和位置的任务
   const [updatingTasks, setUpdatingTasks] = useState<Set<string>>(new Set());
 
+  // 计时操作的专用loading状态
+  const [timerLoadingTasks, setTimerLoadingTasks] = useState<Set<string>>(new Set());
+
   // 通知系统
   const {
     showSuccess,
@@ -464,7 +467,18 @@ const KanbanPage: NextPage = () => {
 
   // 时间追踪
   const startTimer = api.task.startTimer.useMutation({
-    onSuccess: (result) => {
+    onMutate: (variables) => {
+      // 开始loading状态
+      setTimerLoadingTasks(prev => new Set(prev).add(variables.id));
+    },
+    onSuccess: (result, variables) => {
+      // 清除loading状态
+      setTimerLoadingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
+
       // 更新所有任务的状态，特别是被中断任务的totalTimeSpent
       utils.task.getAll.setData({ limit: 100 }, (oldData) => {
         if (!oldData || !result.interruptedTasks) return oldData;
@@ -491,13 +505,30 @@ const KanbanPage: NextPage = () => {
 
       showSuccess("计时已开始");
     },
-    onError: () => {
+    onError: (error, variables) => {
+      // 清除loading状态
+      setTimerLoadingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
       showError("开始计时失败");
     },
   });
 
   const pauseTimer = api.task.pauseTimer.useMutation({
+    onMutate: (variables) => {
+      // 开始loading状态
+      setTimerLoadingTasks(prev => new Set(prev).add(variables.id));
+    },
     onSuccess: (result, variables) => {
+      // 清除loading状态
+      setTimerLoadingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
+
       // 更新总时长（乐观更新已在handlePauseTimer中处理状态）
       utils.task.getAll.setData({ limit: 100 }, (oldData) => {
         if (!oldData) return oldData;
@@ -508,16 +539,27 @@ const KanbanPage: NextPage = () => {
             task.id === variables.id
               ? {
                   ...task,
-                  totalTimeSpent: result.task?.totalTimeSpent || task.totalTimeSpent
+                  totalTimeSpent: result.task?.totalTimeSpent || task.totalTimeSpent,
+                  isTimerActive: false,
+                  timerStartedAt: null,
                 }
               : task
           )
         };
       });
 
+      // 刷新所有数据以确保状态同步
+      void refetchAll();
+
       showSuccess("计时已暂停");
     },
-    onError: () => {
+    onError: (error, variables) => {
+      // 清除loading状态
+      setTimerLoadingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
       showError("暂停计时失败");
     },
   });
@@ -1232,6 +1274,7 @@ const KanbanPage: NextPage = () => {
                   isUpdating={updateTaskStatus.isPending}
                   optimisticUpdates={optimisticUpdates}
                   updatingTasks={updatingTasks}
+                  timerLoadingTasks={timerLoadingTasks}
                   hasMoreTasks={getHasMoreTasksForStatus(column.status)}
                   isLoadingMore={getIsLoadingForStatus(column.status)}
                   onLoadMore={() => handleLoadMoreForStatus(column.status)}
@@ -1257,6 +1300,7 @@ const KanbanPage: NextPage = () => {
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive(activeTask)}
                     isUpdating={false}
+                    isTimerLoading={false}
                     isDragging={true}
                   />
                 </div>
@@ -1330,6 +1374,7 @@ interface KanbanColumnProps {
   isUpdating: boolean;
   optimisticUpdates: Record<string, TaskStatus>;
   updatingTasks: Set<string>;
+  timerLoadingTasks: Set<string>; // 新增：计时loading状态
   // 分页相关
   hasMoreTasks: boolean;
   isLoadingMore: boolean;
@@ -1352,6 +1397,7 @@ function KanbanColumn({
   isUpdating,
   optimisticUpdates,
   updatingTasks,
+  timerLoadingTasks,
   hasMoreTasks,
   isLoadingMore,
   onLoadMore,
@@ -1406,29 +1452,49 @@ function KanbanColumn({
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
               isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
+              isTimerLoading={timerLoadingTasks.has(task.id)}
             />
           ))}
 
           {/* 加载更多按钮 */}
           {hasMoreTasks && (
-            <div className="flex justify-center py-3">
+            <div className="px-1 py-2">
               <button
                 onClick={onLoadMore}
                 disabled={isLoadingMore}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full group relative overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  isLoadingMore
+                    ? "border-blue-300 bg-blue-50"
+                    : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/50"
+                } disabled:cursor-not-allowed`}
               >
-                {isLoadingMore ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-gray-600 border-t-transparent rounded-full mr-2"></div>
-                    加载中...
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                    加载更多
-                  </>
+                <div className="flex flex-col items-center justify-center py-6 px-4">
+                  {isLoadingMore ? (
+                    <>
+                      <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+                      <span className="text-sm font-medium text-blue-700">加载中...</span>
+                      <span className="text-xs text-blue-600 mt-1">正在获取更多任务</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 group-hover:bg-blue-100 transition-colors duration-200 mb-2">
+                        <svg className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 transition-colors duration-200">
+                        加载更多任务
+                      </span>
+                      <span className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors duration-200 mt-1">
+                        点击查看更多内容
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* 悬停效果 */}
+                {!isLoadingMore && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 )}
               </button>
             </div>
@@ -1462,6 +1528,7 @@ interface DraggableTaskCardProps {
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
+  isTimerLoading: boolean; // 新增：计时loading状态
 }
 
 function DraggableTaskCard(props: DraggableTaskCardProps) {
@@ -1517,6 +1584,7 @@ interface TaskCardProps {
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
+  isTimerLoading: boolean; // 新增：计时操作的loading状态
   isDragging?: boolean;
 }
 
@@ -1532,6 +1600,7 @@ function TaskCard({
   formatTimeSpent,
   isTimerActive,
   isUpdating,
+  isTimerLoading,
   isDragging = false,
 }: TaskCardProps) {
   const [showMenu, setShowMenu] = useState(false);
@@ -1772,29 +1841,38 @@ function TaskCard({
                   onStartTimer(task.id);
                 }
               }}
-              disabled={isUpdating}
+              disabled={isTimerLoading || isUpdating}
               className={`relative p-1 rounded-full transition-all duration-200 ${
-                isTimerActive
+                isTimerLoading
+                  ? "text-blue-600 bg-blue-50 border-blue-200"
+                  : isTimerActive
                   ? "text-red-600 hover:bg-red-50 bg-red-50/50"
                   : "text-green-600 hover:bg-green-50 bg-green-50/50"
               } disabled:opacity-50 border ${
-                isTimerActive
+                isTimerLoading
+                  ? "border-blue-200"
+                  : isTimerActive
                   ? "border-red-200 hover:border-red-300"
                   : "border-green-200 hover:border-green-300"
               }`}
-              title={isTimerActive
-                ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
-                : `开始计时 - 开始专注计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
+              title={
+                isTimerLoading
+                  ? "计时操作处理中..."
+                  : isTimerActive
+                  ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
+                  : `开始计时 - 开始专注计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
               }
             >
-              {isTimerActive ? (
+              {isTimerLoading ? (
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
+              ) : isTimerActive ? (
                 <PauseIcon className="h-3.5 w-3.5" />
               ) : (
                 <PlayIcon className="h-3.5 w-3.5" />
               )}
 
               {/* 计时动画环 */}
-              {isTimerActive && (
+              {isTimerActive && !isTimerLoading && (
                 <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-20"></div>
               )}
             </button>
