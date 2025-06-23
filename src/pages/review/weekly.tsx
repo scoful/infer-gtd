@@ -150,12 +150,9 @@ const WeeklyReviewPage: NextPage = () => {
 
     // 反馈统计
     const tasksWithFeedback = completed.filter(task =>
-      task.reflection || task.lessons || task.feedback || task.rating
+      task.feedback && task.feedback.trim().length > 0
     );
     const feedbackRate = completedCount > 0 ? (tasksWithFeedback.length / completedCount) * 100 : 0;
-    const averageRating = tasksWithFeedback.length > 0
-      ? tasksWithFeedback.reduce((sum, task) => sum + (task.rating || 0), 0) / tasksWithFeedback.length
-      : 0;
 
     return {
       totalTasks,
@@ -171,7 +168,6 @@ const WeeklyReviewPage: NextPage = () => {
       // 反馈统计
       tasksWithFeedback: tasksWithFeedback.length,
       feedbackRate,
-      averageRating,
     };
   }, [weeklyTasks, completedTasks, timeEntries]);
 
@@ -442,12 +438,7 @@ const WeeklyReviewPage: NextPage = () => {
                             {getPriorityLabel(task.priority)}
                           </span>
                         )}
-                        {task.rating && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-500">★</span>
-                            <span>{task.rating}</span>
-                          </div>
-                        )}
+
                         {task.completedAt && (
                           <span>
                             {new Date(task.completedAt).toLocaleDateString('zh-CN', {
@@ -460,26 +451,12 @@ const WeeklyReviewPage: NextPage = () => {
                     </div>
 
                     {/* 显示反馈内容 */}
-                    {(task.reflection || task.lessons || task.feedback) && (
+                    {task.feedback && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                        {task.reflection && (
-                          <div className="mb-2">
-                            <span className="text-xs font-medium text-gray-700">心得反思：</span>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.reflection}</p>
-                          </div>
-                        )}
-                        {task.lessons && (
-                          <div className="mb-2">
-                            <span className="text-xs font-medium text-gray-700">经验教训：</span>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.lessons}</p>
-                          </div>
-                        )}
-                        {task.feedback && (
-                          <div>
-                            <span className="text-xs font-medium text-gray-700">其他反馈：</span>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.feedback}</p>
-                          </div>
-                        )}
+                        <div>
+                          <span className="text-xs font-medium text-gray-700">任务反馈：</span>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.feedback}</p>
+                        </div>
                       </div>
                     )}
                   </div>

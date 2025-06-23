@@ -160,16 +160,32 @@ export const taskRouter = createTRPCRouter({
               },
             })),
           }),
-          // 日期筛选
-          ...(createdAfter && { createdAt: { gte: createdAfter } }),
-          ...(createdBefore && { createdAt: { ...where.createdAt, lte: createdBefore } }),
-          ...(updatedAfter && { updatedAt: { gte: updatedAfter } }),
-          ...(updatedBefore && { updatedAt: { ...where.updatedAt, lte: updatedBefore } }),
-          ...(completedAfter && { completedAt: { gte: completedAfter } }),
-          ...(completedBefore && { completedAt: { ...where.completedAt, lte: completedBefore } }),
-          ...(dueAfter && { dueDate: { gte: dueAfter } }),
-          ...(dueBefore && { dueDate: { ...where.dueDate, lte: dueBefore } }),
         };
+
+        // 日期筛选 - 分别处理每个日期字段
+        if (createdAfter || createdBefore) {
+          where.createdAt = {};
+          if (createdAfter) where.createdAt.gte = createdAfter;
+          if (createdBefore) where.createdAt.lte = createdBefore;
+        }
+
+        if (updatedAfter || updatedBefore) {
+          where.updatedAt = {};
+          if (updatedAfter) where.updatedAt.gte = updatedAfter;
+          if (updatedBefore) where.updatedAt.lte = updatedBefore;
+        }
+
+        if (completedAfter || completedBefore) {
+          where.completedAt = {};
+          if (completedAfter) where.completedAt.gte = completedAfter;
+          if (completedBefore) where.completedAt.lte = completedBefore;
+        }
+
+        if (dueAfter || dueBefore) {
+          where.dueDate = {};
+          if (dueAfter) where.dueDate.gte = dueAfter;
+          if (dueBefore) where.dueDate.lte = dueBefore;
+        }
 
         // 并行获取任务列表和总数
         const [tasks, totalCount] = await Promise.all([
@@ -1479,7 +1495,10 @@ export const taskRouter = createTRPCRouter({
           },
         });
 
-        return timeEntries;
+        return {
+          entries: timeEntries,
+          totalCount: timeEntries.length,
+        };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

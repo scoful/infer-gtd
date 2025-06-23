@@ -1803,6 +1803,10 @@ function TaskCard({
           ? "border-blue-200 bg-blue-50 animate-pulse cursor-pointer"
           : isTimerActive
           ? "border-green-300 bg-green-50 shadow-md cursor-not-allowed"
+          : showMenu
+          ? task.type === TaskType.DEADLINE && deadlineInfo
+            ? `${getDeadlineCardStyles()} shadow-lg cursor-pointer z-40`
+            : "bg-white border-gray-200 shadow-md border-gray-300 cursor-pointer z-40"
           : task.type === TaskType.DEADLINE && deadlineInfo
           ? `${getDeadlineCardStyles()} hover:shadow-lg hover:scale-[1.02] cursor-pointer`
           : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 hover:scale-[1.02] cursor-pointer"
@@ -1834,14 +1838,14 @@ function TaskCard({
 
           {/* 菜单按钮 */}
           {!isDragging && (
-            <div ref={menuRef} className="relative">
+            <div ref={menuRef} className="relative z-50">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowMenu(!showMenu);
                 }}
-                className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors z-50"
                 title="更多操作"
               >
                 <EllipsisVerticalIcon className="h-4 w-4" />
@@ -1849,7 +1853,7 @@ function TaskCard({
 
               {/* 下拉菜单 */}
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-[60]">
+                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-xl border border-gray-200 z-50">
                   <div className="py-1">
                     <button
                       type="button"
