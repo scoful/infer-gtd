@@ -336,7 +336,7 @@ const TagManagementPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>标签管理 | Smart GTD</title>
+          <title>标签管理 | Infer GTD</title>
           <meta name="description" content="管理和组织您的标签" />
         </Head>
 

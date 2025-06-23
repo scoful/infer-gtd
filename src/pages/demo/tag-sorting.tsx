@@ -12,7 +12,7 @@ const TagSortingDemo: NextPage = () => {
   return (
     <>
       <Head>
-        <title>标签拖拽排序演示 | Smart GTD</title>
+        <title>标签拖拽排序演示 | Infer GTD</title>
         <meta name="description" content="标签拖拽排序功能演示" />
       </Head>
 

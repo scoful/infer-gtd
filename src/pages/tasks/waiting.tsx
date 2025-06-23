@@ -276,7 +276,7 @@ const WaitingPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>等待清单 | Smart GTD</title>
+          <title>等待清单 | Infer GTD</title>
           <meta name="description" content="GTD等待清单管理" />
         </Head>
 

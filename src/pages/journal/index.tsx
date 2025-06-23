@@ -17,7 +17,7 @@ const JournalPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>日志 | Smart GTD</title>
+          <title>日志 | Infer GTD</title>
           <meta name="description" content="每日反思和记录" />
         </Head>
 

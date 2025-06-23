@@ -120,7 +120,7 @@ const Home: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>仪表盘 | Smart GTD</title>
+          <title>仪表盘 | Infer GTD</title>
           <meta name="description" content="智能化的个人效率和知识管理平台" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

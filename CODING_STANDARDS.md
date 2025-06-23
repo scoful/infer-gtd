@@ -297,7 +297,7 @@ const PageName: NextPage<PageProps> = () => {
   return (
     <>
       <Head>
-        <title>页面标题 | Smart GTD</title>
+        <title>页面标题 | Infer GTD</title>
         <meta name="description" content="页面描述" />
       </Head>
       <main className="container mx-auto px-4 py-8">

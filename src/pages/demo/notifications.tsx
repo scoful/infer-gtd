@@ -69,7 +69,7 @@ const NotificationDemo: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>通知系统演示 | Smart GTD</title>
+          <title>通知系统演示 | Infer GTD</title>
           <meta name="description" content="通知系统功能演示" />
         </Head>
 

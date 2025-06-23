@@ -137,7 +137,7 @@ const StreamPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>思绪流 | Smart GTD</title>
+          <title>思绪流 | Infer GTD</title>
           <meta name="description" content="快速捕捉和管理您的想法" />
         </Head>
 

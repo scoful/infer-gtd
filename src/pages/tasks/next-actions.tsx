@@ -296,7 +296,7 @@ const NextActionsPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>下一步行动 | Smart GTD</title>
+          <title>下一步行动 | Infer GTD</title>
           <meta name="description" content="GTD下一步行动列表" />
         </Head>
 

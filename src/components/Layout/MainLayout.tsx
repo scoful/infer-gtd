@@ -289,7 +289,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold text-gray-900">Smart GTD</h1>
+            <h1 className="text-xl font-bold text-gray-900">Infer GTD</h1>
             <button
               type="button"
               className="text-gray-400 hover:text-gray-600"
@@ -397,7 +397,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
           <div className="flex flex-shrink-0 items-center justify-between px-4">
             {!isCollapsed && (
-              <h1 className="text-xl font-bold text-gray-900">Smart GTD</h1>
+              <h1 className="text-xl font-bold text-gray-900">Infer GTD</h1>
             )}
             <button
               type="button"

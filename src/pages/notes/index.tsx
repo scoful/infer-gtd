@@ -17,7 +17,7 @@ const NotesPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>笔记 | Smart GTD</title>
+          <title>笔记 | Infer GTD</title>
           <meta name="description" content="知识管理和文档" />
         </Head>
 

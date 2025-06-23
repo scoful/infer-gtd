@@ -17,7 +17,7 @@ const AnalyticsPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>统计 | Smart GTD</title>
+          <title>统计 | Infer GTD</title>
           <meta name="description" content="数据分析和洞察" />
         </Head>
 

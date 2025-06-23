@@ -190,7 +190,7 @@ const SearchPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>高级搜索 | Smart GTD</title>
+          <title>高级搜索 | Infer GTD</title>
           <meta name="description" content="高级搜索和筛选功能" />
         </Head>
 

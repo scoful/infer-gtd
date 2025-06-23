@@ -1240,7 +1240,7 @@ const KanbanPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>任务看板 | Smart GTD</title>
+          <title>任务看板 | Infer GTD</title>
           <meta name="description" content="可视化任务管理看板" />
         </Head>
 

@@ -189,7 +189,7 @@ const WeeklyReviewPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>每周回顾 | Smart GTD</title>
+          <title>每周回顾 | Infer GTD</title>
           <meta name="description" content="GTD每周回顾和分析" />
         </Head>
 

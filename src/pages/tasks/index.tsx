@@ -542,7 +542,7 @@ const TaskListPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>任务列表 | Smart GTD</title>
+          <title>任务列表 | Infer GTD</title>
           <meta name="description" content="管理和查看所有任务" />
         </Head>
 

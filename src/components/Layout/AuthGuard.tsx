@@ -23,7 +23,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-              Smart GTD
+              Infer GTD
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               智能化的个人效率和知识管理平台
