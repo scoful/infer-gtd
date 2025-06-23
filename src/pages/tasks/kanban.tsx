@@ -1760,7 +1760,7 @@ function TaskCard({
 
   // 限时任务的样式配置（方案A：渐进式增强）
   const getDeadlineCardStyles = () => {
-    if (task.type !== TaskType.DEADLINE || !deadlineInfo) {
+    if (task.type !== TaskType.DEADLINE || !deadlineInfo || task.status === TaskStatus.DONE) {
       return "";
     }
 
@@ -1908,8 +1908,8 @@ function TaskCard({
         </p>
       )}
 
-      {/* 限时任务的倒计时显示 - 移动到描述下方 */}
-      {task.type === TaskType.DEADLINE && deadlineInfo && (
+      {/* 限时任务的倒计时显示 - 移动到描述下方，已完成任务不显示倒计时 */}
+      {task.type === TaskType.DEADLINE && deadlineInfo && task.status !== TaskStatus.DONE && (
         <div className="mb-3">
           <div className={`text-xs font-medium mb-1 ${
             deadlineInfo.urgencyLevel === 'overdue' ? 'text-red-700' :
@@ -1930,6 +1930,19 @@ function TaskCard({
               })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 已完成的限时任务只显示截止时间，不显示倒计时 */}
+      {task.type === TaskType.DEADLINE && task.status === TaskStatus.DONE && task.dueDate && (
+        <div className="mb-3">
+          <div className="text-xs text-gray-500">
+            截止时间：{new Date(task.dueDate).toLocaleDateString('zh-CN', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
+          </div>
         </div>
       )}
 
@@ -2060,8 +2073,8 @@ function TaskCard({
         )}
       </div>
 
-      {/* 限时任务的时间进度条 */}
-      {task.type === TaskType.DEADLINE && deadlineInfo && !deadlineInfo.isOverdue && (
+      {/* 限时任务的时间进度条 - 已完成任务不显示 */}
+      {task.type === TaskType.DEADLINE && deadlineInfo && !deadlineInfo.isOverdue && task.status !== TaskStatus.DONE && (
         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200 rounded-b-lg overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ${

@@ -25,6 +25,7 @@ import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useConfirm } from "@/hooks";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { TagList, type TagData } from "@/components/Tags";
 
 // 视图模式类型
@@ -96,6 +97,9 @@ const TaskListPage: NextPage = () => {
 
   // 确认模态框状态
   const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
+
+  // 全局通知系统
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 筛选状态
   const [filters, setFilters] = useState<FilterState>({
@@ -192,6 +196,18 @@ const TaskListPage: NextPage = () => {
     },
   });
 
+  // 批量重新安排任务
+  const batchDuplicateTasks = api.task.batchDuplicateTasks.useMutation({
+    onSuccess: (result) => {
+      void refetch();
+      setSelectedTasks(new Set());
+      showSuccess(result.message);
+    },
+    onError: (error) => {
+      showError(error.message || "批量重新安排任务失败");
+    },
+  });
+
   // 格式化时间显示
   const formatTimeSpent = useCallback((seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -279,6 +295,8 @@ const TaskListPage: NextPage = () => {
     }
   }, [selectedTasks, batchDeleteTasks, showConfirm, setLoading, hideConfirm]);
 
+
+
   // 处理任务编辑
   const handleEditTask = useCallback((taskId: string) => {
     setEditingTaskId(taskId);
@@ -317,6 +335,45 @@ const TaskListPage: NextPage = () => {
   const hasMorePages = hasNextPage;
   // 获取总数（从第一页获取，因为总数在所有页面都是一样的）
   const totalCount = tasksData?.pages[0]?.totalCount || 0;
+
+  // 处理批量重新安排
+  const handleBatchDuplicate = useCallback(async () => {
+    if (selectedTasks.size === 0) return;
+
+    // 检查选中的任务中是否有已完成的任务
+    const selectedTaskList = tasks.filter(task => selectedTasks.has(task.id));
+    const completedTasks = selectedTaskList.filter(task => task.status === TaskStatus.DONE);
+
+    if (completedTasks.length === 0) {
+      showError("只能重新安排已完成的任务");
+      return;
+    }
+
+    const taskCount = completedTasks.length;
+    const confirmed = await showConfirm({
+      title: "确认重新安排任务",
+      message: `确定要重新安排选中的 ${taskCount} 个已完成任务吗？\n\n这将创建相同内容的新任务到待办列表。`,
+      confirmText: "重新安排",
+      cancelText: "取消",
+      type: "info",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await batchDuplicateTasks.mutateAsync({
+        taskIds: completedTasks.map(task => task.id),
+      });
+    } catch (error) {
+      console.error("批量重新安排失败:", error);
+    } finally {
+      setLoading(false);
+      hideConfirm();
+    }
+  }, [selectedTasks, tasks, batchDuplicateTasks, showConfirm, showError, setLoading, hideConfirm]);
 
   // 打开计时明细
   const handleViewTimeEntries = useCallback((taskId: string) => {
@@ -765,6 +822,32 @@ const TaskListPage: NextPage = () => {
                     <option value={TaskStatus.ARCHIVED}>已归档</option>
                   </select>
 
+                  {/* 批量重新安排按钮 */}
+                  {(() => {
+                    const selectedTaskList = tasks.filter(task => selectedTasks.has(task.id));
+                    const completedTasksCount = selectedTaskList.filter(task => task.status === TaskStatus.DONE).length;
+
+                    return completedTasksCount > 0 ? (
+                      <button
+                        onClick={handleBatchDuplicate}
+                        disabled={batchDuplicateTasks.isPending}
+                        className="px-3 py-1 border border-blue-300 rounded text-sm bg-white text-blue-600 hover:bg-blue-50 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        title={`重新安排选中的 ${completedTasksCount} 个已完成任务`}
+                      >
+                        {batchDuplicateTasks.isPending ? (
+                          <>
+                            <div className="animate-spin h-3 w-3 border border-blue-600 border-t-transparent rounded-full"></div>
+                            重新安排中...
+                          </>
+                        ) : (
+                          <>
+                            🔄 重新安排 ({completedTasksCount})
+                          </>
+                        )}
+                      </button>
+                    ) : null;
+                  })()}
+
                   {/* 批量删除按钮 */}
                   <button
                     onClick={handleBatchDelete}
@@ -1049,7 +1132,7 @@ function TaskListCard({
 
   // 限时任务的样式配置（方案A：渐进式增强）
   const getDeadlineCardStyles = () => {
-    if (task.type !== TaskType.DEADLINE || !deadlineInfo) {
+    if (task.type !== TaskType.DEADLINE || !deadlineInfo || task.status === TaskStatus.DONE) {
       return "bg-white border-gray-200 hover:shadow-md hover:border-gray-300";
     }
 
@@ -1105,8 +1188,8 @@ function TaskListCard({
             </p>
           )}
 
-          {/* 限时任务的倒计时显示 - 移动到描述下方 */}
-          {task.type === TaskType.DEADLINE && deadlineInfo && (
+          {/* 限时任务的倒计时显示 - 移动到描述下方，已完成任务不显示倒计时 */}
+          {task.type === TaskType.DEADLINE && deadlineInfo && task.status !== TaskStatus.DONE && (
             <div className="mb-3">
               <div className={`text-xs font-medium mb-1 ${
                 deadlineInfo.urgencyLevel === 'overdue' ? 'text-red-700' :
@@ -1127,6 +1210,19 @@ function TaskListCard({
                   })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 已完成的限时任务只显示截止时间，不显示倒计时 */}
+          {task.type === TaskType.DEADLINE && task.status === TaskStatus.DONE && task.dueDate && (
+            <div className="mb-3">
+              <div className="text-xs text-gray-500">
+                截止时间：{new Date(task.dueDate).toLocaleDateString('zh-CN', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
+              </div>
             </div>
           )}
 
@@ -1237,8 +1333,8 @@ function TaskListCard({
         </div>
       </div>
 
-      {/* 限时任务的时间进度条 */}
-      {task.type === TaskType.DEADLINE && deadlineInfo && !deadlineInfo.isOverdue && (
+      {/* 限时任务的时间进度条 - 已完成任务不显示 */}
+      {task.type === TaskType.DEADLINE && deadlineInfo && !deadlineInfo.isOverdue && task.status !== TaskStatus.DONE && (
         <div className="absolute bottom-0 left-4 right-0 h-0.5 bg-gray-200 rounded-b-lg overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ${

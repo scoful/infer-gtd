@@ -1327,6 +1327,115 @@ export const taskRouter = createTRPCRouter({
       }
     }),
 
+  // 批量重新安排任务（批量复制任务到待办）
+  batchDuplicateTasks: protectedProcedure
+    .input(z.object({
+      taskIds: z.array(z.string().cuid()).min(1, "至少选择一个任务"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // 获取所有原任务详情
+        const originalTasks = await ctx.db.task.findMany({
+          where: {
+            id: { in: input.taskIds },
+            createdById: ctx.session.user.id,
+          },
+          include: {
+            tags: {
+              include: {
+                tag: true,
+              },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        });
+
+        if (originalTasks.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "未找到可重新安排的任务",
+          });
+        }
+
+        // 获取待办状态中的最小sortOrder，新任务排在前面
+        const minSortOrder = await ctx.db.task.findFirst({
+          where: {
+            createdById: ctx.session.user.id,
+            status: TaskStatus.TODO,
+          },
+          select: { sortOrder: true },
+          orderBy: { sortOrder: "asc" },
+        });
+
+        let nextSortOrder = (minSortOrder?.sortOrder ?? 1) - originalTasks.length;
+
+        // 批量创建新任务
+        const newTasks = await Promise.all(
+          originalTasks.map(async (originalTask) => {
+            const newTask = await ctx.db.task.create({
+              data: {
+                title: originalTask.title,
+                description: originalTask.description,
+                type: originalTask.type,
+                priority: originalTask.priority,
+                status: TaskStatus.TODO, // 新任务状态为待办
+                sortOrder: nextSortOrder++, // 按顺序排列
+                dueDate: originalTask.dueDate,
+                dueTime: originalTask.dueTime,
+                projectId: originalTask.projectId,
+                createdById: ctx.session.user.id,
+                // 复制标签关系，保持原有排序
+                tags: {
+                  create: originalTask.tags.map(taskTag => ({
+                    tag: { connect: { id: taskTag.tag.id } },
+                    sortOrder: taskTag.sortOrder || 0,
+                  })),
+                },
+              },
+              include: {
+                project: true,
+                tags: {
+                  include: {
+                    tag: true,
+                  },
+                  orderBy: { sortOrder: "asc" },
+                },
+              },
+            });
+
+            // 创建状态历史记录
+            await ctx.db.taskStatusHistory.create({
+              data: {
+                fromStatus: null,
+                toStatus: TaskStatus.TODO,
+                taskId: newTask.id,
+                changedById: ctx.session.user.id,
+                note: "批量重新安排",
+              },
+            });
+
+            return newTask;
+          })
+        );
+
+        return {
+          success: true,
+          message: `成功重新安排 ${newTasks.length} 个任务到待办列表`,
+          tasks: newTasks,
+          count: newTasks.length,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "批量重新安排任务失败",
+          cause: error,
+        });
+      }
+    }),
+
   // 获取时间记录
   getTimeEntries: protectedProcedure
     .input(getTimeEntriesSchema)
