@@ -42,6 +42,7 @@ export const getTasksSchema = z.object({
   projectId: z.string().cuid("无效的项目ID").optional(),
   status: z.nativeEnum(TaskStatus).optional(),
   priority: z.nativeEnum(Priority).optional(),
+  type: z.nativeEnum(TaskType).optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(), // 标签筛选
   limit: z.number().min(1).max(100).default(50),
   cursor: z.string().cuid().optional(),
