@@ -238,18 +238,18 @@ const TaskListPage: NextPage = () => {
   }, []);
 
   // 全选/取消全选
-  const handleSelectAll = useCallback(() => {
-    if (!tasksData?.tasks) return;
-    
-    const allTaskIds = tasksData.tasks.map(task => task.id);
+  const handleSelectAll = useCallback((currentTasks: TaskWithRelations[]) => {
+    if (currentTasks.length === 0) return;
+
+    const allTaskIds = currentTasks.map(task => task.id);
     const allSelected = allTaskIds.every(id => selectedTasks.has(id));
-    
+
     if (allSelected) {
       setSelectedTasks(new Set());
     } else {
       setSelectedTasks(new Set(allTaskIds));
     }
-  }, [tasksData?.tasks, selectedTasks]);
+  }, [selectedTasks]);
 
   // 处理批量状态更新
   const handleBatchStatusUpdate = useCallback(async (status: TaskStatus) => {
@@ -894,7 +894,7 @@ const TaskListPage: NextPage = () => {
                     <input
                       type="checkbox"
                       checked={filteredAndSortedTasks.length > 0 && filteredAndSortedTasks.every(task => selectedTasks.has(task.id))}
-                      onChange={handleSelectAll}
+                      onChange={() => handleSelectAll(filteredAndSortedTasks)}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm text-gray-700">

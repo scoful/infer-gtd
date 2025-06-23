@@ -5,6 +5,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { api } from "@/utils/api";
 import { ButtonLoading } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
+import { TagSelector } from "@/components/Tags";
 
 interface TaskFeedbackModalProps {
   isOpen: boolean;
@@ -16,17 +17,19 @@ interface TaskFeedbackModalProps {
 
 interface FeedbackFormData {
   feedback: string;
+  tagIds: string[];
 }
 
-export default function TaskFeedbackModal({ 
-  isOpen, 
-  onClose, 
-  taskId, 
-  taskTitle, 
-  onSuccess 
+export default function TaskFeedbackModal({
+  isOpen,
+  onClose,
+  taskId,
+  taskTitle,
+  onSuccess
 }: TaskFeedbackModalProps) {
   const [formData, setFormData] = useState<FeedbackFormData>({
     feedback: "",
+    tagIds: [],
   });
 
   const { showSuccess, showError } = useGlobalNotifications();
@@ -36,12 +39,13 @@ export default function TaskFeedbackModal({
     if (isOpen && taskId) {
       setFormData({
         feedback: "",
+        tagIds: [],
       });
     }
   }, [taskId, isOpen]);
 
-  // 获取现有反馈数据
-  const { data: existingFeedback, isLoading: isLoadingFeedback, error: feedbackError } = api.task.getFeedback.useQuery(
+  // 获取任务详情（包含反馈和标签信息）
+  const { data: taskDetail, isLoading: isLoadingTask, error: taskError } = api.task.getById.useQuery(
     { id: taskId },
     {
       enabled: isOpen && !!taskId,
@@ -52,29 +56,31 @@ export default function TaskFeedbackModal({
     }
   );
 
-  // 当获取到反馈数据时更新表单
+  // 当获取到任务数据时更新表单
   useEffect(() => {
-    if (existingFeedback) {
+    if (taskDetail) {
       setFormData({
-        feedback: existingFeedback.feedback || "",
+        feedback: taskDetail.feedback || "",
+        tagIds: taskDetail.tags.map(t => t.tag.id),
       });
-    } else if (feedbackError) {
-      console.warn("获取任务反馈失败，使用默认值:", feedbackError.message);
+    } else if (taskError) {
+      console.warn("获取任务详情失败，使用默认值:", taskError.message);
       setFormData({
         feedback: "",
+        tagIds: [],
       });
     }
-  }, [existingFeedback, feedbackError]);
+  }, [taskDetail, taskError]);
 
-  // 保存反馈
-  const updateFeedback = api.task.updateFeedback.useMutation({
+  // 更新任务（包含反馈和标签）
+  const updateTask = api.task.update.useMutation({
     onSuccess: (result) => {
-      showSuccess(result.message);
+      showSuccess(`任务 "${result.title}" 反馈和标签已保存`);
       onSuccess?.();
       onClose();
     },
     onError: (error) => {
-      showError(error.message || "保存反馈失败");
+      showError(error.message || "保存失败");
     },
   });
 
@@ -89,10 +95,19 @@ export default function TaskFeedbackModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    updateFeedback.mutate({
+    updateTask.mutate({
       id: taskId,
-      ...formData,
+      feedback: formData.feedback,
+      tagIds: formData.tagIds,
     });
+  };
+
+  // 处理标签变化
+  const handleTagsChange = (newTagIds: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      tagIds: newTagIds,
+    }));
   };
 
 
@@ -142,7 +157,7 @@ export default function TaskFeedbackModal({
                   </button>
                 </div>
 
-                {isLoadingFeedback && !feedbackError ? (
+                {isLoadingTask && !taskError ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
                     <span className="ml-2 text-gray-600">加载中...</span>
@@ -164,6 +179,23 @@ export default function TaskFeedbackModal({
                       />
                     </div>
 
+                    {/* 标签选择 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        任务标签
+                      </label>
+                      <TagSelector
+                        selectedTagIds={formData.tagIds}
+                        onTagsChange={handleTagsChange}
+                        placeholder="选择或创建标签..."
+                        allowCreate={true}
+                        size="md"
+                        gridLayout={true}
+                        closeOnSelect={false}
+                        sortable={true}
+                      />
+                    </div>
+
                     {/* 操作按钮 */}
                     <div className="flex justify-end space-x-3 pt-4">
                       <button
@@ -175,10 +207,10 @@ export default function TaskFeedbackModal({
                       </button>
                       <button
                         type="submit"
-                        disabled={updateFeedback.isPending}
+                        disabled={updateTask.isPending}
                         className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
                       >
-                        {updateFeedback.isPending ? (
+                        {updateTask.isPending ? (
                           <ButtonLoading message="保存中..." size="sm" />
                         ) : (
                           "保存反馈"
