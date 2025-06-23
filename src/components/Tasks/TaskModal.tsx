@@ -170,6 +170,12 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
 
     if (!formData.title.trim()) return;
 
+    // 验证限时任务必须有截止日期
+    if (formData.type === TaskType.DEADLINE && !formData.dueDate) {
+      showError("限时任务必须设置截止日期");
+      return;
+    }
+
     try {
       const submitData = {
         ...formData,
@@ -193,6 +199,21 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
 
   const handleClose = () => {
     onClose();
+  };
+
+  // 处理任务类型变更
+  const handleTypeChange = (newType: TaskType) => {
+    setFormData(prev => {
+      const newData = { ...prev, type: newType };
+
+      // 如果从限时任务切换到普通任务，清除截止日期和时间
+      if (prev.type === TaskType.DEADLINE && newType === TaskType.NORMAL) {
+        newData.dueDate = undefined;
+        newData.dueTime = undefined;
+      }
+
+      return newData;
+    });
   };
 
   return (
@@ -309,7 +330,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                         id="type"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value as TaskType })}
+                        onChange={(e) => handleTypeChange(e.target.value as TaskType)}
                       >
                         {TASK_TYPES.map((type) => (
                           <option key={type.value} value={type.value}>
@@ -317,6 +338,12 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                           </option>
                         ))}
                       </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {formData.type === TaskType.NORMAL
+                          ? "普通任务：灵活安排，无固定截止时间"
+                          : "限时任务：有明确截止时间，需要及时完成"
+                        }
+                      </p>
                     </div>
 
                     <div>
@@ -395,34 +422,43 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
                     </div>
                   </div>
 
-                  {/* 截止日期和时间 */}
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
-                        截止日期
-                      </label>
-                      <input
-                        type="date"
-                        id="dueDate"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        value={formData.dueDate || ""}
-                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value || undefined })}
-                      />
-                    </div>
+                  {/* 截止日期和时间 - 只在限时任务时显示 */}
+                  {formData.type === TaskType.DEADLINE && (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
+                          截止日期 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          id="dueDate"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          value={formData.dueDate || ""}
+                          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value || undefined })}
+                          required={formData.type === TaskType.DEADLINE}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          限时任务需要设置截止日期
+                        </p>
+                      </div>
 
-                    <div>
-                      <label htmlFor="dueTime" className="block text-sm font-medium text-gray-700">
-                        截止时间
-                      </label>
-                      <input
-                        type="time"
-                        id="dueTime"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        value={formData.dueTime || ""}
-                        onChange={(e) => setFormData({ ...formData, dueTime: e.target.value || undefined })}
-                      />
+                      <div>
+                        <label htmlFor="dueTime" className="block text-sm font-medium text-gray-700">
+                          截止时间
+                        </label>
+                        <input
+                          type="time"
+                          id="dueTime"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          value={formData.dueTime || ""}
+                          onChange={(e) => setFormData({ ...formData, dueTime: e.target.value || undefined })}
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          可选，不设置则为全天截止
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 标签选择 */}
                   <div>
