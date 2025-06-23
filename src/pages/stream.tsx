@@ -14,6 +14,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { PageLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { TaskType } from "@prisma/client";
 
 const StreamPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -63,7 +64,7 @@ const StreamPage: NextPage = () => {
     try {
       await createIdea.mutateAsync({
         title: newIdea,
-        type: "IDEA",
+        type: TaskType.NORMAL,
       });
     } catch (error) {
       console.error("创建想法失败:", error);

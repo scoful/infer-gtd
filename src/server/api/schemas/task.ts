@@ -5,7 +5,7 @@ import { TaskStatus, TaskType, Priority } from "@prisma/client";
 export const createTaskSchema = z.object({
   title: z.string().min(1, "任务标题不能为空").max(200, "任务标题过长"),
   description: z.string().optional(),
-  type: z.nativeEnum(TaskType).default(TaskType.IDEA),
+  type: z.nativeEnum(TaskType).default(TaskType.NORMAL),
   status: z.nativeEnum(TaskStatus).default(TaskStatus.IDEA),
   priority: z.nativeEnum(Priority).optional(),
   dueDate: z.date().optional(),

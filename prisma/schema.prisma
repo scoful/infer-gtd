@@ -85,8 +85,8 @@ enum TaskStatus {
 }
 
 enum TaskType {
-    IDEA
-    ACTION
+    NORMAL
+    DEADLINE
 }
 
 enum Priority {
@@ -130,7 +130,7 @@ model Task {
     title           String
     description     String?
     status          TaskStatus @default(IDEA)
-    type            TaskType   @default(IDEA)
+    type            TaskType   @default(NORMAL)
     priority        Priority?
 
     // Date and time management

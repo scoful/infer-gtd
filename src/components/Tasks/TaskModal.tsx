@@ -28,8 +28,8 @@ interface TaskFormData {
 }
 
 const TASK_TYPES = [
-  { value: TaskType.IDEA, label: "想法" },
-  { value: TaskType.ACTION, label: "行动" },
+  { value: TaskType.NORMAL, label: "普通任务" },
+  { value: TaskType.DEADLINE, label: "限时任务" },
 ];
 
 const TASK_STATUSES = [
@@ -52,7 +52,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
-    type: TaskType.IDEA,
+    type: TaskType.NORMAL,
     status: TaskStatus.IDEA,
     tagIds: [],
   });
@@ -159,7 +159,7 @@ export default function TaskModal({ isOpen, onClose, taskId, onSuccess }: TaskMo
     setFormData({
       title: "",
       description: "",
-      type: TaskType.IDEA,
+      type: TaskType.NORMAL,
       status: TaskStatus.IDEA,
       tagIds: [],
     });
