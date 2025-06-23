@@ -1228,6 +1228,105 @@ export const taskRouter = createTRPCRouter({
       }
     }),
 
+  // 重新安排任务（手动复制任务）
+  duplicateTask: protectedProcedure
+    .input(taskIdSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // 获取原任务详情
+        const originalTask = await ctx.db.task.findUnique({
+          where: { id: input.id },
+          include: {
+            tags: {
+              include: {
+                tag: true,
+              },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        });
+
+        if (!originalTask || originalTask.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "任务不存在或无权限操作",
+          });
+        }
+
+        // 获取待办状态中的最小sortOrder，新任务排在第一位
+        const minSortOrder = await ctx.db.task.findFirst({
+          where: {
+            createdById: ctx.session.user.id,
+            status: TaskStatus.TODO,
+          },
+          select: { sortOrder: true },
+          orderBy: { sortOrder: "asc" },
+        });
+
+        const nextSortOrder = (minSortOrder?.sortOrder ?? 1) - 1;
+
+        // 创建新任务（复制原任务内容）
+        const newTask = await ctx.db.task.create({
+          data: {
+            title: originalTask.title,
+            description: originalTask.description,
+            type: originalTask.type,
+            priority: originalTask.priority,
+            status: TaskStatus.TODO, // 新任务状态为待办
+            sortOrder: nextSortOrder, // 排在待办列表第一位
+            dueDate: originalTask.dueDate,
+            dueTime: originalTask.dueTime,
+            projectId: originalTask.projectId,
+            createdById: ctx.session.user.id,
+            // 复制标签关系，保持原有排序
+            tags: {
+              create: originalTask.tags.map(taskTag => ({
+                tag: { connect: { id: taskTag.tag.id } },
+                sortOrder: taskTag.sortOrder || 0,
+              })),
+            },
+            // 注意：不设置 isRecurring, parentTaskId, recurringPattern
+            // 这是一个独立的新任务，不是重复任务系统的一部分
+          },
+          include: {
+            project: true,
+            tags: {
+              include: {
+                tag: true,
+              },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        });
+
+        // 创建状态历史记录
+        await ctx.db.taskStatusHistory.create({
+          data: {
+            fromStatus: null,
+            toStatus: TaskStatus.TODO,
+            taskId: newTask.id,
+            changedById: ctx.session.user.id,
+            note: "任务重新安排",
+          },
+        });
+
+        return {
+          success: true,
+          message: `任务 "${originalTask.title}" 已重新安排到待办列表`,
+          task: newTask,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "重新安排任务失败",
+          cause: error,
+        });
+      }
+    }),
+
   // 获取时间记录
   getTimeEntries: protectedProcedure
     .input(getTimeEntriesSchema)

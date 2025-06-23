@@ -988,12 +988,88 @@ function TaskListCard({
     ARCHIVED: "bg-gray-100 text-gray-800",
   };
 
+  // 计算限时任务的剩余时间和紧急程度
+  const getDeadlineInfo = (task: TaskWithRelations) => {
+    if (task.type !== TaskType.DEADLINE || !task.dueDate) {
+      return null;
+    }
+
+    const now = new Date();
+    const deadline = new Date(task.dueDate);
+
+    // 如果有具体时间，设置到deadline
+    if (task.dueTime) {
+      const [hours, minutes] = task.dueTime.split(':');
+      deadline.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    } else {
+      // 没有具体时间，设置为当天23:59
+      deadline.setHours(23, 59, 59, 999);
+    }
+
+    const diffMs = deadline.getTime() - now.getTime();
+    const isOverdue = diffMs < 0;
+
+    const absDiffMs = Math.abs(diffMs);
+    const days = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    // 确定紧急程度
+    let urgencyLevel: 'overdue' | 'critical' | 'urgent' | 'warning' | 'normal';
+    if (isOverdue) {
+      urgencyLevel = 'overdue';
+    } else if (days === 0 && hours <= 2) {
+      urgencyLevel = 'critical'; // 2小时内
+    } else if (days === 0) {
+      urgencyLevel = 'urgent'; // 今天截止
+    } else if (days <= 1) {
+      urgencyLevel = 'warning'; // 明天截止
+    } else {
+      urgencyLevel = 'normal';
+    }
+
+    return {
+      isOverdue,
+      days,
+      hours,
+      minutes,
+      urgencyLevel,
+      deadline,
+      timeText: isOverdue
+        ? `已逾期 ${days > 0 ? `${days}天` : ''}${hours > 0 ? `${hours}小时` : ''}${days === 0 && hours === 0 ? `${minutes}分钟` : ''}`
+        : days > 0
+        ? `剩余 ${days}天${hours > 0 ? `${hours}小时` : ''}`
+        : hours > 0
+        ? `剩余 ${hours}小时${minutes > 0 ? `${minutes}分钟` : ''}`
+        : `剩余 ${minutes}分钟`
+    };
+  };
+
+  const deadlineInfo = getDeadlineInfo(task);
+
+  // 限时任务的样式配置（方案A：渐进式增强）
+  const getDeadlineCardStyles = () => {
+    if (task.type !== TaskType.DEADLINE || !deadlineInfo) {
+      return "bg-white border-gray-200 hover:shadow-md hover:border-gray-300";
+    }
+
+    const urgencyStyles = {
+      overdue: "bg-white border-l-4 border-red-600 bg-red-50",
+      critical: "bg-white border-l-4 border-red-500 bg-red-25",
+      urgent: "bg-white border-l-4 border-orange-500 bg-orange-25",
+      warning: "bg-white border-l-4 border-yellow-500 bg-yellow-25",
+      normal: "bg-white border-l-4 border-blue-500 bg-blue-25"
+    };
+
+    return `${urgencyStyles[deadlineInfo.urgencyLevel]} hover:shadow-md`;
+  };
+
   return (
     <div
-      className={`bg-white rounded-lg border p-4 transition-all duration-200 ${
+      className={`rounded-lg border p-4 transition-all duration-200 relative ${
         isSelected
           ? "border-blue-400 bg-blue-50 shadow-md"
-          : "border-gray-200 hover:shadow-md hover:border-gray-300"
+          : getDeadlineCardStyles()
       }`}
     >
       <div className="flex items-start gap-3">
@@ -1009,12 +1085,14 @@ function TaskListCard({
         <div className="flex-1 min-w-0">
           {/* 标题和状态 */}
           <div className="flex items-start justify-between mb-2">
-            <h4
-              className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 line-clamp-2"
-              onClick={onEdit}
-            >
-              {task.title}
-            </h4>
+            <div className="flex-1 min-w-0">
+              <h4
+                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 line-clamp-2 mb-1"
+                onClick={onEdit}
+              >
+                {task.title}
+              </h4>
+            </div>
             <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status]}`}>
               {getStatusLabel(task.status)}
             </span>
@@ -1025,6 +1103,31 @@ function TaskListCard({
             <p className="text-xs text-gray-600 mb-3 line-clamp-2">
               {task.description}
             </p>
+          )}
+
+          {/* 限时任务的倒计时显示 - 移动到描述下方 */}
+          {task.type === TaskType.DEADLINE && deadlineInfo && (
+            <div className="mb-3">
+              <div className={`text-xs font-medium mb-1 ${
+                deadlineInfo.urgencyLevel === 'overdue' ? 'text-red-700' :
+                deadlineInfo.urgencyLevel === 'critical' ? 'text-red-600' :
+                deadlineInfo.urgencyLevel === 'urgent' ? 'text-orange-600' :
+                deadlineInfo.urgencyLevel === 'warning' ? 'text-yellow-600' :
+                'text-blue-600'
+              }`}>
+                {deadlineInfo.timeText}
+              </div>
+              {/* 具体截止时间另起一行显示 - 包含日期 */}
+              {task.dueDate && (
+                <div className="text-xs text-gray-500">
+                  截止时间：{new Date(task.dueDate).toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
+                </div>
+              )}
+            </div>
           )}
 
           {/* 项目和标签 */}
@@ -1078,8 +1181,8 @@ function TaskListCard({
                 </span>
               )}
 
-              {/* 截止日期 */}
-              {task.dueDate && (
+              {/* 截止日期 - 只在普通任务时显示 */}
+              {task.dueDate && task.type !== TaskType.DEADLINE && (
                 <span className="flex items-center">
                   📅 {new Date(task.dueDate).toLocaleDateString('zh-CN')}
                   {task.dueTime && ` ${task.dueTime}`}
@@ -1133,6 +1236,26 @@ function TaskListCard({
           </div>
         </div>
       </div>
+
+      {/* 限时任务的时间进度条 */}
+      {task.type === TaskType.DEADLINE && deadlineInfo && !deadlineInfo.isOverdue && (
+        <div className="absolute bottom-0 left-4 right-0 h-0.5 bg-gray-200 rounded-b-lg overflow-hidden">
+          <div
+            className={`h-full transition-all duration-300 ${
+              deadlineInfo.urgencyLevel === 'critical' ? 'bg-red-500' :
+              deadlineInfo.urgencyLevel === 'urgent' ? 'bg-orange-500' :
+              deadlineInfo.urgencyLevel === 'warning' ? 'bg-yellow-500' :
+              'bg-blue-500'
+            }`}
+            style={{
+              width: `${Math.min(100, Math.max(0,
+                ((Date.now() - new Date(task.createdAt).getTime()) /
+                (deadlineInfo.deadline.getTime() - new Date(task.createdAt).getTime())) * 100
+              ))}%`
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
