@@ -13,6 +13,7 @@ import {
   ArrowUpIcon,
   ChartBarIcon,
   ArrowPathIcon,
+  ChatBubbleLeftEllipsisIcon,
 } from "@heroicons/react/24/outline";
 import {
   DndContext,
@@ -991,6 +992,16 @@ const KanbanPage: NextPage = () => {
     setIsTimeEntryModalOpen(true);
   };
 
+  // 补充反馈
+  const handleAddFeedback = (taskId: string) => {
+    const task = getAllTasks().find(t => t.id === taskId);
+    if (!task) return;
+
+    setFeedbackTaskId(taskId);
+    setFeedbackTaskTitle(task.title);
+    setIsFeedbackModalOpen(true);
+  };
+
   // 处理快速上浮到第一位
   const handleMoveToTop = async (taskId: string) => {
     const task = getAllTasks().find(t => t.id === taskId);
@@ -1295,6 +1306,7 @@ const KanbanPage: NextPage = () => {
                   onMoveToTop={handleMoveToTop}
                   onViewTimeEntries={handleViewTimeEntries}
                   onDuplicateTask={handleDuplicateTask}
+                  onAddFeedback={handleAddFeedback}
                   formatTimeSpent={formatTimeSpent}
                   isTimerActive={isTimerActive}
                   isUpdating={updateTaskStatus.isPending}
@@ -1324,6 +1336,7 @@ const KanbanPage: NextPage = () => {
                     onMoveToTop={() => {}}
                     onViewTimeEntries={() => {}}
                     onDuplicateTask={() => {}}
+                    onAddFeedback={() => {}}
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive(activeTask)}
                     isUpdating={false}
@@ -1397,6 +1410,7 @@ interface KanbanColumnProps {
   onMoveToTop: (taskId: string) => void;
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
+  onAddFeedback: (taskId: string) => void; // 新增：补充反馈
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: (task: TaskWithRelations) => boolean;
   isUpdating: boolean;
@@ -1421,6 +1435,7 @@ function KanbanColumn({
   onMoveToTop,
   onViewTimeEntries,
   onDuplicateTask,
+  onAddFeedback,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -1479,6 +1494,7 @@ function KanbanColumn({
               onMoveToTop={onMoveToTop}
               onViewTimeEntries={onViewTimeEntries}
               onDuplicateTask={onDuplicateTask}
+              onAddFeedback={onAddFeedback}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
               isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
@@ -1556,6 +1572,7 @@ interface DraggableTaskCardProps {
   onMoveToTop: (taskId: string) => void;
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
+  onAddFeedback: (taskId: string) => void; // 新增：补充反馈
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -1613,6 +1630,7 @@ interface TaskCardProps {
   onMoveToTop: (taskId: string) => void;
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
+  onAddFeedback: (taskId: string) => void; // 新增：补充反馈
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -1630,6 +1648,7 @@ function TaskCard({
   onMoveToTop,
   onViewTimeEntries,
   onDuplicateTask,
+  onAddFeedback,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -1858,6 +1877,22 @@ function TaskCard({
                       >
                         <ChartBarIcon className="h-4 w-4 mr-2 text-green-500" />
                         计时明细
+                      </button>
+                    )}
+
+                    {/* 补充反馈选项 - 仅在已完成任务中显示 */}
+                    {task.status === TaskStatus.DONE && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onAddFeedback(task.id);
+                        }}
+                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <ChatBubbleLeftEllipsisIcon className="h-4 w-4 mr-2 text-green-500" />
+                        补充反馈
                       </button>
                     )}
 
