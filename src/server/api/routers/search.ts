@@ -497,7 +497,7 @@ export const searchRouter = createTRPCRouter({
 
       return savedSearches.map((search) => ({
         ...search,
-        searchParams: JSON.parse(search.searchParams as string),
+        searchParams: JSON.parse(search.searchParams),
       }));
     } catch (error) {
       throw new TRPCError({

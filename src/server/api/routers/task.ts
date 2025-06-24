@@ -433,7 +433,7 @@ export const taskRouter = createTRPCRouter({
         // 处理状态变更
         const statusChanged =
           status !== undefined && status !== existingTask.status;
-        let finalUpdateData = { ...updateData };
+        const finalUpdateData = { ...updateData };
 
         if (statusChanged) {
           // 如果状态变为已完成，记录完成时间并增加完成次数
@@ -486,7 +486,7 @@ export const taskRouter = createTRPCRouter({
           await ctx.db.taskStatusHistory.create({
             data: {
               fromStatus: existingTask.status,
-              toStatus: status!,
+              toStatus: status,
               taskId: id,
               changedById: ctx.session.user.id,
               note: "任务更新时状态变更",

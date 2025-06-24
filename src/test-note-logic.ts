@@ -294,11 +294,11 @@ async function main() {
   await testNoteLogic();
 }
 
-main()
+void main()
   .catch((e) => {
     console.error("❌ 测试失败:", e);
     process.exit(1);
   })
-  .finally(async () => {
-    await db.$disconnect();
+  .finally(() => {
+    void db.$disconnect();
   });

@@ -139,17 +139,20 @@ export function usePageLoadingState(loadingStates: LoadingState[]) {
 }
 
 /**
- * 渲染函数：根据loading状态渲染不同内容
+ * 渲染组件：根据loading状态渲染不同内容
  */
-export function renderWithLoadingState(
-  loadingStates: LoadingState[],
-  options: {
+export function LoadingStateRenderer({
+  loadingStates,
+  options = {},
+}: {
+  loadingStates: LoadingState[];
+  options?: {
     loadingComponent?: React.ReactNode;
     errorComponent?: React.ReactNode;
     loadingMessage?: string;
     errorMessage?: string;
-  } = {},
-) {
+  };
+}) {
   const {
     loadingComponent,
     errorComponent,

@@ -16,7 +16,7 @@ import {
   CheckIcon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
-import { TaskStatus, TaskType, Priority, TagType } from "@prisma/client";
+import { TaskStatus, type TaskType, Priority, TagType } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -323,7 +323,7 @@ const SearchPage: NextPage = () => {
                       className="cursor-pointer rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
                       onClick={() => {
                         // 加载保存的搜索参数
-                        const params = search.searchParams as any;
+                        const params = search.searchParams;
                         setQuery(params.query || "");
                         setSearchIn(params.searchIn || ["tasks"]);
                         // 设置其他参数...

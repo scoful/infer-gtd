@@ -159,8 +159,8 @@ const TagManagementPage: NextPage = () => {
           const errorMessage = error.message || "标签正在被使用，无法删除";
 
           // 延迟显示确认框，确保当前的确认框先关闭
-          setTimeout(async () => {
-            await showConfirm({
+          setTimeout(() => {
+            void showConfirm({
               title: "无法删除标签",
               message: errorMessage,
               confirmText: "我知道了",
@@ -207,8 +207,8 @@ const TagManagementPage: NextPage = () => {
         const errorMessage = error.message || "部分标签正在被使用，无法删除";
 
         // 延迟显示确认框，确保当前的确认框先关闭
-        setTimeout(async () => {
-          await showConfirm({
+        setTimeout(() => {
+          void showConfirm({
             title: "无法删除标签",
             message: errorMessage,
             confirmText: "我知道了",

@@ -15,7 +15,7 @@ import {
   EnvelopeIcon,
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
-import { TaskStatus, TaskType, Priority } from "@prisma/client";
+import { TaskStatus, type TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";

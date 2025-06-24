@@ -700,7 +700,7 @@ const KanbanPage: NextPage = () => {
         // 如果状态变为已完成，触发反馈收集
         if (variables.status === TaskStatus.DONE) {
           // 从所有任务数据中查找任务信息，优先从tasksByStatus中查找
-          let task = (Object.values(tasksByStatus) as TaskWithRelations[][])
+          let task = (Object.values(tasksByStatus))
             .flat()
             .find((t) => t.id === variables.id);
 
@@ -715,7 +715,7 @@ const KanbanPage: NextPage = () => {
             taskTitle: task?.title,
             allTasksCount: getAllTasks().length,
             tasksByStatusCount: (
-              Object.values(tasksByStatus) as TaskWithRelations[][]
+              Object.values(tasksByStatus)
             ).flat().length,
           });
 
@@ -817,7 +817,7 @@ const KanbanPage: NextPage = () => {
 
     // 乐观更新：将开始计时的任务移动到第一位
     const currentStatusTasks =
-      (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] ||
+      (tasksByStatus)[task.status] ||
       [];
     const newOrder = [
       taskId,
@@ -1107,7 +1107,7 @@ const KanbanPage: NextPage = () => {
     if (!task) return;
 
     const currentStatusTasks =
-      (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] ||
+      (tasksByStatus)[task.status] ||
       [];
     if (currentStatusTasks.length <= 1) return; // 如果只有一个任务或没有任务，无需移动
 
@@ -1152,7 +1152,7 @@ const KanbanPage: NextPage = () => {
   // 拖拽开始
   const handleDragStart = (event: DragStartEvent) => {
     const taskId = event.active.id as string;
-    const task = (Object.values(tasksByStatus) as TaskWithRelations[][])
+    const task = (Object.values(tasksByStatus))
       .flat()
       .find((t) => t.id === taskId);
 
@@ -1190,7 +1190,7 @@ const KanbanPage: NextPage = () => {
     // 如果拖拽到自己身上，不执行任何操作
     if (draggedTaskId === overId) return;
 
-    const draggedTask = (Object.values(tasksByStatus) as TaskWithRelations[][])
+    const draggedTask = (Object.values(tasksByStatus))
       .flat()
       .find((task) => task.id === draggedTaskId);
 
@@ -1223,7 +1223,7 @@ const KanbanPage: NextPage = () => {
       if (over.data?.current?.type === "task") {
         // 拖拽到具体任务上，插入到该任务之前
         const targetStatusTasks =
-          (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+          (tasksByStatus)[
             targetStatus
           ] || [];
         const targetTaskIndex = targetStatusTasks.findIndex(
@@ -1250,7 +1250,7 @@ const KanbanPage: NextPage = () => {
       // 乐观更新排序 - 立即在目标位置显示任务
       if (targetInsertIndex !== undefined) {
         const targetStatusTasks =
-          (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+          (tasksByStatus)[
             targetStatus
           ] || [];
         const newTaskIds = [
@@ -1283,7 +1283,7 @@ const KanbanPage: NextPage = () => {
 
     // 处理同状态内的排序
     const statusTasks =
-      (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+      (tasksByStatus)[
         currentStatus
       ] || [];
     const currentIndex = statusTasks.findIndex(
@@ -1342,7 +1342,7 @@ const KanbanPage: NextPage = () => {
 
   // 获取当前拖拽的任务
   const activeTask = activeId
-    ? (Object.values(tasksByStatus) as TaskWithRelations[][])
+    ? (Object.values(tasksByStatus))
         .flat()
         .find((task) => task.id === activeId)
     : null;
@@ -1418,7 +1418,7 @@ const KanbanPage: NextPage = () => {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
               {KANBAN_COLUMNS.map((column) => {
                 const tasks =
-                  (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+                  (tasksByStatus)[
                     column.status
                   ] || [];
 
