@@ -44,6 +44,7 @@ import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
 import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
+import PostponeTaskModal from "@/components/Tasks/PostponeTaskModal";
 import { PageLoading, ConfirmModal } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
@@ -122,6 +123,13 @@ const KanbanPage: NextPage = () => {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackTaskId, setFeedbackTaskId] = useState<string | null>(null);
   const [feedbackTaskTitle, setFeedbackTaskTitle] = useState<string>("");
+
+  // 延期模态框状态
+  const [isPostponeModalOpen, setIsPostponeModalOpen] = useState(false);
+  const [postponeTaskId, setPostponeTaskId] = useState<string | null>(null);
+  const [postponeTaskTitle, setPostponeTaskTitle] = useState<string>("");
+  const [postponeTaskDueDate, setPostponeTaskDueDate] = useState<Date | null>(null);
+  const [postponeTaskDueTime, setPostponeTaskDueTime] = useState<string | null>(null);
 
   // 乐观更新状态
   const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
@@ -992,6 +1000,31 @@ const KanbanPage: NextPage = () => {
     setIsTimeEntryModalOpen(true);
   };
 
+  // 打开延期模态框
+  const handlePostponeTask = (taskId: string) => {
+    const task = getAllTasks().find(t => t.id === taskId);
+    if (!task) return;
+
+    // 只有限时任务才能调整时间
+    if (task.type !== TaskType.DEADLINE) {
+      showError("只有限时任务才能调整时间");
+      return;
+    }
+
+    // 只有待办、进行中、等待中的任务才能调整时间
+    const allowedStatuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.WAITING];
+    if (!allowedStatuses.includes(task.status)) {
+      showError("只有待办、进行中、等待中的任务才能调整时间");
+      return;
+    }
+
+    setPostponeTaskId(taskId);
+    setPostponeTaskTitle(task.title);
+    setPostponeTaskDueDate(task.dueDate);
+    setPostponeTaskDueTime(task.dueTime);
+    setIsPostponeModalOpen(true);
+  };
+
   // 补充反馈
   const handleAddFeedback = (taskId: string) => {
     const task = getAllTasks().find(t => t.id === taskId);
@@ -1307,6 +1340,7 @@ const KanbanPage: NextPage = () => {
                   onViewTimeEntries={handleViewTimeEntries}
                   onDuplicateTask={handleDuplicateTask}
                   onAddFeedback={handleAddFeedback}
+                  onPostponeTask={handlePostponeTask}
                   formatTimeSpent={formatTimeSpent}
                   isTimerActive={isTimerActive}
                   isUpdating={updateTaskStatus.isPending}
@@ -1337,6 +1371,7 @@ const KanbanPage: NextPage = () => {
                     onViewTimeEntries={() => {}}
                     onDuplicateTask={() => {}}
                     onAddFeedback={() => {}}
+                    onPostponeTask={() => {}}
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive(activeTask)}
                     isUpdating={false}
@@ -1372,6 +1407,19 @@ const KanbanPage: NextPage = () => {
           taskId={feedbackTaskId || ""}
           taskTitle={feedbackTaskTitle}
           onSuccess={handleFeedbackSuccess}
+        />
+
+        {/* 延期任务模态框 */}
+        <PostponeTaskModal
+          isOpen={isPostponeModalOpen}
+          onClose={() => setIsPostponeModalOpen(false)}
+          taskId={postponeTaskId || ""}
+          taskTitle={postponeTaskTitle}
+          currentDueDate={postponeTaskDueDate}
+          currentDueTime={postponeTaskDueTime}
+          onSuccess={() => {
+            void refetchAll();
+          }}
         />
 
         {/* 确认模态框 */}
@@ -1411,6 +1459,7 @@ interface KanbanColumnProps {
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
   onAddFeedback: (taskId: string) => void; // 新增：补充反馈
+  onPostponeTask: (taskId: string) => void; // 新增：延期任务
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: (task: TaskWithRelations) => boolean;
   isUpdating: boolean;
@@ -1436,6 +1485,7 @@ function KanbanColumn({
   onViewTimeEntries,
   onDuplicateTask,
   onAddFeedback,
+  onPostponeTask,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -1495,6 +1545,7 @@ function KanbanColumn({
               onViewTimeEntries={onViewTimeEntries}
               onDuplicateTask={onDuplicateTask}
               onAddFeedback={onAddFeedback}
+              onPostponeTask={onPostponeTask}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
               isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
@@ -1573,6 +1624,7 @@ interface DraggableTaskCardProps {
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
   onAddFeedback: (taskId: string) => void; // 新增：补充反馈
+  onPostponeTask: (taskId: string) => void; // 新增：延期任务
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -1631,6 +1683,7 @@ interface TaskCardProps {
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
   onAddFeedback: (taskId: string) => void; // 新增：补充反馈
+  onPostponeTask: (taskId: string) => void; // 新增：延期任务
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
   isUpdating: boolean;
@@ -1649,6 +1702,7 @@ function TaskCard({
   onViewTimeEntries,
   onDuplicateTask,
   onAddFeedback,
+  onPostponeTask,
   formatTimeSpent,
   isTimerActive,
   isUpdating,
@@ -1881,6 +1935,25 @@ function TaskCard({
                       >
                         <ChartBarIcon className="h-4 w-4 mr-2 text-green-500" />
                         计时明细
+                      </button>
+                    )}
+
+                    {/* 延期选项 - 仅在待办、进行中、等待中的限时任务中显示 */}
+                    {(task.status === TaskStatus.TODO ||
+                      task.status === TaskStatus.IN_PROGRESS ||
+                      task.status === TaskStatus.WAITING) &&
+                     task.type === TaskType.DEADLINE && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onPostponeTask(task.id);
+                        }}
+                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <ClockIcon className="h-4 w-4 mr-2 text-orange-500" />
+                        调整时间
                       </button>
                     )}
 

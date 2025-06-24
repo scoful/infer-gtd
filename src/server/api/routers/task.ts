@@ -21,6 +21,7 @@ import {
   reorderTasksSchema,
   updateTaskStatusWithPositionSchema,
   updateTaskFeedbackSchema,
+  postponeTaskSchema,
   getTasksByStatusSchema,
 } from "@/server/api/schemas/task";
 
@@ -2039,6 +2040,118 @@ export const taskRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "获取任务反馈失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 延期任务
+  postponeTask: protectedProcedure
+    .input(postponeTaskSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, dueDate, dueTime, note } = input;
+
+      try {
+        // 验证任务所有权和类型
+        const existingTask = await ctx.db.task.findUnique({
+          where: { id },
+          select: {
+            createdById: true,
+            title: true,
+            dueDate: true,
+            dueTime: true,
+            type: true,
+            status: true,
+          },
+        });
+
+        if (!existingTask || existingTask.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "任务不存在或无权限修改",
+          });
+        }
+
+        // 只有限时任务才能延期
+        if (existingTask.type !== TaskType.DEADLINE) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "只有限时任务才能延期",
+          });
+        }
+
+        // 只有待办、进行中、等待中的任务才能延期
+        const allowedStatuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.WAITING];
+        if (!allowedStatuses.includes(existingTask.status)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "只有待办、进行中、等待中的任务才能延期",
+          });
+        }
+
+        // 更新任务截止时间
+        const task = await ctx.db.task.update({
+          where: { id },
+          data: {
+            dueDate,
+            dueTime,
+          },
+          include: {
+            project: true,
+            tags: {
+              include: {
+                tag: true,
+              },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        });
+
+        // 判断是延期还是提前
+        const oldDateTime = existingTask.dueDate ? new Date(existingTask.dueDate) : null;
+        if (oldDateTime && existingTask.dueTime) {
+          const [hours, minutes] = existingTask.dueTime.split(':');
+          oldDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        }
+
+        const newDateTime = new Date(dueDate);
+        if (dueTime) {
+          const [hours, minutes] = dueTime.split(':');
+          newDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        }
+
+        const isAdvance = oldDateTime && newDateTime < oldDateTime;
+        const actionText = isAdvance ? '提前' : '延期';
+
+        // 记录时间调整操作到状态历史
+        await ctx.db.taskStatusHistory.create({
+          data: {
+            fromStatus: existingTask.status,
+            toStatus: existingTask.status,
+            taskId: id,
+            changedById: ctx.session.user.id,
+            note: note || `任务${actionText}至 ${dueDate.toLocaleDateString('zh-CN')}${dueTime ? ` ${dueTime}` : ''}`,
+          },
+        });
+
+        const oldDateText = existingTask.dueDate
+          ? `${existingTask.dueDate.toLocaleDateString('zh-CN')}${existingTask.dueTime ? ` ${existingTask.dueTime}` : ''}`
+          : '无截止时间';
+
+        const newDateText = `${dueDate.toLocaleDateString('zh-CN')}${dueTime ? ` ${dueTime}` : ''}`;
+
+        return {
+          success: true,
+          message: `任务 "${existingTask.title}" 时间已调整\n从 ${oldDateText} ${actionText}至 ${newDateText}`,
+          task,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "调整任务时间失败",
           cause: error,
         });
       }

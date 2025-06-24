@@ -134,6 +134,14 @@ export const updateTaskFeedbackSchema = z.object({
   feedback: z.string().max(1000, "反馈内容过长").optional(),
 });
 
+// 任务延期 Schema
+export const postponeTaskSchema = z.object({
+  id: z.string().cuid("无效的任务ID"),
+  dueDate: z.date(),
+  dueTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效").optional(),
+  note: z.string().max(500, "备注过长").optional(),
+});
+
 // 按状态获取任务 Schema
 export const getTasksByStatusSchema = z.object({
   status: z.nativeEnum(TaskStatus, { required_error: "状态不能为空" }),
