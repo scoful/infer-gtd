@@ -61,14 +61,14 @@ export default function PostponeTaskModal({
         const defaultPostponeDate = new Date(currentDueDate);
         if (currentDueTime) {
           const [hours, minutes] = currentDueTime.split(':');
-          defaultPostponeDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          defaultPostponeDate.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
         } else {
           // 没有具体时间，设置为当天23:59
           defaultPostponeDate.setHours(23, 59, 0, 0);
         }
         // 延期1小时
         defaultPostponeDate.setHours(defaultPostponeDate.getHours() + 1);
-        setSelectedDate(defaultPostponeDate.toISOString().split('T')[0]);
+        setSelectedDate(defaultPostponeDate.toISOString().split('T')[0] || '');
 
         const newHours = defaultPostponeDate.getHours().toString().padStart(2, '0');
         const newMinutes = defaultPostponeDate.getMinutes().toString().padStart(2, '0');
@@ -77,7 +77,7 @@ export default function PostponeTaskModal({
         // 如果没有当前截止时间，默认设置为1小时后
         const oneHourLater = new Date();
         oneHourLater.setHours(oneHourLater.getHours() + 1);
-        setSelectedDate(oneHourLater.toISOString().split('T')[0]);
+        setSelectedDate(oneHourLater.toISOString().split('T')[0] || '');
 
         const hours = oneHourLater.getHours().toString().padStart(2, '0');
         const minutes = oneHourLater.getMinutes().toString().padStart(2, '0');
@@ -100,7 +100,7 @@ export default function PostponeTaskModal({
       // 如果有具体时间，设置到baseTime
       if (currentDueTime) {
         const [hours, minutes] = currentDueTime.split(':');
-        baseTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        baseTime.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
       } else {
         // 没有具体时间，设置为当天23:59
         baseTime.setHours(23, 59, 0, 0);
@@ -124,7 +124,7 @@ export default function PostponeTaskModal({
       console.warn('调整后的时间在过去，请确认是否正确');
     }
 
-    setSelectedDate(baseTime.toISOString().split('T')[0]);
+    setSelectedDate(baseTime.toISOString().split('T')[0] || '');
     const hours = baseTime.getHours().toString().padStart(2, '0');
     const minutes = baseTime.getMinutes().toString().padStart(2, '0');
     setSelectedTime(`${hours}:${minutes}`);

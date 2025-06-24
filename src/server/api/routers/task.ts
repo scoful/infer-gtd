@@ -2111,13 +2111,13 @@ export const taskRouter = createTRPCRouter({
         const oldDateTime = existingTask.dueDate ? new Date(existingTask.dueDate) : null;
         if (oldDateTime && existingTask.dueTime) {
           const [hours, minutes] = existingTask.dueTime.split(':');
-          oldDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          oldDateTime.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
         }
 
         const newDateTime = new Date(dueDate);
         if (dueTime) {
           const [hours, minutes] = dueTime.split(':');
-          newDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+          newDateTime.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
         }
 
         const isAdvance = oldDateTime && newDateTime < oldDateTime;

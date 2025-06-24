@@ -532,7 +532,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                     className={`h-5 w-5 flex-shrink-0 ${
                                       isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
                                     }`}
-                                    title={child.name}
+                                    aria-hidden="true"
                                   />
                                 </Link>
                               );
