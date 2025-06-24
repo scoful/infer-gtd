@@ -2,10 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 import { arrayMove } from "@dnd-kit/sortable";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   createTaskSchema,
   updateTaskSchema,
@@ -84,12 +81,14 @@ export const taskRouter = createTRPCRouter({
             ...taskData,
             sortOrder: nextSortOrder,
             createdById: ctx.session.user.id,
-            tags: tagIds ? {
-              create: tagIds.map((tagId, index) => ({
-                tag: { connect: { id: tagId } },
-                sortOrder: index, // 按照数组顺序设置sortOrder
-              })),
-            } : undefined,
+            tags: tagIds
+              ? {
+                  create: tagIds.map((tagId, index) => ({
+                    tag: { connect: { id: tagId } },
+                    sortOrder: index, // 按照数组顺序设置sortOrder
+                  })),
+                }
+              : undefined,
           },
           include: {
             project: true,
@@ -135,9 +134,18 @@ export const taskRouter = createTRPCRouter({
     .input(getTasksSchema)
     .query(async ({ ctx, input }) => {
       const {
-        limit, cursor, search, tagIds,
-        createdAfter, createdBefore, updatedAfter, updatedBefore,
-        completedAfter, completedBefore, dueAfter, dueBefore,
+        limit,
+        cursor,
+        search,
+        tagIds,
+        createdAfter,
+        createdBefore,
+        updatedAfter,
+        updatedBefore,
+        completedAfter,
+        completedBefore,
+        dueAfter,
+        dueBefore,
         ...filters
       } = input;
 
@@ -148,19 +156,22 @@ export const taskRouter = createTRPCRouter({
           ...(search && {
             OR: [
               { title: { contains: search, mode: "insensitive" as const } },
-              { description: { contains: search, mode: "insensitive" as const } },
+              {
+                description: { contains: search, mode: "insensitive" as const },
+              },
             ],
           }),
           // 标签筛选 - 使用包含关系（任务必须包含所有选中的标签）
-          ...(tagIds && tagIds.length > 0 && {
-            AND: tagIds.map(tagId => ({
-              tags: {
-                some: {
-                  tagId: tagId,
+          ...(tagIds &&
+            tagIds.length > 0 && {
+              AND: tagIds.map((tagId) => ({
+                tags: {
+                  some: {
+                    tagId: tagId,
+                  },
                 },
-              },
-            })),
-          }),
+              })),
+            }),
         };
 
         // 日期筛选 - 分别处理每个日期字段
@@ -420,7 +431,8 @@ export const taskRouter = createTRPCRouter({
         }
 
         // 处理状态变更
-        const statusChanged = status !== undefined && status !== existingTask.status;
+        const statusChanged =
+          status !== undefined && status !== existingTask.status;
         let finalUpdateData = { ...updateData };
 
         if (statusChanged) {
@@ -433,7 +445,10 @@ export const taskRouter = createTRPCRouter({
           }
 
           // 如果从已完成状态变为其他状态，清除完成时间
-          if (existingTask.status === TaskStatus.DONE && status !== TaskStatus.DONE) {
+          if (
+            existingTask.status === TaskStatus.DONE &&
+            status !== TaskStatus.DONE
+          ) {
             finalUpdateData.completedAt = null;
           }
 
@@ -607,11 +622,13 @@ export const taskRouter = createTRPCRouter({
 
   // 重启任务（将已完成的任务重新激活）
   restartTask: protectedProcedure
-    .input(z.object({
-      id: z.string().cuid("无效的任务ID"),
-      newStatus: z.nativeEnum(TaskStatus).default(TaskStatus.TODO),
-      note: z.string().max(500, "备注过长").optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string().cuid("无效的任务ID"),
+        newStatus: z.nativeEnum(TaskStatus).default(TaskStatus.TODO),
+        note: z.string().max(500, "备注过长").optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // 验证任务所有权
@@ -627,7 +644,10 @@ export const taskRouter = createTRPCRouter({
           });
         }
 
-        if (task.status !== TaskStatus.DONE && task.status !== TaskStatus.ARCHIVED) {
+        if (
+          task.status !== TaskStatus.DONE &&
+          task.status !== TaskStatus.ARCHIVED
+        ) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "只能重启已完成或已归档的任务",
@@ -673,10 +693,12 @@ export const taskRouter = createTRPCRouter({
 
   // 归档任务
   archiveTask: protectedProcedure
-    .input(z.object({
-      id: z.string().cuid("无效的任务ID"),
-      note: z.string().max(500, "备注过长").optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string().cuid("无效的任务ID"),
+        note: z.string().max(500, "备注过长").optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // 验证任务所有权
@@ -767,7 +789,10 @@ export const taskRouter = createTRPCRouter({
           });
         }
 
-        if (task.status === TaskStatus.DONE || task.status === TaskStatus.ARCHIVED) {
+        if (
+          task.status === TaskStatus.DONE ||
+          task.status === TaskStatus.ARCHIVED
+        ) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "无法为已完成或已归档的任务开始计时",
@@ -795,7 +820,7 @@ export const taskRouter = createTRPCRouter({
           if (activeTask.timerStartedAt) {
             // 计算本次会话时长
             const sessionDuration = Math.floor(
-              (now.getTime() - activeTask.timerStartedAt.getTime()) / 1000
+              (now.getTime() - activeTask.timerStartedAt.getTime()) / 1000,
             );
 
             // 查找当前活跃的时间记录
@@ -814,7 +839,8 @@ export const taskRouter = createTRPCRouter({
                 data: {
                   endTime: now,
                   duration: sessionDuration,
-                  description: activeTimeEntry.description || "被其他任务计时中断",
+                  description:
+                    activeTimeEntry.description || "被其他任务计时中断",
                 },
               });
             }
@@ -837,7 +863,10 @@ export const taskRouter = createTRPCRouter({
           data: {
             isTimerActive: true,
             timerStartedAt: now,
-            status: task.status === TaskStatus.IDEA ? TaskStatus.IN_PROGRESS : task.status,
+            status:
+              task.status === TaskStatus.IDEA
+                ? TaskStatus.IN_PROGRESS
+                : task.status,
           },
         });
 
@@ -856,7 +885,7 @@ export const taskRouter = createTRPCRouter({
         for (const activeTask of activeTimerTasks) {
           if (activeTask.timerStartedAt) {
             const sessionDuration = Math.floor(
-              (now.getTime() - activeTask.timerStartedAt.getTime()) / 1000
+              (now.getTime() - activeTask.timerStartedAt.getTime()) / 1000,
             );
             interruptedTasksInfo.push({
               id: activeTask.id,
@@ -916,7 +945,9 @@ export const taskRouter = createTRPCRouter({
         }
 
         const now = new Date();
-        const sessionDuration = Math.floor((now.getTime() - task.timerStartedAt.getTime()) / 1000);
+        const sessionDuration = Math.floor(
+          (now.getTime() - task.timerStartedAt.getTime()) / 1000,
+        );
 
         // 查找当前活跃的时间记录
         const activeTimeEntry = await ctx.db.timeEntry.findFirst({
@@ -951,7 +982,8 @@ export const taskRouter = createTRPCRouter({
 
         const hours = Math.floor(sessionDuration / 3600);
         const minutes = Math.floor((sessionDuration % 3600) / 60);
-        const timeString = hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
+        const timeString =
+          hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
 
         return {
           success: true,
@@ -1003,7 +1035,9 @@ export const taskRouter = createTRPCRouter({
         }
 
         const now = new Date();
-        const sessionDuration = Math.floor((now.getTime() - task.timerStartedAt.getTime()) / 1000);
+        const sessionDuration = Math.floor(
+          (now.getTime() - task.timerStartedAt.getTime()) / 1000,
+        );
 
         // 查找当前活跃的时间记录
         const activeTimeEntry = await ctx.db.timeEntry.findFirst({
@@ -1052,7 +1086,8 @@ export const taskRouter = createTRPCRouter({
 
         const hours = Math.floor(sessionDuration / 3600);
         const minutes = Math.floor((sessionDuration % 3600) / 60);
-        const timeString = hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
+        const timeString =
+          hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
 
         return {
           success: true,
@@ -1095,7 +1130,9 @@ export const taskRouter = createTRPCRouter({
           where: { id: input.id },
           data: {
             isRecurring: input.isRecurring,
-            recurringPattern: input.recurringPattern ? JSON.stringify(input.recurringPattern) : null,
+            recurringPattern: input.recurringPattern
+              ? JSON.stringify(input.recurringPattern)
+              : null,
           },
         });
 
@@ -1156,10 +1193,14 @@ export const taskRouter = createTRPCRouter({
         // 计算下一个到期日期
         switch (pattern.type) {
           case "daily":
-            nextDueDate = new Date(now.getTime() + pattern.interval * 24 * 60 * 60 * 1000);
+            nextDueDate = new Date(
+              now.getTime() + pattern.interval * 24 * 60 * 60 * 1000,
+            );
             break;
           case "weekly":
-            nextDueDate = new Date(now.getTime() + pattern.interval * 7 * 24 * 60 * 60 * 1000);
+            nextDueDate = new Date(
+              now.getTime() + pattern.interval * 7 * 24 * 60 * 60 * 1000,
+            );
             break;
           case "monthly":
             nextDueDate = new Date(now);
@@ -1167,7 +1208,9 @@ export const taskRouter = createTRPCRouter({
             break;
           case "yearly":
             nextDueDate = new Date(now);
-            nextDueDate.setFullYear(nextDueDate.getFullYear() + pattern.interval);
+            nextDueDate.setFullYear(
+              nextDueDate.getFullYear() + pattern.interval,
+            );
             break;
         }
 
@@ -1200,7 +1243,7 @@ export const taskRouter = createTRPCRouter({
             projectId: originalTask.projectId,
             createdById: ctx.session.user.id,
             tags: {
-              create: originalTask.tags.map(taskTag => ({
+              create: originalTask.tags.map((taskTag) => ({
                 tag: { connect: { id: taskTag.tag.id } },
                 sortOrder: taskTag.sortOrder || 0, // 保持原有的sortOrder
               })),
@@ -1297,7 +1340,7 @@ export const taskRouter = createTRPCRouter({
             createdById: ctx.session.user.id,
             // 复制标签关系，保持原有排序
             tags: {
-              create: originalTask.tags.map(taskTag => ({
+              create: originalTask.tags.map((taskTag) => ({
                 tag: { connect: { id: taskTag.tag.id } },
                 sortOrder: taskTag.sortOrder || 0,
               })),
@@ -1346,9 +1389,11 @@ export const taskRouter = createTRPCRouter({
 
   // 批量重新安排任务（批量复制任务到待办）
   batchDuplicateTasks: protectedProcedure
-    .input(z.object({
-      taskIds: z.array(z.string().cuid()).min(1, "至少选择一个任务"),
-    }))
+    .input(
+      z.object({
+        taskIds: z.array(z.string().cuid()).min(1, "至少选择一个任务"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // 获取所有原任务详情
@@ -1384,7 +1429,8 @@ export const taskRouter = createTRPCRouter({
           orderBy: { sortOrder: "asc" },
         });
 
-        let nextSortOrder = (minSortOrder?.sortOrder ?? 1) - originalTasks.length;
+        let nextSortOrder =
+          (minSortOrder?.sortOrder ?? 1) - originalTasks.length;
 
         // 批量创建新任务
         const newTasks = await Promise.all(
@@ -1403,7 +1449,7 @@ export const taskRouter = createTRPCRouter({
                 createdById: ctx.session.user.id,
                 // 复制标签关系，保持原有排序
                 tags: {
-                  create: originalTask.tags.map(taskTag => ({
+                  create: originalTask.tags.map((taskTag) => ({
                     tag: { connect: { id: taskTag.tag.id } },
                     sortOrder: taskTag.sortOrder || 0,
                   })),
@@ -1432,7 +1478,7 @@ export const taskRouter = createTRPCRouter({
             });
 
             return newTask;
-          })
+          }),
         );
 
         return {
@@ -1558,22 +1604,29 @@ export const taskRouter = createTRPCRouter({
           }),
         ]);
 
-        const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+        const completionRate =
+          totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
         return {
           totalTasks,
           completedTasks,
           completionRate: Math.round(completionRate * 100) / 100,
-          statusCounts: statusCounts.reduce((acc, item) => {
-            acc[item.status] = item._count.status;
-            return acc;
-          }, {} as Record<string, number>),
-          priorityCounts: priorityCounts.reduce((acc, item) => {
-            if (item.priority) {
-              acc[item.priority] = item._count.priority;
-            }
-            return acc;
-          }, {} as Record<string, number>),
+          statusCounts: statusCounts.reduce(
+            (acc, item) => {
+              acc[item.status] = item._count.status;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
+          priorityCounts: priorityCounts.reduce(
+            (acc, item) => {
+              if (item.priority) {
+                acc[item.priority] = item._count.priority;
+              }
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
           totalTimeSpent: totalTimeSpent._sum.totalTimeSpent || 0,
         };
       } catch (error) {
@@ -1615,7 +1668,7 @@ export const taskRouter = createTRPCRouter({
           ctx.db.task.update({
             where: { id: taskId },
             data: { sortOrder: index },
-          })
+          }),
         );
 
         await Promise.all(updatePromises);
@@ -1666,16 +1719,13 @@ export const taskRouter = createTRPCRouter({
               createdById: ctx.session.user.id,
               status: newStatus,
             },
-            orderBy: [
-              { sortOrder: "asc" },
-              { createdAt: "desc" },
-            ],
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
             select: { id: true },
           });
 
-          const currentIndex = statusTasks.findIndex(task => task.id === id);
+          const currentIndex = statusTasks.findIndex((task) => task.id === id);
           if (currentIndex !== -1 && currentIndex !== insertIndex) {
-            const taskIds = statusTasks.map(task => task.id);
+            const taskIds = statusTasks.map((task) => task.id);
             const reorderedIds = arrayMove(taskIds, currentIndex, insertIndex);
 
             // 批量更新 sortOrder
@@ -1683,7 +1733,7 @@ export const taskRouter = createTRPCRouter({
               ctx.db.task.update({
                 where: { id: taskId },
                 data: { sortOrder: index },
-              })
+              }),
             );
 
             await Promise.all(updatePromises);
@@ -1718,15 +1768,12 @@ export const taskRouter = createTRPCRouter({
               createdById: ctx.session.user.id,
               status: newStatus,
             },
-            orderBy: [
-              { sortOrder: "asc" },
-              { createdAt: "desc" },
-            ],
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
             select: { id: true },
           });
 
           // 在指定位置插入任务
-          const newTaskIds = [...targetStatusTasks.map(t => t.id)];
+          const newTaskIds = [...targetStatusTasks.map((t) => t.id)];
           newTaskIds.splice(insertIndex, 0, id);
 
           // 批量更新所有任务的 sortOrder
@@ -1855,7 +1902,7 @@ export const taskRouter = createTRPCRouter({
 
         // 如果状态发生了变化，为每个任务创建状态历史记录
         if (updates.status !== undefined) {
-          const statusHistoryData = tasks.map(task => ({
+          const statusHistoryData = tasks.map((task) => ({
             fromStatus: task.status,
             toStatus: updates.status!,
             taskId: task.id,
@@ -1879,12 +1926,12 @@ export const taskRouter = createTRPCRouter({
 
           // 为每个任务创建新的标签关联
           if (updates.tagIds.length > 0) {
-            const tagRelations = taskIds.flatMap(taskId =>
+            const tagRelations = taskIds.flatMap((taskId) =>
               updates.tagIds!.map((tagId, index) => ({
                 taskId,
                 tagId,
                 sortOrder: index,
-              }))
+              })),
             );
 
             await ctx.db.taskTag.createMany({
@@ -2081,7 +2128,11 @@ export const taskRouter = createTRPCRouter({
         }
 
         // 只有待办、进行中、等待中的任务才能延期
-        const allowedStatuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.WAITING];
+        const allowedStatuses = [
+          TaskStatus.TODO,
+          TaskStatus.IN_PROGRESS,
+          TaskStatus.WAITING,
+        ];
         if (!allowedStatuses.includes(existingTask.status)) {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -2108,20 +2159,32 @@ export const taskRouter = createTRPCRouter({
         });
 
         // 判断是延期还是提前
-        const oldDateTime = existingTask.dueDate ? new Date(existingTask.dueDate) : null;
+        const oldDateTime = existingTask.dueDate
+          ? new Date(existingTask.dueDate)
+          : null;
         if (oldDateTime && existingTask.dueTime) {
-          const [hours, minutes] = existingTask.dueTime.split(':');
-          oldDateTime.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
+          const [hours, minutes] = existingTask.dueTime.split(":");
+          oldDateTime.setHours(
+            parseInt(hours || "0"),
+            parseInt(minutes || "0"),
+            0,
+            0,
+          );
         }
 
         const newDateTime = new Date(dueDate);
         if (dueTime) {
-          const [hours, minutes] = dueTime.split(':');
-          newDateTime.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
+          const [hours, minutes] = dueTime.split(":");
+          newDateTime.setHours(
+            parseInt(hours || "0"),
+            parseInt(minutes || "0"),
+            0,
+            0,
+          );
         }
 
         const isAdvance = oldDateTime && newDateTime < oldDateTime;
-        const actionText = isAdvance ? '提前' : '延期';
+        const actionText = isAdvance ? "提前" : "延期";
 
         // 记录时间调整操作到状态历史
         await ctx.db.taskStatusHistory.create({
@@ -2130,15 +2193,17 @@ export const taskRouter = createTRPCRouter({
             toStatus: existingTask.status,
             taskId: id,
             changedById: ctx.session.user.id,
-            note: note || `任务${actionText}至 ${dueDate.toLocaleDateString('zh-CN')}${dueTime ? ` ${dueTime}` : ''}`,
+            note:
+              note ||
+              `任务${actionText}至 ${dueDate.toLocaleDateString("zh-CN")}${dueTime ? ` ${dueTime}` : ""}`,
           },
         });
 
         const oldDateText = existingTask.dueDate
-          ? `${existingTask.dueDate.toLocaleDateString('zh-CN')}${existingTask.dueTime ? ` ${existingTask.dueTime}` : ''}`
-          : '无截止时间';
+          ? `${existingTask.dueDate.toLocaleDateString("zh-CN")}${existingTask.dueTime ? ` ${existingTask.dueTime}` : ""}`
+          : "无截止时间";
 
-        const newDateText = `${dueDate.toLocaleDateString('zh-CN')}${dueTime ? ` ${dueTime}` : ''}`;
+        const newDateText = `${dueDate.toLocaleDateString("zh-CN")}${dueTime ? ` ${dueTime}` : ""}`;
 
         return {
           success: true,

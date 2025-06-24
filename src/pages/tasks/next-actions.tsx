@@ -74,7 +74,12 @@ const NextActionsPage: NextPage = () => {
   const [selectedContext, setSelectedContext] = useState<string | null>(null);
 
   // 获取下一步行动任务（TODO和IN_PROGRESS状态）
-  const { data: tasksData, isLoading, refetch, isFetching } = api.task.getAll.useQuery(
+  const {
+    data: tasksData,
+    isLoading,
+    refetch,
+    isFetching,
+  } = api.task.getAll.useQuery(
     {
       limit: 100,
       // 不设置status筛选，在客户端筛选下一步行动
@@ -84,7 +89,7 @@ const NextActionsPage: NextPage = () => {
       staleTime: 30 * 1000, // 30秒缓存
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-    }
+    },
   );
 
   // 注册页面刷新函数
@@ -109,7 +114,7 @@ const NextActionsPage: NextPage = () => {
   const formatTimeSpent = useCallback((seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -118,7 +123,9 @@ const NextActionsPage: NextPage = () => {
 
   // 检查计时器是否激活
   const isTimerActive = useCallback((task: TaskWithRelations): boolean => {
-    return task.isTimerActive && task.timeEntries.some(entry => !entry.endTime);
+    return (
+      task.isTimerActive && task.timeEntries.some((entry) => !entry.endTime)
+    );
   }, []);
 
   // 处理任务编辑
@@ -140,29 +147,35 @@ const NextActionsPage: NextPage = () => {
   }, [refetch, handleTaskModalClose]);
 
   // 快速标记完成
-  const handleMarkDone = useCallback(async (taskId: string) => {
-    try {
-      await updateTaskStatus.mutateAsync({
-        id: taskId,
-        status: TaskStatus.DONE,
-        note: "从下一步行动快速完成",
-      });
-    } catch (error) {
-      console.error("标记完成失败:", error);
-    }
-  }, [updateTaskStatus]);
+  const handleMarkDone = useCallback(
+    async (taskId: string) => {
+      try {
+        await updateTaskStatus.mutateAsync({
+          id: taskId,
+          status: TaskStatus.DONE,
+          note: "从下一步行动快速完成",
+        });
+      } catch (error) {
+        console.error("标记完成失败:", error);
+      }
+    },
+    [updateTaskStatus],
+  );
 
   // 快速开始计时
-  const handleStartTimer = useCallback(async (taskId: string) => {
-    try {
-      await startTimer.mutateAsync({
-        id: taskId,
-        description: "开始工作",
-      });
-    } catch (error) {
-      console.error("开始计时失败:", error);
-    }
-  }, [startTimer]);
+  const handleStartTimer = useCallback(
+    async (taskId: string) => {
+      try {
+        await startTimer.mutateAsync({
+          id: taskId,
+          description: "开始工作",
+        });
+      } catch (error) {
+        console.error("开始计时失败:", error);
+      }
+    },
+    [startTimer],
+  );
 
   // 延期任务
   const handleDefer = useCallback(async (taskId: string) => {
@@ -171,122 +184,171 @@ const NextActionsPage: NextPage = () => {
   }, []);
 
   // 委派任务
-  const handleDelegate = useCallback(async (taskId: string) => {
-    try {
-      await updateTaskStatus.mutateAsync({
-        id: taskId,
-        status: TaskStatus.WAITING,
-        note: "任务已委派，等待他人处理",
-      });
-    } catch (error) {
-      console.error("委派任务失败:", error);
-    }
-  }, [updateTaskStatus]);
+  const handleDelegate = useCallback(
+    async (taskId: string) => {
+      try {
+        await updateTaskStatus.mutateAsync({
+          id: taskId,
+          status: TaskStatus.WAITING,
+          note: "任务已委派，等待他人处理",
+        });
+      } catch (error) {
+        console.error("委派任务失败:", error);
+      }
+    },
+    [updateTaskStatus],
+  );
 
   // 根据标签判断上下文
   const getTaskContext = useCallback((task: TaskWithRelations): string => {
-    const contextTags = task.tags.map(t => t.tag.name.toLowerCase());
-    
-    if (contextTags.some(tag => tag.includes('电脑') || tag.includes('computer') || tag.includes('@电脑'))) {
-      return 'computer';
+    const contextTags = task.tags.map((t) => t.tag.name.toLowerCase());
+
+    if (
+      contextTags.some(
+        (tag) =>
+          tag.includes("电脑") ||
+          tag.includes("computer") ||
+          tag.includes("@电脑"),
+      )
+    ) {
+      return "computer";
     }
-    if (contextTags.some(tag => tag.includes('电话') || tag.includes('phone') || tag.includes('@电话'))) {
-      return 'phone';
+    if (
+      contextTags.some(
+        (tag) =>
+          tag.includes("电话") ||
+          tag.includes("phone") ||
+          tag.includes("@电话"),
+      )
+    ) {
+      return "phone";
     }
-    if (contextTags.some(tag => tag.includes('外出') || tag.includes('errand') || tag.includes('@外出'))) {
-      return 'errand';
+    if (
+      contextTags.some(
+        (tag) =>
+          tag.includes("外出") ||
+          tag.includes("errand") ||
+          tag.includes("@外出"),
+      )
+    ) {
+      return "errand";
     }
-    if (contextTags.some(tag => tag.includes('家里') || tag.includes('home') || tag.includes('@家里'))) {
-      return 'home';
+    if (
+      contextTags.some(
+        (tag) =>
+          tag.includes("家里") || tag.includes("home") || tag.includes("@家里"),
+      )
+    ) {
+      return "home";
     }
-    if (contextTags.some(tag => tag.includes('办公室') || tag.includes('office') || tag.includes('@办公室'))) {
-      return 'office';
+    if (
+      contextTags.some(
+        (tag) =>
+          tag.includes("办公室") ||
+          tag.includes("office") ||
+          tag.includes("@办公室"),
+      )
+    ) {
+      return "office";
     }
-    
+
     // 默认上下文
-    return 'general';
+    return "general";
   }, []);
 
   // 按上下文分组任务
   const contextGroups = useMemo((): ContextGroup[] => {
     const tasks = tasksData?.tasks || [];
-    
+
     // 筛选下一步行动（TODO和IN_PROGRESS状态）
-    const nextActionTasks = tasks.filter(task => 
-      task.status === TaskStatus.TODO || task.status === TaskStatus.IN_PROGRESS
+    const nextActionTasks = tasks.filter(
+      (task) =>
+        task.status === TaskStatus.TODO ||
+        task.status === TaskStatus.IN_PROGRESS,
     );
 
     // 定义上下文组
-    const contexts: Omit<ContextGroup, 'tasks'>[] = [
+    const contexts: Omit<ContextGroup, "tasks">[] = [
       {
-        id: 'computer',
-        name: '@电脑',
+        id: "computer",
+        name: "@电脑",
         icon: ComputerDesktopIcon,
-        color: 'bg-blue-100 text-blue-800 border-blue-200',
-        description: '需要使用电脑完成的任务',
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        description: "需要使用电脑完成的任务",
       },
       {
-        id: 'phone',
-        name: '@电话',
+        id: "phone",
+        name: "@电话",
         icon: PhoneIcon,
-        color: 'bg-green-100 text-green-800 border-green-200',
-        description: '需要打电话或通话的任务',
+        color: "bg-green-100 text-green-800 border-green-200",
+        description: "需要打电话或通话的任务",
       },
       {
-        id: 'office',
-        name: '@办公室',
+        id: "office",
+        name: "@办公室",
         icon: BuildingOfficeIcon,
-        color: 'bg-purple-100 text-purple-800 border-purple-200',
-        description: '需要在办公室完成的任务',
+        color: "bg-purple-100 text-purple-800 border-purple-200",
+        description: "需要在办公室完成的任务",
       },
       {
-        id: 'home',
-        name: '@家里',
+        id: "home",
+        name: "@家里",
         icon: HomeIcon,
-        color: 'bg-orange-100 text-orange-800 border-orange-200',
-        description: '需要在家里完成的任务',
+        color: "bg-orange-100 text-orange-800 border-orange-200",
+        description: "需要在家里完成的任务",
       },
       {
-        id: 'errand',
-        name: '@外出',
+        id: "errand",
+        name: "@外出",
         icon: MapPinIcon,
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-        description: '需要外出办理的任务',
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        description: "需要外出办理的任务",
       },
       {
-        id: 'general',
-        name: '通用',
+        id: "general",
+        name: "通用",
         icon: BoltIcon,
-        color: 'bg-gray-100 text-gray-800 border-gray-200',
-        description: '不限制特定上下文的任务',
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+        description: "不限制特定上下文的任务",
       },
     ];
 
     // 按上下文分组任务
-    return contexts.map(context => ({
+    return contexts.map((context) => ({
       ...context,
-      tasks: nextActionTasks.filter(task => getTaskContext(task) === context.id),
+      tasks: nextActionTasks.filter(
+        (task) => getTaskContext(task) === context.id,
+      ),
     }));
   }, [tasksData?.tasks, getTaskContext]);
 
   // 筛选后的上下文组（只显示有任务的组，或者选中的组）
   const filteredContextGroups = useMemo(() => {
     if (selectedContext) {
-      return contextGroups.filter(group => group.id === selectedContext);
+      return contextGroups.filter((group) => group.id === selectedContext);
     }
-    return contextGroups.filter(group => group.tasks.length > 0);
+    return contextGroups.filter((group) => group.tasks.length > 0);
   }, [contextGroups, selectedContext]);
 
   // 统计信息
   const stats = useMemo(() => {
-    const totalTasks = contextGroups.reduce((sum, group) => sum + group.tasks.length, 0);
-    const urgentTasks = contextGroups.reduce((sum, group) => 
-      sum + group.tasks.filter(task => task.priority === Priority.URGENT).length, 0
+    const totalTasks = contextGroups.reduce(
+      (sum, group) => sum + group.tasks.length,
+      0,
     );
-    const overdueTasks = contextGroups.reduce((sum, group) => 
-      sum + group.tasks.filter(task => 
-        task.dueDate && new Date(task.dueDate) < new Date()
-      ).length, 0
+    const urgentTasks = contextGroups.reduce(
+      (sum, group) =>
+        sum +
+        group.tasks.filter((task) => task.priority === Priority.URGENT).length,
+      0,
+    );
+    const overdueTasks = contextGroups.reduce(
+      (sum, group) =>
+        sum +
+        group.tasks.filter(
+          (task) => task.dueDate && new Date(task.dueDate) < new Date(),
+        ).length,
+      0,
     );
 
     return { totalTasks, urgentTasks, overdueTasks };
@@ -302,12 +364,12 @@ const NextActionsPage: NextPage = () => {
 
         <div className="space-y-6">
           {/* 页面标题和统计 */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">下一步行动</h1>
               {isFetching && !isLoading && (
                 <div className="flex items-center text-sm text-blue-600">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                   刷新中...
                 </div>
               )}
@@ -337,9 +399,9 @@ const NextActionsPage: NextPage = () => {
               {/* 新建任务按钮 */}
               <button
                 onClick={() => setIsTaskModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
               >
-                <PlusIcon className="h-4 w-4 mr-2" />
+                <PlusIcon className="mr-2 h-4 w-4" />
                 新建行动
               </button>
             </div>
@@ -349,10 +411,10 @@ const NextActionsPage: NextPage = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedContext(null)}
-              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+              className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
                 selectedContext === null
-                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  ? "border-blue-200 bg-blue-100 text-blue-800"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
               全部上下文
@@ -361,10 +423,10 @@ const NextActionsPage: NextPage = () => {
               <button
                 key={group.id}
                 onClick={() => setSelectedContext(group.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
                   selectedContext === group.id
                     ? group.color
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 {group.name} ({group.tasks.length})
@@ -397,20 +459,22 @@ const NextActionsPage: NextPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <div className="mx-auto h-12 w-12 text-gray-400">
                   <BoltIcon className="h-12 w-12" />
                 </div>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">暂无下一步行动</h3>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  暂无下一步行动
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
                   创建一些待办任务，它们会自动出现在这里
                 </p>
                 <div className="mt-6">
                   <button
                     onClick={() => setIsTaskModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
                   >
-                    <PlusIcon className="h-4 w-4 mr-2" />
+                    <PlusIcon className="mr-2 h-4 w-4" />
                     创建第一个行动
                   </button>
                 </div>
@@ -458,9 +522,9 @@ function ContextGroupCard({
   const Icon = group.icon;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       {/* 组标题 */}
-      <div className={`px-6 py-4 border-b border-gray-200 ${group.color}`}>
+      <div className={`border-b border-gray-200 px-6 py-4 ${group.color}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Icon className="h-5 w-5" />
@@ -536,44 +600,46 @@ function NextActionCard({
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
   return (
-    <div className="p-6 hover:bg-gray-50 transition-colors">
+    <div className="p-6 transition-colors hover:bg-gray-50">
       <div className="flex items-start justify-between">
         {/* 任务信息 */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-start gap-3">
             {/* 完成按钮 */}
             <button
               onClick={onMarkDone}
               disabled={isUpdating}
-              className="mt-1 p-1 rounded-full hover:bg-green-100 text-gray-400 hover:text-green-600 disabled:opacity-50"
+              className="mt-1 rounded-full p-1 text-gray-400 hover:bg-green-100 hover:text-green-600 disabled:opacity-50"
               title="标记完成"
             >
               <CheckIcon className="h-5 w-5" />
             </button>
 
             {/* 任务内容 */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <h4
-                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 line-clamp-2"
+                className="line-clamp-2 cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600"
                 onClick={onEdit}
               >
                 {task.title}
               </h4>
 
               {task.description && (
-                <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                   {task.description}
                 </p>
               )}
 
               {/* 标签和项目 */}
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="mt-2 flex flex-wrap gap-1">
                 {task.project && (
                   <span
                     className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                     style={{
-                      backgroundColor: task.project.color ? `${task.project.color}20` : '#f3f4f6',
-                      color: task.project.color || '#374151',
+                      backgroundColor: task.project.color
+                        ? `${task.project.color}20`
+                        : "#f3f4f6",
+                      color: task.project.color || "#374151",
                     }}
                   >
                     {task.project.name}
@@ -585,8 +651,10 @@ function NextActionCard({
                     key={tagRelation.tag.id}
                     className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                     style={{
-                      backgroundColor: tagRelation.tag.color ? `${tagRelation.tag.color}20` : '#f3f4f6',
-                      color: tagRelation.tag.color || '#374151',
+                      backgroundColor: tagRelation.tag.color
+                        ? `${tagRelation.tag.color}20`
+                        : "#f3f4f6",
+                      color: tagRelation.tag.color || "#374151",
                     }}
                   >
                     {tagRelation.tag.name}
@@ -601,24 +669,30 @@ function NextActionCard({
               </div>
 
               {/* 底部信息 */}
-              <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+              <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
                 {/* 状态 */}
-                <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusColors[task.status as keyof typeof statusColors]}`}>
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusColors[task.status as keyof typeof statusColors]}`}
+                >
                   {task.status === TaskStatus.TODO ? "待办" : "进行中"}
                 </span>
 
                 {/* 优先级 */}
                 {task.priority && (
-                  <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}
+                  >
                     {task.priority}
                   </span>
                 )}
 
                 {/* 截止日期 */}
                 {task.dueDate && (
-                  <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-600' : ''}`}>
+                  <span
+                    className={`flex items-center gap-1 ${isOverdue ? "text-red-600" : ""}`}
+                  >
                     <CalendarIcon className="h-3 w-3" />
-                    {new Date(task.dueDate).toLocaleDateString('zh-CN')}
+                    {new Date(task.dueDate).toLocaleDateString("zh-CN")}
                     {task.dueTime && ` ${task.dueTime}`}
                     {isOverdue && " (逾期)"}
                   </span>
@@ -635,7 +709,7 @@ function NextActionCard({
                 {/* 计时器状态 */}
                 {isTimerActive && (
                   <span className="flex items-center gap-1 text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
                     计时中
                   </span>
                 )}
@@ -645,13 +719,13 @@ function NextActionCard({
         </div>
 
         {/* 快速操作按钮 */}
-        <div className="flex items-center gap-1 ml-4">
+        <div className="ml-4 flex items-center gap-1">
           {/* 开始计时 */}
           {task.status === TaskStatus.IN_PROGRESS && !isTimerActive && (
             <button
               onClick={onStartTimer}
               disabled={isUpdating}
-              className="p-2 rounded-md hover:bg-green-100 text-gray-400 hover:text-green-600 disabled:opacity-50"
+              className="rounded-md p-2 text-gray-400 hover:bg-green-100 hover:text-green-600 disabled:opacity-50"
               title="开始计时"
             >
               <ClockIcon className="h-4 w-4" />
@@ -662,7 +736,7 @@ function NextActionCard({
           <button
             onClick={onDefer}
             disabled={isUpdating}
-            className="p-2 rounded-md hover:bg-yellow-100 text-gray-400 hover:text-yellow-600 disabled:opacity-50"
+            className="rounded-md p-2 text-gray-400 hover:bg-yellow-100 hover:text-yellow-600 disabled:opacity-50"
             title="延期"
           >
             <CalendarIcon className="h-4 w-4" />
@@ -672,7 +746,7 @@ function NextActionCard({
           <button
             onClick={onDelegate}
             disabled={isUpdating}
-            className="p-2 rounded-md hover:bg-purple-100 text-gray-400 hover:text-purple-600 disabled:opacity-50"
+            className="rounded-md p-2 text-gray-400 hover:bg-purple-100 hover:text-purple-600 disabled:opacity-50"
             title="委派给他人"
           >
             <UserIcon className="h-4 w-4" />

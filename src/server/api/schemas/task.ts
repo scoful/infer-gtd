@@ -9,7 +9,10 @@ export const createTaskSchema = z.object({
   status: z.nativeEnum(TaskStatus).default(TaskStatus.IDEA),
   priority: z.nativeEnum(Priority).optional(),
   dueDate: z.date().optional(),
-  dueTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效").optional(),
+  dueTime: z
+    .string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效")
+    .optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
 });
@@ -17,13 +20,20 @@ export const createTaskSchema = z.object({
 // 任务更新 Schema
 export const updateTaskSchema = z.object({
   id: z.string().cuid("无效的任务ID"),
-  title: z.string().min(1, "任务标题不能为空").max(200, "任务标题过长").optional(),
+  title: z
+    .string()
+    .min(1, "任务标题不能为空")
+    .max(200, "任务标题过长")
+    .optional(),
   description: z.string().optional(),
   type: z.nativeEnum(TaskType).optional(),
   status: z.nativeEnum(TaskStatus).optional(),
   priority: z.nativeEnum(Priority).optional(),
   dueDate: z.date().optional(),
-  dueTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效").optional(),
+  dueTime: z
+    .string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效")
+    .optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
   // 反馈相关字段
@@ -67,13 +77,18 @@ export const taskIdSchema = z.object({
 export const setRecurringSchema = z.object({
   id: z.string().cuid("无效的任务ID"),
   isRecurring: z.boolean(),
-  recurringPattern: z.object({
-    type: z.enum(["daily", "weekly", "monthly", "yearly", "custom"]),
-    interval: z.number().min(1).max(365),
-    time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(),
-    daysOfWeek: z.array(z.number().min(0).max(6)).optional(), // 0=Sunday, 6=Saturday
-    dayOfMonth: z.number().min(1).max(31).optional(),
-  }).optional(),
+  recurringPattern: z
+    .object({
+      type: z.enum(["daily", "weekly", "monthly", "yearly", "custom"]),
+      interval: z.number().min(1).max(365),
+      time: z
+        .string()
+        .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)
+        .optional(),
+      daysOfWeek: z.array(z.number().min(0).max(6)).optional(), // 0=Sunday, 6=Saturday
+      dayOfMonth: z.number().min(1).max(31).optional(),
+    })
+    .optional(),
 });
 
 // 时间追踪 Schema
@@ -138,7 +153,10 @@ export const updateTaskFeedbackSchema = z.object({
 export const postponeTaskSchema = z.object({
   id: z.string().cuid("无效的任务ID"),
   dueDate: z.date(),
-  dueTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效").optional(),
+  dueTime: z
+    .string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效")
+    .optional(),
   note: z.string().max(500, "备注过长").optional(),
 });
 
@@ -162,5 +180,7 @@ export type GetTaskStatsInput = z.infer<typeof getTaskStatsSchema>;
 export type BatchUpdateTasksInput = z.infer<typeof batchUpdateTasksSchema>;
 export type BatchDeleteTasksInput = z.infer<typeof batchDeleteTasksSchema>;
 export type ReorderTasksInput = z.infer<typeof reorderTasksSchema>;
-export type UpdateTaskStatusWithPositionInput = z.infer<typeof updateTaskStatusWithPositionSchema>;
+export type UpdateTaskStatusWithPositionInput = z.infer<
+  typeof updateTaskStatusWithPositionSchema
+>;
 export type UpdateTaskFeedbackInput = z.infer<typeof updateTaskFeedbackSchema>;

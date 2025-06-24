@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { TaskStatus } from "@prisma/client";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -73,7 +70,9 @@ export const projectRouter = createTRPCRouter({
           ...(search && {
             OR: [
               { name: { contains: search, mode: "insensitive" as const } },
-              { description: { contains: search, mode: "insensitive" as const } },
+              {
+                description: { contains: search, mode: "insensitive" as const },
+              },
             ],
           }),
         };
@@ -82,10 +81,7 @@ export const projectRouter = createTRPCRouter({
           where,
           take: limit + 1,
           cursor: cursor ? { id: cursor } : undefined,
-          orderBy: [
-            { isArchived: "asc" },
-            { name: "asc" },
-          ],
+          orderBy: [{ isArchived: "asc" }, { name: "asc" }],
           include: {
             _count: {
               select: {
@@ -185,7 +181,10 @@ export const projectRouter = createTRPCRouter({
           select: { createdById: true, name: true },
         });
 
-        if (!existingProject || existingProject.createdById !== ctx.session.user.id) {
+        if (
+          !existingProject ||
+          existingProject.createdById !== ctx.session.user.id
+        ) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "项目不存在或无权限修改",
@@ -280,7 +279,7 @@ export const projectRouter = createTRPCRouter({
 
         return {
           success: true,
-          message: `项目 "${project.name}" 已删除`
+          message: `项目 "${project.name}" 已删除`,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -315,7 +314,9 @@ export const projectRouter = createTRPCRouter({
         if (project.isArchived === input.isArchived) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: input.isArchived ? "项目已经是归档状态" : "项目已经是活跃状态",
+            message: input.isArchived
+              ? "项目已经是归档状态"
+              : "项目已经是活跃状态",
           });
         }
 
@@ -404,7 +405,8 @@ export const projectRouter = createTRPCRouter({
           ctx.db.note.count({ where: { projectId: input.id } }),
         ]);
 
-        const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+        const completionRate =
+          totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
         return {
           projectName: project.name,
@@ -412,16 +414,22 @@ export const projectRouter = createTRPCRouter({
           completedTasks,
           completionRate: Math.round(completionRate * 100) / 100,
           totalNotes,
-          statusCounts: statusCounts.reduce((acc, item) => {
-            acc[item.status] = item._count.status;
-            return acc;
-          }, {} as Record<string, number>),
-          priorityCounts: priorityCounts.reduce((acc, item) => {
-            if (item.priority) {
-              acc[item.priority] = item._count.priority;
-            }
-            return acc;
-          }, {} as Record<string, number>),
+          statusCounts: statusCounts.reduce(
+            (acc, item) => {
+              acc[item.status] = item._count.status;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
+          priorityCounts: priorityCounts.reduce(
+            (acc, item) => {
+              if (item.priority) {
+                acc[item.priority] = item._count.priority;
+              }
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
           totalTimeSpent: totalTimeSpent._sum.totalTimeSpent || 0,
         };
       } catch (error) {
@@ -642,13 +650,13 @@ export const projectRouter = createTRPCRouter({
             });
 
             const nonEmptyProjects = projectsWithContent.filter(
-              p => p._count.tasks > 0 || p._count.notes > 0
+              (p) => p._count.tasks > 0 || p._count.notes > 0,
             );
 
             if (nonEmptyProjects.length > 0) {
               throw new TRPCError({
                 code: "BAD_REQUEST",
-                message: `以下项目包含任务或笔记，无法删除：${nonEmptyProjects.map(p => p.name).join(", ")}`,
+                message: `以下项目包含任务或笔记，无法删除：${nonEmptyProjects.map((p) => p.name).join(", ")}`,
               });
             }
 

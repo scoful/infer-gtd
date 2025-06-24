@@ -13,19 +13,19 @@ interface LoadingSpinnerProps {
 export function LoadingSpinner({
   size = "md",
   color = "blue",
-  className = ""
+  className = "",
 }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: "h-4 w-4",
     md: "h-6 w-6",
     lg: "h-8 w-8",
-    xl: "h-12 w-12"
+    xl: "h-12 w-12",
   };
 
   const colorClasses = {
     blue: "border-blue-600 border-r-transparent",
     gray: "border-gray-600 border-r-transparent",
-    white: "border-white border-r-transparent"
+    white: "border-white border-r-transparent",
   };
 
   return (
@@ -51,18 +51,18 @@ export function LoadingText({
   children = "加载中...",
   size = "md",
   color = "gray",
-  className = ""
+  className = "",
 }: LoadingTextProps) {
   const sizeClasses = {
     sm: "text-xs",
     md: "text-sm",
-    lg: "text-base"
+    lg: "text-base",
   };
 
   const colorClasses = {
     gray: "text-gray-600",
     blue: "text-blue-600",
-    white: "text-white"
+    white: "text-white",
   };
 
   return (
@@ -84,16 +84,14 @@ export function LoadingContainer({
   children,
   center = true,
   fullHeight = false,
-  className = ""
+  className = "",
 }: LoadingContainerProps) {
   const centerClasses = center ? "flex items-center justify-center" : "";
   const heightClasses = fullHeight ? "min-h-screen" : "h-64";
 
   return (
     <div className={`${centerClasses} ${heightClasses} ${className}`}>
-      <div className="text-center">
-        {children}
-      </div>
+      <div className="text-center">{children}</div>
     </div>
   );
 }
@@ -106,7 +104,7 @@ interface PageLoadingProps {
 
 export function PageLoading({
   message = "加载中...",
-  className = ""
+  className = "",
 }: PageLoadingProps) {
   return (
     <LoadingContainer fullHeight className={`bg-gray-50 ${className}`}>
@@ -126,12 +124,14 @@ interface SectionLoadingProps {
 export function SectionLoading({
   message = "加载中...",
   size = "md",
-  className = ""
+  className = "",
 }: SectionLoadingProps) {
   return (
     <LoadingContainer center fullHeight={false} className={className}>
       <LoadingSpinner size={size} />
-      <LoadingText size={size} className="mt-2">{message}</LoadingText>
+      <LoadingText size={size} className="mt-2">
+        {message}
+      </LoadingText>
     </LoadingContainer>
   );
 }
@@ -148,12 +148,14 @@ export function ButtonLoading({
   message = "处理中...",
   size = "sm",
   color = "white",
-  className = ""
+  className = "",
 }: ButtonLoadingProps) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <LoadingSpinner size={size} color={color} />
-      <LoadingText size={size} color={color}>{message}</LoadingText>
+      <LoadingText size={size} color={color}>
+        {message}
+      </LoadingText>
     </div>
   );
 }
@@ -168,7 +170,7 @@ interface InlineLoadingProps {
 export function InlineLoading({
   message = "加载中...",
   showSpinner = true,
-  className = ""
+  className = "",
 }: InlineLoadingProps) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -194,15 +196,15 @@ export function QueryLoading({
   children,
   loadingComponent,
   errorComponent,
-  loadingMessage = "加载数据中..."
+  loadingMessage = "加载数据中...",
 }: QueryLoadingProps) {
   if (error) {
     return (
-      <div className="text-center text-red-600 p-4">
+      <div className="p-4 text-center text-red-600">
         {errorComponent || (
           <div>
             <p className="text-sm font-medium">加载失败</p>
-            <p className="text-xs mt-1">{error.message}</p>
+            <p className="mt-1 text-xs">{error.message}</p>
           </div>
         )}
       </div>

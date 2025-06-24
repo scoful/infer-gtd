@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   createNoteSchema,
   updateNoteSchema,
@@ -79,14 +76,18 @@ export const noteRouter = createTRPCRouter({
           data: {
             ...noteData,
             createdById: ctx.session.user.id,
-            tags: tagIds ? {
-              create: tagIds.map(tagId => ({
-                tag: { connect: { id: tagId } },
-              })),
-            } : undefined,
-            linkedTasks: linkedTaskIds ? {
-              connect: linkedTaskIds.map(taskId => ({ id: taskId })),
-            } : undefined,
+            tags: tagIds
+              ? {
+                  create: tagIds.map((tagId) => ({
+                    tag: { connect: { id: tagId } },
+                  })),
+                }
+              : undefined,
+            linkedTasks: linkedTaskIds
+              ? {
+                  connect: linkedTaskIds.map((taskId) => ({ id: taskId })),
+                }
+              : undefined,
           },
           include: {
             project: true,
@@ -122,7 +123,15 @@ export const noteRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getNotesSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy, sortOrder, includeArchived, ...filters } = input;
+      const {
+        limit,
+        cursor,
+        search,
+        sortBy,
+        sortOrder,
+        includeArchived,
+        ...filters
+      } = input;
 
       try {
         const where = {
@@ -320,14 +329,14 @@ export const noteRouter = createTRPCRouter({
             ...(tagIds !== undefined && {
               tags: {
                 deleteMany: {},
-                create: tagIds.map(tagId => ({
+                create: tagIds.map((tagId) => ({
                   tag: { connect: { id: tagId } },
                 })),
               },
             }),
             ...(linkedTaskIds !== undefined && {
               linkedTasks: {
-                set: linkedTaskIds.map(taskId => ({ id: taskId })),
+                set: linkedTaskIds.map((taskId) => ({ id: taskId })),
               },
             }),
           },
@@ -386,7 +395,7 @@ export const noteRouter = createTRPCRouter({
 
         return {
           success: true,
-          message: `笔记 "${note.title}" 已删除`
+          message: `笔记 "${note.title}" 已删除`,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -421,7 +430,9 @@ export const noteRouter = createTRPCRouter({
         if (note.isArchived === input.isArchived) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: input.isArchived ? "笔记已经是归档状态" : "笔记已经是活跃状态",
+            message: input.isArchived
+              ? "笔记已经是归档状态"
+              : "笔记已经是活跃状态",
           });
         }
 
@@ -768,7 +779,10 @@ export const noteRouter = createTRPCRouter({
               select: { createdById: true, name: true },
             });
 
-            if (!targetProject || targetProject.createdById !== ctx.session.user.id) {
+            if (
+              !targetProject ||
+              targetProject.createdById !== ctx.session.user.id
+            ) {
               throw new TRPCError({
                 code: "NOT_FOUND",
                 message: "目标项目不存在或无权限访问",

@@ -23,32 +23,32 @@ const NotesPage: NextPage = () => {
 
         <div className="space-y-6">
           {/* 页面标题 */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">笔记</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                知识管理和文档整理
-              </p>
+              <p className="mt-1 text-sm text-gray-600">知识管理和文档整理</p>
             </div>
 
             <button
               disabled
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-400 cursor-not-allowed"
+              className="inline-flex cursor-not-allowed items-center rounded-md border border-transparent bg-gray-400 px-4 py-2 text-sm font-medium text-white shadow-sm"
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
+              <PlusIcon className="mr-2 h-4 w-4" />
               新建笔记
             </button>
           </div>
 
           {/* 开发中提示 */}
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">
             <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">笔记功能开发中</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              笔记功能开发中
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
               笔记管理功能正在开发中，敬请期待
             </p>
             <div className="mt-6">
-              <div className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white">
+              <div className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm">
                 即将推出
               </div>
             </div>

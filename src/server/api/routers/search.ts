@@ -1,31 +1,30 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { TaskStatus, TaskType, Priority, TagType } from "@prisma/client";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 // 高级搜索 Schema
 const advancedSearchSchema = z.object({
   // 基础搜索
   query: z.string().optional(),
-  
+
   // 内容类型
-  searchIn: z.array(z.enum(["tasks", "notes", "projects", "journals"])).default(["tasks"]),
-  
+  searchIn: z
+    .array(z.enum(["tasks", "notes", "projects", "journals"]))
+    .default(["tasks"]),
+
   // 任务特定筛选
   taskStatus: z.array(z.nativeEnum(TaskStatus)).optional(),
   taskType: z.array(z.nativeEnum(TaskType)).optional(),
   priority: z.array(z.nativeEnum(Priority)).optional(),
-  
+
   // 标签筛选
   tagIds: z.array(z.string().cuid()).optional(),
   tagTypes: z.array(z.nativeEnum(TagType)).optional(),
-  
+
   // 项目筛选
   projectIds: z.array(z.string().cuid()).optional(),
-  
+
   // 日期筛选
   createdAfter: z.date().optional(),
   createdBefore: z.date().optional(),
@@ -33,25 +32,32 @@ const advancedSearchSchema = z.object({
   updatedBefore: z.date().optional(),
   dueAfter: z.date().optional(),
   dueBefore: z.date().optional(),
-  
+
   // 时间筛选
   hasTimeTracking: z.boolean().optional(),
   minTimeSpent: z.number().min(0).optional(), // 秒
   maxTimeSpent: z.number().min(0).optional(), // 秒
-  
+
   // 状态筛选
   isCompleted: z.boolean().optional(),
   isOverdue: z.boolean().optional(),
   isRecurring: z.boolean().optional(),
   hasDescription: z.boolean().optional(),
-  
+
   // 排序
-  sortBy: z.enum([
-    "relevance", "createdAt", "updatedAt", "dueDate", 
-    "priority", "title", "timeSpent"
-  ]).default("relevance"),
+  sortBy: z
+    .enum([
+      "relevance",
+      "createdAt",
+      "updatedAt",
+      "dueDate",
+      "priority",
+      "title",
+      "timeSpent",
+    ])
+    .default("relevance"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-  
+
   // 分页
   limit: z.number().min(1).max(100).default(20),
   cursor: z.string().cuid().optional(),
@@ -67,7 +73,11 @@ const savedSearchSchema = z.object({
 
 const updateSavedSearchSchema = z.object({
   id: z.string().cuid("无效的搜索ID"),
-  name: z.string().min(1, "搜索名称不能为空").max(100, "搜索名称过长").optional(),
+  name: z
+    .string()
+    .min(1, "搜索名称不能为空")
+    .max(100, "搜索名称过长")
+    .optional(),
   description: z.string().max(500, "描述过长").optional(),
   searchParams: advancedSearchSchema.optional(),
   isPublic: z.boolean().optional(),
@@ -89,12 +99,32 @@ export const searchRouter = createTRPCRouter({
   advanced: protectedProcedure
     .input(advancedSearchSchema)
     .query(async ({ ctx, input }) => {
-      const { 
-        query, searchIn, limit, cursor, sortBy, sortOrder,
-        taskStatus, taskType, priority, tagIds, tagTypes, projectIds,
-        createdAfter, createdBefore, updatedAfter, updatedBefore,
-        dueAfter, dueBefore, hasTimeTracking, minTimeSpent, maxTimeSpent,
-        isCompleted, isOverdue, isRecurring, hasDescription
+      const {
+        query,
+        searchIn,
+        limit,
+        cursor,
+        sortBy,
+        sortOrder,
+        taskStatus,
+        taskType,
+        priority,
+        tagIds,
+        tagTypes,
+        projectIds,
+        createdAfter,
+        createdBefore,
+        updatedAfter,
+        updatedBefore,
+        dueAfter,
+        dueBefore,
+        hasTimeTracking,
+        minTimeSpent,
+        maxTimeSpent,
+        isCompleted,
+        isOverdue,
+        isRecurring,
+        hasDescription,
       } = input;
 
       try {
@@ -114,7 +144,12 @@ export const searchRouter = createTRPCRouter({
             ...(query && {
               OR: [
                 { title: { contains: query, mode: "insensitive" as const } },
-                { description: { contains: query, mode: "insensitive" as const } },
+                {
+                  description: {
+                    contains: query,
+                    mode: "insensitive" as const,
+                  },
+                },
               ],
             }),
             ...(taskStatus && { status: { in: taskStatus } }),
@@ -127,8 +162,8 @@ export const searchRouter = createTRPCRouter({
             ...(updatedBefore && { updatedAt: { lte: updatedBefore } }),
             ...(dueAfter && { dueDate: { gte: dueAfter } }),
             ...(dueBefore && { dueDate: { lte: dueBefore } }),
-            ...(isCompleted !== undefined && { 
-              status: isCompleted ? TaskStatus.DONE : { not: TaskStatus.DONE }
+            ...(isCompleted !== undefined && {
+              status: isCompleted ? TaskStatus.DONE : { not: TaskStatus.DONE },
             }),
             ...(isOverdue && {
               dueDate: { lt: new Date() },
@@ -157,16 +192,26 @@ export const searchRouter = createTRPCRouter({
           };
 
           // 时间筛选需要聚合查询
-          if (hasTimeTracking !== undefined || minTimeSpent !== undefined || maxTimeSpent !== undefined) {
+          if (
+            hasTimeTracking !== undefined ||
+            minTimeSpent !== undefined ||
+            maxTimeSpent !== undefined
+          ) {
             // 这里需要更复杂的查询，暂时简化处理
             if (hasTimeTracking !== undefined) {
               taskWhere.totalTimeSpent = hasTimeTracking ? { gt: 0 } : 0;
             }
             if (minTimeSpent !== undefined) {
-              taskWhere.totalTimeSpent = { ...taskWhere.totalTimeSpent, gte: minTimeSpent };
+              taskWhere.totalTimeSpent = {
+                ...taskWhere.totalTimeSpent,
+                gte: minTimeSpent,
+              };
             }
             if (maxTimeSpent !== undefined) {
-              taskWhere.totalTimeSpent = { ...taskWhere.totalTimeSpent, lte: maxTimeSpent };
+              taskWhere.totalTimeSpent = {
+                ...taskWhere.totalTimeSpent,
+                lte: maxTimeSpent,
+              };
             }
           }
 
@@ -260,7 +305,12 @@ export const searchRouter = createTRPCRouter({
             ...(query && {
               OR: [
                 { name: { contains: query, mode: "insensitive" as const } },
-                { description: { contains: query, mode: "insensitive" as const } },
+                {
+                  description: {
+                    contains: query,
+                    mode: "insensitive" as const,
+                  },
+                },
               ],
             }),
             ...(createdAfter && { createdAt: { gte: createdAfter } }),
@@ -436,28 +486,27 @@ export const searchRouter = createTRPCRouter({
     }),
 
   // 获取保存的搜索列表
-  getSavedSearches: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const savedSearches = await ctx.db.savedSearch.findMany({
-          where: {
-            createdById: ctx.session.user.id,
-          },
-          orderBy: { updatedAt: "desc" },
-        });
+  getSavedSearches: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const savedSearches = await ctx.db.savedSearch.findMany({
+        where: {
+          createdById: ctx.session.user.id,
+        },
+        orderBy: { updatedAt: "desc" },
+      });
 
-        return savedSearches.map(search => ({
-          ...search,
-          searchParams: JSON.parse(search.searchParams as string),
-        }));
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "获取保存的搜索失败",
-          cause: error,
-        });
-      }
-    }),
+      return savedSearches.map((search) => ({
+        ...search,
+        searchParams: JSON.parse(search.searchParams as string),
+      }));
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "获取保存的搜索失败",
+        cause: error,
+      });
+    }
+  }),
 
   // 删除保存的搜索
   deleteSavedSearch: protectedProcedure

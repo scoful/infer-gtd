@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { TagType } from "@prisma/client";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 // 标签相关的 Schema
 const createTagSchema = z.object({
   name: z.string().min(1, "标签名称不能为空").max(50, "标签名称过长"),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, "颜色格式无效").optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i, "颜色格式无效")
+    .optional(),
   type: z.nativeEnum(TagType).default(TagType.CUSTOM),
   category: z.string().max(50, "分类名称过长").optional(),
   description: z.string().max(200, "描述过长").optional(),
@@ -18,8 +18,15 @@ const createTagSchema = z.object({
 
 const updateTagSchema = z.object({
   id: z.string().cuid("无效的标签ID"),
-  name: z.string().min(1, "标签名称不能为空").max(50, "标签名称过长").optional(),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, "颜色格式无效").optional(),
+  name: z
+    .string()
+    .min(1, "标签名称不能为空")
+    .max(50, "标签名称过长")
+    .optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i, "颜色格式无效")
+    .optional(),
   type: z.nativeEnum(TagType).optional(),
   category: z.string().max(50, "分类名称过长").optional(),
   description: z.string().max(200, "描述过长").optional(),
@@ -40,14 +47,18 @@ const tagIdSchema = z.object({
 });
 
 const batchCreateTagsSchema = z.object({
-  tags: z.array(createTagSchema).min(1, "至少需要一个标签").max(20, "一次最多创建20个标签"),
+  tags: z
+    .array(createTagSchema)
+    .min(1, "至少需要一个标签")
+    .max(20, "一次最多创建20个标签"),
 });
 
 const batchDeleteTagsSchema = z.object({
-  tagIds: z.array(z.string().cuid("无效的标签ID")).min(1, "至少选择一个标签").max(50, "一次最多删除50个标签"),
+  tagIds: z
+    .array(z.string().cuid("无效的标签ID"))
+    .min(1, "至少选择一个标签")
+    .max(50, "一次最多删除50个标签"),
 });
-
-
 
 export const tagRouter = createTRPCRouter({
   // 创建标签
@@ -99,16 +110,16 @@ export const tagRouter = createTRPCRouter({
         // 检查标签名称是否已存在
         const existingTags = await ctx.db.tag.findMany({
           where: {
-            name: { in: input.tags.map(tag => tag.name) },
+            name: { in: input.tags.map((tag) => tag.name) },
             createdById: ctx.session.user.id,
           },
           select: { name: true },
         });
 
-        const existingNames = existingTags.map(tag => tag.name);
+        const existingNames = existingTags.map((tag) => tag.name);
         const duplicateNames = input.tags
-          .map(tag => tag.name)
-          .filter(name => existingNames.includes(name));
+          .map((tag) => tag.name)
+          .filter((name) => existingNames.includes(name));
 
         if (duplicateNames.length > 0) {
           throw new TRPCError({
@@ -119,7 +130,7 @@ export const tagRouter = createTRPCRouter({
 
         // 批量创建标签
         const tags = await ctx.db.tag.createMany({
-          data: input.tags.map(tag => ({
+          data: input.tags.map((tag) => ({
             ...tag,
             createdById: ctx.session.user.id,
           })),
@@ -152,7 +163,9 @@ export const tagRouter = createTRPCRouter({
           ...(search && {
             OR: [
               { name: { contains: search, mode: "insensitive" as const } },
-              { description: { contains: search, mode: "insensitive" as const } },
+              {
+                description: { contains: search, mode: "insensitive" as const },
+              },
             ],
           }),
           ...(includeSystem === false && { isSystem: false }),
@@ -199,10 +212,12 @@ export const tagRouter = createTRPCRouter({
 
   // 根据类型获取标签
   getByType: protectedProcedure
-    .input(z.object({
-      type: z.nativeEnum(TagType),
-      includeSystem: z.boolean().default(true),
-    }))
+    .input(
+      z.object({
+        type: z.nativeEnum(TagType),
+        includeSystem: z.boolean().default(true),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       try {
         const tags = await ctx.db.tag.findMany({
@@ -211,10 +226,7 @@ export const tagRouter = createTRPCRouter({
             type: input.type,
             ...(input.includeSystem === false && { isSystem: false }),
           },
-          orderBy: [
-            { isSystem: "desc" },
-            { name: "asc" },
-          ],
+          orderBy: [{ isSystem: "desc" }, { name: "asc" }],
           include: {
             _count: {
               select: {
@@ -237,10 +249,12 @@ export const tagRouter = createTRPCRouter({
 
   // 根据分类获取标签
   getByCategory: protectedProcedure
-    .input(z.object({
-      category: z.string(),
-      includeSystem: z.boolean().default(true),
-    }))
+    .input(
+      z.object({
+        category: z.string(),
+        includeSystem: z.boolean().default(true),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       try {
         const tags = await ctx.db.tag.findMany({
@@ -249,10 +263,7 @@ export const tagRouter = createTRPCRouter({
             category: input.category,
             ...(input.includeSystem === false && { isSystem: false }),
           },
-          orderBy: [
-            { isSystem: "desc" },
-            { name: "asc" },
-          ],
+          orderBy: [{ isSystem: "desc" }, { name: "asc" }],
           include: {
             _count: {
               select: {
@@ -391,8 +402,8 @@ export const tagRouter = createTRPCRouter({
         // 验证标签所有权
         const tag = await ctx.db.tag.findUnique({
           where: { id: input.id },
-          select: { 
-            createdById: true, 
+          select: {
+            createdById: true,
             isSystem: true,
             _count: {
               select: {
@@ -463,49 +474,51 @@ export const tagRouter = createTRPCRouter({
     }),
 
   // 获取标签统计信息
-  getStats: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const stats = await ctx.db.tag.groupBy({
-          by: ['type'],
-          where: {
-            createdById: ctx.session.user.id,
-          },
-          _count: {
-            id: true,
-          },
-        });
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const stats = await ctx.db.tag.groupBy({
+        by: ["type"],
+        where: {
+          createdById: ctx.session.user.id,
+        },
+        _count: {
+          id: true,
+        },
+      });
 
-        const totalTags = await ctx.db.tag.count({
-          where: {
-            createdById: ctx.session.user.id,
-          },
-        });
+      const totalTags = await ctx.db.tag.count({
+        where: {
+          createdById: ctx.session.user.id,
+        },
+      });
 
-        const systemTags = await ctx.db.tag.count({
-          where: {
-            createdById: ctx.session.user.id,
-            isSystem: true,
-          },
-        });
+      const systemTags = await ctx.db.tag.count({
+        where: {
+          createdById: ctx.session.user.id,
+          isSystem: true,
+        },
+      });
 
-        return {
-          total: totalTags,
-          system: systemTags,
-          custom: totalTags - systemTags,
-          byType: stats.reduce((acc, stat) => {
+      return {
+        total: totalTags,
+        system: systemTags,
+        custom: totalTags - systemTags,
+        byType: stats.reduce(
+          (acc, stat) => {
             acc[stat.type] = stat._count.id;
             return acc;
-          }, {} as Record<TagType, number>),
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "获取标签统计失败",
-          cause: error,
-        });
-      }
-    }),
+          },
+          {} as Record<TagType, number>,
+        ),
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "获取标签统计失败",
+        cause: error,
+      });
+    }
+  }),
 
   // 批量删除标签
   batchDelete: protectedProcedure
@@ -541,26 +554,28 @@ export const tagRouter = createTRPCRouter({
         }
 
         // 检查系统标签
-        const systemTags = tags.filter(tag => tag.isSystem);
+        const systemTags = tags.filter((tag) => tag.isSystem);
         if (systemTags.length > 0) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: `系统标签不允许删除: ${systemTags.map(tag => tag.name).join(", ")}`,
+            message: `系统标签不允许删除: ${systemTags.map((tag) => tag.name).join(", ")}`,
           });
         }
 
         // 检查被引用的标签
-        const referencedTags = tags.filter(tag =>
-          tag._count.taskTags > 0 || tag._count.noteTags > 0
+        const referencedTags = tags.filter(
+          (tag) => tag._count.taskTags > 0 || tag._count.noteTags > 0,
         );
 
         if (referencedTags.length > 0) {
-          const referencedNames = referencedTags.map(tag => {
-            const taskCount = tag._count.taskTags;
-            const noteCount = tag._count.noteTags;
-            const totalCount = taskCount + noteCount;
-            return `${tag.name} (${totalCount}处引用)`;
-          }).join(", ");
+          const referencedNames = referencedTags
+            .map((tag) => {
+              const taskCount = tag._count.taskTags;
+              const noteCount = tag._count.noteTags;
+              const totalCount = taskCount + noteCount;
+              return `${tag.name} (${totalCount}处引用)`;
+            })
+            .join(", ");
 
           throw new TRPCError({
             code: "CONFLICT",

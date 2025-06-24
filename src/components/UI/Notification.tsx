@@ -56,18 +56,16 @@ export function Notification({ notification, onClose }: NotificationProps) {
 
   return (
     <div
-      className={`rounded-lg px-6 py-4 shadow-xl transition-all duration-300 backdrop-blur-sm ${style.container} max-w-md`}
+      className={`rounded-lg px-6 py-4 shadow-xl backdrop-blur-sm transition-all duration-300 ${style.container} max-w-md`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
           <Icon className={`h-5 w-5 ${style.iconColor}`} />
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {notification.title && (
-            <h4 className="text-sm font-semibold mb-1">
-              {notification.title}
-            </h4>
+            <h4 className="mb-1 text-sm font-semibold">{notification.title}</h4>
           )}
           <p className="text-sm">{notification.message}</p>
 
@@ -97,7 +95,13 @@ export function Notification({ notification, onClose }: NotificationProps) {
 interface NotificationContainerProps {
   notifications: NotificationData[];
   onClose: (id: string) => void;
-  position?: "top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left";
+  position?:
+    | "top-right"
+    | "top-center"
+    | "top-left"
+    | "bottom-right"
+    | "bottom-center"
+    | "bottom-left";
 }
 
 const positionStyles = {

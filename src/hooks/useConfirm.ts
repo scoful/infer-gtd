@@ -26,30 +26,33 @@ export function useConfirm() {
     onConfirm: () => {},
   });
 
-  const showConfirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setConfirmState({
-        isOpen: true,
-        isLoading: false,
-        title: options.title,
-        message: options.message,
-        confirmText: options.confirmText || "确认",
-        cancelText: options.cancelText || "取消",
-        type: options.type || "danger",
-        onConfirm: () => {
-          resolve(true);
-          setConfirmState(prev => ({ ...prev, isOpen: false }));
-        },
+  const showConfirm = useCallback(
+    (options: ConfirmOptions): Promise<boolean> => {
+      return new Promise((resolve) => {
+        setConfirmState({
+          isOpen: true,
+          isLoading: false,
+          title: options.title,
+          message: options.message,
+          confirmText: options.confirmText || "确认",
+          cancelText: options.cancelText || "取消",
+          type: options.type || "danger",
+          onConfirm: () => {
+            resolve(true);
+            setConfirmState((prev) => ({ ...prev, isOpen: false }));
+          },
+        });
       });
-    });
-  }, []);
+    },
+    [],
+  );
 
   const hideConfirm = useCallback(() => {
-    setConfirmState(prev => ({ ...prev, isOpen: false }));
+    setConfirmState((prev) => ({ ...prev, isOpen: false }));
   }, []);
 
   const setLoading = useCallback((loading: boolean) => {
-    setConfirmState(prev => ({ ...prev, isLoading: loading }));
+    setConfirmState((prev) => ({ ...prev, isLoading: loading }));
   }, []);
 
   return {

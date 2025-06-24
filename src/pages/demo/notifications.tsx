@@ -82,9 +82,11 @@ const NotificationDemo: NextPage = () => {
           </div>
 
           {/* 全局通知系统说明 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">全局通知系统</h2>
-            <div className="text-sm text-gray-600 space-y-2">
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-4 text-lg font-medium text-gray-900">
+              全局通知系统
+            </h2>
+            <div className="space-y-2 text-sm text-gray-600">
               <p>• 当前使用全局通知系统，所有通知都会显示在页面顶部居中位置</p>
               <p>• 通知位置在应用级别的 NotificationProvider 中统一配置</p>
               <p>• 所有页面和组件共享同一个通知实例，确保用户体验一致</p>
@@ -92,30 +94,32 @@ const NotificationDemo: NextPage = () => {
           </div>
 
           {/* 基础通知 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">基础通知类型</h2>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-4 text-lg font-medium text-gray-900">
+              基础通知类型
+            </h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <button
                 onClick={handleShowSuccess}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
               >
                 成功通知
               </button>
               <button
                 onClick={handleShowError}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
               >
                 错误通知
               </button>
               <button
                 onClick={handleShowWarning}
-                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                className="rounded-md bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
               >
                 警告通知
               </button>
               <button
                 onClick={handleShowInfo}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
                 信息通知
               </button>
@@ -123,53 +127,58 @@ const NotificationDemo: NextPage = () => {
           </div>
 
           {/* 高级功能 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">高级功能</h2>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-4 text-lg font-medium text-gray-900">高级功能</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <button
                   onClick={handleShowPersistent}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                  className="rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
                 >
                   持久化通知
                 </button>
                 <button
                   onClick={handleShowWithAction}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
                 >
                   带操作的通知
                 </button>
               </div>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p>• <strong>持久化通知</strong>：不会自动消失，但可以点击 ✕ 手动关闭</p>
-                <p>• <strong>带操作的通知</strong>：包含可点击的操作按钮</p>
+              <div className="space-y-1 text-sm text-gray-600">
+                <p>
+                  • <strong>持久化通知</strong>：不会自动消失，但可以点击 ✕
+                  手动关闭
+                </p>
+                <p>
+                  • <strong>带操作的通知</strong>：包含可点击的操作按钮
+                </p>
               </div>
             </div>
           </div>
 
           {/* 管理功能 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">通知管理</h2>
+          <div className="rounded-lg bg-white p-6 shadow">
+            <h2 className="mb-4 text-lg font-medium text-gray-900">通知管理</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <button
                 onClick={() => clearByType("success")}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                className="rounded-md bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
               >
                 清除成功通知
               </button>
               <button
                 onClick={() => clearByType("error")}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                className="rounded-md bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
               >
                 清除错误通知
               </button>
               <button
                 onClick={clearAll}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
               >
                 清除所有通知
               </button>
-              <div className="text-sm text-gray-500 flex items-center">
+              <div className="flex items-center text-sm text-gray-500">
                 通知管理功能已集成到全局系统
               </div>
             </div>

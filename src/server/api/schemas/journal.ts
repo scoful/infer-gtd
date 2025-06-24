@@ -77,7 +77,9 @@ export const exportJournalsSchema = z.object({
 
 // 批量日志操作 Schema
 export const batchJournalOperationSchema = z.object({
-  journalIds: z.array(z.string().cuid("无效的日志ID")).min(1, "至少选择一个日志"),
+  journalIds: z
+    .array(z.string().cuid("无效的日志ID"))
+    .min(1, "至少选择一个日志"),
   operation: z.enum(["delete", "export", "template"]),
   templateName: z.string().max(100).optional(), // 用于应用模板操作
 });
@@ -105,7 +107,10 @@ export const restoreJournalsSchema = z.object({
 // 日志提醒设置 Schema
 export const journalReminderSchema = z.object({
   enabled: z.boolean(),
-  time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效").optional(),
+  time: z
+    .string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "时间格式无效")
+    .optional(),
   days: z.array(z.number().min(0).max(6)).optional(), // 0=Sunday, 6=Saturday
   template: z.string().max(100).optional(),
 });
@@ -117,11 +122,15 @@ export type GetJournalByDateInput = z.infer<typeof getJournalByDateSchema>;
 export type GetJournalsInput = z.infer<typeof getJournalsSchema>;
 export type JournalIdInput = z.infer<typeof journalIdSchema>;
 export type JournalTemplateInput = z.infer<typeof journalTemplateSchema>;
-export type CreateJournalFromTemplateInput = z.infer<typeof createJournalFromTemplateSchema>;
+export type CreateJournalFromTemplateInput = z.infer<
+  typeof createJournalFromTemplateSchema
+>;
 export type GetJournalStatsInput = z.infer<typeof getJournalStatsSchema>;
 export type SearchJournalsInput = z.infer<typeof searchJournalsSchema>;
 export type ExportJournalsInput = z.infer<typeof exportJournalsSchema>;
-export type BatchJournalOperationInput = z.infer<typeof batchJournalOperationSchema>;
+export type BatchJournalOperationInput = z.infer<
+  typeof batchJournalOperationSchema
+>;
 export type GetJournalTimelineInput = z.infer<typeof getJournalTimelineSchema>;
 export type BackupJournalsInput = z.infer<typeof backupJournalsSchema>;
 export type RestoreJournalsInput = z.infer<typeof restoreJournalsSchema>;

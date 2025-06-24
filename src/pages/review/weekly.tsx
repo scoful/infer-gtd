@@ -41,13 +41,13 @@ function getWeekRange(date: Date): { start: Date; end: Date } {
 
 // 格式化周范围
 function formatWeekRange(start: Date, end: Date): string {
-  const startStr = start.toLocaleDateString('zh-CN', { 
-    month: 'short', 
-    day: 'numeric' 
+  const startStr = start.toLocaleDateString("zh-CN", {
+    month: "short",
+    day: "numeric",
   });
-  const endStr = end.toLocaleDateString('zh-CN', { 
-    month: 'short', 
-    day: 'numeric' 
+  const endStr = end.toLocaleDateString("zh-CN", {
+    month: "short",
+    day: "numeric",
   });
   return `${startStr} - ${endStr}`;
 }
@@ -60,23 +60,25 @@ const WeeklyReviewPage: NextPage = () => {
   const weekRange = useMemo(() => getWeekRange(currentWeek), [currentWeek]);
 
   // 获取本周任务统计
-  const { data: weeklyStats, isLoading: statsLoading } = api.task.getStats.useQuery(
-    {
-      startDate: weekRange.start,
-      endDate: weekRange.end,
-    },
-    { enabled: !!sessionData }
-  );
+  const { data: weeklyStats, isLoading: statsLoading } =
+    api.task.getStats.useQuery(
+      {
+        startDate: weekRange.start,
+        endDate: weekRange.end,
+      },
+      { enabled: !!sessionData },
+    );
 
   // 获取本周任务列表
-  const { data: weeklyTasks, isLoading: tasksLoading } = api.task.getAll.useQuery(
-    {
-      createdAfter: weekRange.start,
-      createdBefore: weekRange.end,
-      limit: 100,
-    },
-    { enabled: !!sessionData }
-  );
+  const { data: weeklyTasks, isLoading: tasksLoading } =
+    api.task.getAll.useQuery(
+      {
+        createdAfter: weekRange.start,
+        createdBefore: weekRange.end,
+        limit: 100,
+      },
+      { enabled: !!sessionData },
+    );
 
   // 获取本周完成的任务
   const { data: completedTasks } = api.task.getAll.useQuery(
@@ -86,7 +88,7 @@ const WeeklyReviewPage: NextPage = () => {
       completedBefore: weekRange.end,
       limit: 50,
     },
-    { enabled: !!sessionData }
+    { enabled: !!sessionData },
   );
 
   // 获取本周时间追踪数据
@@ -96,12 +98,16 @@ const WeeklyReviewPage: NextPage = () => {
       endDate: weekRange.end,
       limit: 100,
     },
-    { enabled: !!sessionData }
+    { enabled: !!sessionData },
   );
 
   // 计算周统计数据
   const weekStats = useMemo(() => {
-    if (!weeklyTasks?.tasks || !completedTasks?.tasks || !timeEntries?.entries) {
+    if (
+      !weeklyTasks?.tasks ||
+      !completedTasks?.tasks ||
+      !timeEntries?.entries
+    ) {
       return null;
     }
 
@@ -112,20 +118,27 @@ const WeeklyReviewPage: NextPage = () => {
     // 任务统计
     const totalTasks = tasks.length;
     const completedCount = completed.length;
-    const completionRate = totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0;
+    const completionRate =
+      totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0;
 
     // 优先级分布
-    const priorityStats = tasks.reduce((acc, task) => {
-      const priority = task.priority || 'NONE';
-      acc[priority] = (acc[priority] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const priorityStats = tasks.reduce(
+      (acc, task) => {
+        const priority = task.priority || "NONE";
+        acc[priority] = (acc[priority] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     // 状态分布
-    const statusStats = tasks.reduce((acc, task) => {
-      acc[task.status] = (acc[task.status] || 0) + 1;
-      return acc;
-    }, {} as Record<TaskStatus, number>);
+    const statusStats = tasks.reduce(
+      (acc, task) => {
+        acc[task.status] = (acc[task.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<TaskStatus, number>,
+    );
 
     // 时间统计
     const totalTimeSpent = entries.reduce((total, entry) => {
@@ -133,26 +146,33 @@ const WeeklyReviewPage: NextPage = () => {
     }, 0);
 
     // 每日完成任务数
-    const dailyCompletion = completed.reduce((acc, task) => {
-      if (task.completedAt) {
-        const day = new Date(task.completedAt).toLocaleDateString('zh-CN');
-        acc[day] = (acc[day] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>);
+    const dailyCompletion = completed.reduce(
+      (acc, task) => {
+        if (task.completedAt) {
+          const day = new Date(task.completedAt).toLocaleDateString("zh-CN");
+          acc[day] = (acc[day] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     // 逾期任务
-    const overdueTasks = tasks.filter(task =>
-      task.dueDate &&
-      new Date(task.dueDate) < new Date() &&
-      task.status !== TaskStatus.DONE
+    const overdueTasks = tasks.filter(
+      (task) =>
+        task.dueDate &&
+        new Date(task.dueDate) < new Date() &&
+        task.status !== TaskStatus.DONE,
     );
 
     // 反馈统计
-    const tasksWithFeedback = completed.filter(task =>
-      task.feedback && task.feedback.trim().length > 0
+    const tasksWithFeedback = completed.filter(
+      (task) => task.feedback && task.feedback.trim().length > 0,
     );
-    const feedbackRate = completedCount > 0 ? (tasksWithFeedback.length / completedCount) * 100 : 0;
+    const feedbackRate =
+      completedCount > 0
+        ? (tasksWithFeedback.length / completedCount) * 100
+        : 0;
 
     return {
       totalTasks,
@@ -172,9 +192,9 @@ const WeeklyReviewPage: NextPage = () => {
   }, [weeklyTasks, completedTasks, timeEntries]);
 
   // 导航到上一周/下一周
-  const navigateWeek = (direction: 'prev' | 'next') => {
+  const navigateWeek = (direction: "prev" | "next") => {
     const newDate = new Date(currentWeek);
-    newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+    newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7));
     setCurrentWeek(newDate);
   };
 
@@ -198,32 +218,38 @@ const WeeklyReviewPage: NextPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">每周回顾</h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 回顾本周的任务完成情况和时间投入
               </p>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigateWeek('prev')}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+                onClick={() => navigateWeek("prev")}
+                className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                 title="上一周"
               >
                 <ChevronLeftIcon className="h-5 w-5" />
               </button>
-              
+
               <div className="text-center">
                 <div className="text-lg font-semibold text-gray-900">
                   {formatWeekRange(weekRange.start, weekRange.end)}
                 </div>
                 <div className="text-sm text-gray-500">
-                  {weekRange.start.getFullYear()}年第{Math.ceil((weekRange.start.getTime() - new Date(weekRange.start.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}周
+                  {weekRange.start.getFullYear()}年第
+                  {Math.ceil(
+                    (weekRange.start.getTime() -
+                      new Date(weekRange.start.getFullYear(), 0, 1).getTime()) /
+                      (7 * 24 * 60 * 60 * 1000),
+                  )}
+                  周
                 </div>
               </div>
-              
+
               <button
-                onClick={() => navigateWeek('next')}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+                onClick={() => navigateWeek("next")}
+                className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                 title="下一周"
               >
                 <ChevronRightIcon className="h-5 w-5" />
@@ -233,7 +259,7 @@ const WeeklyReviewPage: NextPage = () => {
 
           {/* 加载状态 */}
           {(statsLoading || tasksLoading) && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
               <SectionLoading />
             </div>
           )}
@@ -242,15 +268,17 @@ const WeeklyReviewPage: NextPage = () => {
           {weekStats && (
             <>
               {/* 关键指标卡片 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
                 {/* 任务完成率 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <TrophyIcon className="h-8 w-8 text-yellow-500" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">完成率</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        完成率
+                      </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {weekStats.completionRate.toFixed(1)}%
                       </p>
@@ -262,13 +290,15 @@ const WeeklyReviewPage: NextPage = () => {
                 </div>
 
                 {/* 总时间投入 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <ClockIcon className="h-8 w-8 text-blue-500" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">时间投入</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        时间投入
+                      </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {Math.floor(weekStats.totalTimeSpent / 3600)}h
                       </p>
@@ -280,54 +310,60 @@ const WeeklyReviewPage: NextPage = () => {
                 </div>
 
                 {/* 平均每日任务 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <ChartBarIcon className="h-8 w-8 text-green-500" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">日均任务</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        日均任务
+                      </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {weekStats.averageTasksPerDay.toFixed(1)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        完成 {weekStats.averageCompletionPerDay.toFixed(1)} 个/天
+                        完成 {weekStats.averageCompletionPerDay.toFixed(1)}{" "}
+                        个/天
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* 逾期任务 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">逾期任务</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        逾期任务
+                      </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {weekStats.overdueCount}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        需要关注
-                      </p>
+                      <p className="text-xs text-gray-500">需要关注</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 反馈统计 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <ChatBubbleLeftRightIcon className="h-8 w-8 text-purple-500" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">反馈率</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        反馈率
+                      </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {weekStats.feedbackRate.toFixed(1)}%
                       </p>
                       <p className="text-xs text-gray-500">
-                        {weekStats.tasksWithFeedback}/{weekStats.completedCount} 个任务
+                        {weekStats.tasksWithFeedback}/{weekStats.completedCount}{" "}
+                        个任务
                       </p>
                     </div>
                   </div>
@@ -335,74 +371,115 @@ const WeeklyReviewPage: NextPage = () => {
               </div>
 
               {/* 详细分析 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* 任务状态分布 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">任务状态分布</h3>
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    任务状态分布
+                  </h3>
                   <div className="space-y-3">
-                    {Object.entries(weekStats.statusStats).map(([status, count]) => (
-                      <div key={status} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className={`w-3 h-3 rounded-full mr-3 ${getStatusColor(status as TaskStatus)}`} />
-                          <span className="text-sm text-gray-700">{getStatusLabel(status as TaskStatus)}</span>
+                    {Object.entries(weekStats.statusStats).map(
+                      ([status, count]) => (
+                        <div
+                          key={status}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`mr-3 h-3 w-3 rounded-full ${getStatusColor(status as TaskStatus)}`}
+                            />
+                            <span className="text-sm text-gray-700">
+                              {getStatusLabel(status as TaskStatus)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              {count}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              (
+                              {((count / weekStats.totalTasks) * 100).toFixed(
+                                1,
+                              )}
+                              %)
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900">{count}</span>
-                          <span className="text-xs text-gray-500">
-                            ({((count / weekStats.totalTasks) * 100).toFixed(1)}%)
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
 
                 {/* 优先级分布 */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">优先级分布</h3>
+                <div className="rounded-lg border border-gray-200 bg-white p-6">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    优先级分布
+                  </h3>
                   <div className="space-y-3">
-                    {Object.entries(weekStats.priorityStats).map(([priority, count]) => (
-                      <div key={priority} className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className={`w-3 h-3 rounded-full mr-3 ${getPriorityColor(priority)}`} />
-                          <span className="text-sm text-gray-700">{getPriorityLabel(priority)}</span>
+                    {Object.entries(weekStats.priorityStats).map(
+                      ([priority, count]) => (
+                        <div
+                          key={priority}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`mr-3 h-3 w-3 rounded-full ${getPriorityColor(priority)}`}
+                            />
+                            <span className="text-sm text-gray-700">
+                              {getPriorityLabel(priority)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              {count}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              (
+                              {((count / weekStats.totalTasks) * 100).toFixed(
+                                1,
+                              )}
+                              %)
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900">{count}</span>
-                          <span className="text-xs text-gray-500">
-                            ({((count / weekStats.totalTasks) * 100).toFixed(1)}%)
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* 每日完成趋势 */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">每日完成趋势</h3>
+              <div className="rounded-lg border border-gray-200 bg-white p-6">
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  每日完成趋势
+                </h3>
                 <div className="grid grid-cols-7 gap-2">
                   {Array.from({ length: 7 }, (_, i) => {
                     const date = new Date(weekRange.start);
                     date.setDate(date.getDate() + i);
-                    const dateStr = date.toLocaleDateString('zh-CN');
+                    const dateStr = date.toLocaleDateString("zh-CN");
                     const count = weekStats.dailyCompletion[dateStr] || 0;
-                    const maxCount = Math.max(...Object.values(weekStats.dailyCompletion), 1);
+                    const maxCount = Math.max(
+                      ...Object.values(weekStats.dailyCompletion),
+                      1,
+                    );
                     const height = (count / maxCount) * 100;
 
                     return (
                       <div key={i} className="text-center">
-                        <div className="text-xs text-gray-500 mb-2">
-                          {date.toLocaleDateString('zh-CN', { weekday: 'short' })}
+                        <div className="mb-2 text-xs text-gray-500">
+                          {date.toLocaleDateString("zh-CN", {
+                            weekday: "short",
+                          })}
                         </div>
-                        <div className="relative h-20 bg-gray-100 rounded">
+                        <div className="relative h-20 rounded bg-gray-100">
                           <div
-                            className="absolute bottom-0 w-full bg-blue-500 rounded"
+                            className="absolute bottom-0 w-full rounded bg-blue-500"
                             style={{ height: `${height}%` }}
                           />
                         </div>
-                        <div className="text-xs font-medium text-gray-900 mt-2">
+                        <div className="mt-2 text-xs font-medium text-gray-900">
                           {count}
                         </div>
                       </div>
@@ -415,36 +492,46 @@ const WeeklyReviewPage: NextPage = () => {
 
           {/* 本周亮点 */}
           {completedTasks?.tasks && completedTasks.tasks.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                <CheckCircleIcon className="h-5 w-5 mr-2 text-green-500" />
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+                <CheckCircleIcon className="mr-2 h-5 w-5 text-green-500" />
                 本周完成的任务
               </h3>
               <div className="space-y-4">
                 {completedTasks.tasks.slice(0, 10).map((task) => (
-                  <div key={task.id} className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0">
-                    <div className="flex items-center justify-between mb-2">
+                  <div
+                    key={task.id}
+                    className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
+                  >
+                    <div className="mb-2 flex items-center justify-between">
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {task.title}
+                        </h4>
                         {task.description && (
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-1">
+                          <p className="mt-1 line-clamp-1 text-xs text-gray-600">
                             {task.description}
                           </p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         {task.priority && (
-                          <span className={`px-2 py-1 rounded-full ${getPriorityBgColor(task.priority)}`}>
+                          <span
+                            className={`rounded-full px-2 py-1 ${getPriorityBgColor(task.priority)}`}
+                          >
                             {getPriorityLabel(task.priority)}
                           </span>
                         )}
 
                         {task.completedAt && (
                           <span>
-                            {new Date(task.completedAt).toLocaleDateString('zh-CN', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}
+                            {new Date(task.completedAt).toLocaleDateString(
+                              "zh-CN",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
                           </span>
                         )}
                       </div>
@@ -452,10 +539,14 @@ const WeeklyReviewPage: NextPage = () => {
 
                     {/* 显示反馈内容 */}
                     {task.feedback && (
-                      <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="mt-2 rounded-lg bg-gray-50 p-3">
                         <div>
-                          <span className="text-xs font-medium text-gray-700">任务反馈：</span>
-                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{task.feedback}</p>
+                          <span className="text-xs font-medium text-gray-700">
+                            任务反馈：
+                          </span>
+                          <p className="mt-1 line-clamp-2 text-xs text-gray-600">
+                            {task.feedback}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -466,61 +557,70 @@ const WeeklyReviewPage: NextPage = () => {
           )}
 
           {/* 改进建议 */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <LightBulbIcon className="h-5 w-5 mr-2 text-yellow-500" />
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+              <LightBulbIcon className="mr-2 h-5 w-5 text-yellow-500" />
               改进建议
             </h3>
             <div className="space-y-3">
               {weekStats && (
                 <>
                   {weekStats.completionRate < 70 && (
-                    <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
-                      <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
+                    <div className="flex items-start gap-3 rounded-lg bg-yellow-50 p-3">
+                      <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 text-yellow-500" />
                       <div>
-                        <p className="text-sm font-medium text-yellow-800">任务完成率偏低</p>
-                        <p className="text-xs text-yellow-700 mt-1">
+                        <p className="text-sm font-medium text-yellow-800">
+                          任务完成率偏低
+                        </p>
+                        <p className="mt-1 text-xs text-yellow-700">
                           建议重新评估任务优先级，专注于最重要的任务
                         </p>
                       </div>
                     </div>
                   )}
-                  
+
                   {weekStats.overdueCount > 0 && (
-                    <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg">
-                      <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mt-0.5" />
+                    <div className="flex items-start gap-3 rounded-lg bg-red-50 p-3">
+                      <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 text-red-500" />
                       <div>
-                        <p className="text-sm font-medium text-red-800">存在逾期任务</p>
-                        <p className="text-xs text-red-700 mt-1">
+                        <p className="text-sm font-medium text-red-800">
+                          存在逾期任务
+                        </p>
+                        <p className="mt-1 text-xs text-red-700">
                           建议重新安排逾期任务的时间，或调整任务优先级
                         </p>
                       </div>
                     </div>
                   )}
-                  
+
                   {weekStats.totalTimeSpent < 3600 * 10 && (
-                    <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                      <ClockIcon className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div className="flex items-start gap-3 rounded-lg bg-blue-50 p-3">
+                      <ClockIcon className="mt-0.5 h-5 w-5 text-blue-500" />
                       <div>
-                        <p className="text-sm font-medium text-blue-800">时间投入较少</p>
-                        <p className="text-xs text-blue-700 mt-1">
+                        <p className="text-sm font-medium text-blue-800">
+                          时间投入较少
+                        </p>
+                        <p className="mt-1 text-xs text-blue-700">
                           考虑增加专注时间，或使用时间追踪功能更好地记录工作时间
                         </p>
                       </div>
                     </div>
                   )}
-                  
-                  {weekStats.completionRate >= 80 && weekStats.overdueCount === 0 && (
-                    <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
-                      <TrophyIcon className="h-5 w-5 text-green-500 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-green-800">表现优秀！</p>
-                        <p className="text-xs text-green-700 mt-1">
-                          本周任务完成情况良好，继续保持这种节奏
-                        </p>
+
+                  {weekStats.completionRate >= 80 &&
+                    weekStats.overdueCount === 0 && (
+                      <div className="flex items-start gap-3 rounded-lg bg-green-50 p-3">
+                        <TrophyIcon className="mt-0.5 h-5 w-5 text-green-500" />
+                        <div>
+                          <p className="text-sm font-medium text-green-800">
+                            表现优秀！
+                          </p>
+                          <p className="mt-1 text-xs text-green-700">
+                            本周任务完成情况良好，继续保持这种节奏
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </>
               )}
             </div>

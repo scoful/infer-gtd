@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   createJournalSchema,
   updateJournalSchema,
@@ -83,7 +80,8 @@ export const journalRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getJournalsSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortOrder, startDate, endDate, template } = input;
+      const { limit, cursor, search, sortOrder, startDate, endDate, template } =
+        input;
 
       try {
         const where: any = {
@@ -182,7 +180,10 @@ export const journalRouter = createTRPCRouter({
           select: { createdById: true },
         });
 
-        if (!existingJournal || existingJournal.createdById !== ctx.session.user.id) {
+        if (
+          !existingJournal ||
+          existingJournal.createdById !== ctx.session.user.id
+        ) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "日志不存在或无权限修改",
@@ -233,7 +234,7 @@ export const journalRouter = createTRPCRouter({
 
         return {
           success: true,
-          message: `${journal.date.toLocaleDateString()} 的日志已删除`
+          message: `${journal.date.toLocaleDateString()} 的日志已删除`,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -409,13 +410,17 @@ export const journalRouter = createTRPCRouter({
           totalJournals,
           totalWords: totalWordsCount,
           consecutiveDays,
-          templatesUsed: templatesUsed.reduce((acc, item) => {
-            if (item.template) {
-              acc[item.template] = item._count.template;
-            }
-            return acc;
-          }, {} as Record<string, number>),
-          averageWordsPerJournal: totalJournals > 0 ? Math.round(totalWordsCount / totalJournals) : 0,
+          templatesUsed: templatesUsed.reduce(
+            (acc, item) => {
+              if (item.template) {
+                acc[item.template] = item._count.template;
+              }
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
+          averageWordsPerJournal:
+            totalJournals > 0 ? Math.round(totalWordsCount / totalJournals) : 0,
         };
       } catch (error) {
         throw new TRPCError({
@@ -431,7 +436,11 @@ export const journalRouter = createTRPCRouter({
     .input(getJournalTimelineSchema)
     .query(async ({ ctx, input }) => {
       try {
-        const startDate = new Date(input.year, input.month ? input.month - 1 : 0, 1);
+        const startDate = new Date(
+          input.year,
+          input.month ? input.month - 1 : 0,
+          1,
+        );
         const endDate = new Date(input.year, input.month ? input.month : 12, 0);
 
         const journals = await ctx.db.journal.findMany({
@@ -452,18 +461,20 @@ export const journalRouter = createTRPCRouter({
         });
 
         // 按日期组织数据
-        const timeline = journals.map(journal => ({
+        const timeline = journals.map((journal) => ({
           id: journal.id,
           date: journal.date,
           template: journal.template,
-          preview: journal.content.substring(0, 200) + (journal.content.length > 200 ? "..." : ""),
+          preview:
+            journal.content.substring(0, 200) +
+            (journal.content.length > 200 ? "..." : ""),
           wordCount: journal.content.length,
         }));
 
         // 生成日历数据（显示哪些日期有日志）
         const calendar: Record<string, boolean> = {};
-        journals.forEach(journal => {
-          const dateKey = journal.date.toISOString().split('T')[0];
+        journals.forEach((journal) => {
+          const dateKey = journal.date.toISOString().split("T")[0];
           calendar[dateKey!] = true;
         });
 
@@ -487,9 +498,11 @@ export const journalRouter = createTRPCRouter({
 
   // 获取最近的日志
   getRecent: protectedProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(20).default(5),
-    }))
+    .input(
+      z.object({
+        limit: z.number().min(1).max(20).default(5),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       try {
         const journals = await ctx.db.journal.findMany({
@@ -506,9 +519,11 @@ export const journalRouter = createTRPCRouter({
           },
         });
 
-        return journals.map(journal => ({
+        return journals.map((journal) => ({
           ...journal,
-          preview: journal.content.substring(0, 150) + (journal.content.length > 150 ? "..." : ""),
+          preview:
+            journal.content.substring(0, 150) +
+            (journal.content.length > 150 ? "..." : ""),
           wordCount: journal.content.length,
         }));
       } catch (error) {
@@ -521,37 +536,38 @@ export const journalRouter = createTRPCRouter({
     }),
 
   // 获取日志模板使用统计
-  getTemplateStats: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const templateStats = await ctx.db.journal.groupBy({
-          by: ["template"],
-          where: {
-            createdById: ctx.session.user.id,
-            template: { not: null },
-          },
-          _count: { template: true },
-          orderBy: { _count: { template: "desc" } },
-        });
+  getTemplateStats: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const templateStats = await ctx.db.journal.groupBy({
+        by: ["template"],
+        where: {
+          createdById: ctx.session.user.id,
+          template: { not: null },
+        },
+        _count: { template: true },
+        orderBy: { _count: { template: "desc" } },
+      });
 
-        return templateStats.map(stat => ({
-          template: stat.template,
-          count: stat._count.template,
-        }));
-      } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "获取模板统计失败",
-          cause: error,
-        });
-      }
-    }),
+      return templateStats.map((stat) => ({
+        template: stat.template,
+        count: stat._count.template,
+      }));
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "获取模板统计失败",
+        cause: error,
+      });
+    }
+  }),
 
   // 获取写作习惯分析
   getWritingHabits: protectedProcedure
-    .input(z.object({
-      days: z.number().min(7).max(365).default(30),
-    }))
+    .input(
+      z.object({
+        days: z.number().min(7).max(365).default(30),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       try {
         const startDate = new Date();
@@ -575,10 +591,10 @@ export const journalRouter = createTRPCRouter({
         const dailyWordCounts: Record<string, number> = {};
         const weeklyPattern: Record<number, number> = {}; // 0=Sunday, 6=Saturday
 
-        journals.forEach(journal => {
+        journals.forEach((journal) => {
           const hour = journal.createdAt.getHours();
           const dayOfWeek = journal.date.getDay();
-          const dateKey = journal.date.toISOString().split('T')[0]!;
+          const dateKey = journal.date.toISOString().split("T")[0]!;
 
           writingTimes[hour] = (writingTimes[hour] || 0) + 1;
           weeklyPattern[dayOfWeek] = (weeklyPattern[dayOfWeek] || 0) + 1;
@@ -586,18 +602,28 @@ export const journalRouter = createTRPCRouter({
         });
 
         // 计算平均字数
-        const totalWords = Object.values(dailyWordCounts).reduce((sum, count) => sum + count, 0);
-        const averageWords = journals.length > 0 ? Math.round(totalWords / journals.length) : 0;
+        const totalWords = Object.values(dailyWordCounts).reduce(
+          (sum, count) => sum + count,
+          0,
+        );
+        const averageWords =
+          journals.length > 0 ? Math.round(totalWords / journals.length) : 0;
 
         // 找出最活跃的写作时间
-        const mostActiveHour = Object.entries(writingTimes).reduce((max, [hour, count]) => {
-          return count > max.count ? { hour: parseInt(hour), count } : max;
-        }, { hour: 0, count: 0 });
+        const mostActiveHour = Object.entries(writingTimes).reduce(
+          (max, [hour, count]) => {
+            return count > max.count ? { hour: parseInt(hour), count } : max;
+          },
+          { hour: 0, count: 0 },
+        );
 
         // 找出最活跃的写作日
-        const mostActiveDay = Object.entries(weeklyPattern).reduce((max, [day, count]) => {
-          return count > max.count ? { day: parseInt(day), count } : max;
-        }, { day: 0, count: 0 });
+        const mostActiveDay = Object.entries(weeklyPattern).reduce(
+          (max, [day, count]) => {
+            return count > max.count ? { day: parseInt(day), count } : max;
+          },
+          { day: 0, count: 0 },
+        );
 
         return {
           totalEntries: journals.length,
@@ -620,9 +646,13 @@ export const journalRouter = createTRPCRouter({
 
   // 批量删除日志
   batchDelete: protectedProcedure
-    .input(z.object({
-      journalIds: z.array(z.string().cuid("无效的日志ID")).min(1, "至少选择一个日志"),
-    }))
+    .input(
+      z.object({
+        journalIds: z
+          .array(z.string().cuid("无效的日志ID"))
+          .min(1, "至少选择一个日志"),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // 验证所有日志的所有权

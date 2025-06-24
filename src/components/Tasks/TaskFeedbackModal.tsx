@@ -25,7 +25,7 @@ export default function TaskFeedbackModal({
   onClose,
   taskId,
   taskTitle,
-  onSuccess
+  onSuccess,
 }: TaskFeedbackModalProps) {
   const [formData, setFormData] = useState<FeedbackFormData>({
     feedback: "",
@@ -45,7 +45,11 @@ export default function TaskFeedbackModal({
   }, [taskId, isOpen]);
 
   // 获取任务详情（包含反馈和标签信息）
-  const { data: taskDetail, isLoading: isLoadingTask, error: taskError } = api.task.getById.useQuery(
+  const {
+    data: taskDetail,
+    isLoading: isLoadingTask,
+    error: taskError,
+  } = api.task.getById.useQuery(
     { id: taskId },
     {
       enabled: isOpen && !!taskId,
@@ -53,7 +57,7 @@ export default function TaskFeedbackModal({
       refetchOnMount: true, // 每次挂载时重新获取
       refetchOnWindowFocus: false, // 避免窗口聚焦时重新获取
       staleTime: 0, // 立即过期，确保获取最新数据
-    }
+    },
   );
 
   // 当获取到任务数据时更新表单
@@ -61,7 +65,7 @@ export default function TaskFeedbackModal({
     if (taskDetail) {
       setFormData({
         feedback: taskDetail.feedback || "",
-        tagIds: taskDetail.tags.map(t => t.tag.id),
+        tagIds: taskDetail.tags.map((t) => t.tag.id),
       });
     } else if (taskError) {
       console.warn("获取任务详情失败，使用默认值:", taskError.message);
@@ -84,8 +88,6 @@ export default function TaskFeedbackModal({
     },
   });
 
-
-
   // 处理关闭
   const handleClose = () => {
     onClose();
@@ -104,13 +106,11 @@ export default function TaskFeedbackModal({
 
   // 处理标签变化
   const handleTagsChange = (newTagIds: string[]) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       tagIds: newTagIds,
     }));
   };
-
-
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -124,7 +124,7 @@ export default function TaskFeedbackModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="bg-opacity-25 fixed inset-0 bg-black" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -140,18 +140,19 @@ export default function TaskFeedbackModal({
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                 {/* 标题栏 */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex items-center justify-between">
                   <div>
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    <Dialog.Title
+                      as="h3"
+                      className="text-lg leading-6 font-medium text-gray-900"
+                    >
                       任务完成反馈
                     </Dialog.Title>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {taskTitle}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-600">{taskTitle}</p>
                   </div>
                   <button
                     onClick={handleClose}
-                    className="rounded-md p-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="rounded-md p-2 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <XMarkIcon className="h-5 w-5" />
                   </button>
@@ -159,14 +160,17 @@ export default function TaskFeedbackModal({
 
                 {isLoadingTask && !taskError ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                     <span className="ml-2 text-gray-600">加载中...</span>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* 任务反馈 */}
                     <div>
-                      <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="feedback"
+                        className="mb-2 block text-sm font-medium text-gray-700"
+                      >
                         任务反馈
                       </label>
                       <textarea
@@ -175,13 +179,15 @@ export default function TaskFeedbackModal({
                         className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         placeholder="完成这个任务后，有什么想记录的反馈吗？"
                         value={formData.feedback}
-                        onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, feedback: e.target.value })
+                        }
                       />
                     </div>
 
                     {/* 标签选择 */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
                         任务标签
                       </label>
                       <TagSelector
@@ -201,14 +207,14 @@ export default function TaskFeedbackModal({
                       <button
                         type="button"
                         onClick={handleClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                       >
                         跳过
                       </button>
                       <button
                         type="submit"
                         disabled={updateTask.isPending}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+                        className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                       >
                         {updateTask.isPending ? (
                           <ButtonLoading message="保存中..." size="sm" />

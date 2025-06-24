@@ -32,7 +32,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
           <div className="mt-8 space-y-6">
             <button
               onClick={() => void signIn("github")}
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
             >
               使用 GitHub 登录
             </button>

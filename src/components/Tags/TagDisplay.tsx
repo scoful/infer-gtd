@@ -16,9 +16,7 @@ import {
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  useSortable,
-} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 // 标签数据类型
@@ -111,9 +109,12 @@ function getSizeClasses(size: "sm" | "md" | "lg") {
 }
 
 // 获取变体相关的样式类
-function getVariantClasses(variant: "default" | "outline" | "minimal", color: string) {
+function getVariantClasses(
+  variant: "default" | "outline" | "minimal",
+  color: string,
+) {
   const baseColor = color || "#6B7280";
-  
+
   switch (variant) {
     case "outline":
       return {
@@ -139,7 +140,11 @@ interface SortableTagProps extends TagDisplayProps {
   isDragging?: boolean;
 }
 
-const SortableTag: React.FC<SortableTagProps> = ({ id, isDragging, ...props }) => {
+const SortableTag: React.FC<SortableTagProps> = ({
+  id,
+  isDragging,
+  ...props
+}) => {
   const {
     attributes,
     listeners,
@@ -199,17 +204,11 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
 
   return (
     <span
-      className={`
-        inline-flex items-center rounded-full font-medium transition-colors
-        ${sizeClasses.container}
-        ${variantClasses.container}
-        ${clickable ? "cursor-pointer hover:opacity-80" : ""}
-        ${className}
-      `}
+      className={`inline-flex items-center rounded-full font-medium transition-colors ${sizeClasses.container} ${variantClasses.container} ${clickable ? "cursor-pointer hover:opacity-80" : ""} ${className} `}
       style={{
         ...variantClasses.style,
-        alignItems: 'center',
-        lineHeight: 1
+        alignItems: "center",
+        lineHeight: 1,
       }}
       onClick={handleClick}
       title={tag.description || `${getTagTypeLabel(tag.type)}标签: ${tag.name}`}
@@ -219,38 +218,35 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
         <>
           {tag.icon ? (
             <span
-              className={`
-                inline-flex items-center justify-center flex-shrink-0
-                ${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'}
-                ${sizeClasses.iconContainer}
-              `}
+              className={`inline-flex flex-shrink-0 items-center justify-center ${size === "sm" ? "mr-1" : size === "md" ? "mr-1.5" : "mr-2"} ${sizeClasses.iconContainer} `}
               style={{ lineHeight: 1 }}
             >
               {tag.icon}
             </span>
           ) : (
-            <TagIcon className={`flex-shrink-0 ${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'} ${sizeClasses.icon}`} />
+            <TagIcon
+              className={`flex-shrink-0 ${size === "sm" ? "mr-1" : size === "md" ? "mr-1.5" : "mr-2"} ${sizeClasses.icon}`}
+            />
           )}
         </>
       )}
-      
+
       {/* 标签名称 */}
-      <span className="truncate leading-none flex items-center">{tag.name}</span>
-      
+      <span className="flex items-center truncate leading-none">
+        {tag.name}
+      </span>
+
       {/* 系统标签标识 */}
       {tag.isSystem && size !== "sm" && (
         <span className="ml-1 text-xs opacity-75">*</span>
       )}
-      
+
       {/* 删除按钮 */}
       {showRemove && onRemove && (
         <button
           type="button"
           onClick={handleRemove}
-          className={`
-            hover:bg-black hover:bg-opacity-20 rounded-full p-0.5 transition-colors
-            ${sizeClasses.removeButton}
-          `}
+          className={`hover:bg-opacity-20 rounded-full p-0.5 transition-colors hover:bg-black ${sizeClasses.removeButton} `}
           title="移除标签"
         >
           <XMarkIcon className="h-full w-full" />
@@ -287,7 +283,7 @@ export const TagList: React.FC<TagListProps> = ({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // 处理拖拽结束
@@ -299,7 +295,7 @@ export const TagList: React.FC<TagListProps> = ({
       const newIndex = tags.findIndex((tag) => tag.id === over?.id);
 
       const newTags = arrayMove(tags, oldIndex, newIndex);
-      const newOrder = newTags.map(tag => tag.id);
+      const newOrder = newTags.map((tag) => tag.id);
 
       if (onReorder) {
         onReorder(newOrder);
@@ -310,7 +306,10 @@ export const TagList: React.FC<TagListProps> = ({
   // 如果没有设置maxDisplay或者已经展开，显示所有标签
   const shouldShowAll = !maxDisplay || isExpanded;
   const displayTags = shouldShowAll ? tags : tags.slice(0, maxDisplay);
-  const remainingCount = maxDisplay && tags.length > maxDisplay && !isExpanded ? tags.length - maxDisplay : 0;
+  const remainingCount =
+    maxDisplay && tags.length > maxDisplay && !isExpanded
+      ? tags.length - maxDisplay
+      : 0;
 
   if (tags.length === 0) {
     return null;
@@ -334,7 +333,7 @@ export const TagList: React.FC<TagListProps> = ({
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={displayTags.map(tag => tag.id)}
+            items={displayTags.map((tag) => tag.id)}
             strategy={horizontalListSortingStrategy}
           >
             {displayTags.map((tag) => (
@@ -381,12 +380,12 @@ export const TagList: React.FC<TagListProps> = ({
         <button
           type="button"
           onClick={handleExpandClick}
-          className={`
-            inline-flex items-center rounded-full bg-gray-200 text-gray-600 font-medium
-            hover:bg-gray-300 transition-colors cursor-pointer
-            ${getSizeClasses(size).container}
-          `}
-          title={expandable ? `点击查看全部 ${tags.length} 个标签` : `还有 ${remainingCount} 个标签`}
+          className={`inline-flex cursor-pointer items-center rounded-full bg-gray-200 font-medium text-gray-600 transition-colors hover:bg-gray-300 ${getSizeClasses(size).container} `}
+          title={
+            expandable
+              ? `点击查看全部 ${tags.length} 个标签`
+              : `还有 ${remainingCount} 个标签`
+          }
         >
           +{remainingCount}
         </button>
@@ -397,11 +396,7 @@ export const TagList: React.FC<TagListProps> = ({
         <button
           type="button"
           onClick={handleExpandClick}
-          className={`
-            inline-flex items-center rounded-full bg-blue-100 text-blue-600 font-medium
-            hover:bg-blue-200 transition-colors cursor-pointer
-            ${getSizeClasses(size).container}
-          `}
+          className={`inline-flex cursor-pointer items-center rounded-full bg-blue-100 font-medium text-blue-600 transition-colors hover:bg-blue-200 ${getSizeClasses(size).container} `}
           title="收起标签"
         >
           收起
@@ -436,14 +431,17 @@ export const TagGroupDisplay: React.FC<TagGroupDisplayProps> = ({
   onTagClick,
 }) => {
   // 按类型分组
-  const groupedTags = tags.reduce((groups, tag) => {
-    const type = tag.type;
-    if (!groups[type]) {
-      groups[type] = [];
-    }
-    groups[type].push(tag);
-    return groups;
-  }, {} as Record<TagType, TagData[]>);
+  const groupedTags = tags.reduce(
+    (groups, tag) => {
+      const type = tag.type;
+      if (!groups[type]) {
+        groups[type] = [];
+      }
+      groups[type].push(tag);
+      return groups;
+    },
+    {} as Record<TagType, TagData[]>,
+  );
 
   if (tags.length === 0) {
     return null;
@@ -453,7 +451,7 @@ export const TagGroupDisplay: React.FC<TagGroupDisplayProps> = ({
     <div className={`space-y-2 ${className}`}>
       {Object.entries(groupedTags).map(([type, typeTags]) => (
         <div key={type}>
-          <div className="text-xs font-medium text-gray-500 mb-1">
+          <div className="mb-1 text-xs font-medium text-gray-500">
             {getTagTypeLabel(type as TagType)}
           </div>
           <TagList

@@ -60,7 +60,7 @@ async function main() {
     }),
   ]);
 
-  console.log("📁 创建项目:", projects.map(p => p.name).join(", "));
+  console.log("📁 创建项目:", projects.map((p) => p.name).join(", "));
 
   // 创建标签
   const tags = await Promise.all([
@@ -94,7 +94,7 @@ async function main() {
     }),
   ]);
 
-  console.log("🏷️ 创建标签:", tags.map(t => t.name).join(", "));
+  console.log("🏷️ 创建标签:", tags.map((t) => t.name).join(", "));
 
   // 创建复杂的任务场景
   const tasks = [];
@@ -103,7 +103,8 @@ async function main() {
   const ideaTask = await prisma.task.create({
     data: {
       title: "学习 React 19 新特性",
-      description: "研究 React 19 的新功能，包括 Server Components 和 Concurrent Features",
+      description:
+        "研究 React 19 的新功能，包括 Server Components 和 Concurrent Features",
       status: TaskStatus.IDEA,
       type: TaskType.NORMAL,
       priority: Priority.MEDIUM,
@@ -144,7 +145,7 @@ async function main() {
       recurringPattern: JSON.stringify({
         type: "daily",
         interval: 1,
-        time: "07:00"
+        time: "07:00",
       }),
       completedAt: new Date(),
       completedCount: 15,

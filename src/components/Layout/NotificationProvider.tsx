@@ -17,7 +17,7 @@ interface NotificationContextType {
   showNotification: (
     type: NotificationType,
     message: string,
-    options?: ShowNotificationOptions
+    options?: ShowNotificationOptions,
   ) => string;
   showSuccess: (message: string, options?: ShowNotificationOptions) => string;
   showError: (message: string, options?: ShowNotificationOptions) => string;
@@ -32,12 +32,18 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 
 interface NotificationProviderProps {
   children: ReactNode;
-  position?: "top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left";
+  position?:
+    | "top-right"
+    | "top-center"
+    | "top-left"
+    | "bottom-right"
+    | "bottom-center"
+    | "bottom-left";
 }
 
-export function NotificationProvider({ 
-  children, 
-  position = "top-center" 
+export function NotificationProvider({
+  children,
+  position = "top-center",
 }: NotificationProviderProps) {
   const notificationHook = useNotifications();
 
@@ -56,7 +62,9 @@ export function NotificationProvider({
 export function useGlobalNotifications() {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error("useGlobalNotifications must be used within a NotificationProvider");
+    throw new Error(
+      "useGlobalNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
 }

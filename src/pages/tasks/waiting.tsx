@@ -71,10 +71,17 @@ const WaitingPage: NextPage = () => {
   // 状态管理
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [selectedWaitingType, setSelectedWaitingType] = useState<string | null>(null);
+  const [selectedWaitingType, setSelectedWaitingType] = useState<string | null>(
+    null,
+  );
 
   // 获取等待中的任务
-  const { data: tasksData, isLoading, refetch, isFetching } = api.task.getAll.useQuery(
+  const {
+    data: tasksData,
+    isLoading,
+    refetch,
+    isFetching,
+  } = api.task.getAll.useQuery(
     {
       limit: 100,
       status: TaskStatus.WAITING,
@@ -84,7 +91,7 @@ const WaitingPage: NextPage = () => {
       staleTime: 30 * 1000, // 30秒缓存
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-    }
+    },
   );
 
   // 注册页面刷新函数
@@ -103,7 +110,7 @@ const WaitingPage: NextPage = () => {
   const formatTimeSpent = useCallback((seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -129,30 +136,36 @@ const WaitingPage: NextPage = () => {
   }, [refetch, handleTaskModalClose]);
 
   // 恢复为下一步行动
-  const handleResumeAction = useCallback(async (taskId: string) => {
-    try {
-      await updateTaskStatus.mutateAsync({
-        id: taskId,
-        status: TaskStatus.TODO,
-        note: "从等待清单恢复为下一步行动",
-      });
-    } catch (error) {
-      console.error("恢复行动失败:", error);
-    }
-  }, [updateTaskStatus]);
+  const handleResumeAction = useCallback(
+    async (taskId: string) => {
+      try {
+        await updateTaskStatus.mutateAsync({
+          id: taskId,
+          status: TaskStatus.TODO,
+          note: "从等待清单恢复为下一步行动",
+        });
+      } catch (error) {
+        console.error("恢复行动失败:", error);
+      }
+    },
+    [updateTaskStatus],
+  );
 
   // 标记完成
-  const handleMarkDone = useCallback(async (taskId: string) => {
-    try {
-      await updateTaskStatus.mutateAsync({
-        id: taskId,
-        status: TaskStatus.DONE,
-        note: "等待事项已完成",
-      });
-    } catch (error) {
-      console.error("标记完成失败:", error);
-    }
-  }, [updateTaskStatus]);
+  const handleMarkDone = useCallback(
+    async (taskId: string) => {
+      try {
+        await updateTaskStatus.mutateAsync({
+          id: taskId,
+          status: TaskStatus.DONE,
+          note: "等待事项已完成",
+        });
+      } catch (error) {
+        console.error("标记完成失败:", error);
+      }
+    },
+    [updateTaskStatus],
+  );
 
   // 跟进提醒
   const handleFollowUp = useCallback(async (taskId: string) => {
@@ -162,26 +175,57 @@ const WaitingPage: NextPage = () => {
 
   // 根据标签判断等待类型
   const getWaitingType = useCallback((task: TaskWithRelations): string => {
-    const waitingTags = task.tags.map(t => t.tag.name.toLowerCase());
-    
-    if (waitingTags.some(tag => tag.includes('回复') || tag.includes('邮件') || tag.includes('email'))) {
-      return 'email';
+    const waitingTags = task.tags.map((t) => t.tag.name.toLowerCase());
+
+    if (
+      waitingTags.some(
+        (tag) =>
+          tag.includes("回复") || tag.includes("邮件") || tag.includes("email"),
+      )
+    ) {
+      return "email";
     }
-    if (waitingTags.some(tag => tag.includes('电话') || tag.includes('通话') || tag.includes('phone'))) {
-      return 'phone';
+    if (
+      waitingTags.some(
+        (tag) =>
+          tag.includes("电话") || tag.includes("通话") || tag.includes("phone"),
+      )
+    ) {
+      return "phone";
     }
-    if (waitingTags.some(tag => tag.includes('会议') || tag.includes('讨论') || tag.includes('meeting'))) {
-      return 'meeting';
+    if (
+      waitingTags.some(
+        (tag) =>
+          tag.includes("会议") ||
+          tag.includes("讨论") ||
+          tag.includes("meeting"),
+      )
+    ) {
+      return "meeting";
     }
-    if (waitingTags.some(tag => tag.includes('审批') || tag.includes('批准') || tag.includes('approval'))) {
-      return 'approval';
+    if (
+      waitingTags.some(
+        (tag) =>
+          tag.includes("审批") ||
+          tag.includes("批准") ||
+          tag.includes("approval"),
+      )
+    ) {
+      return "approval";
     }
-    if (waitingTags.some(tag => tag.includes('他人') || tag.includes('委派') || tag.includes('delegate'))) {
-      return 'delegate';
+    if (
+      waitingTags.some(
+        (tag) =>
+          tag.includes("他人") ||
+          tag.includes("委派") ||
+          tag.includes("delegate"),
+      )
+    ) {
+      return "delegate";
     }
-    
+
     // 默认等待类型
-    return 'general';
+    return "general";
   }, []);
 
   // 按等待类型分组任务
@@ -189,84 +233,97 @@ const WaitingPage: NextPage = () => {
     const tasks = tasksData?.tasks || [];
 
     // 定义等待类型组
-    const waitingTypes: Omit<WaitingGroup, 'tasks'>[] = [
+    const waitingTypes: Omit<WaitingGroup, "tasks">[] = [
       {
-        id: 'email',
-        name: '等待回复',
+        id: "email",
+        name: "等待回复",
         icon: EnvelopeIcon,
-        color: 'bg-blue-100 text-blue-800 border-blue-200',
-        description: '等待邮件回复或信息反馈',
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        description: "等待邮件回复或信息反馈",
       },
       {
-        id: 'phone',
-        name: '等待通话',
+        id: "phone",
+        name: "等待通话",
         icon: PhoneIcon,
-        color: 'bg-green-100 text-green-800 border-green-200',
-        description: '等待电话回复或通话安排',
+        color: "bg-green-100 text-green-800 border-green-200",
+        description: "等待电话回复或通话安排",
       },
       {
-        id: 'meeting',
-        name: '等待会议',
+        id: "meeting",
+        name: "等待会议",
         icon: ChatBubbleLeftRightIcon,
-        color: 'bg-purple-100 text-purple-800 border-purple-200',
-        description: '等待会议安排或讨论结果',
+        color: "bg-purple-100 text-purple-800 border-purple-200",
+        description: "等待会议安排或讨论结果",
       },
       {
-        id: 'approval',
-        name: '等待审批',
+        id: "approval",
+        name: "等待审批",
         icon: ExclamationTriangleIcon,
-        color: 'bg-orange-100 text-orange-800 border-orange-200',
-        description: '等待上级审批或决策',
+        color: "bg-orange-100 text-orange-800 border-orange-200",
+        description: "等待上级审批或决策",
       },
       {
-        id: 'delegate',
-        name: '委派他人',
+        id: "delegate",
+        name: "委派他人",
         icon: UserIcon,
-        color: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-        description: '委派给他人处理的任务',
+        color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+        description: "委派给他人处理的任务",
       },
       {
-        id: 'general',
-        name: '其他等待',
+        id: "general",
+        name: "其他等待",
         icon: ClockIcon,
-        color: 'bg-gray-100 text-gray-800 border-gray-200',
-        description: '其他类型的等待事项',
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+        description: "其他类型的等待事项",
       },
     ];
 
     // 按等待类型分组任务
-    return waitingTypes.map(waitingType => ({
+    return waitingTypes.map((waitingType) => ({
       ...waitingType,
-      tasks: tasks.filter(task => getWaitingType(task) === waitingType.id),
+      tasks: tasks.filter((task) => getWaitingType(task) === waitingType.id),
     }));
   }, [tasksData?.tasks, getWaitingType]);
 
   // 筛选后的等待组（只显示有任务的组，或者选中的组）
   const filteredWaitingGroups = useMemo(() => {
     if (selectedWaitingType) {
-      return waitingGroups.filter(group => group.id === selectedWaitingType);
+      return waitingGroups.filter((group) => group.id === selectedWaitingType);
     }
-    return waitingGroups.filter(group => group.tasks.length > 0);
+    return waitingGroups.filter((group) => group.tasks.length > 0);
   }, [waitingGroups, selectedWaitingType]);
 
   // 统计信息
   const stats = useMemo(() => {
-    const totalTasks = waitingGroups.reduce((sum, group) => sum + group.tasks.length, 0);
-    const urgentTasks = waitingGroups.reduce((sum, group) => 
-      sum + group.tasks.filter(task => task.priority === Priority.URGENT).length, 0
+    const totalTasks = waitingGroups.reduce(
+      (sum, group) => sum + group.tasks.length,
+      0,
     );
-    const overdueTasks = waitingGroups.reduce((sum, group) => 
-      sum + group.tasks.filter(task => 
-        task.dueDate && new Date(task.dueDate) < new Date()
-      ).length, 0
+    const urgentTasks = waitingGroups.reduce(
+      (sum, group) =>
+        sum +
+        group.tasks.filter((task) => task.priority === Priority.URGENT).length,
+      0,
     );
-    const longWaitingTasks = waitingGroups.reduce((sum, group) => 
-      sum + group.tasks.filter(task => {
-        const daysSinceCreated = Math.floor(
-          (new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        return daysSinceCreated >= 7; // 等待超过7天
-      }).length, 0
+    const overdueTasks = waitingGroups.reduce(
+      (sum, group) =>
+        sum +
+        group.tasks.filter(
+          (task) => task.dueDate && new Date(task.dueDate) < new Date(),
+        ).length,
+      0,
+    );
+    const longWaitingTasks = waitingGroups.reduce(
+      (sum, group) =>
+        sum +
+        group.tasks.filter((task) => {
+          const daysSinceCreated = Math.floor(
+            (new Date().getTime() - new Date(task.createdAt).getTime()) /
+              (1000 * 60 * 60 * 24),
+          );
+          return daysSinceCreated >= 7; // 等待超过7天
+        }).length,
+      0,
     );
 
     return { totalTasks, urgentTasks, overdueTasks, longWaitingTasks };
@@ -282,12 +339,12 @@ const WaitingPage: NextPage = () => {
 
         <div className="space-y-6">
           {/* 页面标题和统计 */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">等待清单</h1>
               {isFetching && !isLoading && (
                 <div className="flex items-center text-sm text-blue-600">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                   刷新中...
                 </div>
               )}
@@ -323,9 +380,9 @@ const WaitingPage: NextPage = () => {
               {/* 新建任务按钮 */}
               <button
                 onClick={() => setIsTaskModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
               >
-                <PlusIcon className="h-4 w-4 mr-2" />
+                <PlusIcon className="mr-2 h-4 w-4" />
                 新建等待
               </button>
             </div>
@@ -335,10 +392,10 @@ const WaitingPage: NextPage = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedWaitingType(null)}
-              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+              className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
                 selectedWaitingType === null
-                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  ? "border-blue-200 bg-blue-100 text-blue-800"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
               全部等待
@@ -347,10 +404,10 @@ const WaitingPage: NextPage = () => {
               <button
                 key={group.id}
                 onClick={() => setSelectedWaitingType(group.id)}
-                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
                   selectedWaitingType === group.id
                     ? group.color
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 {group.name} ({group.tasks.length})
@@ -381,20 +438,22 @@ const WaitingPage: NextPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <div className="mx-auto h-12 w-12 text-gray-400">
                   <ClockIcon className="h-12 w-12" />
                 </div>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">暂无等待事项</h3>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  暂无等待事项
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
                   当您委派任务给他人或等待他人回复时，这些任务会出现在这里
                 </p>
                 <div className="mt-6">
                   <button
                     onClick={() => setIsTaskModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
                   >
-                    <PlusIcon className="h-4 w-4 mr-2" />
+                    <PlusIcon className="mr-2 h-4 w-4" />
                     创建等待事项
                   </button>
                 </div>
@@ -438,9 +497,9 @@ function WaitingGroupCard({
   const Icon = group.icon;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       {/* 组标题 */}
-      <div className={`px-6 py-4 border-b border-gray-200 ${group.color}`}>
+      <div className={`border-b border-gray-200 px-6 py-4 ${group.color}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Icon className="h-5 w-5" />
@@ -506,47 +565,48 @@ function WaitingTaskCard({
 
   // 计算等待天数
   const waitingDays = Math.floor(
-    (new Date().getTime() - new Date(task.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+    (new Date().getTime() - new Date(task.createdAt).getTime()) /
+      (1000 * 60 * 60 * 24),
   );
 
   // 判断是否长期等待
   const isLongWaiting = waitingDays >= 7;
 
   return (
-    <div className="p-6 hover:bg-gray-50 transition-colors">
+    <div className="p-6 transition-colors hover:bg-gray-50">
       <div className="flex items-start justify-between">
         {/* 任务信息 */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-start gap-3">
             {/* 完成按钮 */}
             <button
               onClick={onMarkDone}
               disabled={isUpdating}
-              className="mt-1 p-1 rounded-full hover:bg-green-100 text-gray-400 hover:text-green-600 disabled:opacity-50"
+              className="mt-1 rounded-full p-1 text-gray-400 hover:bg-green-100 hover:text-green-600 disabled:opacity-50"
               title="标记完成"
             >
               <CheckIcon className="h-5 w-5" />
             </button>
 
             {/* 任务内容 */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
+            <div className="min-w-0 flex-1">
+              <div className="mb-2 flex items-start justify-between">
                 <h4
-                  className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 line-clamp-2"
+                  className="line-clamp-2 cursor-pointer text-sm font-medium text-gray-900 hover:text-blue-600"
                   onClick={onEdit}
                 >
                   {task.title}
                 </h4>
 
                 {/* 等待时间提醒 */}
-                <div className="flex items-center gap-2 ml-4">
+                <div className="ml-4 flex items-center gap-2">
                   {isLongWaiting && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800">
                       等待 {waitingDays} 天
                     </span>
                   )}
                   {isOverdue && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">
                       已逾期
                     </span>
                   )}
@@ -554,19 +614,21 @@ function WaitingTaskCard({
               </div>
 
               {task.description && (
-                <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                   {task.description}
                 </p>
               )}
 
               {/* 标签和项目 */}
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="mt-2 flex flex-wrap gap-1">
                 {task.project && (
                   <span
                     className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                     style={{
-                      backgroundColor: task.project.color ? `${task.project.color}20` : '#f3f4f6',
-                      color: task.project.color || '#374151',
+                      backgroundColor: task.project.color
+                        ? `${task.project.color}20`
+                        : "#f3f4f6",
+                      color: task.project.color || "#374151",
                     }}
                   >
                     {task.project.name}
@@ -576,7 +638,9 @@ function WaitingTaskCard({
                 {/* 标签显示 */}
                 {task.tags.length > 0 && (
                   <TagList
-                    tags={task.tags.map(tagRelation => tagRelation.tag as TagData)}
+                    tags={task.tags.map(
+                      (tagRelation) => tagRelation.tag as TagData,
+                    )}
                     size="sm"
                     variant="default"
                     showIcon={true}
@@ -588,19 +652,23 @@ function WaitingTaskCard({
               </div>
 
               {/* 底部信息 */}
-              <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+              <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
                 {/* 优先级 */}
                 {task.priority && (
-                  <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}
+                  >
                     {task.priority}
                   </span>
                 )}
 
                 {/* 截止日期 */}
                 {task.dueDate && (
-                  <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-600' : ''}`}>
+                  <span
+                    className={`flex items-center gap-1 ${isOverdue ? "text-red-600" : ""}`}
+                  >
                     <CalendarIcon className="h-3 w-3" />
-                    {new Date(task.dueDate).toLocaleDateString('zh-CN')}
+                    {new Date(task.dueDate).toLocaleDateString("zh-CN")}
                     {task.dueTime && ` ${task.dueTime}`}
                   </span>
                 )}
@@ -623,12 +691,12 @@ function WaitingTaskCard({
         </div>
 
         {/* 快速操作按钮 */}
-        <div className="flex items-center gap-1 ml-4">
+        <div className="ml-4 flex items-center gap-1">
           {/* 跟进提醒 */}
           <button
             onClick={onFollowUp}
             disabled={isUpdating}
-            className="p-2 rounded-md hover:bg-blue-100 text-gray-400 hover:text-blue-600 disabled:opacity-50"
+            className="rounded-md p-2 text-gray-400 hover:bg-blue-100 hover:text-blue-600 disabled:opacity-50"
             title="跟进提醒"
           >
             <ArrowPathIcon className="h-4 w-4" />
@@ -638,7 +706,7 @@ function WaitingTaskCard({
           <button
             onClick={onResumeAction}
             disabled={isUpdating}
-            className="p-2 rounded-md hover:bg-green-100 text-gray-400 hover:text-green-600 disabled:opacity-50"
+            className="rounded-md p-2 text-gray-400 hover:bg-green-100 hover:text-green-600 disabled:opacity-50"
             title="恢复为下一步行动"
           >
             <CheckIcon className="h-4 w-4" />

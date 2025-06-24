@@ -49,7 +49,7 @@ const SearchPage: NextPage = () => {
   const [priority, setPriority] = useState<Priority[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [projectIds, setProjectIds] = useState<string[]>([]);
-  
+
   // 日期筛选
   const [createdAfter, setCreatedAfter] = useState<Date | null>(null);
   const [createdBefore, setCreatedBefore] = useState<Date | null>(null);
@@ -94,36 +94,48 @@ const SearchPage: NextPage = () => {
 
     return params;
   }, [
-    query, searchIn, taskStatus, taskType, priority, tagIds, projectIds,
-    createdAfter, createdBefore, dueAfter, dueBefore,
-    isCompleted, isOverdue, hasDescription, sortBy, sortOrder
+    query,
+    searchIn,
+    taskStatus,
+    taskType,
+    priority,
+    tagIds,
+    projectIds,
+    createdAfter,
+    createdBefore,
+    dueAfter,
+    dueBefore,
+    isCompleted,
+    isOverdue,
+    hasDescription,
+    sortBy,
+    sortOrder,
   ]);
 
   // 执行搜索
-  const { data: searchResults, isLoading, isFetching, refetch } = api.search.advanced.useQuery(
-    searchParams,
-    {
-      enabled: !!sessionData && (!!query.trim() || Object.keys(searchParams).length > 4),
-      staleTime: 30 * 1000,
-    }
-  );
+  const {
+    data: searchResults,
+    isLoading,
+    isFetching,
+    refetch,
+  } = api.search.advanced.useQuery(searchParams, {
+    enabled:
+      !!sessionData && (!!query.trim() || Object.keys(searchParams).length > 4),
+    staleTime: 30 * 1000,
+  });
 
   // 获取标签和项目用于筛选
   const { data: tags, refetch: refetchTags } = api.tag.getAll.useQuery(
     { limit: 100 },
-    { enabled: !!sessionData }
+    { enabled: !!sessionData },
   );
 
-  const { data: projects, refetch: refetchProjects } = api.project.getAll.useQuery(
-    { limit: 100 },
-    { enabled: !!sessionData }
-  );
+  const { data: projects, refetch: refetchProjects } =
+    api.project.getAll.useQuery({ limit: 100 }, { enabled: !!sessionData });
 
   // 获取保存的搜索
-  const { data: savedSearches, refetch: refetchSavedSearches } = api.search.getSavedSearches.useQuery(
-    undefined,
-    { enabled: !!sessionData }
-  );
+  const { data: savedSearches, refetch: refetchSavedSearches } =
+    api.search.getSavedSearches.useQuery(undefined, { enabled: !!sessionData });
 
   // 注册页面刷新函数
   usePageRefresh(() => {
@@ -201,7 +213,7 @@ const SearchPage: NextPage = () => {
               <h1 className="text-2xl font-bold text-gray-900">高级搜索</h1>
               {isFetching && !isLoading && (
                 <div className="flex items-center text-sm text-blue-600">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                   刷新中...
                 </div>
               )}
@@ -209,49 +221,49 @@ const SearchPage: NextPage = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowSavedSearches(!showSavedSearches)}
-                className={`inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
+                className={`inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium ${
                   showSavedSearches
                     ? "border-blue-300 bg-blue-50 text-blue-700"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <BookmarkIcon className="h-4 w-4 mr-2" />
+                <BookmarkIcon className="mr-2 h-4 w-4" />
                 保存的搜索
               </button>
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className={`inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md ${
+                className={`inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium ${
                   showAdvanced
                     ? "border-blue-300 bg-blue-50 text-blue-700"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <AdjustmentsHorizontalIcon className="h-4 w-4 mr-2" />
+                <AdjustmentsHorizontalIcon className="mr-2 h-4 w-4" />
                 高级筛选
               </button>
             </div>
           </div>
 
           {/* 搜索框 */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                   <input
                     type="text"
                     placeholder="搜索任务、笔记、项目..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full rounded-md border border-gray-300 py-3 pr-3 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
               <button
                 onClick={handleSearch}
                 disabled={isLoading}
-                className="px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 {isLoading ? "搜索中..." : "搜索"}
               </button>
@@ -259,7 +271,7 @@ const SearchPage: NextPage = () => {
 
             {/* 搜索范围 */}
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 搜索范围
               </label>
               <div className="flex flex-wrap gap-2">
@@ -279,13 +291,15 @@ const SearchPage: NextPage = () => {
                           if (e.target.checked) {
                             setSearchIn([...searchIn, option.value]);
                           } else {
-                            setSearchIn(searchIn.filter(item => item !== option.value));
+                            setSearchIn(
+                              searchIn.filter((item) => item !== option.value),
+                            );
                           }
                         }}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="ml-2 text-sm text-gray-700 flex items-center">
-                        <Icon className="h-4 w-4 mr-1" />
+                      <span className="ml-2 flex items-center text-sm text-gray-700">
+                        <Icon className="mr-1 h-4 w-4" />
                         {option.label}
                       </span>
                     </label>
@@ -297,14 +311,16 @@ const SearchPage: NextPage = () => {
 
           {/* 保存的搜索 */}
           {showSavedSearches && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">保存的搜索</h3>
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <h3 className="mb-4 text-lg font-medium text-gray-900">
+                保存的搜索
+              </h3>
               {savedSearches && savedSearches.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {savedSearches.map((search) => (
                     <div
                       key={search.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                      className="cursor-pointer rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
                       onClick={() => {
                         // 加载保存的搜索参数
                         const params = search.searchParams as any;
@@ -314,12 +330,16 @@ const SearchPage: NextPage = () => {
                         void refetch();
                       }}
                     >
-                      <h4 className="font-medium text-gray-900">{search.name}</h4>
+                      <h4 className="font-medium text-gray-900">
+                        {search.name}
+                      </h4>
                       {search.description && (
-                        <p className="text-sm text-gray-600 mt-1">{search.description}</p>
+                        <p className="mt-1 text-sm text-gray-600">
+                          {search.description}
+                        </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-2">
-                        {new Date(search.updatedAt).toLocaleDateString('zh-CN')}
+                      <p className="mt-2 text-xs text-gray-500">
+                        {new Date(search.updatedAt).toLocaleDateString("zh-CN")}
                       </p>
                     </div>
                   ))}
@@ -329,20 +349,24 @@ const SearchPage: NextPage = () => {
               )}
 
               {/* 保存当前搜索 */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">保存当前搜索</h4>
+              <div className="mt-6 border-t border-gray-200 pt-6">
+                <h4 className="mb-2 text-sm font-medium text-gray-900">
+                  保存当前搜索
+                </h4>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="搜索名称"
                     value={saveSearchName}
                     onChange={(e) => setSaveSearchName(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                   />
                   <button
                     onClick={handleSaveSearch}
-                    disabled={!saveSearchName.trim() || saveSearchMutation.isPending}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    disabled={
+                      !saveSearchName.trim() || saveSearchMutation.isPending
+                    }
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                   >
                     保存
                   </button>
@@ -437,18 +461,41 @@ interface AdvancedFiltersProps {
 }
 
 const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
-  taskStatus, setTaskStatus, taskType, setTaskType, priority, setPriority,
-  tagIds, setTagIds, projectIds, setProjectIds,
-  createdAfter, setCreatedAfter, createdBefore, setCreatedBefore,
-  dueAfter, setDueAfter, dueBefore, setDueBefore,
-  isCompleted, setIsCompleted, isOverdue, setIsOverdue,
-  hasDescription, setHasDescription,
-  sortBy, setSortBy, sortOrder, setSortOrder,
-  tags, projects, onClear
+  taskStatus,
+  setTaskStatus,
+  taskType,
+  setTaskType,
+  priority,
+  setPriority,
+  tagIds,
+  setTagIds,
+  projectIds,
+  setProjectIds,
+  createdAfter,
+  setCreatedAfter,
+  createdBefore,
+  setCreatedBefore,
+  dueAfter,
+  setDueAfter,
+  dueBefore,
+  setDueBefore,
+  isCompleted,
+  setIsCompleted,
+  isOverdue,
+  setIsOverdue,
+  hasDescription,
+  setHasDescription,
+  sortBy,
+  setSortBy,
+  sortOrder,
+  setSortOrder,
+  tags,
+  projects,
+  onClear,
 }) => {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="mb-6 flex items-center justify-between">
         <h3 className="text-lg font-medium text-gray-900">高级筛选</h3>
         <button
           onClick={onClear}
@@ -458,10 +505,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* 任务状态 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             任务状态
           </label>
           <div className="space-y-2">
@@ -474,10 +521,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     if (e.target.checked) {
                       setTaskStatus([...taskStatus, status]);
                     } else {
-                      setTaskStatus(taskStatus.filter(s => s !== status));
+                      setTaskStatus(taskStatus.filter((s) => s !== status));
                     }
                   }}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   {getStatusLabel(status)}
@@ -489,7 +536,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         {/* 优先级 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             优先级
           </label>
           <div className="space-y-2">
@@ -502,10 +549,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     if (e.target.checked) {
                       setPriority([...priority, p]);
                     } else {
-                      setPriority(priority.filter(pr => pr !== p));
+                      setPriority(priority.filter((pr) => pr !== p));
                     }
                   }}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   {getPriorityLabel(p)}
@@ -517,10 +564,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         {/* 标签 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             标签
           </label>
-          <div className="max-h-32 overflow-y-auto space-y-2">
+          <div className="max-h-32 space-y-2 overflow-y-auto">
             {tags.map((tag) => (
               <label key={tag.id} className="flex items-center">
                 <input
@@ -530,12 +577,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     if (e.target.checked) {
                       setTagIds([...tagIds, tag.id]);
                     } else {
-                      setTagIds(tagIds.filter(id => id !== tag.id));
+                      setTagIds(tagIds.filter((id) => id !== tag.id));
                     }
                   }}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700 flex items-center">
+                <span className="ml-2 flex items-center text-sm text-gray-700">
                   {tag.icon && <span className="mr-1">{tag.icon}</span>}
                   {tag.name}
                 </span>
@@ -546,10 +593,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         {/* 项目 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             项目
           </label>
-          <div className="max-h-32 overflow-y-auto space-y-2">
+          <div className="max-h-32 space-y-2 overflow-y-auto">
             {projects.map((project) => (
               <label key={project.id} className="flex items-center">
                 <input
@@ -559,10 +606,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     if (e.target.checked) {
                       setProjectIds([...projectIds, project.id]);
                     } else {
-                      setProjectIds(projectIds.filter(id => id !== project.id));
+                      setProjectIds(
+                        projectIds.filter((id) => id !== project.id),
+                      );
                     }
                   }}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   {project.name}
@@ -574,22 +623,34 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         {/* 日期筛选 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             创建日期
           </label>
           <div className="space-y-2">
             <input
               type="date"
-              value={createdAfter ? createdAfter.toISOString().split('T')[0] : ''}
-              onChange={(e) => setCreatedAfter(e.target.value ? new Date(e.target.value) : null)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              value={
+                createdAfter ? createdAfter.toISOString().split("T")[0] : ""
+              }
+              onChange={(e) =>
+                setCreatedAfter(
+                  e.target.value ? new Date(e.target.value) : null,
+                )
+              }
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               placeholder="开始日期"
             />
             <input
               type="date"
-              value={createdBefore ? createdBefore.toISOString().split('T')[0] : ''}
-              onChange={(e) => setCreatedBefore(e.target.value ? new Date(e.target.value) : null)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              value={
+                createdBefore ? createdBefore.toISOString().split("T")[0] : ""
+              }
+              onChange={(e) =>
+                setCreatedBefore(
+                  e.target.value ? new Date(e.target.value) : null,
+                )
+              }
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               placeholder="结束日期"
             />
           </div>
@@ -597,7 +658,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
         {/* 状态筛选 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             状态筛选
           </label>
           <div className="space-y-2">
@@ -606,7 +667,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 type="checkbox"
                 checked={isCompleted === true}
                 onChange={(e) => setIsCompleted(e.target.checked ? true : null)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-sm text-gray-700">已完成</span>
             </label>
@@ -615,7 +676,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 type="checkbox"
                 checked={isOverdue === true}
                 onChange={(e) => setIsOverdue(e.target.checked ? true : null)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-sm text-gray-700">已逾期</span>
             </label>
@@ -623,8 +684,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               <input
                 type="checkbox"
                 checked={hasDescription === true}
-                onChange={(e) => setHasDescription(e.target.checked ? true : null)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                onChange={(e) =>
+                  setHasDescription(e.target.checked ? true : null)
+                }
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="ml-2 text-sm text-gray-700">有描述</span>
             </label>
@@ -633,16 +696,16 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       </div>
 
       {/* 排序 */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
+      <div className="mt-6 border-t border-gray-200 pt-6">
         <div className="flex items-center gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               排序方式
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               <option value="relevance">相关性</option>
               <option value="createdAt">创建时间</option>
@@ -653,13 +716,13 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               排序顺序
             </label>
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               <option value="desc">降序</option>
               <option value="asc">升序</option>
@@ -683,11 +746,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   isLoading,
   query,
-  searchIn
+  searchIn,
 }) => {
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         <SectionLoading />
       </div>
     );
@@ -695,7 +758,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   if (!results) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         <div className="text-center text-gray-500">
           <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">开始搜索</h3>
@@ -711,13 +774,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   if (totalCount === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         <div className="text-center text-gray-500">
           <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">未找到结果</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            尝试调整搜索条件或筛选器
-          </p>
+          <p className="mt-1 text-sm text-gray-500">尝试调整搜索条件或筛选器</p>
         </div>
       </div>
     );
@@ -726,12 +787,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   return (
     <div className="space-y-6">
       {/* 结果统计 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
         <p className="text-sm text-gray-600">
-          找到 <span className="font-medium text-gray-900">{totalCount}</span> 个结果
+          找到 <span className="font-medium text-gray-900">{totalCount}</span>{" "}
+          个结果
           {query && (
             <>
-              ，关键词: <span className="font-medium text-gray-900">"{query}"</span>
+              ，关键词:{" "}
+              <span className="font-medium text-gray-900">"{query}"</span>
             </>
           )}
         </p>
@@ -739,41 +802,48 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 任务结果 */}
       {searchIn.includes("tasks") && tasks.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <CheckIcon className="h-5 w-5 mr-2" />
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+            <CheckIcon className="mr-2 h-5 w-5" />
             任务 ({tasks.length})
           </h3>
           <div className="space-y-3">
             {tasks.map((task) => (
-              <div key={task.id} className="border border-gray-200 rounded-lg p-4">
+              <div
+                key={task.id}
+                className="rounded-lg border border-gray-200 p-4"
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{task.title}</h4>
                     {task.description && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                         {task.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                      <span className={`px-2 py-1 rounded-full ${getStatusColor(task.status)}`}>
+                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                      <span
+                        className={`rounded-full px-2 py-1 ${getStatusColor(task.status)}`}
+                      >
                         {getStatusLabel(task.status)}
                       </span>
                       {task.priority && (
-                        <span className={`px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
+                        <span
+                          className={`rounded-full px-2 py-1 ${getPriorityColor(task.priority)}`}
+                        >
                           {getPriorityLabel(task.priority)}
                         </span>
                       )}
                       {task.project && (
                         <span className="flex items-center">
-                          <FolderIcon className="h-3 w-3 mr-1" />
+                          <FolderIcon className="mr-1 h-3 w-3" />
                           {task.project.name}
                         </span>
                       )}
                       {task.dueDate && (
                         <span className="flex items-center">
-                          <CalendarIcon className="h-3 w-3 mr-1" />
-                          {new Date(task.dueDate).toLocaleDateString('zh-CN')}
+                          <CalendarIcon className="mr-1 h-3 w-3" />
+                          {new Date(task.dueDate).toLocaleDateString("zh-CN")}
                         </span>
                       )}
                     </div>
@@ -787,27 +857,30 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 笔记结果 */}
       {searchIn.includes("notes") && notes.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <DocumentTextIcon className="h-5 w-5 mr-2" />
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+            <DocumentTextIcon className="mr-2 h-5 w-5" />
             笔记 ({notes.length})
           </h3>
           <div className="space-y-3">
             {notes.map((note) => (
-              <div key={note.id} className="border border-gray-200 rounded-lg p-4">
+              <div
+                key={note.id}
+                className="rounded-lg border border-gray-200 p-4"
+              >
                 <h4 className="font-medium text-gray-900">{note.title}</h4>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-3">
+                <p className="mt-1 line-clamp-3 text-sm text-gray-600">
                   {note.content}
                 </p>
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                   {note.project && (
                     <span className="flex items-center">
-                      <FolderIcon className="h-3 w-3 mr-1" />
+                      <FolderIcon className="mr-1 h-3 w-3" />
                       {note.project.name}
                     </span>
                   )}
                   <span>
-                    {new Date(note.updatedAt).toLocaleDateString('zh-CN')}
+                    {new Date(note.updatedAt).toLocaleDateString("zh-CN")}
                   </span>
                 </div>
               </div>
@@ -818,23 +891,28 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 项目结果 */}
       {searchIn.includes("projects") && projects.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <FolderIcon className="h-5 w-5 mr-2" />
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+            <FolderIcon className="mr-2 h-5 w-5" />
             项目 ({projects.length})
           </h3>
           <div className="space-y-3">
             {projects.map((project) => (
-              <div key={project.id} className="border border-gray-200 rounded-lg p-4">
+              <div
+                key={project.id}
+                className="rounded-lg border border-gray-200 p-4"
+              >
                 <h4 className="font-medium text-gray-900">{project.name}</h4>
                 {project.description && (
-                  <p className="text-sm text-gray-600 mt-1">{project.description}</p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {project.description}
+                  </p>
                 )}
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                   <span>{project._count.tasks} 个任务</span>
                   <span>{project._count.notes} 个笔记</span>
                   <span>
-                    {new Date(project.updatedAt).toLocaleDateString('zh-CN')}
+                    {new Date(project.updatedAt).toLocaleDateString("zh-CN")}
                   </span>
                 </div>
               </div>
@@ -845,18 +923,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 日志结果 */}
       {searchIn.includes("journals") && journals.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            <CalendarIcon className="h-5 w-5 mr-2" />
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+            <CalendarIcon className="mr-2 h-5 w-5" />
             日志 ({journals.length})
           </h3>
           <div className="space-y-3">
             {journals.map((journal) => (
-              <div key={journal.id} className="border border-gray-200 rounded-lg p-4">
+              <div
+                key={journal.id}
+                className="rounded-lg border border-gray-200 p-4"
+              >
                 <h4 className="font-medium text-gray-900">
-                  {new Date(journal.date).toLocaleDateString('zh-CN')}
+                  {new Date(journal.date).toLocaleDateString("zh-CN")}
                 </h4>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-3">
+                <p className="mt-1 line-clamp-3 text-sm text-gray-600">
                   {journal.content}
                 </p>
               </div>

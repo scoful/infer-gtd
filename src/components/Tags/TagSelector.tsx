@@ -60,17 +60,17 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
   };
 
   return (
-    <div className="p-4 border-t border-gray-200">
+    <div className="border-t border-gray-200 p-4">
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-gray-700">
             标签名称
           </label>
           <input
@@ -79,21 +79,21 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="输入标签名称"
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             autoFocus
             disabled={isLoading}
           />
         </div>
-        
+
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               类型
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as TagType)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               disabled={isLoading}
             >
               <option value={TagType.CUSTOM}>自定义</option>
@@ -102,26 +102,26 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
               <option value={TagType.PRIORITY}>优先级</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               颜色
             </label>
             <input
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="block w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="block h-10 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               disabled={isLoading}
             />
           </div>
         </div>
-        
+
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             disabled={isLoading}
           >
             取消
@@ -130,7 +130,7 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={!name.trim() || isLoading}
-            className="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md border border-transparent bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? "创建中..." : "创建"}
           </button>
@@ -160,7 +160,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedType, setSelectedType] = useState<TagType | "ALL">("ALL");
-  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">(
+    "bottom",
+  );
   const [isPositionCalculated, setIsPositionCalculated] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -177,7 +179,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       search: searchQuery || undefined,
       type: selectedType !== "ALL" ? selectedType : undefined,
     },
-    { enabled: !disabled }
+    { enabled: !disabled },
   );
 
   // 创建标签的mutation
@@ -203,14 +205,14 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   // 获取可用的标签列表
   const availableTags = useMemo(() => {
     if (!tagsData?.tags) return [];
-    
+
     let tags = tagsData.tags;
-    
+
     // 按类型筛选
     if (filterTypes && filterTypes.length > 0) {
-      tags = tags.filter(tag => filterTypes.includes(tag.type));
+      tags = tags.filter((tag) => filterTypes.includes(tag.type));
     }
-    
+
     return tags;
   }, [tagsData?.tags, filterTypes]);
 
@@ -218,20 +220,20 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const selectedTags = useMemo(() => {
     // 按照 selectedTagIds 的顺序来排列标签，保持用户选择的顺序
     return selectedTagIds
-      .map(id => availableTags.find(tag => tag.id === id))
+      .map((id) => availableTags.find((tag) => tag.id === id))
       .filter(Boolean) as TagData[];
   }, [availableTags, selectedTagIds]);
 
   // 获取未选中的标签（用于下拉列表）
   const unselectedTags = useMemo(() => {
-    return availableTags.filter(tag => !selectedTagIds.includes(tag.id));
+    return availableTags.filter((tag) => !selectedTagIds.includes(tag.id));
   }, [availableTags, selectedTagIds]);
 
   // 处理标签选择
   const handleTagSelect = (tag: TagData) => {
     if (selectedTagIds.includes(tag.id)) {
       // 取消选择
-      onTagsChange(selectedTagIds.filter(id => id !== tag.id));
+      onTagsChange(selectedTagIds.filter((id) => id !== tag.id));
     } else {
       // 选择标签
       if (maxTags && selectedTagIds.length >= maxTags) {
@@ -249,7 +251,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
   // 处理标签移除
   const handleTagRemove = (tagId: string) => {
-    onTagsChange(selectedTagIds.filter(id => id !== tagId));
+    onTagsChange(selectedTagIds.filter((id) => id !== tagId));
   };
 
   // 处理标签重新排序
@@ -258,13 +260,17 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   };
 
   // 处理创建新标签
-  const handleCreateTag = (tagData: { name: string; type: TagType; color?: string }) => {
+  const handleCreateTag = (tagData: {
+    name: string;
+    type: TagType;
+    color?: string;
+  }) => {
     createTagMutation.mutate(tagData);
   };
 
   // 计算下拉菜单最佳位置
   const calculateDropdownPosition = () => {
-    if (!containerRef.current) return 'bottom';
+    if (!containerRef.current) return "bottom";
 
     const rect = containerRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
@@ -278,18 +284,22 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     const searchAreaHeight = 100;
     const tagListHeight = showCreateForm ? 120 : 200;
     const createFormHeight = showCreateForm ? 180 : 0;
-    const totalDropdownHeight = searchAreaHeight + tagListHeight + createFormHeight;
+    const totalDropdownHeight =
+      searchAreaHeight + tagListHeight + createFormHeight;
 
     // 如果下方空间不足300px，很可能在Dialog中，优先向上弹出
     if (spaceBelow < 300) {
-      return 'top';
+      return "top";
     }
 
     // 否则使用标准逻辑
-    if (spaceBelow < totalDropdownHeight && spaceAbove > Math.max(spaceBelow, 200)) {
-      return 'top';
+    if (
+      spaceBelow < totalDropdownHeight &&
+      spaceAbove > Math.max(spaceBelow, 200)
+    ) {
+      return "top";
     } else {
-      return 'bottom';
+      return "bottom";
     }
   };
 
@@ -303,7 +313,10 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   // 点击外部关闭下拉框
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         closeDropdown();
       }
     };
@@ -344,13 +357,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     <div ref={containerRef} className={`relative ${className}`}>
       {/* 主输入区域 */}
       <div
-        className={`
-          relative border rounded-md bg-white transition-colors
-          ${disabled ? "bg-gray-50 cursor-not-allowed" : "cursor-text"}
-          ${error ? "border-red-300 focus-within:border-red-500 focus-within:ring-red-500" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-blue-500"}
-          ${isOpen ? "ring-1" : ""}
-          ${sizeClasses[size]}
-        `}
+        className={`relative rounded-md border bg-white transition-colors ${disabled ? "cursor-not-allowed bg-gray-50" : "cursor-text"} ${error ? "border-red-300 focus-within:border-red-500 focus-within:ring-red-500" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-blue-500"} ${isOpen ? "ring-1" : ""} ${sizeClasses[size]} `}
         onClick={() => {
           if (!disabled) {
             openDropdown();
@@ -358,7 +365,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           }
         }}
       >
-        <div className="flex flex-wrap items-center gap-1 p-2 min-h-[2.5rem]">
+        <div className="flex min-h-[2.5rem] flex-wrap items-center gap-1 p-2">
           {/* 已选中的标签 */}
           {selectedTags.length > 0 && (
             <TagList
@@ -370,7 +377,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               onReorder={handleTagReorder}
             />
           )}
-          
+
           {/* 输入框 */}
           <input
             ref={inputRef}
@@ -378,7 +385,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={selectedTags.length === 0 ? placeholder : ""}
-            className="flex-1 min-w-[120px] outline-none bg-transparent"
+            className="min-w-[120px] flex-1 bg-transparent outline-none"
             disabled={disabled}
             onFocus={() => {
               if (!isOpen) {
@@ -386,7 +393,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               }
             }}
           />
-          
+
           {/* 下拉箭头 */}
           <ChevronDownIcon
             className={`h-4 w-4 text-gray-400 transition-transform ${
@@ -397,26 +404,21 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       </div>
 
       {/* 错误信息 */}
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
 
       {/* 下拉选项 */}
       {isOpen && !disabled && isPositionCalculated && (
         <div
           ref={dropdownRef}
-          className={`
-            absolute z-40 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden
-            ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}
-          `}
+          className={`absolute z-40 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg ${dropdownPosition === "top" ? "bottom-full mb-1" : "top-full mt-1"} `}
           style={{
             maxHeight: (() => {
-              if (!containerRef.current) return '400px';
+              if (!containerRef.current) return "400px";
 
               const rect = containerRef.current.getBoundingClientRect();
               const viewportHeight = window.innerHeight;
 
-              if (dropdownPosition === 'top') {
+              if (dropdownPosition === "top") {
                 // 向上弹出时，使用可用的上方空间
                 const availableSpace = rect.top - 20; // 留20px边距
                 // 如果显示创建表单，需要更多空间
@@ -429,27 +431,29 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 const minHeight = showCreateForm ? 250 : 150;
                 return `${Math.min(400, Math.max(minHeight, availableSpace))}px`;
               }
-            })()
+            })(),
           }}
         >
           {/* 搜索和筛选 */}
-          <div className="p-3 border-b border-gray-200">
+          <div className="border-b border-gray-200 p-3">
             <div className="relative mb-2">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索标签..."
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-md border border-gray-300 py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </div>
-            
+
             {/* 类型筛选 */}
             <select
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value as TagType | "ALL")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) =>
+                setSelectedType(e.target.value as TagType | "ALL")
+              }
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               <option value="ALL">所有类型</option>
               <option value={TagType.CONTEXT}>上下文</option>
@@ -460,9 +464,12 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           </div>
 
           {/* 标签列表 */}
-          <div className="flex-1 overflow-y-auto" style={{
-            maxHeight: showCreateForm ? '80px' : '200px'
-          }}>
+          <div
+            className="flex-1 overflow-y-auto"
+            style={{
+              maxHeight: showCreateForm ? "80px" : "200px",
+            }}
+          >
             {isLoading ? (
               <div className="p-4">
                 <SectionLoading />
@@ -474,21 +481,21 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                   <div
                     className="grid gap-2"
                     style={{
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(min(120px, 100%), 1fr))'
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(min(120px, 100%), 1fr))",
                     }}
                   >
                     {unselectedTags.map((tag) => (
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className={`
-                          flex items-center justify-center p-2 rounded-lg cursor-pointer transition-all duration-200
-                          hover:bg-gray-50 hover:shadow-sm border border-gray-100 hover:border-gray-300
-                          active:scale-95 active:bg-gray-100
-                          ${maxTags && selectedTagIds.length >= maxTags ? 'opacity-50 cursor-not-allowed hover:bg-transparent hover:shadow-none' : ''}
-                        `}
-                        style={{ alignItems: 'center', minHeight: '36px' }}
-                        title={maxTags && selectedTagIds.length >= maxTags ? '已达到最大标签数量限制' : `点击选择 ${tag.name}`}
+                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-100 p-2 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm active:scale-95 active:bg-gray-100 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
+                        style={{ alignItems: "center", minHeight: "36px" }}
+                        title={
+                          maxTags && selectedTagIds.length >= maxTags
+                            ? "已达到最大标签数量限制"
+                            : `点击选择 ${tag.name}`
+                        }
                       >
                         <TagDisplay
                           tag={tag}
@@ -506,17 +513,19 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer transition-colors"
-                        style={{ alignItems: 'center' }}
+                        className="flex cursor-pointer items-center justify-between rounded-md p-2 transition-colors hover:bg-gray-50"
+                        style={{ alignItems: "center" }}
                       >
                         <TagDisplay
                           tag={tag}
                           size="sm"
                           clickable={false}
-                          className="flex-1 min-w-0"
+                          className="min-w-0 flex-1"
                         />
                         {maxTags && selectedTagIds.length >= maxTags && (
-                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">已达上限</span>
+                          <span className="ml-2 flex-shrink-0 text-xs text-gray-400">
+                            已达上限
+                          </span>
                         )}
                       </div>
                     ))}
@@ -524,7 +533,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 )}
               </div>
             ) : (
-              <div className="p-4 text-center text-gray-500 text-sm">
+              <div className="p-4 text-center text-sm text-gray-500">
                 {searchQuery ? "未找到匹配的标签" : "暂无可用标签"}
               </div>
             )}
@@ -535,9 +544,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
             <div className="border-t border-gray-200">
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="w-full p-3 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center"
+                className="flex w-full items-center p-3 text-left text-sm text-blue-600 hover:bg-blue-50"
               >
-                <PlusIcon className="h-4 w-4 mr-2" />
+                <PlusIcon className="mr-2 h-4 w-4" />
                 创建标签 "{searchQuery}"
               </button>
             </div>
@@ -545,7 +554,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
           {/* 创建标签表单 */}
           {showCreateForm && (
-            <div className="border-t border-gray-200 max-h-40 overflow-y-auto">
+            <div className="max-h-40 overflow-y-auto border-t border-gray-200">
               <TagCreateForm
                 onSubmit={handleCreateTag}
                 onCancel={() => setShowCreateForm(false)}

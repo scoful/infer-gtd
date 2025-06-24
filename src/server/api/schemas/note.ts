@@ -12,7 +12,11 @@ export const createNoteSchema = z.object({
 // 笔记更新 Schema
 export const updateNoteSchema = z.object({
   id: z.string().cuid("无效的笔记ID"),
-  title: z.string().min(1, "笔记标题不能为空").max(200, "笔记标题过长").optional(),
+  title: z
+    .string()
+    .min(1, "笔记标题不能为空")
+    .max(200, "笔记标题过长")
+    .optional(),
   content: z.string().min(1, "笔记内容不能为空").optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
@@ -111,5 +115,7 @@ export type BatchNoteOperationInput = z.infer<typeof batchNoteOperationSchema>;
 export type SearchNotesInput = z.infer<typeof searchNotesSchema>;
 export type ExportNotesInput = z.infer<typeof exportNotesSchema>;
 export type GetNoteStatsInput = z.infer<typeof getNoteStatsSchema>;
-export type CreateNoteFromTemplateInput = z.infer<typeof createNoteFromTemplateSchema>;
+export type CreateNoteFromTemplateInput = z.infer<
+  typeof createNoteFromTemplateSchema
+>;
 export type GetNoteVersionsInput = z.infer<typeof getNoteVersionsSchema>;

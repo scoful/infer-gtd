@@ -1,6 +1,6 @@
-import { useEffect, useCallback } from 'react';
-import { useRouter } from 'next/router';
-import { useRefresh } from '@/contexts/RefreshContext';
+import { useEffect, useCallback } from "react";
+import { useRouter } from "next/router";
+import { useRefresh } from "@/contexts/RefreshContext";
 
 /**
  * 通用的页面刷新 Hook
@@ -9,7 +9,10 @@ import { useRefresh } from '@/contexts/RefreshContext';
  * @param refreshFn 页面的刷新函数
  * @param deps 依赖数组，当依赖变化时重新注册刷新函数
  */
-export function usePageRefresh(refreshFn: () => void, deps: React.DependencyList = []) {
+export function usePageRefresh(
+  refreshFn: () => void,
+  deps: React.DependencyList = [],
+) {
   const router = useRouter();
   const { registerPageRefresh, unregisterPageRefresh } = useRefresh();
 
@@ -26,5 +29,10 @@ export function usePageRefresh(refreshFn: () => void, deps: React.DependencyList
     return () => {
       unregisterPageRefresh(currentPath);
     };
-  }, [router.asPath, registerPageRefresh, unregisterPageRefresh, stableRefreshFn]);
+  }, [
+    router.asPath,
+    registerPageRefresh,
+    unregisterPageRefresh,
+    stableRefreshFn,
+  ]);
 }

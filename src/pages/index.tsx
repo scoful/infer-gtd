@@ -38,40 +38,61 @@ const Home: NextPage = () => {
     return date;
   }, []);
 
-  const { data: taskStats, isLoading: isLoadingStats, error: statsError, refetch: refetchStats, isFetching: isFetchingStats } = api.task.getStats.useQuery(
+  const {
+    data: taskStats,
+    isLoading: isLoadingStats,
+    error: statsError,
+    refetch: refetchStats,
+    isFetching: isFetchingStats,
+  } = api.task.getStats.useQuery(
     { startDate: thirtyDaysAgo },
     {
       enabled: !!sessionData,
       staleTime: 5 * 60 * 1000, // 5分钟内不重新获取
       refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
-    }
+    },
   );
 
-  const { data: recentTasks, isLoading: isLoadingTasks, error: tasksError, refetch: refetchTasks } = api.task.getAll.useQuery(
+  const {
+    data: recentTasks,
+    isLoading: isLoadingTasks,
+    error: tasksError,
+    refetch: refetchTasks,
+  } = api.task.getAll.useQuery(
     { limit: 5 },
     {
       enabled: !!sessionData,
       staleTime: 2 * 60 * 1000, // 2分钟内不重新获取
       refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
-    }
+    },
   );
 
-  const { data: recentNotes, isLoading: isLoadingNotes, error: notesError, refetch: refetchNotes } = api.note.getAll.useQuery(
+  const {
+    data: recentNotes,
+    isLoading: isLoadingNotes,
+    error: notesError,
+    refetch: refetchNotes,
+  } = api.note.getAll.useQuery(
     { limit: 3, sortBy: "updatedAt", sortOrder: "desc" },
     {
       enabled: !!sessionData,
       staleTime: 2 * 60 * 1000, // 2分钟内不重新获取
       refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
-    }
+    },
   );
 
-  const { data: recentJournals, isLoading: isLoadingJournals, error: journalsError, refetch: refetchJournals } = api.journal.getRecent.useQuery(
+  const {
+    data: recentJournals,
+    isLoading: isLoadingJournals,
+    error: journalsError,
+    refetch: refetchJournals,
+  } = api.journal.getRecent.useQuery(
     { limit: 3 },
     {
       enabled: !!sessionData,
       staleTime: 2 * 60 * 1000, // 2分钟内不重新获取
       refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
-    }
+    },
   );
 
   // 注册页面刷新函数
@@ -127,7 +148,7 @@ const Home: NextPage = () => {
 
         <div className="space-y-8">
           {/* 欢迎区域 */}
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -135,11 +156,12 @@ const Home: NextPage = () => {
                     欢迎回来，{sessionData?.user?.name}！
                   </h1>
                   <p className="mt-1 text-sm text-gray-500">
-                    今天是 {new Date().toLocaleDateString('zh-CN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      weekday: 'long'
+                    今天是{" "}
+                    {new Date().toLocaleDateString("zh-CN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      weekday: "long",
                     })}
                   </p>
                 </div>
@@ -156,11 +178,11 @@ const Home: NextPage = () => {
 
           {/* 统计概览 */}
           <div>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="mb-4 flex items-center gap-3">
               <h2 className="text-lg font-medium text-gray-900">本月统计</h2>
               {isFetchingStats && !isLoadingStats && (
                 <div className="flex items-center text-sm text-blue-600">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                   刷新中...
                 </div>
               )}
@@ -172,7 +194,7 @@ const Home: NextPage = () => {
             >
               {taskStats && (
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="overflow-hidden rounded-lg bg-white shadow">
                     <div className="p-5">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -180,7 +202,7 @@ const Home: NextPage = () => {
                         </div>
                         <div className="ml-5 w-0 flex-1">
                           <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
+                            <dt className="truncate text-sm font-medium text-gray-500">
                               总任务数
                             </dt>
                             <dd className="text-lg font-medium text-gray-900">
@@ -192,7 +214,7 @@ const Home: NextPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="overflow-hidden rounded-lg bg-white shadow">
                     <div className="p-5">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -200,7 +222,7 @@ const Home: NextPage = () => {
                         </div>
                         <div className="ml-5 w-0 flex-1">
                           <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
+                            <dt className="truncate text-sm font-medium text-gray-500">
                               已完成
                             </dt>
                             <dd className="text-lg font-medium text-gray-900">
@@ -212,7 +234,7 @@ const Home: NextPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="overflow-hidden rounded-lg bg-white shadow">
                     <div className="p-5">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -220,7 +242,7 @@ const Home: NextPage = () => {
                         </div>
                         <div className="ml-5 w-0 flex-1">
                           <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
+                            <dt className="truncate text-sm font-medium text-gray-500">
                               总时长
                             </dt>
                             <dd className="text-lg font-medium text-gray-900">
@@ -232,7 +254,7 @@ const Home: NextPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="overflow-hidden rounded-lg bg-white shadow">
                     <div className="p-5">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -240,13 +262,18 @@ const Home: NextPage = () => {
                         </div>
                         <div className="ml-5 w-0 flex-1">
                           <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
+                            <dt className="truncate text-sm font-medium text-gray-500">
                               完成率
                             </dt>
                             <dd className="text-lg font-medium text-gray-900">
                               {taskStats.totalTasks > 0
-                                ? Math.round((taskStats.completedTasks / taskStats.totalTasks) * 100)
-                                : 0}%
+                                ? Math.round(
+                                    (taskStats.completedTasks /
+                                      taskStats.totalTasks) *
+                                      100,
+                                  )
+                                : 0}
+                              %
                             </dd>
                           </dl>
                         </div>
@@ -260,7 +287,7 @@ const Home: NextPage = () => {
 
           {/* 快速操作 */}
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-4">快速操作</h2>
+            <h2 className="mb-4 text-lg font-medium text-gray-900">快速操作</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
@@ -271,16 +298,16 @@ const Home: NextPage = () => {
                     <button
                       key={action.name}
                       onClick={action.onClick}
-                      className={`relative group ${action.color} rounded-lg p-6 text-white transition-colors text-left w-full`}
+                      className={`group relative ${action.color} w-full rounded-lg p-6 text-left text-white transition-colors`}
                     >
                       <div>
-                        <span className="rounded-lg inline-flex p-3 bg-white bg-opacity-20">
+                        <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3">
                           <Icon className="h-6 w-6 text-gray-700" />
                         </span>
                       </div>
                       <div className="mt-4">
                         <h3 className="text-lg font-medium">{action.name}</h3>
-                        <p className="mt-2 text-sm text-white text-opacity-90">
+                        <p className="text-opacity-90 mt-2 text-sm text-white">
                           {action.description}
                         </p>
                       </div>
@@ -293,16 +320,16 @@ const Home: NextPage = () => {
                   <Link
                     key={action.name}
                     href={action.href}
-                    className={`relative group ${action.color} rounded-lg p-6 text-white transition-colors`}
+                    className={`group relative ${action.color} rounded-lg p-6 text-white transition-colors`}
                   >
                     <div>
-                      <span className="rounded-lg inline-flex p-3 bg-white bg-opacity-20">
+                      <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3">
                         <Icon className="h-6 w-6 text-gray-700" />
                       </span>
                     </div>
                     <div className="mt-4">
                       <h3 className="text-lg font-medium">{action.name}</h3>
-                      <p className="mt-2 text-sm text-white text-opacity-90">
+                      <p className="text-opacity-90 mt-2 text-sm text-white">
                         {action.description}
                       </p>
                     </div>
@@ -312,19 +339,21 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-
-
           {/* 最近活动 */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* 最近任务 */}
-            <div className="bg-white shadow rounded-lg">
+            <div className="rounded-lg bg-white shadow">
               <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">最近任务</h3>
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  最近任务
+                </h3>
                 <QueryLoading
                   isLoading={isLoadingTasks}
                   error={tasksError}
                   loadingMessage="加载任务中..."
-                  loadingComponent={<SectionLoading size="sm" message="加载任务中..." />}
+                  loadingComponent={
+                    <SectionLoading size="sm" message="加载任务中..." />
+                  }
                 >
                   {recentTasks?.tasks && recentTasks.tasks.length > 0 ? (
                     <div className="space-y-3">
@@ -337,24 +366,35 @@ const Home: NextPage = () => {
                         })
                         .slice(0, 5)
                         .map((task) => (
-                        <div key={task.id} className="flex items-center space-x-3">
-                          <div className={`flex-shrink-0 w-2 h-2 rounded-full ${
-                            task.status === 'DONE' ? 'bg-green-400' :
-                            task.status === 'IN_PROGRESS' ? 'bg-blue-400' :
-                            'bg-gray-400'
-                          }`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {task.title}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {task.status === 'DONE' ? '已完成' :
-                               task.status === 'IN_PROGRESS' ? '进行中' :
-                               task.status === 'TODO' ? '待办' : '想法'}
-                            </p>
+                          <div
+                            key={task.id}
+                            className="flex items-center space-x-3"
+                          >
+                            <div
+                              className={`h-2 w-2 flex-shrink-0 rounded-full ${
+                                task.status === "DONE"
+                                  ? "bg-green-400"
+                                  : task.status === "IN_PROGRESS"
+                                    ? "bg-blue-400"
+                                    : "bg-gray-400"
+                              }`}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-gray-900">
+                                {task.title}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {task.status === "DONE"
+                                  ? "已完成"
+                                  : task.status === "IN_PROGRESS"
+                                    ? "进行中"
+                                    : task.status === "TODO"
+                                      ? "待办"
+                                      : "想法"}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   ) : (
                     <p className="text-sm text-gray-500">暂无任务</p>
@@ -372,24 +412,30 @@ const Home: NextPage = () => {
             </div>
 
             {/* 最近笔记 */}
-            <div className="bg-white shadow rounded-lg">
+            <div className="rounded-lg bg-white shadow">
               <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">最近笔记</h3>
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  最近笔记
+                </h3>
                 <QueryLoading
                   isLoading={isLoadingNotes}
                   error={notesError}
                   loadingMessage="加载笔记中..."
-                  loadingComponent={<SectionLoading size="sm" message="加载笔记中..." />}
+                  loadingComponent={
+                    <SectionLoading size="sm" message="加载笔记中..." />
+                  }
                 >
                   {recentNotes?.notes && recentNotes.notes.length > 0 ? (
                     <div className="space-y-3">
                       {recentNotes.notes.slice(0, 3).map((note) => (
                         <div key={note.id}>
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="truncate text-sm font-medium text-gray-900">
                             {note.title}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {new Date(note.updatedAt).toLocaleDateString('zh-CN')}
+                            {new Date(note.updatedAt).toLocaleDateString(
+                              "zh-CN",
+                            )}
                           </p>
                         </div>
                       ))}
@@ -410,23 +456,27 @@ const Home: NextPage = () => {
             </div>
 
             {/* 最近日志 */}
-            <div className="bg-white shadow rounded-lg">
+            <div className="rounded-lg bg-white shadow">
               <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">最近日志</h3>
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  最近日志
+                </h3>
                 <QueryLoading
                   isLoading={isLoadingJournals}
                   error={journalsError}
                   loadingMessage="加载日志中..."
-                  loadingComponent={<SectionLoading size="sm" message="加载日志中..." />}
+                  loadingComponent={
+                    <SectionLoading size="sm" message="加载日志中..." />
+                  }
                 >
                   {recentJournals && recentJournals.length > 0 ? (
                     <div className="space-y-3">
                       {recentJournals.slice(0, 3).map((journal) => (
                         <div key={journal.id}>
                           <p className="text-sm font-medium text-gray-900">
-                            {new Date(journal.date).toLocaleDateString('zh-CN')}
+                            {new Date(journal.date).toLocaleDateString("zh-CN")}
                           </p>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="truncate text-sm text-gray-500">
                             {journal.preview}
                           </p>
                         </div>

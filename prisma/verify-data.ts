@@ -51,19 +51,26 @@ async function verifyData() {
       console.log(`  - 日志: ${userWithData.journals.length} 篇`);
 
       // 验证任务状态分布
-      const statusCounts = userWithData.tasks.reduce((acc, task) => {
-        acc[task.status] = (acc[task.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const statusCounts = userWithData.tasks.reduce(
+        (acc, task) => {
+          acc[task.status] = (acc[task.status] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       console.log(`  - 任务状态分布:`, statusCounts);
 
       // 验证标签关联
-      const tasksWithTags = userWithData.tasks.filter(task => task.tags.length > 0);
+      const tasksWithTags = userWithData.tasks.filter(
+        (task) => task.tags.length > 0,
+      );
       console.log(`  - 有标签的任务: ${tasksWithTags.length} 个`);
 
       // 验证时间追踪
-      const tasksWithTime = userWithData.tasks.filter(task => task.timeEntries.length > 0);
+      const tasksWithTime = userWithData.tasks.filter(
+        (task) => task.timeEntries.length > 0,
+      );
       console.log(`  - 有时间记录的任务: ${tasksWithTime.length} 个`);
     }
 
@@ -87,12 +94,13 @@ async function verifyData() {
     for (const task of complexQuery) {
       console.log(`  - ${task.title}`);
       console.log(`    项目: ${task.project?.name || "无"}`);
-      console.log(`    标签: ${task.tags.map(t => t.tag.name).join(", ") || "无"}`);
+      console.log(
+        `    标签: ${task.tags.map((t) => t.tag.name).join(", ") || "无"}`,
+      );
       console.log(`    时间记录: ${task.timeEntries.length} 条`);
     }
 
     console.log("\n✅ 数据验证完成！所有关联关系正常工作。");
-
   } catch (error) {
     console.error("❌ 数据验证失败:", error);
     throw error;

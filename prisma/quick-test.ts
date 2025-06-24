@@ -13,7 +13,14 @@ async function quickTest() {
 
     // 2. 基础数据统计
     console.log("\n📊 数据统计:");
-    const [userCount, projectCount, taskCount, noteCount, journalCount, tagCount] = await Promise.all([
+    const [
+      userCount,
+      projectCount,
+      taskCount,
+      noteCount,
+      journalCount,
+      tagCount,
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.project.count(),
       prisma.task.count(),
@@ -37,7 +44,7 @@ async function quickTest() {
 
     // 3. 测试基础查询
     console.log("\n🔍 测试基础查询...");
-    
+
     const firstUser = await prisma.user.findFirst({
       include: {
         projects: true,
@@ -57,7 +64,7 @@ async function quickTest() {
 
     // 4. 测试关联查询
     console.log("\n🔗 测试关联查询...");
-    
+
     const taskWithRelations = await prisma.task.findFirst({
       include: {
         project: true,
@@ -81,9 +88,9 @@ async function quickTest() {
 
     // 5. 测试枚举值
     console.log("\n📋 测试枚举值...");
-    
+
     const taskStatusCounts = await prisma.task.groupBy({
-      by: ['status'],
+      by: ["status"],
       _count: {
         status: true,
       },
@@ -96,7 +103,7 @@ async function quickTest() {
 
     // 6. 测试复杂查询
     console.log("\n🔍 测试复杂查询...");
-    
+
     const recentTasks = await prisma.task.findMany({
       where: {
         createdAt: {
@@ -107,7 +114,7 @@ async function quickTest() {
         project: true,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
       take: 5,
     });
@@ -118,10 +125,9 @@ async function quickTest() {
     }
 
     console.log("\n🎉 所有测试通过！数据库工作正常。");
-
   } catch (error) {
     console.error("❌ 测试失败:", error);
-    
+
     if (error instanceof Error) {
       if (error.message.includes("connect")) {
         console.log("\n💡 可能的解决方案:");
@@ -134,7 +140,7 @@ async function quickTest() {
         console.log("2. 或重置数据库: pnpm prisma migrate reset");
       }
     }
-    
+
     throw error;
   }
 }

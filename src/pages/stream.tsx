@@ -22,15 +22,18 @@ const StreamPage: NextPage = () => {
   const [isClient, setIsClient] = useState(false);
   const [convertingTaskId, setConvertingTaskId] = useState<string | null>(null);
 
-
-
   // 确保只在客户端渲染动态内容，避免水合错误
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   // 获取想法流（IDEA状态的任务）- 创意捕获需要较新的数据
-  const { data: ideasData, isLoading, refetch, isFetching } = api.task.getAll.useQuery(
+  const {
+    data: ideasData,
+    isLoading,
+    refetch,
+    isFetching,
+  } = api.task.getAll.useQuery(
     {
       limit: 50,
       status: "IDEA", // 只获取想法状态的任务
@@ -41,7 +44,7 @@ const StreamPage: NextPage = () => {
       refetchOnWindowFocus: true, // 窗口聚焦时重新获取，适合多设备创意捕获
       refetchOnMount: true, // 每次挂载时重新获取
       refetchOnReconnect: true, // 网络重连时重新获取
-    }
+    },
   );
 
   // 注册页面刷新函数
@@ -101,7 +104,7 @@ const StreamPage: NextPage = () => {
     if (!isClient) {
       return ""; // 服务端渲染时返回空字符串
     }
-    return date.toLocaleString('zh-CN');
+    return date.toLocaleString("zh-CN");
   };
 
   const formatDate = (date: Date) => {
@@ -117,7 +120,7 @@ const StreamPage: NextPage = () => {
       return 0;
     }
     const today = new Date();
-    return ideasData.tasks.filter(idea => {
+    return ideasData.tasks.filter((idea) => {
       const ideaDate = new Date(idea.createdAt);
       return ideaDate.toDateString() === today.toDateString();
     }).length;
@@ -148,7 +151,7 @@ const StreamPage: NextPage = () => {
               <h1 className="text-2xl font-bold text-gray-900">思绪流</h1>
               {isFetching && !isLoading && (
                 <div className="flex items-center text-sm text-blue-600">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                   刷新中...
                 </div>
               )}
@@ -159,10 +162,10 @@ const StreamPage: NextPage = () => {
           </div>
 
           {/* 快速添加想法 */}
-          <div className="bg-white shadow rounded-lg">
+          <div className="rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                <LightBulbIcon className="inline h-5 w-5 mr-2 text-yellow-500" />
+              <h3 className="mb-4 text-lg font-medium text-gray-900">
+                <LightBulbIcon className="mr-2 inline h-5 w-5 text-yellow-500" />
                 记录新想法
               </h3>
               <form onSubmit={handleCreateIdea} className="space-y-4">
@@ -181,7 +184,7 @@ const StreamPage: NextPage = () => {
                     disabled={!newIdea.trim() || createIdea.isPending}
                     className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
                   >
-                    <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+                    <PlusIcon className="mr-1.5 -ml-0.5 h-5 w-5" />
                     {createIdea.isPending ? "保存中..." : "添加想法"}
                   </button>
                 </div>
@@ -191,7 +194,7 @@ const StreamPage: NextPage = () => {
 
           {/* 统计信息 */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="overflow-hidden rounded-lg bg-white shadow">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -199,7 +202,7 @@ const StreamPage: NextPage = () => {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="truncate text-sm font-medium text-gray-500">
                         总想法数
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
@@ -211,7 +214,7 @@ const StreamPage: NextPage = () => {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="overflow-hidden rounded-lg bg-white shadow">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -219,7 +222,7 @@ const StreamPage: NextPage = () => {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="truncate text-sm font-medium text-gray-500">
                         今日新增
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
@@ -231,7 +234,7 @@ const StreamPage: NextPage = () => {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="overflow-hidden rounded-lg bg-white shadow">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -239,7 +242,7 @@ const StreamPage: NextPage = () => {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="truncate text-sm font-medium text-gray-500">
                         待转换
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
@@ -253,9 +256,9 @@ const StreamPage: NextPage = () => {
           </div>
 
           {/* 想法列表 */}
-          <div className="bg-white shadow rounded-lg">
+          <div className="rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="mb-4 text-lg font-medium text-gray-900">
                 最近的想法
               </h3>
 
@@ -264,27 +267,29 @@ const StreamPage: NextPage = () => {
                   {ideasData.tasks.map((idea) => (
                     <div
                       key={idea.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                      className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="text-sm font-medium text-gray-900 mb-2">
+                          <h4 className="mb-2 text-sm font-medium text-gray-900">
                             {idea.title}
                           </h4>
                           {idea.description && (
-                            <p className="text-sm text-gray-600 mb-3">
+                            <p className="mb-3 text-sm text-gray-600">
                               {idea.description}
                             </p>
                           )}
 
                           {/* 标签和项目 */}
-                          <div className="flex flex-wrap gap-2 mb-3">
+                          <div className="mb-3 flex flex-wrap gap-2">
                             {idea.project && (
                               <span
                                 className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                                 style={{
-                                  backgroundColor: idea.project.color ? `${idea.project.color}20` : '#f3f4f6',
-                                  color: idea.project.color || '#374151',
+                                  backgroundColor: idea.project.color
+                                    ? `${idea.project.color}20`
+                                    : "#f3f4f6",
+                                  color: idea.project.color || "#374151",
                                 }}
                               >
                                 {idea.project.name}
@@ -296,11 +301,13 @@ const StreamPage: NextPage = () => {
                                 key={tagRelation.tag.id}
                                 className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
                                 style={{
-                                  backgroundColor: tagRelation.tag.color ? `${tagRelation.tag.color}20` : '#f3f4f6',
-                                  color: tagRelation.tag.color || '#374151',
+                                  backgroundColor: tagRelation.tag.color
+                                    ? `${tagRelation.tag.color}20`
+                                    : "#f3f4f6",
+                                  color: tagRelation.tag.color || "#374151",
                                 }}
                               >
-                                <TagIcon className="h-3 w-3 mr-1" />
+                                <TagIcon className="mr-1 h-3 w-3" />
                                 {tagRelation.tag.name}
                               </span>
                             ))}
@@ -308,9 +315,12 @@ const StreamPage: NextPage = () => {
 
                           {/* 时间信息 - 使用安全的日期格式化 */}
                           <div className="flex items-center text-xs text-gray-500">
-                            <ClockIcon className="h-3 w-3 mr-1" />
+                            <ClockIcon className="mr-1 h-3 w-3" />
                             {isClient && (
-                              <span>创建于 {formatDateTime(new Date(idea.createdAt))}</span>
+                              <span>
+                                创建于{" "}
+                                {formatDateTime(new Date(idea.createdAt))}
+                              </span>
                             )}
                             {!isClient && <span>创建于 ...</span>}
                           </div>
@@ -324,7 +334,9 @@ const StreamPage: NextPage = () => {
                             disabled={convertingTaskId === idea.id}
                             className="inline-flex items-center rounded-md bg-green-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:opacity-50"
                           >
-                            {convertingTaskId === idea.id ? "转换中..." : "转为任务"}
+                            {convertingTaskId === idea.id
+                              ? "转换中..."
+                              : "转为任务"}
                           </button>
                         </div>
                       </div>
@@ -332,9 +344,11 @@ const StreamPage: NextPage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="py-8 text-center">
                   <LightBulbIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">暂无想法</h3>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    暂无想法
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     开始记录您的第一个想法吧！
                   </p>
@@ -342,8 +356,6 @@ const StreamPage: NextPage = () => {
               )}
             </div>
           </div>
-
-
         </div>
       </MainLayout>
     </AuthGuard>

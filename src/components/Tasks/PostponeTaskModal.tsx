@@ -27,7 +27,9 @@ export default function PostponeTaskModal({
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [note, setNote] = useState<string>("");
-  const [selectedQuickOption, setSelectedQuickOption] = useState<number | null>(null);
+  const [selectedQuickOption, setSelectedQuickOption] = useState<number | null>(
+    null,
+  );
 
   // 快捷时间调整选项（支持延期和提前）
   const quickOptions = [
@@ -60,27 +62,38 @@ export default function PostponeTaskModal({
         // 默认延期1小时
         const defaultPostponeDate = new Date(currentDueDate);
         if (currentDueTime) {
-          const [hours, minutes] = currentDueTime.split(':');
-          defaultPostponeDate.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
+          const [hours, minutes] = currentDueTime.split(":");
+          defaultPostponeDate.setHours(
+            parseInt(hours || "0"),
+            parseInt(minutes || "0"),
+            0,
+            0,
+          );
         } else {
           // 没有具体时间，设置为当天23:59
           defaultPostponeDate.setHours(23, 59, 0, 0);
         }
         // 延期1小时
         defaultPostponeDate.setHours(defaultPostponeDate.getHours() + 1);
-        setSelectedDate(defaultPostponeDate.toISOString().split('T')[0] || '');
+        setSelectedDate(defaultPostponeDate.toISOString().split("T")[0] || "");
 
-        const newHours = defaultPostponeDate.getHours().toString().padStart(2, '0');
-        const newMinutes = defaultPostponeDate.getMinutes().toString().padStart(2, '0');
+        const newHours = defaultPostponeDate
+          .getHours()
+          .toString()
+          .padStart(2, "0");
+        const newMinutes = defaultPostponeDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0");
         setSelectedTime(`${newHours}:${newMinutes}`);
       } else {
         // 如果没有当前截止时间，默认设置为1小时后
         const oneHourLater = new Date();
         oneHourLater.setHours(oneHourLater.getHours() + 1);
-        setSelectedDate(oneHourLater.toISOString().split('T')[0] || '');
+        setSelectedDate(oneHourLater.toISOString().split("T")[0] || "");
 
-        const hours = oneHourLater.getHours().toString().padStart(2, '0');
-        const minutes = oneHourLater.getMinutes().toString().padStart(2, '0');
+        const hours = oneHourLater.getHours().toString().padStart(2, "0");
+        const minutes = oneHourLater.getMinutes().toString().padStart(2, "0");
         setSelectedTime(`${hours}:${minutes}`);
       }
 
@@ -91,7 +104,10 @@ export default function PostponeTaskModal({
   }, [isOpen, currentDueDate, currentDueTime]);
 
   // 处理快捷时间调整（支持延期和提前）
-  const handleQuickPostpone = (option: { hours?: number; days?: number }, optionIndex: number) => {
+  const handleQuickPostpone = (
+    option: { hours?: number; days?: number },
+    optionIndex: number,
+  ) => {
     // 以当前截止时间为基点计算调整后的时间
     let baseTime: Date;
 
@@ -99,8 +115,13 @@ export default function PostponeTaskModal({
       baseTime = new Date(currentDueDate);
       // 如果有具体时间，设置到baseTime
       if (currentDueTime) {
-        const [hours, minutes] = currentDueTime.split(':');
-        baseTime.setHours(parseInt(hours || '0'), parseInt(minutes || '0'), 0, 0);
+        const [hours, minutes] = currentDueTime.split(":");
+        baseTime.setHours(
+          parseInt(hours || "0"),
+          parseInt(minutes || "0"),
+          0,
+          0,
+        );
       } else {
         // 没有具体时间，设置为当天23:59
         baseTime.setHours(23, 59, 0, 0);
@@ -119,14 +140,17 @@ export default function PostponeTaskModal({
 
     // 检查调整后的时间是否在过去（仅对提前操作进行提醒）
     const now = new Date();
-    if (baseTime < now && (option.hours && option.hours < 0 || option.days && option.days < 0)) {
+    if (
+      baseTime < now &&
+      ((option.hours && option.hours < 0) || (option.days && option.days < 0))
+    ) {
       // 如果提前后的时间在过去，给出提示但仍允许设置
-      console.warn('调整后的时间在过去，请确认是否正确');
+      console.warn("调整后的时间在过去，请确认是否正确");
     }
 
-    setSelectedDate(baseTime.toISOString().split('T')[0] || '');
-    const hours = baseTime.getHours().toString().padStart(2, '0');
-    const minutes = baseTime.getMinutes().toString().padStart(2, '0');
+    setSelectedDate(baseTime.toISOString().split("T")[0] || "");
+    const hours = baseTime.getHours().toString().padStart(2, "0");
+    const minutes = baseTime.getMinutes().toString().padStart(2, "0");
     setSelectedTime(`${hours}:${minutes}`);
 
     // 设置选中的快捷选项
@@ -167,13 +191,13 @@ export default function PostponeTaskModal({
   const formatCurrentDueDate = () => {
     if (!currentDueDate) return "未设置截止时间";
 
-    const dateStr = currentDueDate.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+    const dateStr = currentDueDate.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
 
-    return `${dateStr}${currentDueTime ? ` ${currentDueTime}` : ' 全天'}`;
+    return `${dateStr}${currentDueTime ? ` ${currentDueTime}` : " 全天"}`;
   };
 
   // 格式化延期后时间显示
@@ -181,13 +205,13 @@ export default function PostponeTaskModal({
     if (!selectedDate) return "";
 
     const newDate = new Date(selectedDate);
-    const dateStr = newDate.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+    const dateStr = newDate.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
 
-    return `${dateStr}${selectedTime ? ` ${selectedTime}` : ' 全天'}`;
+    return `${dateStr}${selectedTime ? ` ${selectedTime}` : " 全天"}`;
   };
 
   return (
@@ -202,7 +226,7 @@ export default function PostponeTaskModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="bg-opacity-25 fixed inset-0 bg-black" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -218,22 +242,27 @@ export default function PostponeTaskModal({
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                 {/* 标题栏 */}
-                <div className="flex items-center justify-between mb-4">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                <div className="mb-4 flex items-center justify-between">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg leading-6 font-medium text-gray-900"
+                  >
                     调整任务时间
                   </Dialog.Title>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="rounded-md text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
                 </div>
 
                 {/* 任务信息 */}
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">{taskTitle}</h4>
+                <div className="mb-4 rounded-lg bg-gray-50 p-3">
+                  <h4 className="mb-2 font-medium text-gray-900">
+                    {taskTitle}
+                  </h4>
                   <div className="space-y-1">
                     <p className="text-sm text-gray-600">
                       当前截止时间：{formatCurrentDueDate()}
@@ -249,26 +278,28 @@ export default function PostponeTaskModal({
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* 快捷时间调整选项 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
                       快捷时间调整
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {quickOptions.map((option, index) => {
-                        const isAdvance = (option.hours && option.hours < 0) || (option.days && option.days < 0);
+                        const isAdvance =
+                          (option.hours && option.hours < 0) ||
+                          (option.days && option.days < 0);
                         const isSelected = selectedQuickOption === index;
                         return (
                           <button
                             key={index}
                             type="button"
                             onClick={() => handleQuickPostpone(option, index)}
-                            className={`px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                            className={`rounded-md border px-3 py-2 text-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                               isSelected
                                 ? isAdvance
-                                  ? 'border-orange-500 bg-orange-100 text-orange-800 shadow-sm'
-                                  : 'border-blue-500 bg-blue-100 text-blue-800 shadow-sm'
+                                  ? "border-orange-500 bg-orange-100 text-orange-800 shadow-sm"
+                                  : "border-blue-500 bg-blue-100 text-blue-800 shadow-sm"
                                 : isAdvance
-                                  ? 'border-orange-300 text-orange-700 hover:bg-orange-50'
-                                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                  ? "border-orange-300 text-orange-700 hover:bg-orange-50"
+                                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                           >
                             {option.label}
@@ -280,7 +311,10 @@ export default function PostponeTaskModal({
 
                   {/* 自定义日期 */}
                   <div>
-                    <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="dueDate"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
                       调整至日期 *
                     </label>
                     <input
@@ -288,14 +322,17 @@ export default function PostponeTaskModal({
                       id="dueDate"
                       value={selectedDate}
                       onChange={(e) => handleManualDateChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       required
                     />
                   </div>
 
                   {/* 自定义时间 */}
                   <div>
-                    <label htmlFor="dueTime" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="dueTime"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
                       调整至时间（可选）
                     </label>
                     <input
@@ -303,13 +340,16 @@ export default function PostponeTaskModal({
                       id="dueTime"
                       value={selectedTime}
                       onChange={(e) => handleManualTimeChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
 
                   {/* 延期备注 */}
                   <div>
-                    <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="note"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
                       调整原因（可选）
                     </label>
                     <textarea
@@ -319,9 +359,11 @@ export default function PostponeTaskModal({
                       rows={3}
                       maxLength={500}
                       placeholder="记录时间调整的原因..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
-                    <p className="text-xs text-gray-500 mt-1">{note.length}/500</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {note.length}/500
+                    </p>
                   </div>
 
                   {/* 操作按钮 */}
@@ -329,14 +371,14 @@ export default function PostponeTaskModal({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
                       取消
                     </button>
                     <button
                       type="submit"
                       disabled={postponeTask.isPending || !selectedDate}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {postponeTask.isPending ? "调整中..." : "确认调整"}
                     </button>

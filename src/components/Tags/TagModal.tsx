@@ -42,12 +42,38 @@ const PRESET_COLORS = [
 
 // 预定义图标选项
 const PRESET_ICONS = [
-  "🏷️", "📌", "⭐", "🔥", "💡", "📝", "📊", "🎯",
-  "🚀", "💼", "🏠", "📞", "💻", "🌐", "📅", "⏰",
-  "✅", "❌", "⚠️", "🔔", "📧", "📁", "🔍", "⚙️",
+  "🏷️",
+  "📌",
+  "⭐",
+  "🔥",
+  "💡",
+  "📝",
+  "📊",
+  "🎯",
+  "🚀",
+  "💼",
+  "🏠",
+  "📞",
+  "💻",
+  "🌐",
+  "📅",
+  "⏰",
+  "✅",
+  "❌",
+  "⚠️",
+  "🔔",
+  "📧",
+  "📁",
+  "🔍",
+  "⚙️",
 ];
 
-export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalProps) {
+export default function TagModal({
+  isOpen,
+  onClose,
+  tag,
+  onSuccess,
+}: TagModalProps) {
   const [formData, setFormData] = useState<TagFormData>({
     name: "",
     color: "#3B82F6",
@@ -172,7 +198,7 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="bg-opacity-25 fixed inset-0 bg-black" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -187,8 +213,11 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex items-center justify-between mb-6">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                <div className="mb-6 flex items-center justify-between">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg leading-6 font-medium text-gray-900"
+                  >
                     {isEditing ? "编辑标签" : "创建新标签"}
                   </Dialog.Title>
                   <button
@@ -203,10 +232,10 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* 标签预览 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
                       预览效果
                     </label>
-                    <div className="p-3 bg-gray-50 rounded-md">
+                    <div className="rounded-md bg-gray-50 p-3">
                       <TagDisplay
                         tag={previewTag}
                         size="md"
@@ -218,7 +247,10 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
 
                   {/* 标签名称 */}
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       标签名称 *
                     </label>
                     <input
@@ -227,21 +259,31 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                       required
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       placeholder="输入标签名称..."
                     />
                   </div>
 
                   {/* 标签类型 */}
                   <div>
-                    <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="type"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       标签类型
                     </label>
                     <select
                       id="type"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value as TagType })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          type: e.target.value as TagType,
+                        })
+                      }
                       disabled={isEditing && tag?.isSystem}
                     >
                       <option value={TagType.CUSTOM}>自定义</option>
@@ -253,7 +295,10 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
 
                   {/* 标签分类 */}
                   <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="category"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       分类 (可选)
                     </label>
                     <input
@@ -261,28 +306,34 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                       id="category"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
                       placeholder="如：工作、生活、学习..."
                     />
                   </div>
 
                   {/* 标签颜色 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
                       标签颜色
                     </label>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="mb-2 flex items-center gap-2">
                       <input
                         type="color"
                         value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="h-8 w-16 border border-gray-300 rounded cursor-pointer"
+                        onChange={(e) =>
+                          setFormData({ ...formData, color: e.target.value })
+                        }
+                        className="h-8 w-16 cursor-pointer rounded border border-gray-300"
                       />
                       <input
                         type="text"
                         value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
+                        onChange={(e) =>
+                          setFormData({ ...formData, color: e.target.value })
+                        }
+                        className="flex-1 rounded border border-gray-300 px-3 py-1 text-sm"
                         placeholder="#3B82F6"
                       />
                     </div>
@@ -293,7 +344,9 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                           type="button"
                           onClick={() => setFormData({ ...formData, color })}
                           className={`h-6 w-6 rounded border-2 ${
-                            formData.color === color ? "border-gray-400" : "border-gray-200"
+                            formData.color === color
+                              ? "border-gray-400"
+                              : "border-gray-200"
                           }`}
                           style={{ backgroundColor: color }}
                           title={color}
@@ -304,23 +357,25 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
 
                   {/* 标签图标 */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
                       标签图标 (可选)
                     </label>
                     <input
                       type="text"
                       value={formData.icon}
-                      onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                      className="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      onChange={(e) =>
+                        setFormData({ ...formData, icon: e.target.value })
+                      }
+                      className="mb-2 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                       placeholder="输入emoji或图标..."
                     />
-                    <div className="grid grid-cols-8 gap-1 max-h-24 overflow-y-auto">
+                    <div className="grid max-h-24 grid-cols-8 gap-1 overflow-y-auto">
                       {PRESET_ICONS.map((icon) => (
                         <button
                           key={icon}
                           type="button"
                           onClick={() => setFormData({ ...formData, icon })}
-                          className={`h-8 w-8 text-lg hover:bg-gray-100 rounded ${
+                          className={`h-8 w-8 rounded text-lg hover:bg-gray-100 ${
                             formData.icon === icon ? "bg-blue-100" : ""
                           }`}
                         >
@@ -332,7 +387,10 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
 
                   {/* 标签描述 */}
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       描述 (可选)
                     </label>
                     <textarea
@@ -340,7 +398,12 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                       rows={2}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
                       placeholder="输入标签描述..."
                     />
                   </div>
@@ -349,7 +412,7 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                   <div className="flex justify-end space-x-3 pt-4">
                     <button
                       type="button"
-                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                       onClick={handleClose}
                     >
                       取消
@@ -357,12 +420,14 @@ export default function TagModal({ isOpen, onClose, tag, onSuccess }: TagModalPr
                     <button
                       type="submit"
                       disabled={createTag.isPending || updateTag.isPending}
-                      className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                     >
                       {createTag.isPending || updateTag.isPending ? (
                         <ButtonLoading message="保存中..." size="sm" />
+                      ) : isEditing ? (
+                        "更新"
                       ) : (
-                        isEditing ? "更新" : "创建"
+                        "创建"
                       )}
                     </button>
                   </div>

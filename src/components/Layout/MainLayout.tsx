@@ -140,28 +140,36 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
     // 初始化时，如果当前路径是相关页面，自动展开对应菜单
     const initialExpanded = new Set<string>();
-    if (typeof window !== 'undefined') {
-      if (window.location.pathname.startsWith('/tasks')) {
-        initialExpanded.add('任务管理');
+    if (typeof window !== "undefined") {
+      if (window.location.pathname.startsWith("/tasks")) {
+        initialExpanded.add("任务管理");
       }
-      if (window.location.pathname.startsWith('/analytics') || window.location.pathname.startsWith('/review')) {
-        initialExpanded.add('统计分析');
+      if (
+        window.location.pathname.startsWith("/analytics") ||
+        window.location.pathname.startsWith("/review")
+      ) {
+        initialExpanded.add("统计分析");
       }
     }
     return initialExpanded;
   });
   // 收缩状态下的子菜单展开状态
-  const [collapsedExpandedItems, setCollapsedExpandedItems] = useState<Set<string>>(new Set());
+  const [collapsedExpandedItems, setCollapsedExpandedItems] = useState<
+    Set<string>
+  >(new Set());
   const { isCollapsed, isLoaded, toggleSidebar } = useSidebarState();
   const { refreshPage } = useRefresh();
 
   // 监听路由变化，自动展开相关菜单
   useEffect(() => {
-    if (router.pathname.startsWith('/tasks')) {
-      setExpandedItems(prev => new Set(prev).add('任务管理'));
+    if (router.pathname.startsWith("/tasks")) {
+      setExpandedItems((prev) => new Set(prev).add("任务管理"));
     }
-    if (router.pathname.startsWith('/analytics') || router.pathname.startsWith('/review')) {
-      setExpandedItems(prev => new Set(prev).add('统计分析'));
+    if (
+      router.pathname.startsWith("/analytics") ||
+      router.pathname.startsWith("/review")
+    ) {
+      setExpandedItems((prev) => new Set(prev).add("统计分析"));
     }
   }, [router.pathname]);
 
@@ -170,15 +178,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const handleClickOutside = (event: MouseEvent) => {
       if (collapsedExpandedItems.size > 0) {
         const target = event.target as Element;
-        if (!target.closest('.collapsed-submenu-container')) {
+        if (!target.closest(".collapsed-submenu-container")) {
           setCollapsedExpandedItems(new Set());
         }
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [collapsedExpandedItems]);
 
@@ -203,7 +211,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname === "/tasks/kanban";
     }
     if (href === "/tags") {
-      return router.pathname === "/tags" || router.pathname.startsWith("/tags/");
+      return (
+        router.pathname === "/tags" || router.pathname.startsWith("/tags/")
+      );
     }
     if (href === "/analytics") {
       return router.pathname === "/analytics";
@@ -217,7 +227,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 检查是否有子项处于激活状态
   const hasActiveChild = (item: NavigationItem) => {
     if (!item.children) return false;
-    return item.children.some(child => isActivePath(child.href));
+    return item.children.some((child) => isActivePath(child.href));
   };
 
   // 检查父菜单是否应该激活（当任何子页面激活时）
@@ -226,14 +236,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname.startsWith("/tasks");
     }
     if (item.name === "统计分析") {
-      return router.pathname.startsWith("/analytics") || router.pathname.startsWith("/review");
+      return (
+        router.pathname.startsWith("/analytics") ||
+        router.pathname.startsWith("/review")
+      );
     }
     return isActivePath(item.href);
   };
 
   // 切换展开状态
   const toggleExpanded = (itemName: string) => {
-    setExpandedItems(prev => {
+    setExpandedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemName)) {
         newSet.delete(itemName);
@@ -246,7 +259,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // 切换收缩状态下的展开状态
   const toggleCollapsedExpanded = (itemName: string) => {
-    setCollapsedExpandedItems(prev => {
+    setCollapsedExpandedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(itemName)) {
         newSet.delete(itemName);
@@ -286,7 +299,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           sidebarOpen ? "block" : "hidden"
         }`}
       >
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" />
+        <div className="bg-opacity-75 fixed inset-0 bg-gray-600" />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
             <h1 className="text-xl font-bold text-gray-900">Infer GTD</h1>
@@ -321,7 +334,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                       <div className="flex items-center">
                         <Icon
                           className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                            parentActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                            parentActive
+                              ? "text-blue-500"
+                              : "text-gray-400 group-hover:text-gray-500"
                           }`}
                         />
                         {item.name}
@@ -340,11 +355,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                           ? "bg-blue-100 text-blue-900"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }`}
-                      onClick={(event) => handleNavigationClick(item.href, event)}
+                      onClick={(event) =>
+                        handleNavigationClick(item.href, event)
+                      }
                     >
                       <Icon
                         className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                          isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                          isActive
+                            ? "text-blue-500"
+                            : "text-gray-400 group-hover:text-gray-500"
                         }`}
                       />
                       {item.name}
@@ -353,7 +372,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                   {/* 子导航项 */}
                   {hasChildren && isExpanded && (
-                    <div className="ml-6 mt-1 space-y-1">
+                    <div className="mt-1 ml-6 space-y-1">
                       {item.children!.map((child) => {
                         const ChildIcon = child.icon;
                         const isChildActive = isActivePath(child.href);
@@ -366,11 +385,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                 ? "bg-blue-100 text-blue-900"
                                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                             }`}
-                            onClick={(event) => handleNavigationClick(child.href, event)}
+                            onClick={(event) =>
+                              handleNavigationClick(child.href, event)
+                            }
                           >
                             <ChildIcon
                               className={`mr-3 h-4 w-4 flex-shrink-0 ${
-                                isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                                isChildActive
+                                  ? "text-blue-500"
+                                  : "text-gray-400 group-hover:text-gray-500"
                               }`}
                             />
                             {child.name}
@@ -387,13 +410,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ease-in-out ${
-        isCollapsed && collapsedExpandedItems.size === 0
-          ? "lg:w-16"
-          : isCollapsed && collapsedExpandedItems.size > 0
-          ? "lg:w-20"
-          : "lg:w-56"
-      }`}>
+      <div
+        className={`hidden transition-all duration-300 ease-in-out lg:fixed lg:inset-y-0 lg:flex lg:flex-col ${
+          isCollapsed && collapsedExpandedItems.size === 0
+            ? "lg:w-16"
+            : isCollapsed && collapsedExpandedItems.size > 0
+              ? "lg:w-20"
+              : "lg:w-56"
+        }`}
+      >
         <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
           <div className="flex flex-shrink-0 items-center justify-between px-4">
             {!isCollapsed && (
@@ -419,21 +444,27 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 const isActive = isActivePath(item.href);
                 const hasChildren = item.children && item.children.length > 0;
                 const isExpanded = expandedItems.has(item.name);
-                const isCollapsedExpanded = collapsedExpandedItems.has(item.name);
+                const isCollapsedExpanded = collapsedExpandedItems.has(
+                  item.name,
+                );
                 const hasActiveChildItem = hasActiveChild(item);
                 const parentActive = isParentActive(item);
 
                 return (
                   <div key={item.name}>
                     {hasChildren ? (
-                      <div className="relative collapsed-submenu-container">
+                      <div className="collapsed-submenu-container relative">
                         <button
                           className={`flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors ${
                             parentActive
                               ? "bg-blue-100 text-blue-900"
                               : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                           } ${isCollapsed ? "justify-center" : "justify-between"}`}
-                          title={isCollapsed ? `${item.description} (点击展开子菜单)` : item.description}
+                          title={
+                            isCollapsed
+                              ? `${item.description} (点击展开子菜单)`
+                              : item.description
+                          }
                           onClick={() => {
                             if (isCollapsed) {
                               // 在收缩状态下，点击切换子菜单展开状态
@@ -446,7 +477,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                           <div className="flex items-center">
                             <Icon
                               className={`h-5 w-5 flex-shrink-0 ${
-                                parentActive ? "text-blue-500" : "text-gray-400 group-hover/parent:text-gray-500"
+                                parentActive
+                                  ? "text-blue-500"
+                                  : "text-gray-400 group-hover/parent:text-gray-500"
                               } ${isCollapsed ? "" : "mr-3"}`}
                             />
                             {!isCollapsed && (
@@ -454,7 +487,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                             )}
                             {/* 收缩状态下的多级菜单指示器 */}
                             {isCollapsed && (
-                              <div className="absolute -right-0.5 -top-0.5 bg-blue-500 rounded-full p-0.5">
+                              <div className="absolute -top-0.5 -right-0.5 rounded-full bg-blue-500 p-0.5">
                                 {isCollapsedExpanded ? (
                                   <ChevronDownIcon className="h-2.5 w-2.5 text-white" />
                                 ) : (
@@ -463,18 +496,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
                               </div>
                             )}
                           </div>
-                          {!isCollapsed && (
-                            isExpanded ? (
+                          {!isCollapsed &&
+                            (isExpanded ? (
                               <ChevronUpIcon className="h-4 w-4" />
                             ) : (
                               <ChevronDownIcon className="h-4 w-4" />
-                            )
-                          )}
+                            ))}
                         </button>
 
                         {/* 子导航项 - 展开状态下显示 */}
                         {hasChildren && isExpanded && !isCollapsed && (
-                          <div className="ml-6 mt-1 space-y-1">
+                          <div className="mt-1 ml-6 space-y-1">
                             {item.children!.map((child) => {
                               const ChildIcon = child.icon;
                               const isChildActive = isActivePath(child.href);
@@ -488,11 +520,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                   }`}
                                   title={child.description}
-                                  onClick={(event) => handleNavigationClick(child.href, event)}
+                                  onClick={(event) =>
+                                    handleNavigationClick(child.href, event)
+                                  }
                                 >
                                   <ChildIcon
                                     className={`mr-3 h-4 w-4 flex-shrink-0 ${
-                                      isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                                      isChildActive
+                                        ? "text-blue-500"
+                                        : "text-gray-400 group-hover:text-gray-500"
                                     }`}
                                   />
                                   {child.name}
@@ -504,7 +540,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                         {/* 收缩状态下的展开子菜单 */}
                         {hasChildren && isCollapsed && isCollapsedExpanded && (
-                          <div className="mt-1 space-y-0.5 border-l-2 border-blue-200 ml-2">
+                          <div className="mt-1 ml-2 space-y-0.5 border-l-2 border-blue-200">
                             {item.children!.map((child) => {
                               const ChildIcon = child.icon;
                               const isChildActive = isActivePath(child.href);
@@ -512,7 +548,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                 <Link
                                   key={child.name}
                                   href={child.href}
-                                  className={`group flex items-center justify-center rounded-md mx-1 py-1.5 text-sm font-medium ${
+                                  className={`group mx-1 flex items-center justify-center rounded-md py-1.5 text-sm font-medium ${
                                     isChildActive
                                       ? "bg-blue-100 text-blue-900"
                                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -521,7 +557,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                   onClick={(event) => {
                                     handleNavigationClick(child.href, event);
                                     // 点击后关闭展开状态
-                                    setCollapsedExpandedItems(prev => {
+                                    setCollapsedExpandedItems((prev) => {
                                       const newSet = new Set(prev);
                                       newSet.delete(item.name);
                                       return newSet;
@@ -530,7 +566,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                 >
                                   <ChildIcon
                                     className={`h-5 w-5 flex-shrink-0 ${
-                                      isChildActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                                      isChildActive
+                                        ? "text-blue-500"
+                                        : "text-gray-400 group-hover:text-gray-500"
                                     }`}
                                     aria-hidden="true"
                                   />
@@ -548,12 +586,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
                             ? "bg-blue-100 text-blue-900"
                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                         } ${isCollapsed ? "justify-center" : ""}`}
-                        title={isCollapsed ? item.description : item.description}
-                        onClick={(event) => handleNavigationClick(item.href, event)}
+                        title={
+                          isCollapsed ? item.description : item.description
+                        }
+                        onClick={(event) =>
+                          handleNavigationClick(item.href, event)
+                        }
                       >
                         <Icon
                           className={`h-5 w-5 flex-shrink-0 ${
-                            isActive ? "text-blue-500" : "text-gray-400 group-hover:text-gray-500"
+                            isActive
+                              ? "text-blue-500"
+                              : "text-gray-400 group-hover:text-gray-500"
                           } ${isCollapsed ? "" : "mr-3"}`}
                         />
                         {!isCollapsed && (
@@ -570,13 +614,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className={`transition-all duration-300 ease-in-out ${
-        isCollapsed && collapsedExpandedItems.size === 0
-          ? "lg:pl-16"
-          : isCollapsed && collapsedExpandedItems.size > 0
-          ? "lg:pl-20"
-          : "lg:pl-56"
-      }`}>
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          isCollapsed && collapsedExpandedItems.size === 0
+            ? "lg:pl-16"
+            : isCollapsed && collapsedExpandedItems.size > 0
+              ? "lg:pl-20"
+              : "lg:pl-56"
+        }`}
+      >
         {/* Top navigation */}
         <div className="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button

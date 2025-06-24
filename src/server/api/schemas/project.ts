@@ -4,15 +4,25 @@ import { z } from "zod";
 export const createProjectSchema = z.object({
   name: z.string().min(1, "项目名称不能为空").max(100, "项目名称过长"),
   description: z.string().max(500, "项目描述过长").optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "颜色格式无效").optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "颜色格式无效")
+    .optional(),
 });
 
 // 项目更新 Schema
 export const updateProjectSchema = z.object({
   id: z.string().cuid("无效的项目ID"),
-  name: z.string().min(1, "项目名称不能为空").max(100, "项目名称过长").optional(),
+  name: z
+    .string()
+    .min(1, "项目名称不能为空")
+    .max(100, "项目名称过长")
+    .optional(),
   description: z.string().max(500, "项目描述过长").optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "颜色格式无效").optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "颜色格式无效")
+    .optional(),
 });
 
 // 项目查询 Schema
@@ -44,7 +54,9 @@ export const getProjectStatsSchema = z.object({
 // 项目任务查询 Schema
 export const getProjectTasksSchema = z.object({
   id: z.string().cuid("无效的项目ID"),
-  status: z.enum(["IDEA", "TODO", "IN_PROGRESS", "WAITING", "DONE", "ARCHIVED"]).optional(),
+  status: z
+    .enum(["IDEA", "TODO", "IN_PROGRESS", "WAITING", "DONE", "ARCHIVED"])
+    .optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   limit: z.number().min(1).max(100).default(50),
   cursor: z.string().cuid().optional(),
@@ -60,7 +72,9 @@ export const getProjectNotesSchema = z.object({
 
 // 批量项目操作 Schema
 export const batchProjectOperationSchema = z.object({
-  projectIds: z.array(z.string().cuid("无效的项目ID")).min(1, "至少选择一个项目"),
+  projectIds: z
+    .array(z.string().cuid("无效的项目ID"))
+    .min(1, "至少选择一个项目"),
   operation: z.enum(["archive", "unarchive", "delete"]),
 });
 
@@ -78,5 +92,7 @@ export type ArchiveProjectInput = z.infer<typeof archiveProjectSchema>;
 export type GetProjectStatsInput = z.infer<typeof getProjectStatsSchema>;
 export type GetProjectTasksInput = z.infer<typeof getProjectTasksSchema>;
 export type GetProjectNotesInput = z.infer<typeof getProjectNotesSchema>;
-export type BatchProjectOperationInput = z.infer<typeof batchProjectOperationSchema>;
+export type BatchProjectOperationInput = z.infer<
+  typeof batchProjectOperationSchema
+>;
 export type ReorderProjectsInput = z.infer<typeof reorderProjectsSchema>;

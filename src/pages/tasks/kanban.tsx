@@ -33,9 +33,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import {
-  useSortable,
-} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import { api } from "@/utils/api";
@@ -94,7 +92,16 @@ const KANBAN_COLUMNS = [
 type TaskWithRelations = Task & {
   project?: { id: string; name: string; color?: string | null } | null;
   tags: Array<{
-    tag: { id: string; name: string; color?: string | null; type: any; category?: string | null; isSystem: boolean; description?: string | null; icon?: string | null };
+    tag: {
+      id: string;
+      name: string;
+      color?: string | null;
+      type: any;
+      category?: string | null;
+      isSystem: boolean;
+      description?: string | null;
+      icon?: string | null;
+    };
   }>;
   timeEntries: Array<{
     id: string;
@@ -128,14 +135,22 @@ const KanbanPage: NextPage = () => {
   const [isPostponeModalOpen, setIsPostponeModalOpen] = useState(false);
   const [postponeTaskId, setPostponeTaskId] = useState<string | null>(null);
   const [postponeTaskTitle, setPostponeTaskTitle] = useState<string>("");
-  const [postponeTaskDueDate, setPostponeTaskDueDate] = useState<Date | null>(null);
-  const [postponeTaskDueTime, setPostponeTaskDueTime] = useState<string | null>(null);
+  const [postponeTaskDueDate, setPostponeTaskDueDate] = useState<Date | null>(
+    null,
+  );
+  const [postponeTaskDueTime, setPostponeTaskDueTime] = useState<string | null>(
+    null,
+  );
 
   // 乐观更新状态
-  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, TaskStatus>>({});
+  const [optimisticUpdates, setOptimisticUpdates] = useState<
+    Record<string, TaskStatus>
+  >({});
 
   // 排序相关状态
-  const [optimisticTaskOrder, setOptimisticTaskOrder] = useState<Record<TaskStatus, string[]>>({
+  const [optimisticTaskOrder, setOptimisticTaskOrder] = useState<
+    Record<TaskStatus, string[]>
+  >({
     [TaskStatus.IDEA]: [],
     [TaskStatus.TODO]: [],
     [TaskStatus.IN_PROGRESS]: [],
@@ -144,24 +159,19 @@ const KanbanPage: NextPage = () => {
     [TaskStatus.ARCHIVED]: [],
   });
 
-
-
   // 正在更新状态和位置的任务
   const [updatingTasks, setUpdatingTasks] = useState<Set<string>>(new Set());
 
   // 计时操作的专用loading状态
-  const [timerLoadingTasks, setTimerLoadingTasks] = useState<Set<string>>(new Set());
+  const [timerLoadingTasks, setTimerLoadingTasks] = useState<Set<string>>(
+    new Set(),
+  );
 
   // 通知系统
-  const {
-    showSuccess,
-    showError,
-  } = useGlobalNotifications();
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 确认对话框
   const { confirmState, showConfirm, hideConfirm } = useConfirm();
-
-
 
   // 拖拽传感器配置
   const sensors = useSensors(
@@ -169,7 +179,7 @@ const KanbanPage: NextPage = () => {
       activationConstraint: {
         distance: 8, // 8px 移动距离后才开始拖拽
       },
-    })
+    }),
   );
 
   // 自定义碰撞检测：优先检测任务，然后检测列
@@ -178,7 +188,7 @@ const KanbanPage: NextPage = () => {
     const taskCollisions = pointerWithin({
       ...args,
       droppableContainers: args.droppableContainers.filter(
-        container => container.data.current?.type === "task"
+        (container) => container.data.current?.type === "task",
       ),
     });
 
@@ -190,14 +200,12 @@ const KanbanPage: NextPage = () => {
     const columnCollisions = pointerWithin({
       ...args,
       droppableContainers: args.droppableContainers.filter(
-        container => container.data.current?.type === "column"
+        (container) => container.data.current?.type === "column",
       ),
     });
 
     return columnCollisions;
   };
-
-
 
   // 为每个状态单独获取任务数据
   // 使用 useInfiniteQuery 来实现真正的分页加载，避免数据清空
@@ -208,7 +216,7 @@ const KanbanPage: NextPage = () => {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+    },
   );
 
   const todoTasks = api.task.getByStatus.useInfiniteQuery(
@@ -218,7 +226,7 @@ const KanbanPage: NextPage = () => {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+    },
   );
 
   const inProgressTasks = api.task.getByStatus.useInfiniteQuery(
@@ -228,7 +236,7 @@ const KanbanPage: NextPage = () => {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+    },
   );
 
   const waitingTasks = api.task.getByStatus.useInfiniteQuery(
@@ -238,7 +246,7 @@ const KanbanPage: NextPage = () => {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+    },
   );
 
   const doneTasks = api.task.getByStatus.useInfiniteQuery(
@@ -248,7 +256,7 @@ const KanbanPage: NextPage = () => {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    }
+    },
   );
 
   // 合并加载状态
@@ -257,31 +265,57 @@ const KanbanPage: NextPage = () => {
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
   // 检查是否是真正的初始加载（第一次访问页面且没有任何数据）
-  const isRealInitialLoading = !sessionData || (!hasInitiallyLoaded && (
-    ideaTasks.isLoading || todoTasks.isLoading || inProgressTasks.isLoading || waitingTasks.isLoading || doneTasks.isLoading
-  ));
+  const isRealInitialLoading =
+    !sessionData ||
+    (!hasInitiallyLoaded &&
+      (ideaTasks.isLoading ||
+        todoTasks.isLoading ||
+        inProgressTasks.isLoading ||
+        waitingTasks.isLoading ||
+        doneTasks.isLoading));
 
-  const isFetching = ideaTasks.isFetching || todoTasks.isFetching || inProgressTasks.isFetching || waitingTasks.isFetching || doneTasks.isFetching;
+  const isFetching =
+    ideaTasks.isFetching ||
+    todoTasks.isFetching ||
+    inProgressTasks.isFetching ||
+    waitingTasks.isFetching ||
+    doneTasks.isFetching;
 
   // 跟踪初始加载完成状态
   useEffect(() => {
     if (sessionData && !hasInitiallyLoaded) {
       // 检查是否所有查询都已完成初始加载（有数据或加载完成）
-      const allQueriesReady = [ideaTasks, todoTasks, inProgressTasks, waitingTasks, doneTasks]
-        .every(query => !query.isLoading);
+      const allQueriesReady = [
+        ideaTasks,
+        todoTasks,
+        inProgressTasks,
+        waitingTasks,
+        doneTasks,
+      ].every((query) => !query.isLoading);
 
       if (allQueriesReady) {
         setHasInitiallyLoaded(true);
       }
     }
-  }, [sessionData, hasInitiallyLoaded, ideaTasks.isLoading, todoTasks.isLoading, inProgressTasks.isLoading, waitingTasks.isLoading, doneTasks.isLoading]);
+  }, [
+    sessionData,
+    hasInitiallyLoaded,
+    ideaTasks.isLoading,
+    todoTasks.isLoading,
+    inProgressTasks.isLoading,
+    waitingTasks.isLoading,
+    doneTasks.isLoading,
+  ]);
 
   // 跟踪不同类型的刷新状态
   const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
-  const [loadingMoreStatuses, setLoadingMoreStatuses] = useState<Set<TaskStatus>>(new Set()); // 正在加载更多的状态
+  const [loadingMoreStatuses, setLoadingMoreStatuses] = useState<
+    Set<TaskStatus>
+  >(new Set()); // 正在加载更多的状态
 
   // 检查是否是手动数据刷新（导航栏点击触发的刷新）
-  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
+  const isDataRefreshing =
+    isFetching && !isRealInitialLoading && isManualRefreshing;
 
   // 监听查询状态变化，在刷新完成后重置标志
   useEffect(() => {
@@ -301,7 +335,7 @@ const KanbanPage: NextPage = () => {
   const getAllTasks = (): TaskWithRelations[] => {
     const flattenPages = (pages: any[] | undefined) => {
       if (!pages) return [];
-      return pages.flatMap(page => page.tasks || []);
+      return pages.flatMap((page) => page.tasks || []);
     };
 
     const allTasks = [
@@ -313,7 +347,7 @@ const KanbanPage: NextPage = () => {
     ];
 
     // 应用乐观更新状态
-    return allTasks.map(task => {
+    return allTasks.map((task) => {
       const optimisticStatus = optimisticUpdates[task.id];
       if (optimisticStatus) {
         return { ...task, status: optimisticStatus };
@@ -337,7 +371,13 @@ const KanbanPage: NextPage = () => {
   // 注册页面刷新函数
   usePageRefresh(() => {
     void refetchAll();
-  }, [ideaTasks.refetch, todoTasks.refetch, inProgressTasks.refetch, waitingTasks.refetch, doneTasks.refetch]);
+  }, [
+    ideaTasks.refetch,
+    todoTasks.refetch,
+    inProgressTasks.refetch,
+    waitingTasks.refetch,
+    doneTasks.refetch,
+  ]);
 
   // 按状态分组任务（包含乐观更新）
   const tasksByStatus = useMemo(() => {
@@ -351,10 +391,13 @@ const KanbanPage: NextPage = () => {
     };
 
     // 处理每个状态的任务数据
-    const processStatusTasks = (pages: any[] | undefined, originalStatus: TaskStatus) => {
+    const processStatusTasks = (
+      pages: any[] | undefined,
+      originalStatus: TaskStatus,
+    ) => {
       if (!pages) return;
 
-      const tasks = pages.flatMap(page => page.tasks || []);
+      const tasks = pages.flatMap((page) => page.tasks || []);
       tasks.forEach((task) => {
         // 检查是否有乐观更新
         const optimisticStatus = optimisticUpdates[task.id];
@@ -381,11 +424,13 @@ const KanbanPage: NextPage = () => {
 
       if (optimisticOrder.length > 0) {
         // 按照乐观更新的顺序重新排列任务
-        const taskMap = new Map(grouped[taskStatus].map(task => [task.id, task]));
+        const taskMap = new Map(
+          grouped[taskStatus].map((task) => [task.id, task]),
+        );
         const reorderedTasks: TaskWithRelations[] = [];
 
         // 先添加按乐观顺序排列的任务
-        optimisticOrder.forEach(taskId => {
+        optimisticOrder.forEach((taskId) => {
           const task = taskMap.get(taskId);
           if (task) {
             reorderedTasks.push(task);
@@ -394,7 +439,7 @@ const KanbanPage: NextPage = () => {
         });
 
         // 再添加剩余的任务（新任务或未在乐观更新中的任务）
-        taskMap.forEach(task => {
+        taskMap.forEach((task) => {
           reorderedTasks.push(task);
         });
 
@@ -410,10 +455,8 @@ const KanbanPage: NextPage = () => {
     waitingTasks.data?.pages,
     doneTasks.data?.pages,
     optimisticUpdates,
-    optimisticTaskOrder
+    optimisticTaskOrder,
   ]);
-
-
 
   // 获取tRPC utils用于缓存操作
   const utils = api.useUtils();
@@ -421,11 +464,13 @@ const KanbanPage: NextPage = () => {
   // 任务状态更新
   const updateTaskStatus = api.task.updateStatus.useMutation({
     onSuccess: (_, variables) => {
-      const columnTitle = KANBAN_COLUMNS.find(col => col.status === variables.status)?.title;
+      const columnTitle = KANBAN_COLUMNS.find(
+        (col) => col.status === variables.status,
+      )?.title;
       showSuccess(`任务已移动到"${columnTitle}"`);
 
       // 清除乐观更新状态
-      setOptimisticUpdates(prev => {
+      setOptimisticUpdates((prev) => {
         const newState = { ...prev };
         delete newState[variables.id];
         return newState;
@@ -437,26 +482,30 @@ const KanbanPage: NextPage = () => {
 
         return {
           ...oldData,
-          tasks: oldData.tasks.map(task =>
+          tasks: oldData.tasks.map((task) =>
             task.id === variables.id
               ? { ...task, status: variables.status }
-              : task
-          )
+              : task,
+          ),
         };
       });
 
       // 如果状态变为已完成，触发反馈收集
       if (variables.status === TaskStatus.DONE) {
         // 从所有任务数据中查找任务信息
-        const task = getAllTasks().find(t => t.id === variables.id);
-        console.log('查找任务反馈信息:', { taskId: variables.id, task: task, allTasksCount: getAllTasks().length });
+        const task = getAllTasks().find((t) => t.id === variables.id);
+        console.log("查找任务反馈信息:", {
+          taskId: variables.id,
+          task: task,
+          allTasksCount: getAllTasks().length,
+        });
         if (task) {
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle(task.title);
           setIsFeedbackModalOpen(true);
         } else {
           // 如果找不到任务，使用默认标题
-          console.warn('未找到任务，使用默认标题:', variables.id);
+          console.warn("未找到任务，使用默认标题:", variables.id);
           setFeedbackTaskId(variables.id);
           setFeedbackTaskTitle("任务");
           setIsFeedbackModalOpen(true);
@@ -465,7 +514,7 @@ const KanbanPage: NextPage = () => {
     },
     onError: (error, variables) => {
       // 立即清除乐观更新状态（回滚）
-      setOptimisticUpdates(prev => {
+      setOptimisticUpdates((prev) => {
         const newState = { ...prev };
         delete newState[variables.id];
         return newState;
@@ -479,11 +528,11 @@ const KanbanPage: NextPage = () => {
   const startTimer = api.task.startTimer.useMutation({
     onMutate: (variables) => {
       // 开始loading状态
-      setTimerLoadingTasks(prev => new Set(prev).add(variables.id));
+      setTimerLoadingTasks((prev) => new Set(prev).add(variables.id));
     },
     onSuccess: (result, variables) => {
       // 清除loading状态
-      setTimerLoadingTasks(prev => {
+      setTimerLoadingTasks((prev) => {
         const newSet = new Set(prev);
         newSet.delete(variables.id);
         return newSet;
@@ -495,10 +544,10 @@ const KanbanPage: NextPage = () => {
 
         return {
           ...oldData,
-          tasks: oldData.tasks.map(task => {
+          tasks: oldData.tasks.map((task) => {
             // 更新被中断任务的totalTimeSpent
             const interruptedTask = result.interruptedTasks?.find(
-              (interrupted: any) => interrupted.id === task.id
+              (interrupted: any) => interrupted.id === task.id,
             );
             if (interruptedTask) {
               return {
@@ -509,7 +558,7 @@ const KanbanPage: NextPage = () => {
               };
             }
             return task;
-          })
+          }),
         };
       });
 
@@ -517,7 +566,7 @@ const KanbanPage: NextPage = () => {
     },
     onError: (error, variables) => {
       // 清除loading状态
-      setTimerLoadingTasks(prev => {
+      setTimerLoadingTasks((prev) => {
         const newSet = new Set(prev);
         newSet.delete(variables.id);
         return newSet;
@@ -529,11 +578,11 @@ const KanbanPage: NextPage = () => {
   const pauseTimer = api.task.pauseTimer.useMutation({
     onMutate: (variables) => {
       // 开始loading状态
-      setTimerLoadingTasks(prev => new Set(prev).add(variables.id));
+      setTimerLoadingTasks((prev) => new Set(prev).add(variables.id));
     },
     onSuccess: (result, variables) => {
       // 清除loading状态
-      setTimerLoadingTasks(prev => {
+      setTimerLoadingTasks((prev) => {
         const newSet = new Set(prev);
         newSet.delete(variables.id);
         return newSet;
@@ -545,16 +594,17 @@ const KanbanPage: NextPage = () => {
 
         return {
           ...oldData,
-          tasks: oldData.tasks.map(task =>
+          tasks: oldData.tasks.map((task) =>
             task.id === variables.id
               ? {
                   ...task,
-                  totalTimeSpent: result.task?.totalTimeSpent || task.totalTimeSpent,
+                  totalTimeSpent:
+                    result.task?.totalTimeSpent || task.totalTimeSpent,
                   isTimerActive: false,
                   timerStartedAt: null,
                 }
-              : task
-          )
+              : task,
+          ),
         };
       });
 
@@ -565,7 +615,7 @@ const KanbanPage: NextPage = () => {
     },
     onError: (error, variables) => {
       // 清除loading状态
-      setTimerLoadingTasks(prev => {
+      setTimerLoadingTasks((prev) => {
         const newSet = new Set(prev);
         newSet.delete(variables.id);
         return newSet;
@@ -617,19 +667,84 @@ const KanbanPage: NextPage = () => {
   });
 
   // 带位置的状态更新
-  const updateStatusWithPosition = api.task.updateStatusWithPosition.useMutation({
-    onSuccess: (_, variables) => {
-      // 立即清理更新状态，但保持乐观更新直到数据刷新
-      setUpdatingTasks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(variables.id);
-        return newSet;
-      });
+  const updateStatusWithPosition =
+    api.task.updateStatusWithPosition.useMutation({
+      onSuccess: (_, variables) => {
+        // 立即清理更新状态，但保持乐观更新直到数据刷新
+        setUpdatingTasks((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(variables.id);
+          return newSet;
+        });
 
-      // 刷新数据并清理乐观更新
-      void refetchAll().then(() => {
-        // 数据更新完成后清理乐观更新
-        setOptimisticUpdates(prev => {
+        // 刷新数据并清理乐观更新
+        void refetchAll().then(() => {
+          // 数据更新完成后清理乐观更新
+          setOptimisticUpdates((prev) => {
+            const newState = { ...prev };
+            delete newState[variables.id];
+            return newState;
+          });
+
+          setOptimisticTaskOrder({
+            [TaskStatus.IDEA]: [],
+            [TaskStatus.TODO]: [],
+            [TaskStatus.IN_PROGRESS]: [],
+            [TaskStatus.WAITING]: [],
+            [TaskStatus.DONE]: [],
+            [TaskStatus.ARCHIVED]: [],
+          });
+        });
+
+        // 如果状态变为已完成，触发反馈收集
+        if (variables.status === TaskStatus.DONE) {
+          // 从所有任务数据中查找任务信息，优先从tasksByStatus中查找
+          let task = (Object.values(tasksByStatus) as TaskWithRelations[][])
+            .flat()
+            .find((t) => t.id === variables.id);
+
+          // 如果在tasksByStatus中找不到，再从getAllTasks中查找
+          if (!task) {
+            task = getAllTasks().find((t) => t.id === variables.id);
+          }
+
+          console.log("拖拽完成查找任务反馈信息:", {
+            taskId: variables.id,
+            task: task,
+            taskTitle: task?.title,
+            allTasksCount: getAllTasks().length,
+            tasksByStatusCount: (
+              Object.values(tasksByStatus) as TaskWithRelations[][]
+            ).flat().length,
+          });
+
+          if (task) {
+            setFeedbackTaskId(variables.id);
+            setFeedbackTaskTitle(task.title);
+            setIsFeedbackModalOpen(true);
+          } else {
+            // 如果找不到任务，使用默认标题
+            console.warn("拖拽完成未找到任务，使用默认标题:", variables.id);
+            setFeedbackTaskId(variables.id);
+            setFeedbackTaskTitle("任务");
+            setIsFeedbackModalOpen(true);
+          }
+        }
+
+        showSuccess("任务状态和位置已更新");
+      },
+      onError: (error, variables) => {
+        showError(error.message || "更新任务状态和位置失败");
+
+        // 清理更新状态
+        setUpdatingTasks((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(variables.id);
+          return newSet;
+        });
+
+        // 回滚乐观更新
+        setOptimisticUpdates((prev) => {
           const newState = { ...prev };
           delete newState[variables.id];
           return newState;
@@ -643,74 +758,12 @@ const KanbanPage: NextPage = () => {
           [TaskStatus.DONE]: [],
           [TaskStatus.ARCHIVED]: [],
         });
-      });
-
-      // 如果状态变为已完成，触发反馈收集
-      if (variables.status === TaskStatus.DONE) {
-        // 从所有任务数据中查找任务信息，优先从tasksByStatus中查找
-        let task = (Object.values(tasksByStatus) as TaskWithRelations[][])
-          .flat()
-          .find(t => t.id === variables.id);
-
-        // 如果在tasksByStatus中找不到，再从getAllTasks中查找
-        if (!task) {
-          task = getAllTasks().find(t => t.id === variables.id);
-        }
-
-        console.log('拖拽完成查找任务反馈信息:', {
-          taskId: variables.id,
-          task: task,
-          taskTitle: task?.title,
-          allTasksCount: getAllTasks().length,
-          tasksByStatusCount: (Object.values(tasksByStatus) as TaskWithRelations[][]).flat().length
-        });
-
-        if (task) {
-          setFeedbackTaskId(variables.id);
-          setFeedbackTaskTitle(task.title);
-          setIsFeedbackModalOpen(true);
-        } else {
-          // 如果找不到任务，使用默认标题
-          console.warn('拖拽完成未找到任务，使用默认标题:', variables.id);
-          setFeedbackTaskId(variables.id);
-          setFeedbackTaskTitle("任务");
-          setIsFeedbackModalOpen(true);
-        }
-      }
-
-      showSuccess("任务状态和位置已更新");
-    },
-    onError: (error, variables) => {
-      showError(error.message || "更新任务状态和位置失败");
-
-      // 清理更新状态
-      setUpdatingTasks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(variables.id);
-        return newSet;
-      });
-
-      // 回滚乐观更新
-      setOptimisticUpdates(prev => {
-        const newState = { ...prev };
-        delete newState[variables.id];
-        return newState;
-      });
-
-      setOptimisticTaskOrder({
-        [TaskStatus.IDEA]: [],
-        [TaskStatus.TODO]: [],
-        [TaskStatus.IN_PROGRESS]: [],
-        [TaskStatus.WAITING]: [],
-        [TaskStatus.DONE]: [],
-        [TaskStatus.ARCHIVED]: [],
-      });
-    },
-  });
+      },
+    });
 
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     // 立即进行乐观更新
-    setOptimisticUpdates(prev => ({
+    setOptimisticUpdates((prev) => ({
       ...prev,
       [taskId]: newStatus,
     }));
@@ -719,7 +772,7 @@ const KanbanPage: NextPage = () => {
       await updateTaskStatus.mutateAsync({
         id: taskId,
         status: newStatus,
-        note: `状态变更为${KANBAN_COLUMNS.find(col => col.status === newStatus)?.title}`,
+        note: `状态变更为${KANBAN_COLUMNS.find((col) => col.status === newStatus)?.title}`,
       });
     } catch (error) {
       console.error("状态更新失败:", error);
@@ -728,7 +781,7 @@ const KanbanPage: NextPage = () => {
   };
 
   const handleStartTimer = async (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
     // 乐观更新：立即更新UI状态
@@ -739,14 +792,15 @@ const KanbanPage: NextPage = () => {
 
       return {
         ...oldData,
-        tasks: oldData.tasks.map(currentTask => {
+        tasks: oldData.tasks.map((currentTask) => {
           if (currentTask.id === taskId) {
             // 开始新的计时
             return { ...currentTask, isTimerActive: true, timerStartedAt: now };
           } else if (currentTask.isTimerActive && currentTask.timerStartedAt) {
             // 停止其他正在计时的任务，并立即计算累计时间
             const sessionDuration = Math.floor(
-              (now.getTime() - new Date(currentTask.timerStartedAt).getTime()) / 1000
+              (now.getTime() - new Date(currentTask.timerStartedAt).getTime()) /
+                1000,
             );
             return {
               ...currentTask,
@@ -756,14 +810,21 @@ const KanbanPage: NextPage = () => {
             };
           }
           return currentTask;
-        })
+        }),
       };
     });
 
     // 乐观更新：将开始计时的任务移动到第一位
-    const currentStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] || [];
-    const newOrder = [taskId, ...currentStatusTasks.filter((t: TaskWithRelations) => t.id !== taskId).map((t: TaskWithRelations) => t.id)];
-    setOptimisticTaskOrder(prev => ({
+    const currentStatusTasks =
+      (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] ||
+      [];
+    const newOrder = [
+      taskId,
+      ...currentStatusTasks
+        .filter((t: TaskWithRelations) => t.id !== taskId)
+        .map((t: TaskWithRelations) => t.id),
+    ];
+    setOptimisticTaskOrder((prev) => ({
       ...prev,
       [task.status]: newOrder,
     }));
@@ -796,11 +857,11 @@ const KanbanPage: NextPage = () => {
 
       return {
         ...oldData,
-        tasks: oldData.tasks.map(task =>
+        tasks: oldData.tasks.map((task) =>
           task.id === taskId
             ? { ...task, isTimerActive: false, timerStartedAt: null }
-            : task
-        )
+            : task,
+        ),
       };
     });
 
@@ -887,7 +948,7 @@ const KanbanPage: NextPage = () => {
 
   // 为特定状态加载更多任务
   const handleLoadMoreForStatus = (status: TaskStatus) => {
-    setLoadingMoreStatuses(prev => new Set(prev).add(status)); // 记录正在加载更多的状态
+    setLoadingMoreStatuses((prev) => new Set(prev).add(status)); // 记录正在加载更多的状态
 
     // 根据状态调用对应的 fetchNextPage
     switch (status) {
@@ -970,7 +1031,7 @@ const KanbanPage: NextPage = () => {
 
   // 处理删除任务
   const handleDeleteTask = async (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     const taskTitle = task?.title || "此任务";
 
     const confirmed = await showConfirm({
@@ -992,7 +1053,7 @@ const KanbanPage: NextPage = () => {
 
   // 打开计时明细
   const handleViewTimeEntries = (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
     setTimeEntryTaskId(taskId);
@@ -1002,7 +1063,7 @@ const KanbanPage: NextPage = () => {
 
   // 打开延期模态框
   const handlePostponeTask = (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
     // 只有限时任务才能调整时间
@@ -1012,7 +1073,11 @@ const KanbanPage: NextPage = () => {
     }
 
     // 只有待办、进行中、等待中的任务才能调整时间
-    const allowedStatuses = [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.WAITING];
+    const allowedStatuses = [
+      TaskStatus.TODO,
+      TaskStatus.IN_PROGRESS,
+      TaskStatus.WAITING,
+    ];
     if (!allowedStatuses.includes(task.status)) {
       showError("只有待办、进行中、等待中的任务才能调整时间");
       return;
@@ -1027,7 +1092,7 @@ const KanbanPage: NextPage = () => {
 
   // 补充反馈
   const handleAddFeedback = (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
     setFeedbackTaskId(taskId);
@@ -1037,15 +1102,22 @@ const KanbanPage: NextPage = () => {
 
   // 处理快速上浮到第一位
   const handleMoveToTop = async (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
-    const currentStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] || [];
+    const currentStatusTasks =
+      (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[task.status] ||
+      [];
     if (currentStatusTasks.length <= 1) return; // 如果只有一个任务或没有任务，无需移动
 
     // 乐观更新：立即将任务移动到第一位
-    const newOrder = [taskId, ...currentStatusTasks.filter((t: TaskWithRelations) => t.id !== taskId).map((t: TaskWithRelations) => t.id)];
-    setOptimisticTaskOrder(prev => ({
+    const newOrder = [
+      taskId,
+      ...currentStatusTasks
+        .filter((t: TaskWithRelations) => t.id !== taskId)
+        .map((t: TaskWithRelations) => t.id),
+    ];
+    setOptimisticTaskOrder((prev) => ({
       ...prev,
       [task.status]: newOrder,
     }));
@@ -1065,7 +1137,7 @@ const KanbanPage: NextPage = () => {
 
   // 处理重新安排任务
   const handleDuplicateTask = async (taskId: string) => {
-    const task = getAllTasks().find(t => t.id === taskId);
+    const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
     try {
@@ -1102,17 +1174,16 @@ const KanbanPage: NextPage = () => {
     const { active, over } = event;
     setActiveId(null);
 
-
     if (!over) return;
 
     const draggedTaskId = active.id as string;
     const overId = over.id as string;
 
-    console.log('拖拽结束:', {
+    console.log("拖拽结束:", {
       draggedTaskId,
       overId,
       overType: over.data?.current?.type,
-      overData: over.data?.current
+      overData: over.data?.current,
     });
 
     // 如果拖拽到自己身上，不执行任何操作
@@ -1150,39 +1221,50 @@ const KanbanPage: NextPage = () => {
 
       if (over.data?.current?.type === "task") {
         // 拖拽到具体任务上，插入到该任务之前
-        const targetStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[targetStatus] || [];
-        const targetTaskIndex = targetStatusTasks.findIndex((task: TaskWithRelations) => task.id === overId);
-        targetInsertIndex = targetTaskIndex !== -1 ? targetTaskIndex : undefined;
+        const targetStatusTasks =
+          (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+            targetStatus
+          ] || [];
+        const targetTaskIndex = targetStatusTasks.findIndex(
+          (task: TaskWithRelations) => task.id === overId,
+        );
+        targetInsertIndex =
+          targetTaskIndex !== -1 ? targetTaskIndex : undefined;
       }
 
-      console.log('跨状态拖拽:', {
+      console.log("跨状态拖拽:", {
         draggedTaskId,
         currentStatus,
         targetStatus,
         targetInsertIndex,
-        overId
+        overId,
       });
 
       // 乐观更新UI - 同时更新状态和位置
-      setOptimisticUpdates(prev => ({
+      setOptimisticUpdates((prev) => ({
         ...prev,
         [draggedTaskId]: targetStatus,
       }));
 
       // 乐观更新排序 - 立即在目标位置显示任务
       if (targetInsertIndex !== undefined) {
-        const targetStatusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[targetStatus] || [];
-        const newTaskIds = [...targetStatusTasks.map((t: TaskWithRelations) => t.id)];
+        const targetStatusTasks =
+          (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+            targetStatus
+          ] || [];
+        const newTaskIds = [
+          ...targetStatusTasks.map((t: TaskWithRelations) => t.id),
+        ];
         newTaskIds.splice(targetInsertIndex, 0, draggedTaskId);
 
-        setOptimisticTaskOrder(prev => ({
+        setOptimisticTaskOrder((prev) => ({
           ...prev,
           [targetStatus]: newTaskIds,
         }));
       }
 
       // 标记任务为更新中
-      setUpdatingTasks(prev => new Set(prev).add(draggedTaskId));
+      setUpdatingTasks((prev) => new Set(prev).add(draggedTaskId));
 
       try {
         // 使用新的 API 一次性更新状态和位置
@@ -1190,7 +1272,7 @@ const KanbanPage: NextPage = () => {
           id: draggedTaskId,
           status: targetStatus,
           insertIndex: targetInsertIndex,
-          note: `拖拽到${KANBAN_COLUMNS.find(col => col.status === targetStatus)?.title}`,
+          note: `拖拽到${KANBAN_COLUMNS.find((col) => col.status === targetStatus)?.title}`,
         });
       } catch (error) {
         console.error("跨状态拖拽失败:", error);
@@ -1199,8 +1281,13 @@ const KanbanPage: NextPage = () => {
     }
 
     // 处理同状态内的排序
-    const statusTasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[currentStatus] || [];
-    const currentIndex = statusTasks.findIndex((task: TaskWithRelations) => task.id === draggedTaskId);
+    const statusTasks =
+      (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+        currentStatus
+      ] || [];
+    const currentIndex = statusTasks.findIndex(
+      (task: TaskWithRelations) => task.id === draggedTaskId,
+    );
 
     if (currentIndex === -1) return;
 
@@ -1211,15 +1298,17 @@ const KanbanPage: NextPage = () => {
       newIndex = statusTasks.length - 1;
     } else {
       // 拖拽到具体任务上
-      const targetTaskIndex = statusTasks.findIndex((task: TaskWithRelations) => task.id === overId);
+      const targetTaskIndex = statusTasks.findIndex(
+        (task: TaskWithRelations) => task.id === overId,
+      );
       if (targetTaskIndex === -1) return;
 
-      console.log('位置计算:', {
+      console.log("位置计算:", {
         currentIndex,
         targetTaskIndex,
         draggedTaskId,
         targetTaskId: overId,
-        statusTasks: statusTasks.map(t => ({ id: t.id, title: t.title }))
+        statusTasks: statusTasks.map((t) => ({ id: t.id, title: t.title })),
       });
 
       // 简化逻辑：直接使用目标任务的索引作为新位置
@@ -1235,7 +1324,7 @@ const KanbanPage: NextPage = () => {
     const taskIds = reorderedTasks.map((task: TaskWithRelations) => task.id);
 
     // 乐观更新UI
-    setOptimisticTaskOrder(prev => ({
+    setOptimisticTaskOrder((prev) => ({
       ...prev,
       [currentStatus]: taskIds,
     }));
@@ -1252,7 +1341,9 @@ const KanbanPage: NextPage = () => {
 
   // 获取当前拖拽的任务
   const activeTask = activeId
-    ? (Object.values(tasksByStatus) as TaskWithRelations[][]).flat().find((task) => task.id === activeId)
+    ? (Object.values(tasksByStatus) as TaskWithRelations[][])
+        .flat()
+        .find((task) => task.id === activeId)
     : null;
 
   // 首次加载显示页面级loading
@@ -1277,10 +1368,12 @@ const KanbanPage: NextPage = () => {
           <meta name="description" content="可视化任务管理看板" />
         </Head>
 
-        <div className={`space-y-6 transition-all duration-200 ${activeId ? 'bg-gray-50' : ''}`}>
+        <div
+          className={`space-y-6 transition-all duration-200 ${activeId ? "bg-gray-50" : ""}`}
+        >
           {/* 拖拽状态指示器 */}
           {activeId && (
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+            <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 transform rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
               正在拖拽任务 - 拖拽到目标位置释放
             </div>
           )}
@@ -1292,7 +1385,7 @@ const KanbanPage: NextPage = () => {
                 <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
                 {(isDataRefreshing || reorderTasks.isPending) && (
                   <div className="flex items-center text-sm text-blue-600">
-                    <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                     {reorderTasks.isPending ? "更新排序中..." : "刷新中..."}
                   </div>
                 )}
@@ -1300,8 +1393,7 @@ const KanbanPage: NextPage = () => {
               <p className="mt-1 text-sm text-gray-500">
                 {activeId
                   ? "拖拽任务到目标位置或列来重新排序或更改状态"
-                  : "拖拽任务卡片来更新状态或调整顺序，可视化管理您的工作流程"
-                }
+                  : "拖拽任务卡片来更新状态或调整顺序，可视化管理您的工作流程"}
               </p>
             </div>
             <button
@@ -1309,7 +1401,7 @@ const KanbanPage: NextPage = () => {
               onClick={handleCreateTask}
               className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
-              <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
+              <PlusIcon className="mr-1.5 -ml-0.5 h-5 w-5" />
               新建任务
             </button>
           </div>
@@ -1323,43 +1415,46 @@ const KanbanPage: NextPage = () => {
             onDragEnd={handleDragEnd}
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-            {KANBAN_COLUMNS.map((column) => {
-              const tasks = (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[column.status] || [];
+              {KANBAN_COLUMNS.map((column) => {
+                const tasks =
+                  (tasksByStatus as Record<TaskStatus, TaskWithRelations[]>)[
+                    column.status
+                  ] || [];
 
-              return (
-                <KanbanColumn
-                  key={column.status}
-                  column={column}
-                  tasks={tasks}
-                  onStatusChange={handleStatusChange}
-                  onStartTimer={handleStartTimer}
-                  onPauseTimer={handlePauseTimer}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteTask}
-                  onMoveToTop={handleMoveToTop}
-                  onViewTimeEntries={handleViewTimeEntries}
-                  onDuplicateTask={handleDuplicateTask}
-                  onAddFeedback={handleAddFeedback}
-                  onPostponeTask={handlePostponeTask}
-                  formatTimeSpent={formatTimeSpent}
-                  isTimerActive={isTimerActive}
-                  isUpdating={updateTaskStatus.isPending}
-                  optimisticUpdates={optimisticUpdates}
-                  updatingTasks={updatingTasks}
-                  timerLoadingTasks={timerLoadingTasks}
-                  hasMoreTasks={getHasMoreTasksForStatus(column.status)}
-                  isLoadingMore={getIsLoadingForStatus(column.status)}
-                  onLoadMore={() => handleLoadMoreForStatus(column.status)}
-                  totalTaskCount={getTotalTaskCountForStatus(column.status)}
-                />
-              );
-            })}
+                return (
+                  <KanbanColumn
+                    key={column.status}
+                    column={column}
+                    tasks={tasks}
+                    onStatusChange={handleStatusChange}
+                    onStartTimer={handleStartTimer}
+                    onPauseTimer={handlePauseTimer}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteTask}
+                    onMoveToTop={handleMoveToTop}
+                    onViewTimeEntries={handleViewTimeEntries}
+                    onDuplicateTask={handleDuplicateTask}
+                    onAddFeedback={handleAddFeedback}
+                    onPostponeTask={handlePostponeTask}
+                    formatTimeSpent={formatTimeSpent}
+                    isTimerActive={isTimerActive}
+                    isUpdating={updateTaskStatus.isPending}
+                    optimisticUpdates={optimisticUpdates}
+                    updatingTasks={updatingTasks}
+                    timerLoadingTasks={timerLoadingTasks}
+                    hasMoreTasks={getHasMoreTasksForStatus(column.status)}
+                    isLoadingMore={getIsLoadingForStatus(column.status)}
+                    onLoadMore={() => handleLoadMoreForStatus(column.status)}
+                    totalTaskCount={getTotalTaskCountForStatus(column.status)}
+                  />
+                );
+              })}
             </div>
 
             {/* 拖拽覆盖层 */}
             <DragOverlay>
               {activeTask ? (
-                <div className="transform rotate-2 opacity-95 scale-105 shadow-2xl">
+                <div className="scale-105 rotate-2 transform opacity-95 shadow-2xl">
                   <TaskCard
                     task={activeTask}
                     onStatusChange={() => {}}
@@ -1434,7 +1529,6 @@ const KanbanPage: NextPage = () => {
           type={confirmState.type}
           isLoading={confirmState.isLoading}
         />
-
       </MainLayout>
     </AuthGuard>
   );
@@ -1510,28 +1604,28 @@ function KanbanColumn({
       ref={setNodeRef}
       className={`rounded-lg border-2 border-dashed ${column.color} min-h-[600px] transition-all duration-200 ${
         isOver
-          ? "border-blue-500 bg-blue-50 shadow-lg scale-[1.02] border-solid"
+          ? "scale-[1.02] border-solid border-blue-500 bg-blue-50 shadow-lg"
           : "hover:border-gray-400"
       }`}
     >
       {/* 列标题 */}
-      <div className={`${column.headerColor} rounded-t-lg px-4 py-3 border-b`}>
+      <div className={`${column.headerColor} rounded-t-lg border-b px-4 py-3`}>
         <div>
-          <h3 className="text-sm font-medium text-gray-900">
-            {column.title}
-          </h3>
+          <h3 className="text-sm font-medium text-gray-900">{column.title}</h3>
           <p className="text-xs text-gray-500">
             {totalTaskCount !== undefined
               ? `${tasks.length}/${totalTaskCount} 个任务`
-              : `${tasks.length} 个任务`
-            }
+              : `${tasks.length} 个任务`}
           </p>
         </div>
       </div>
 
       {/* 任务列表 */}
-      <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
-        <div className="p-3 space-y-3 min-h-[500px] flex flex-col">
+      <SortableContext
+        items={tasks.map((task) => task.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="flex min-h-[500px] flex-col space-y-3 p-3">
           {tasks.map((task) => (
             <DraggableTaskCard
               key={task.id}
@@ -1548,7 +1642,9 @@ function KanbanColumn({
               onPostponeTask={onPostponeTask}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
-              isUpdating={!!optimisticUpdates[task.id] || updatingTasks.has(task.id)}
+              isUpdating={
+                !!optimisticUpdates[task.id] || updatingTasks.has(task.id)
+              }
               isTimerLoading={timerLoadingTasks.has(task.id)}
             />
           ))}
@@ -1559,30 +1655,44 @@ function KanbanColumn({
               <button
                 onClick={onLoadMore}
                 disabled={isLoadingMore}
-                className={`w-full group relative overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 ${
+                className={`group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 ${
                   isLoadingMore
                     ? "border-blue-300 bg-blue-50"
                     : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/50"
                 } disabled:cursor-not-allowed`}
               >
-                <div className="flex flex-col items-center justify-center py-6 px-4">
+                <div className="flex flex-col items-center justify-center px-4 py-6">
                   {isLoadingMore ? (
                     <>
-                      <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                      <span className="text-sm font-medium text-blue-700">加载中...</span>
-                      <span className="text-xs text-blue-600 mt-1">正在获取更多任务</span>
+                      <div className="mb-2 h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                      <span className="text-sm font-medium text-blue-700">
+                        加载中...
+                      </span>
+                      <span className="mt-1 text-xs text-blue-600">
+                        正在获取更多任务
+                      </span>
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 group-hover:bg-blue-100 transition-colors duration-200 mb-2">
-                        <svg className="h-5 w-5 text-gray-500 group-hover:text-blue-600 transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 transition-colors duration-200 group-hover:bg-blue-100">
+                        <svg
+                          className="h-5 w-5 text-gray-500 transition-colors duration-200 group-hover:text-blue-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
                         </svg>
                       </div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 transition-colors duration-200">
+                      <span className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover:text-blue-700">
                         加载更多任务
                       </span>
-                      <span className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors duration-200 mt-1">
+                      <span className="mt-1 text-xs text-gray-500 transition-colors duration-200 group-hover:text-blue-600">
                         点击查看更多内容
                       </span>
                     </>
@@ -1591,18 +1701,18 @@ function KanbanColumn({
 
                 {/* 悬停效果 */}
                 {!isLoadingMore && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"></div>
                 )}
               </button>
             </div>
           )}
 
           {/* 空白拖拽区域 */}
-          <div className="flex-1 min-h-[100px]">
+          <div className="min-h-[100px] flex-1">
             {tasks.length === 0 && (
-              <div className="text-center py-8">
+              <div className="py-8 text-center">
                 <p className="text-sm text-gray-500">暂无任务</p>
-                <p className="text-xs text-gray-400 mt-1">拖拽任务到此处</p>
+                <p className="mt-1 text-xs text-gray-400">拖拽任务到此处</p>
               </div>
             )}
           </div>
@@ -1746,7 +1856,8 @@ function TaskCard({
 
     if (showMenu) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showMenu]);
 
@@ -1783,7 +1894,7 @@ function TaskCard({
 
     // 如果有具体时间，设置到deadline
     if (task.dueTime) {
-      const [hours, minutes] = task.dueTime.split(':');
+      const [hours, minutes] = task.dueTime.split(":");
       deadline.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     } else {
       // 没有具体时间，设置为当天23:59
@@ -1795,21 +1906,23 @@ function TaskCard({
 
     const absDiffMs = Math.abs(diffMs);
     const days = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(
+      (absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    );
     const minutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
 
     // 确定紧急程度
-    let urgencyLevel: 'overdue' | 'critical' | 'urgent' | 'warning' | 'normal';
+    let urgencyLevel: "overdue" | "critical" | "urgent" | "warning" | "normal";
     if (isOverdue) {
-      urgencyLevel = 'overdue';
+      urgencyLevel = "overdue";
     } else if (days === 0 && hours <= 2) {
-      urgencyLevel = 'critical'; // 2小时内
+      urgencyLevel = "critical"; // 2小时内
     } else if (days === 0) {
-      urgencyLevel = 'urgent'; // 今天截止
+      urgencyLevel = "urgent"; // 今天截止
     } else if (days <= 1) {
-      urgencyLevel = 'warning'; // 明天截止
+      urgencyLevel = "warning"; // 明天截止
     } else {
-      urgencyLevel = 'normal';
+      urgencyLevel = "normal";
     }
 
     return {
@@ -1820,12 +1933,12 @@ function TaskCard({
       urgencyLevel,
       deadline,
       timeText: isOverdue
-        ? `已逾期 ${days > 0 ? `${days}天` : ''}${hours > 0 ? `${hours}小时` : ''}${days === 0 && hours === 0 ? `${minutes}分钟` : ''}`
+        ? `已逾期 ${days > 0 ? `${days}天` : ""}${hours > 0 ? `${hours}小时` : ""}${days === 0 && hours === 0 ? `${minutes}分钟` : ""}`
         : days > 0
-        ? `剩余 ${days}天${hours > 0 ? `${hours}小时` : ''}`
-        : hours > 0
-        ? `剩余 ${hours}小时${minutes > 0 ? `${minutes}分钟` : ''}`
-        : `剩余 ${minutes}分钟`
+          ? `剩余 ${days}天${hours > 0 ? `${hours}小时` : ""}`
+          : hours > 0
+            ? `剩余 ${hours}小时${minutes > 0 ? `${minutes}分钟` : ""}`
+            : `剩余 ${minutes}分钟`,
     };
   };
 
@@ -1833,7 +1946,11 @@ function TaskCard({
 
   // 限时任务的样式配置（方案A：渐进式增强）
   const getDeadlineCardStyles = () => {
-    if (task.type !== TaskType.DEADLINE || !deadlineInfo || task.status === TaskStatus.DONE) {
+    if (
+      task.type !== TaskType.DEADLINE ||
+      !deadlineInfo ||
+      task.status === TaskStatus.DONE
+    ) {
       return "";
     }
 
@@ -1842,7 +1959,7 @@ function TaskCard({
       critical: "border-l-4 border-red-500 bg-red-25",
       urgent: "border-l-4 border-orange-500 bg-orange-25",
       warning: "border-l-4 border-yellow-500 bg-yellow-25",
-      normal: "border-l-4 border-blue-500 bg-blue-25"
+      normal: "border-l-4 border-blue-500 bg-blue-25",
     };
 
     return urgencyStyles[deadlineInfo.urgencyLevel];
@@ -1850,33 +1967,33 @@ function TaskCard({
 
   return (
     <div
-      className={`group rounded-lg border p-4 shadow-sm transition-all duration-200 relative ${
+      className={`group relative rounded-lg border p-4 shadow-sm transition-all duration-200 ${
         isDragging
-          ? "border-blue-400 shadow-xl bg-blue-50 scale-105 rotate-1 z-50 cursor-grabbing"
+          ? "z-50 scale-105 rotate-1 cursor-grabbing border-blue-400 bg-blue-50 shadow-xl"
           : isUpdating
-          ? "border-blue-200 bg-blue-50 animate-pulse cursor-pointer"
-          : isTimerActive
-          ? "border-green-300 bg-green-50 shadow-md cursor-not-allowed"
-          : showMenu
-          ? task.type === TaskType.DEADLINE && deadlineInfo
-            ? `${getDeadlineCardStyles()} shadow-lg cursor-pointer z-40`
-            : "bg-white border-gray-200 shadow-md border-gray-300 cursor-pointer z-40"
-          : task.type === TaskType.DEADLINE && deadlineInfo
-          ? `${getDeadlineCardStyles()} hover:shadow-lg hover:scale-[1.02] cursor-pointer`
-          : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 hover:scale-[1.02] cursor-pointer"
+            ? "animate-pulse cursor-pointer border-blue-200 bg-blue-50"
+            : isTimerActive
+              ? "cursor-not-allowed border-green-300 bg-green-50 shadow-md"
+              : showMenu
+                ? task.type === TaskType.DEADLINE && deadlineInfo
+                  ? `${getDeadlineCardStyles()} z-40 cursor-pointer shadow-lg`
+                  : "z-40 cursor-pointer border-gray-200 border-gray-300 bg-white shadow-md"
+                : task.type === TaskType.DEADLINE && deadlineInfo
+                  ? `${getDeadlineCardStyles()} cursor-pointer hover:scale-[1.02] hover:shadow-lg`
+                  : "cursor-pointer border-gray-200 bg-white hover:scale-[1.02] hover:border-gray-300 hover:shadow-md"
       }`}
       onClick={() => !isDragging && onEdit(task.id)}
     >
       {/* 正在计时的视觉标识 */}
       {isTimerActive && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-white shadow-sm"></div>
+        <div className="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full border-2 border-white bg-green-500 shadow-sm"></div>
       )}
 
       {/* 任务标题和菜单 */}
       <div className="mb-2 flex items-start justify-between">
-        <div className="flex-1 min-w-0 pr-1">
+        <div className="min-w-0 flex-1 pr-1">
           <h4
-            className="text-sm font-medium text-gray-900 line-clamp-3 mb-1"
+            className="mb-1 line-clamp-3 text-sm font-medium text-gray-900"
             title={task.title}
           >
             {task.title}
@@ -1884,10 +2001,10 @@ function TaskCard({
         </div>
 
         {/* 右侧区域：更新指示器和菜单 */}
-        <div className="flex items-center flex-shrink-0 -mr-1">
+        <div className="-mr-1 flex flex-shrink-0 items-center">
           {/* 更新中的指示器 */}
           {isUpdating && (
-            <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent mr-1"></div>
+            <div className="mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
           )}
 
           {/* 菜单按钮 */}
@@ -1899,7 +2016,7 @@ function TaskCard({
                   e.stopPropagation();
                   setShowMenu(!showMenu);
                 }}
-                className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors z-50"
+                className="z-50 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                 title="更多操作"
               >
                 <EllipsisVerticalIcon className="h-4 w-4" />
@@ -1907,7 +2024,7 @@ function TaskCard({
 
               {/* 下拉菜单 */}
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-xl border border-gray-200 z-50">
+                <div className="absolute top-full right-0 z-50 mt-1 w-32 rounded-md border border-gray-200 bg-white shadow-xl">
                   <div className="py-1">
                     <button
                       type="button"
@@ -1916,9 +2033,9 @@ function TaskCard({
                         setShowMenu(false);
                         onMoveToTop(task.id);
                       }}
-                      className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="flex w-full items-center px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
                     >
-                      <ArrowUpIcon className="h-4 w-4 mr-2 text-blue-500" />
+                      <ArrowUpIcon className="mr-2 h-4 w-4 text-blue-500" />
                       置顶
                     </button>
 
@@ -1931,9 +2048,9 @@ function TaskCard({
                           setShowMenu(false);
                           onViewTimeEntries(task.id);
                         }}
-                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
                       >
-                        <ChartBarIcon className="h-4 w-4 mr-2 text-green-500" />
+                        <ChartBarIcon className="mr-2 h-4 w-4 text-green-500" />
                         计时明细
                       </button>
                     )}
@@ -1942,20 +2059,20 @@ function TaskCard({
                     {(task.status === TaskStatus.TODO ||
                       task.status === TaskStatus.IN_PROGRESS ||
                       task.status === TaskStatus.WAITING) &&
-                     task.type === TaskType.DEADLINE && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowMenu(false);
-                          onPostponeTask(task.id);
-                        }}
-                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <ClockIcon className="h-4 w-4 mr-2 text-orange-500" />
-                        调整时间
-                      </button>
-                    )}
+                      task.type === TaskType.DEADLINE && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(false);
+                            onPostponeTask(task.id);
+                          }}
+                          className="flex w-full items-center px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                        >
+                          <ClockIcon className="mr-2 h-4 w-4 text-orange-500" />
+                          调整时间
+                        </button>
+                      )}
 
                     {/* 补充反馈选项 - 仅在已完成任务中显示 */}
                     {task.status === TaskStatus.DONE && (
@@ -1966,9 +2083,9 @@ function TaskCard({
                           setShowMenu(false);
                           onAddFeedback(task.id);
                         }}
-                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
                       >
-                        <ChatBubbleLeftEllipsisIcon className="h-4 w-4 mr-2 text-green-500" />
+                        <ChatBubbleLeftEllipsisIcon className="mr-2 h-4 w-4 text-green-500" />
                         补充反馈
                       </button>
                     )}
@@ -1982,9 +2099,9 @@ function TaskCard({
                           setShowMenu(false);
                           onDuplicateTask(task.id);
                         }}
-                        className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
                       >
-                        <ArrowPathIcon className="h-4 w-4 mr-2 text-blue-500" />
+                        <ArrowPathIcon className="mr-2 h-4 w-4 text-blue-500" />
                         重新安排
                       </button>
                     )}
@@ -1997,9 +2114,9 @@ function TaskCard({
                         setShowMenu(false);
                         onDelete(task.id);
                       }}
-                      className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="flex w-full items-center px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
                     >
-                      <TrashIcon className="h-4 w-4 mr-2" />
+                      <TrashIcon className="mr-2 h-4 w-4" />
                       删除
                     </button>
                   </div>
@@ -2013,7 +2130,7 @@ function TaskCard({
       {/* 任务描述 */}
       {task.description && (
         <p
-          className="text-xs text-gray-600 mb-3 line-clamp-4 pr-8"
+          className="mb-3 line-clamp-4 pr-8 text-xs text-gray-600"
           title={task.description}
         >
           {task.description}
@@ -2021,51 +2138,67 @@ function TaskCard({
       )}
 
       {/* 限时任务的倒计时显示 - 移动到描述下方，已完成任务不显示倒计时 */}
-      {task.type === TaskType.DEADLINE && deadlineInfo && task.status !== TaskStatus.DONE && (
-        <div className="mb-3">
-          <div className={`text-xs font-medium mb-1 ${
-            deadlineInfo.urgencyLevel === 'overdue' ? 'text-red-700' :
-            deadlineInfo.urgencyLevel === 'critical' ? 'text-red-600' :
-            deadlineInfo.urgencyLevel === 'urgent' ? 'text-orange-600' :
-            deadlineInfo.urgencyLevel === 'warning' ? 'text-yellow-600' :
-            'text-blue-600'
-          }`}>
-            {deadlineInfo.timeText}
-          </div>
-          {/* 具体截止时间另起一行显示 - 包含日期 */}
-          {task.dueDate && (
-            <div className="text-xs text-gray-500">
-              截止时间：{new Date(task.dueDate).toLocaleDateString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-              })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
+      {task.type === TaskType.DEADLINE &&
+        deadlineInfo &&
+        task.status !== TaskStatus.DONE && (
+          <div className="mb-3">
+            <div
+              className={`mb-1 text-xs font-medium ${
+                deadlineInfo.urgencyLevel === "overdue"
+                  ? "text-red-700"
+                  : deadlineInfo.urgencyLevel === "critical"
+                    ? "text-red-600"
+                    : deadlineInfo.urgencyLevel === "urgent"
+                      ? "text-orange-600"
+                      : deadlineInfo.urgencyLevel === "warning"
+                        ? "text-yellow-600"
+                        : "text-blue-600"
+              }`}
+            >
+              {deadlineInfo.timeText}
             </div>
-          )}
-        </div>
-      )}
+            {/* 具体截止时间另起一行显示 - 包含日期 */}
+            {task.dueDate && (
+              <div className="text-xs text-gray-500">
+                截止时间：
+                {new Date(task.dueDate).toLocaleDateString("zh-CN", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })}
+                {task.dueTime ? ` ${task.dueTime}` : " 全天"}
+              </div>
+            )}
+          </div>
+        )}
 
       {/* 已完成的限时任务只显示截止时间，不显示倒计时 */}
-      {task.type === TaskType.DEADLINE && task.status === TaskStatus.DONE && task.dueDate && (
-        <div className="mb-3">
-          <div className="text-xs text-gray-500">
-            截止时间：{new Date(task.dueDate).toLocaleDateString('zh-CN', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            })}{task.dueTime ? ` ${task.dueTime}` : ' 全天'}
+      {task.type === TaskType.DEADLINE &&
+        task.status === TaskStatus.DONE &&
+        task.dueDate && (
+          <div className="mb-3">
+            <div className="text-xs text-gray-500">
+              截止时间：
+              {new Date(task.dueDate).toLocaleDateString("zh-CN", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })}
+              {task.dueTime ? ` ${task.dueTime}` : " 全天"}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* 标签和项目 */}
-      <div className="flex flex-wrap gap-1 mb-3">
+      <div className="mb-3 flex flex-wrap gap-1">
         {task.project && (
           <span
             className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
             style={{
-              backgroundColor: task.project.color ? `${task.project.color}20` : '#f3f4f6',
-              color: task.project.color || '#374151',
+              backgroundColor: task.project.color
+                ? `${task.project.color}20`
+                : "#f3f4f6",
+              color: task.project.color || "#374151",
             }}
           >
             {task.project.name}
@@ -2075,7 +2208,7 @@ function TaskCard({
         {/* 标签显示 */}
         {task.tags.length > 0 && (
           <TagList
-            tags={task.tags.map(tagRelation => tagRelation.tag as TagData)}
+            tags={task.tags.map((tagRelation) => tagRelation.tag as TagData)}
             size="sm"
             variant="default"
             showIcon={true}
@@ -2091,7 +2224,9 @@ function TaskCard({
         {/* 第一行：优先级（仅在有优先级时显示） */}
         {task.priority && (
           <div className="flex items-center">
-            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}>
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${priorityColors[task.priority]}`}
+            >
               {task.priority}
             </span>
           </div>
@@ -2100,8 +2235,8 @@ function TaskCard({
         {/* 第二行：累计时间信息 */}
         {task.totalTimeSpent > 0 && (
           <div className="flex items-center">
-            <span className="text-xs text-gray-500 flex items-center">
-              <ClockIcon className="h-3 w-3 mr-1" />
+            <span className="flex items-center text-xs text-gray-500">
+              <ClockIcon className="mr-1 h-3 w-3" />
               累计用时 {formatTimeSpent(task.totalTimeSpent)}
             </span>
           </div>
@@ -2122,25 +2257,25 @@ function TaskCard({
                 }
               }}
               disabled={isTimerLoading || isUpdating}
-              className={`relative p-1 rounded-full transition-all duration-200 ${
+              className={`relative rounded-full p-1 transition-all duration-200 ${
                 isTimerLoading
-                  ? "text-blue-600 bg-blue-50 border-blue-200"
+                  ? "border-blue-200 bg-blue-50 text-blue-600"
                   : isTimerActive
-                  ? "text-red-600 hover:bg-red-50 bg-red-50/50"
-                  : "text-green-600 hover:bg-green-50 bg-green-50/50"
-              } disabled:opacity-50 border ${
+                    ? "bg-red-50/50 text-red-600 hover:bg-red-50"
+                    : "bg-green-50/50 text-green-600 hover:bg-green-50"
+              } border disabled:opacity-50 ${
                 isTimerLoading
                   ? "border-blue-200"
                   : isTimerActive
-                  ? "border-red-200 hover:border-red-300"
-                  : "border-green-200 hover:border-green-300"
+                    ? "border-red-200 hover:border-red-300"
+                    : "border-green-200 hover:border-green-300"
               }`}
               title={
                 isTimerLoading
                   ? "计时操作处理中..."
                   : isTimerActive
-                  ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
-                  : `开始计时 - 开始专注计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ''}`
+                    ? `暂停计时 - 当前已计时 ${formatTimeSpent(currentSessionTime)}，点击暂停`
+                    : `开始计时 - 开始专注计时${task.totalTimeSpent > 0 ? `（累计已用时 ${formatTimeSpent(task.totalTimeSpent)}）` : ""}`
               }
             >
               {isTimerLoading ? (
@@ -2153,7 +2288,7 @@ function TaskCard({
 
               {/* 计时动画环 */}
               {isTimerActive && !isTimerLoading && (
-                <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-20"></div>
+                <div className="absolute inset-0 animate-ping rounded-full border-2 border-green-400 opacity-20"></div>
               )}
             </button>
           </div>
@@ -2161,12 +2296,12 @@ function TaskCard({
 
         {/* 第四行：当前计时状态（仅在计时时显示） */}
         {task.status === TaskStatus.IN_PROGRESS && isTimerActive && (
-          <div className="flex items-center justify-between bg-green-50 rounded-md px-2 py-1.5 border border-green-200">
+          <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-2 py-1.5">
             <div className="flex items-center text-xs text-green-700">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+              <div className="mr-2 h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
               <span className="font-medium">正在计时</span>
             </div>
-            <div className="text-xs font-mono text-green-800 font-semibold">
+            <div className="font-mono text-xs font-semibold text-green-800">
               {formatTimeSpent(currentSessionTime)}
             </div>
           </div>
@@ -2174,10 +2309,13 @@ function TaskCard({
 
         {/* 任务反馈（仅在已完成且有反馈时显示） */}
         {task.status === TaskStatus.DONE && task.feedback && (
-          <div className="bg-blue-50 rounded-md px-2 py-1.5 border border-blue-200">
+          <div className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1.5">
             <div className="flex items-start">
-              <span className="text-xs text-blue-600 font-medium mr-1">💭</span>
-              <p className="text-xs text-blue-700 line-clamp-3" title={task.feedback}>
+              <span className="mr-1 text-xs font-medium text-blue-600">💭</span>
+              <p
+                className="line-clamp-3 text-xs text-blue-700"
+                title={task.feedback}
+              >
                 {task.feedback}
               </p>
             </div>
@@ -2186,24 +2324,36 @@ function TaskCard({
       </div>
 
       {/* 限时任务的时间进度条 - 已完成任务不显示 */}
-      {task.type === TaskType.DEADLINE && deadlineInfo && !deadlineInfo.isOverdue && task.status !== TaskStatus.DONE && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200 rounded-b-lg overflow-hidden">
-          <div
-            className={`h-full transition-all duration-300 ${
-              deadlineInfo.urgencyLevel === 'critical' ? 'bg-red-500' :
-              deadlineInfo.urgencyLevel === 'urgent' ? 'bg-orange-500' :
-              deadlineInfo.urgencyLevel === 'warning' ? 'bg-yellow-500' :
-              'bg-blue-500'
-            }`}
-            style={{
-              width: `${Math.min(100, Math.max(0,
-                ((Date.now() - new Date(task.createdAt).getTime()) /
-                (deadlineInfo.deadline.getTime() - new Date(task.createdAt).getTime())) * 100
-              ))}%`
-            }}
-          />
-        </div>
-      )}
+      {task.type === TaskType.DEADLINE &&
+        deadlineInfo &&
+        !deadlineInfo.isOverdue &&
+        task.status !== TaskStatus.DONE && (
+          <div className="absolute right-0 bottom-0 left-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
+            <div
+              className={`h-full transition-all duration-300 ${
+                deadlineInfo.urgencyLevel === "critical"
+                  ? "bg-red-500"
+                  : deadlineInfo.urgencyLevel === "urgent"
+                    ? "bg-orange-500"
+                    : deadlineInfo.urgencyLevel === "warning"
+                      ? "bg-yellow-500"
+                      : "bg-blue-500"
+              }`}
+              style={{
+                width: `${Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    ((Date.now() - new Date(task.createdAt).getTime()) /
+                      (deadlineInfo.deadline.getTime() -
+                        new Date(task.createdAt).getTime())) *
+                      100,
+                  ),
+                )}%`,
+              }}
+            />
+          </div>
+        )}
     </div>
   );
 }
