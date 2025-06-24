@@ -66,8 +66,8 @@ export default function TimeEntryModal({
 
   // 按日期分组时间记录
   const groupedEntries =
-    timeEntries?.reduce(
-      (groups, entry) => {
+    timeEntries?.entries?.reduce(
+      (groups: Record<string, TimeEntry[]>, entry: any) => {
         const date = new Date(entry.startTime).toDateString();
         if (!groups[date]) {
           groups[date] = [];
@@ -80,7 +80,7 @@ export default function TimeEntryModal({
 
   // 计算总时长
   const totalDuration =
-    timeEntries?.reduce((total, entry) => {
+    timeEntries?.entries?.reduce((total: number, entry: any) => {
       return total + (entry.duration || 0);
     }, 0) || 0;
 
@@ -144,7 +144,7 @@ export default function TimeEntryModal({
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
-                        {timeEntries?.length || 0}
+                        {timeEntries?.entries?.length || 0}
                       </div>
                       <div className="text-sm text-gray-500">计时会话</div>
                     </div>

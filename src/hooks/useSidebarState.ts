@@ -46,7 +46,7 @@ export function useSidebarState() {
   }, [isCollapsed, isLoaded]);
 
   const toggleSidebar = () => {
-    setIsCollapsed((prev) => !prev);
+    setIsCollapsed((prev: boolean) => !prev);
   };
 
   const collapseSidebar = () => {

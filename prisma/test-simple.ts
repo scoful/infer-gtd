@@ -168,7 +168,7 @@ async function testBasicScenarios() {
 
     console.log(`✅ 日志记录: ${journals.length} 篇`);
     for (const journal of journals) {
-      const preview = journal.content.split('\n')[0].substring(0, 50) + "...";
+      const preview = journal.content.split('\n')[0]?.substring(0, 50) + "...";
       console.log(`  - ${journal.date.toLocaleDateString()}: ${preview}`);
     }
 

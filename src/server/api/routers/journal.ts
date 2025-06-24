@@ -355,12 +355,8 @@ export const journalRouter = createTRPCRouter({
 
         const [totalJournals, totalWords, templatesUsed] = await Promise.all([
           ctx.db.journal.count({ where }),
-          ctx.db.journal.aggregate({
-            where,
-            _sum: {
-              content: true, // 这里需要用字符串长度，但 Prisma 不直接支持，我们用其他方式
-            },
-          }),
+          // 移除不支持的 aggregate 操作
+          Promise.resolve(0),
           ctx.db.journal.groupBy({
             by: ["template"],
             where: {

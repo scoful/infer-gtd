@@ -63,6 +63,7 @@ type TaskWithRelations = {
   completedAt?: Date | null;
   totalTimeSpent: number;
   isTimerActive: boolean;
+  feedback?: string | null;
   createdAt: Date;
   updatedAt: Date;
   project?: { id: string; name: string; color?: string | null } | null;
@@ -1210,7 +1211,7 @@ function TaskListCard({
     // 如果有具体时间，设置到deadline
     if (task.dueTime) {
       const [hours, minutes] = task.dueTime.split(":");
-      deadline.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      deadline.setHours(parseInt(hours || "0"), parseInt(minutes || "0"), 0, 0);
     } else {
       // 没有具体时间，设置为当天23:59
       deadline.setHours(23, 59, 59, 999);

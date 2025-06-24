@@ -28,7 +28,7 @@ async function testTaskLogic() {
       data: {
         title: "逻辑测试任务",
         description: "这是一个测试任务的逻辑功能",
-        type: TaskType.ACTION,
+        type: TaskType.NORMAL,
         priority: Priority.HIGH,
         status: TaskStatus.IDEA,
         createdById: testUser.id,

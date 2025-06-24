@@ -90,6 +90,7 @@ const KANBAN_COLUMNS = [
 
 // 扩展Task类型以包含关联数据
 type TaskWithRelations = Task & {
+  feedback?: string | null;
   project?: { id: string; name: string; color?: string | null } | null;
   tags: Array<{
     tag: {
@@ -403,7 +404,7 @@ const KanbanPage: NextPage = () => {
         const optimisticStatus = optimisticUpdates[task.id];
         const effectiveStatus = optimisticStatus || task.status;
 
-        grouped[effectiveStatus].push({
+        (grouped as any)[effectiveStatus].push({
           ...task,
           status: effectiveStatus, // 使用乐观更新的状态
         } as TaskWithRelations);
@@ -627,7 +628,7 @@ const KanbanPage: NextPage = () => {
   // 重新排序任务
   const reorderTasks = api.task.reorder.useMutation({
     onSuccess: () => {
-      void refetch();
+      void refetchAll();
       showSuccess("任务排序已更新");
     },
     onError: (error) => {
@@ -1073,7 +1074,7 @@ const KanbanPage: NextPage = () => {
     }
 
     // 只有待办、进行中、等待中的任务才能调整时间
-    const allowedStatuses = [
+    const allowedStatuses: TaskStatus[] = [
       TaskStatus.TODO,
       TaskStatus.IN_PROGRESS,
       TaskStatus.WAITING,
@@ -1895,7 +1896,7 @@ function TaskCard({
     // 如果有具体时间，设置到deadline
     if (task.dueTime) {
       const [hours, minutes] = task.dueTime.split(":");
-      deadline.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      deadline.setHours(parseInt(hours || "0"), parseInt(minutes || "0"), 0, 0);
     } else {
       // 没有具体时间，设置为当天23:59
       deadline.setHours(23, 59, 59, 999);

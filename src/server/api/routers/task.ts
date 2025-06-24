@@ -66,7 +66,7 @@ export const taskRouter = createTRPCRouter({
         const minSortOrder = await ctx.db.task.findFirst({
           where: {
             createdById: ctx.session.user.id,
-            status: taskData.status || TaskStatus.IDEA,
+            status: taskData.status || TaskStatus.TODO,
           },
           select: { sortOrder: true },
           orderBy: { sortOrder: "asc" },
@@ -438,10 +438,10 @@ export const taskRouter = createTRPCRouter({
         if (statusChanged) {
           // 如果状态变为已完成，记录完成时间并增加完成次数
           if (status === TaskStatus.DONE) {
-            finalUpdateData.completedAt = new Date();
-            finalUpdateData.completedCount = { increment: 1 };
-            finalUpdateData.isTimerActive = false;
-            finalUpdateData.timerStartedAt = null;
+            (finalUpdateData as any).completedAt = new Date();
+            (finalUpdateData as any).completedCount = { increment: 1 };
+            (finalUpdateData as any).isTimerActive = false;
+            (finalUpdateData as any).timerStartedAt = null;
           }
 
           // 如果从已完成状态变为其他状态，清除完成时间
@@ -449,10 +449,10 @@ export const taskRouter = createTRPCRouter({
             existingTask.status === TaskStatus.DONE &&
             status !== TaskStatus.DONE
           ) {
-            finalUpdateData.completedAt = null;
+            (finalUpdateData as any).completedAt = null;
           }
 
-          finalUpdateData.status = status;
+          (finalUpdateData as any).status = status;
         }
 
         // 更新任务
@@ -864,7 +864,7 @@ export const taskRouter = createTRPCRouter({
             isTimerActive: true,
             timerStartedAt: now,
             status:
-              task.status === TaskStatus.IDEA
+              task.status === TaskStatus.TODO
                 ? TaskStatus.IN_PROGRESS
                 : task.status,
           },
@@ -2128,7 +2128,7 @@ export const taskRouter = createTRPCRouter({
         }
 
         // 只有待办、进行中、等待中的任务才能延期
-        const allowedStatuses = [
+        const allowedStatuses: TaskStatus[] = [
           TaskStatus.TODO,
           TaskStatus.IN_PROGRESS,
           TaskStatus.WAITING,

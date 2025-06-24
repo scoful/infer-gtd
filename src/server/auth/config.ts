@@ -58,7 +58,7 @@ export const authConfig = {
     createUser: async ({ user }) => {
       // 为新用户创建系统预定义标签
       try {
-        await createSystemTagsForUser(user.id);
+        await createSystemTagsForUser(user.id!);
         console.log(`✅ 为新用户 ${user.email} 创建系统标签成功`);
       } catch (error) {
         console.error(`❌ 为新用户 ${user.email} 创建系统标签失败:`, error);

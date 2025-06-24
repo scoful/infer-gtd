@@ -739,7 +739,7 @@ function TagManagementCard({
   viewMode,
   getTagTypeLabel,
 }: TagManagementCardProps) {
-  const usageCount = (tag._count?.taskTags || 0) + (tag._count?.noteTags || 0);
+  const usageCount = ((tag as any)._count?.taskTags || 0) + ((tag as any)._count?.noteTags || 0);
 
   return (
     <div
@@ -819,7 +819,7 @@ function TagManagementCard({
               <span>使用次数: {usageCount}</span>
               {tag.category && <span>分类: {tag.category}</span>}
             </div>
-            <span>{new Date(tag.createdAt).toLocaleDateString("zh-CN")}</span>
+            <span>{new Date((tag as any).createdAt).toLocaleDateString("zh-CN")}</span>
           </div>
         </div>
       </div>

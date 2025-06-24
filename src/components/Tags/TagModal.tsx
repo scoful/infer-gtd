@@ -182,8 +182,6 @@ export default function TagModal({
     isSystem: false,
     description: formData.description || null,
     icon: formData.icon || null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   return (

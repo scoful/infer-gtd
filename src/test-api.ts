@@ -3,8 +3,7 @@
  * 用于测试 tRPC API 的功能
  */
 
-import { appRouter } from "@/server/api/root";
-import { createTRPCContext } from "@/server/api/trpc";
+import { appRouter, createCaller } from "@/server/api/root";
 import { db } from "@/server/db";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
@@ -22,9 +21,8 @@ async function testTaskAPI() {
       return;
     }
 
-    // 创建模拟的 tRPC 上下文
-    const ctx = await createTRPCContext({
-      headers: new Headers(),
+    // 创建 API 调用器
+    const caller = createCaller({
       session: {
         user: {
           id: testUser.id,
@@ -37,15 +35,12 @@ async function testTaskAPI() {
       db,
     });
 
-    // 创建 API 调用器
-    const caller = appRouter.createCaller(ctx);
-
     // 测试1: 创建任务
     console.log("\n📋 测试1: 创建任务");
     const newTask = await caller.task.create({
       title: "API 测试任务",
       description: "这是一个通过 API 创建的测试任务",
-      type: TaskType.ACTION,
+      type: TaskType.NORMAL,
       priority: Priority.HIGH,
     });
     console.log(`✅ 创建任务成功: ${newTask.title} (ID: ${newTask.id})`);
@@ -113,9 +108,9 @@ async function testTaskAPI() {
       taskId: newTask.id,
       limit: 10,
     });
-    console.log(`✅ 获取时间记录成功: ${timeEntries.length} 条记录`);
-    if (timeEntries.length > 0) {
-      const entry = timeEntries[0];
+    console.log(`✅ 获取时间记录成功: ${timeEntries.entries.length} 条记录`);
+    if (timeEntries.entries.length > 0) {
+      const entry = timeEntries.entries[0];
       console.log(`  - 最新记录: ${entry?.description || "无描述"}`);
       console.log(`  - 时长: ${entry?.duration ? `${entry.duration}秒` : "进行中"}`);
     }
