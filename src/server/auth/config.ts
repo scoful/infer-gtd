@@ -45,6 +45,8 @@ export const authConfig = {
      */
   ],
   adapter: PrismaAdapter(db),
+  // 信任的主机配置 - 解决 UntrustedHost 错误
+  trustHost: true,
   callbacks: {
     session: ({ session, user }) => ({
       ...session,
