@@ -42,9 +42,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # 构建应用
 RUN pnpm build
 
-# 清理开发依赖，只保留生产依赖（跳过 postinstall）
-RUN pnpm install --frozen-lockfile --prod=true --ignore-scripts && pnpm store prune
-
 # 生产运行阶段
 FROM node:20-alpine AS runner
 
@@ -67,10 +64,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# 复制 Prisma 相关文件
+# 复制 Prisma 相关文件（运行时需要）
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # 切换到非 root 用户
 USER nextjs
