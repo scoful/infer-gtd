@@ -42,7 +42,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-,suffix=-{{date 'YYYYMMDD-HHmmss'}},format=short
