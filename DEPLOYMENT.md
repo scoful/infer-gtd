@@ -73,7 +73,7 @@ ALIYUN_PASSWORD="your-aliyun-password"
 
 ### 健康检查
 ```bash
-curl http://localhost:3000/api/health
+curl http://localhost:3001/api/health
 ```
 
 ### 查看日志

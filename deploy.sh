@@ -114,7 +114,7 @@ health_check() {
     local attempt=1
     
     while [ $attempt -le $max_attempts ]; do
-        if curl -f http://localhost:3000/api/health &> /dev/null; then
+        if curl -f http://localhost:3001/api/health &> /dev/null; then
             log_info "健康检查通过"
             return 0
         fi
@@ -213,7 +213,7 @@ main() {
     fi
     
     log_info "部署完成！"
-    log_info "应用访问地址: http://localhost:3000"
+    log_info "应用访问地址: http://localhost:3001"
 }
 
 # 执行主函数

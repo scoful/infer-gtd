@@ -142,7 +142,7 @@ docker-compose logs app
 docker-compose exec app sh
 
 # 健康检查
-curl http://localhost:3000/api/health
+curl http://localhost:3001/api/health
 ```
 
 ## 性能优化

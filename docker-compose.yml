@@ -7,7 +7,7 @@ services:
     image: ${DOCKER_IMAGE:-registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd:latest}
     container_name: gtd-app
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-3001}:3000"
     env_file:
       - .env
     environment:
