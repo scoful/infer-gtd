@@ -75,7 +75,7 @@ COPY --from=builder /app/package.json ./package.json
 RUN pnpm add @prisma/client prisma --prod
 
 # 生成 Prisma 客户端
-RUN pnpm prisma generate
+RUN npx prisma generate
 
 # 设置文件权限
 RUN chown -R nextjs:nodejs /app
