@@ -21,12 +21,6 @@ const config = {
 
   // Docker 部署优化
   output: 'standalone',
-
-  // 实验性功能
-  experimental: {
-    // 优化包大小
-    outputFileTracingRoot: process.cwd(),
-  },
 };
 
 export default config;
