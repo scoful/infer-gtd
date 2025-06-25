@@ -18,8 +18,9 @@ COPY package.json pnpm-lock.yaml ./
 
 # 依赖安装阶段
 FROM base AS deps
-# 安装依赖（仅生产依赖）
-RUN pnpm install --frozen-lockfile --prod=false
+
+# 安装依赖（跳过 postinstall 脚本）
+RUN pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
 # 构建阶段
 FROM base AS builder
@@ -41,8 +42,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # 构建应用
 RUN pnpm build
 
-# 清理开发依赖，只保留生产依赖
-RUN pnpm install --frozen-lockfile --prod=true && pnpm store prune
+# 清理开发依赖，只保留生产依赖（跳过 postinstall）
+RUN pnpm install --frozen-lockfile --prod=true --ignore-scripts && pnpm store prune
 
 # 生产运行阶段
 FROM node:20-alpine AS runner
