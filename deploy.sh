@@ -47,15 +47,29 @@ check_requirements() {
     log_info "环境检查通过"
 }
 
+# 加载环境变量
+load_env_vars() {
+    if [ -f ".env" ]; then
+        log_info "加载 .env 文件中的环境变量..."
+        # 导出 .env 文件中的变量（忽略注释和空行）
+        export $(grep -v '^#' .env | grep -v '^$' | xargs)
+    fi
+}
+
 # 登录阿里云镜像仓库
 login_registry() {
     log_info "登录阿里云镜像仓库..."
-    
+
+    # 先尝试加载 .env 文件
+    load_env_vars
+
     if [ -z "$ALIYUN_USERNAME" ] || [ -z "$ALIYUN_PASSWORD" ]; then
         log_error "请设置环境变量 ALIYUN_USERNAME 和 ALIYUN_PASSWORD"
+        log_error "可以在 .env 文件中设置，或者通过以下方式运行："
+        log_error "ALIYUN_USERNAME=your-username ALIYUN_PASSWORD=your-password ./deploy.sh"
         exit 1
     fi
-    
+
     echo "$ALIYUN_PASSWORD" | docker login --username "$ALIYUN_USERNAME" --password-stdin "$REGISTRY"
     log_info "登录成功"
 }
@@ -83,13 +97,13 @@ stop_services() {
 # 启动服务
 start_services() {
     log_info "启动服务..."
-    
+
     # 检查环境文件
     if [ ! -f ".env" ]; then
         log_error ".env 文件不存在，请创建并配置环境变量"
         exit 1
     fi
-    
+
     # 启动服务
     docker-compose -f docker-compose.yml up -d
     
@@ -147,13 +161,14 @@ show_help() {
     echo "  --no-health    跳过健康检查"
     echo ""
     echo "环境变量:"
-    echo "  ALIYUN_USERNAME  阿里云镜像仓库用户名"
-    echo "  ALIYUN_PASSWORD  阿里云镜像仓库密码"
+    echo "  ALIYUN_USERNAME  阿里云镜像仓库用户名（可在 .env 文件中设置）"
+    echo "  ALIYUN_PASSWORD  阿里云镜像仓库密码（可在 .env 文件中设置）"
     echo ""
     echo "示例:"
-    echo "  $0                    # 部署 latest 标签"
+    echo "  $0                    # 部署 latest 标签（从 .env 读取凭据）"
     echo "  $0 v1.0.0            # 部署指定标签"
     echo "  $0 -c latest         # 部署并清理"
+    echo "  ALIYUN_USERNAME=user ALIYUN_PASSWORD=pass $0  # 临时设置凭据"
     echo ""
     echo "系统要求:"
     echo "  - Linux/macOS 系统"

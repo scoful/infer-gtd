@@ -5,7 +5,7 @@
 ## 文件说明
 
 - `Dockerfile` - 生产环境多阶段构建
-- `docker-compose.yml` - 生产环境编排（从阿里云拉取镜像）
+- `docker-compose.yml` - 生产环境编排（从阿里云拉取镜像，无状态部署）
 - `.dockerignore` - Docker 构建忽略文件
 - `.github/workflows/main.yml` - GitHub Actions CI/CD 配置
 - `deploy.sh` - 自动化部署脚本
@@ -97,6 +97,8 @@ docker-compose exec app pnpm prisma migrate deploy
 # 或者推送数据库结构
 docker-compose exec app pnpm prisma db push
 ```
+
+**注意**: 本项目采用无状态部署，所有数据存储在外部PostgreSQL数据库中，容器重启不会丢失数据。
 
 ### 停止服务
 
