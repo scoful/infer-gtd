@@ -1,0 +1,83 @@
+# 依赖目录
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Next.js 构建产物
+.next/
+out/
+
+# 生产构建
+build
+
+# 环境变量文件
+.env*.local
+.env.example
+
+# 版本控制
+.git
+.gitignore
+
+# IDE 和编辑器
+.vscode
+.idea
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 运行时数据
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 覆盖率目录
+coverage
+*.lcov
+
+# 测试
+.nyc_output
+
+# 临时文件
+.tmp
+.temp
+
+# 文档
+README.md
+CHANGELOG.md
+LICENSE
+DOCKER_README.md
+DEPLOYMENT.md
+EXECUTIVE_SUMMARY.md
+PROJECT_STATUS_*.md
+TASK_MANAGEMENT_*.md
+CODING_STANDARDS.md
+DEVELOPMENT_CHECKLIST.md
+project-PRD.md
+
+# Docker 相关
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+deploy.sh
+
+# 测试和开发文件
+test-*.js
+test-*.ts
+**/test-*.tsx
+**/demo/
+prisma/test-*.ts
+prisma/quick-test.ts
+prisma/verify-data.ts
+
+# 其他
+.eslintcache
+.tsbuildinfo
