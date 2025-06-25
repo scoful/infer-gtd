@@ -48,6 +48,9 @@ FROM node:20-alpine AS runner
 # 安装运行时依赖
 RUN apk add --no-cache curl
 
+# 安装 pnpm（用于 Prisma 客户端生成）
+RUN npm install -g pnpm@9.6.0
+
 # 设置生产环境
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -64,9 +67,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# 复制 Prisma 相关文件（运行时需要）
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+# 复制 Prisma 相关文件
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
+
+# 安装 Prisma 客户端（仅生产依赖）
+RUN pnpm add @prisma/client prisma --prod
+
+# 生成 Prisma 客户端
+RUN pnpm prisma generate
+
+# 设置文件权限
+RUN chown -R nextjs:nodejs /app
 
 # 切换到非 root 用户
 USER nextjs
