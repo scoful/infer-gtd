@@ -66,7 +66,7 @@ export const taskRouter = createTRPCRouter({
         const minSortOrder = await ctx.db.task.findFirst({
           where: {
             createdById: ctx.session.user.id,
-            status: taskData.status || TaskStatus.TODO,
+            status: taskData.status ?? TaskStatus.TODO,
           },
           select: { sortOrder: true },
           orderBy: { sortOrder: "asc" },
@@ -670,7 +670,7 @@ export const taskRouter = createTRPCRouter({
             toStatus: input.newStatus,
             taskId: input.id,
             changedById: ctx.session.user.id,
-            note: input.note || "任务重启",
+            note: input.note ?? "任务重启",
           },
         });
 
@@ -738,7 +738,7 @@ export const taskRouter = createTRPCRouter({
             toStatus: TaskStatus.ARCHIVED,
             taskId: input.id,
             changedById: ctx.session.user.id,
-            note: input.note || "任务归档",
+            note: input.note ?? "任务归档",
           },
         });
 
@@ -840,7 +840,7 @@ export const taskRouter = createTRPCRouter({
                   endTime: now,
                   duration: sessionDuration,
                   description:
-                    activeTimeEntry.description || "被其他任务计时中断",
+                    activeTimeEntry.description ?? "被其他任务计时中断",
                 },
               });
             }
@@ -965,7 +965,7 @@ export const taskRouter = createTRPCRouter({
             data: {
               endTime: now,
               duration: sessionDuration,
-              description: input.description || activeTimeEntry.description,
+              description: input.description ?? activeTimeEntry.description,
             },
           });
         }
@@ -1055,7 +1055,7 @@ export const taskRouter = createTRPCRouter({
             data: {
               endTime: now,
               duration: sessionDuration,
-              description: input.description || activeTimeEntry.description,
+              description: input.description ?? activeTimeEntry.description,
             },
           });
         }
@@ -1236,7 +1236,7 @@ export const taskRouter = createTRPCRouter({
             status: TaskStatus.TODO,
             sortOrder: nextSortOrder, // 新循环任务排在第一位
             dueDate: nextDueDate,
-            dueTime: pattern.time || originalTask.dueTime,
+            dueTime: pattern.time ?? originalTask.dueTime,
             isRecurring: true,
             recurringPattern: originalTask.recurringPattern,
             parentTaskId: originalTask.id,
@@ -1245,7 +1245,7 @@ export const taskRouter = createTRPCRouter({
             tags: {
               create: originalTask.tags.map((taskTag) => ({
                 tag: { connect: { id: taskTag.tag.id } },
-                sortOrder: taskTag.sortOrder || 0, // 保持原有的sortOrder
+                sortOrder: taskTag.sortOrder ?? 0, // 保持原有的sortOrder
               })),
             },
           },
@@ -1342,7 +1342,7 @@ export const taskRouter = createTRPCRouter({
             tags: {
               create: originalTask.tags.map((taskTag) => ({
                 tag: { connect: { id: taskTag.tag.id } },
-                sortOrder: taskTag.sortOrder || 0,
+                sortOrder: taskTag.sortOrder ?? 0,
               })),
             },
             // 注意：不设置 isRecurring, parentTaskId, recurringPattern
@@ -1451,7 +1451,7 @@ export const taskRouter = createTRPCRouter({
                 tags: {
                   create: originalTask.tags.map((taskTag) => ({
                     tag: { connect: { id: taskTag.tag.id } },
-                    sortOrder: taskTag.sortOrder || 0,
+                    sortOrder: taskTag.sortOrder ?? 0,
                   })),
                 },
               },
@@ -1627,7 +1627,7 @@ export const taskRouter = createTRPCRouter({
             },
             {} as Record<string, number>,
           ),
-          totalTimeSpent: totalTimeSpent._sum.totalTimeSpent || 0,
+          totalTimeSpent: totalTimeSpent._sum.totalTimeSpent ?? 0,
         };
       } catch (error) {
         throw new TRPCError({
@@ -1820,7 +1820,7 @@ export const taskRouter = createTRPCRouter({
             toStatus: newStatus,
             taskId: id,
             changedById: ctx.session.user.id,
-            note: note || "拖拽更新状态和位置",
+            note: note ?? "拖拽更新状态和位置",
           },
         });
 
@@ -2165,8 +2165,8 @@ export const taskRouter = createTRPCRouter({
         if (oldDateTime && existingTask.dueTime) {
           const [hours, minutes] = existingTask.dueTime.split(":");
           oldDateTime.setHours(
-            parseInt(hours || "0"),
-            parseInt(minutes || "0"),
+            parseInt(hours ?? "0"),
+            parseInt(minutes ?? "0"),
             0,
             0,
           );
@@ -2176,8 +2176,8 @@ export const taskRouter = createTRPCRouter({
         if (dueTime) {
           const [hours, minutes] = dueTime.split(":");
           newDateTime.setHours(
-            parseInt(hours || "0"),
-            parseInt(minutes || "0"),
+            parseInt(hours ?? "0"),
+            parseInt(minutes ?? "0"),
             0,
             0,
           );
@@ -2194,7 +2194,7 @@ export const taskRouter = createTRPCRouter({
             taskId: id,
             changedById: ctx.session.user.id,
             note:
-              note ||
+              note ??
               `任务${actionText}至 ${dueDate.toLocaleDateString("zh-CN")}${dueTime ? ` ${dueTime}` : ""}`,
           },
         });

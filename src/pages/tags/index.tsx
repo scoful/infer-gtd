@@ -156,7 +156,7 @@ const TagManagementPage: NextPage = () => {
 
         // 如果是标签被引用的错误，显示友好的提示信息
         if (error?.data?.code === "CONFLICT") {
-          const errorMessage = error.message || "标签正在被使用，无法删除";
+          const errorMessage = error.message ?? "标签正在被使用，无法删除";
 
           // 延迟显示确认框，确保当前的确认框先关闭
           setTimeout(() => {
@@ -170,7 +170,7 @@ const TagManagementPage: NextPage = () => {
           }, 100);
         } else {
           // 其他错误显示通用错误信息
-          showError(`删除标签失败: ${error.message || "未知错误"}`);
+          showError(`删除标签失败: ${error.message ?? "未知错误"}`);
         }
       } finally {
         setLoading(false);
@@ -204,7 +204,7 @@ const TagManagementPage: NextPage = () => {
     } catch (error: any) {
       // 如果是标签被引用的错误，显示友好的提示信息
       if (error?.data?.code === "CONFLICT") {
-        const errorMessage = error.message || "部分标签正在被使用，无法删除";
+        const errorMessage = error.message ?? "部分标签正在被使用，无法删除";
 
         // 延迟显示确认框，确保当前的确认框先关闭
         setTimeout(() => {
@@ -218,7 +218,7 @@ const TagManagementPage: NextPage = () => {
         }, 100);
       } else {
         // 其他错误显示通用错误信息
-        showError(`批量删除标签失败: ${error.message || "未知错误"}`);
+        showError(`批量删除标签失败: ${error.message ?? "未知错误"}`);
       }
     } finally {
       setLoading(false);
@@ -318,8 +318,8 @@ const TagManagementPage: NextPage = () => {
           bValue = new Date(b.createdAt).getTime();
           break;
         case "usage":
-          aValue = (a._count?.taskTags || 0) + (a._count?.noteTags || 0);
-          bValue = (b._count?.taskTags || 0) + (b._count?.noteTags || 0);
+          aValue = (a._count?.taskTags ?? 0) + (a._count?.noteTags ?? 0);
+          bValue = (b._count?.taskTags ?? 0) + (b._count?.noteTags ?? 0);
           break;
         default:
           return 0;
@@ -739,7 +739,7 @@ function TagManagementCard({
   viewMode,
   getTagTypeLabel,
 }: TagManagementCardProps) {
-  const usageCount = ((tag as any)._count?.taskTags || 0) + ((tag as any)._count?.noteTags || 0);
+  const usageCount = ((tag as any)._count?.taskTags ?? 0) + ((tag as any)._count?.noteTags ?? 0);
 
   return (
     <div

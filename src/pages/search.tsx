@@ -324,8 +324,8 @@ const SearchPage: NextPage = () => {
                       onClick={() => {
                         // 加载保存的搜索参数
                         const params = search.searchParams;
-                        setQuery(params.query || "");
-                        setSearchIn(params.searchIn || ["tasks"]);
+                        setQuery(params.query ?? "");
+                        setSearchIn(params.searchIn ?? ["tasks"]);
                         // 设置其他参数...
                         void refetch();
                       }}
@@ -406,8 +406,8 @@ const SearchPage: NextPage = () => {
               setSortBy={setSortBy}
               sortOrder={sortOrder}
               setSortOrder={setSortOrder}
-              tags={tags?.tags || []}
-              projects={projects?.projects || []}
+              tags={tags?.tags ?? []}
+              projects={projects?.projects ?? []}
               onClear={clearFilters}
             />
           )}

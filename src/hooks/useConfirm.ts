@@ -34,9 +34,9 @@ export function useConfirm() {
           isLoading: false,
           title: options.title,
           message: options.message,
-          confirmText: options.confirmText || "确认",
-          cancelText: options.cancelText || "取消",
-          type: options.type || "danger",
+          confirmText: options.confirmText ?? "确认",
+          cancelText: options.cancelText ?? "取消",
+          type: options.type ?? "danger",
           onConfirm: () => {
             resolve(true);
             setConfirmState((prev) => ({ ...prev, isOpen: false }));

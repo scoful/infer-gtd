@@ -113,7 +113,7 @@ function getVariantClasses(
   variant: "default" | "outline" | "minimal",
   color: string,
 ) {
-  const baseColor = color || "#6B7280";
+  const baseColor = color ?? "#6B7280";
 
   switch (variant) {
     case "outline":
@@ -186,7 +186,7 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
   onClick,
 }) => {
   const sizeClasses = getSizeClasses(size);
-  const color = tag.color || getDefaultTagColor(tag.type);
+  const color = tag.color ?? getDefaultTagColor(tag.type);
   const variantClasses = getVariantClasses(variant, color);
 
   const handleClick = () => {
@@ -211,7 +211,7 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
         lineHeight: 1,
       }}
       onClick={handleClick}
-      title={tag.description || `${getTagTypeLabel(tag.type)}标签: ${tag.name}`}
+      title={tag.description ?? `${getTagTypeLabel(tag.type)}标签: ${tag.name}`}
     >
       {/* 图标 */}
       {showIcon && (

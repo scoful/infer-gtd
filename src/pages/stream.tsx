@@ -206,7 +206,7 @@ const StreamPage: NextPage = () => {
                         总想法数
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {ideasData?.tasks?.length || 0}
+                        {ideasData?.tasks?.length ?? 0}
                       </dd>
                     </dl>
                   </div>
@@ -246,7 +246,7 @@ const StreamPage: NextPage = () => {
                         待转换
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {ideasData?.tasks?.length || 0}
+                        {ideasData?.tasks?.length ?? 0}
                       </dd>
                     </dl>
                   </div>
@@ -289,7 +289,7 @@ const StreamPage: NextPage = () => {
                                   backgroundColor: idea.project.color
                                     ? `${idea.project.color}20`
                                     : "#f3f4f6",
-                                  color: idea.project.color || "#374151",
+                                  color: idea.project.color ?? "#374151",
                                 }}
                               >
                                 {idea.project.name}
@@ -304,7 +304,7 @@ const StreamPage: NextPage = () => {
                                   backgroundColor: tagRelation.tag.color
                                     ? `${tagRelation.tag.color}20`
                                     : "#f3f4f6",
-                                  color: tagRelation.tag.color || "#374151",
+                                  color: tagRelation.tag.color ?? "#374151",
                                 }}
                               >
                                 <TagIcon className="mr-1 h-3 w-3" />

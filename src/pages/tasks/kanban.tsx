@@ -336,7 +336,7 @@ const KanbanPage: NextPage = () => {
   const getAllTasks = (): TaskWithRelations[] => {
     const flattenPages = (pages: any[] | undefined) => {
       if (!pages) return [];
-      return pages.flatMap((page) => page.tasks || []);
+      return pages.flatMap((page) => page.tasks ?? []);
     };
 
     const allTasks = [
@@ -398,11 +398,11 @@ const KanbanPage: NextPage = () => {
     ) => {
       if (!pages) return;
 
-      const tasks = pages.flatMap((page) => page.tasks || []);
+      const tasks = pages.flatMap((page) => page.tasks ?? []);
       tasks.forEach((task) => {
         // 检查是否有乐观更新
         const optimisticStatus = optimisticUpdates[task.id];
-        const effectiveStatus = optimisticStatus || task.status;
+        const effectiveStatus = optimisticStatus ?? task.status;
 
         (grouped as any)[effectiveStatus].push({
           ...task,
@@ -600,7 +600,7 @@ const KanbanPage: NextPage = () => {
               ? {
                   ...task,
                   totalTimeSpent:
-                    result.task?.totalTimeSpent || task.totalTimeSpent,
+                    result.task?.totalTimeSpent ?? task.totalTimeSpent,
                   isTimerActive: false,
                   timerStartedAt: null,
                 }
@@ -632,7 +632,7 @@ const KanbanPage: NextPage = () => {
       showSuccess("任务排序已更新");
     },
     onError: (error) => {
-      showError(error.message || "更新任务排序失败");
+      showError(error.message ?? "更新任务排序失败");
       // 回滚乐观更新
       setOptimisticTaskOrder({
         [TaskStatus.IDEA]: [],
@@ -652,7 +652,7 @@ const KanbanPage: NextPage = () => {
       void refetchAll();
     },
     onError: (error) => {
-      showError(error.message || "删除任务失败");
+      showError(error.message ?? "删除任务失败");
     },
   });
 
@@ -663,7 +663,7 @@ const KanbanPage: NextPage = () => {
       void refetchAll();
     },
     onError: (error) => {
-      showError(error.message || "重新安排任务失败");
+      showError(error.message ?? "重新安排任务失败");
     },
   });
 
@@ -705,9 +705,7 @@ const KanbanPage: NextPage = () => {
             .find((t) => t.id === variables.id);
 
           // 如果在tasksByStatus中找不到，再从getAllTasks中查找
-          if (!task) {
-            task = getAllTasks().find((t) => t.id === variables.id);
-          }
+          task ??= getAllTasks().find((t) => t.id === variables.id);
 
           console.log("拖拽完成查找任务反馈信息:", {
             taskId: variables.id,
@@ -735,7 +733,7 @@ const KanbanPage: NextPage = () => {
         showSuccess("任务状态和位置已更新");
       },
       onError: (error, variables) => {
-        showError(error.message || "更新任务状态和位置失败");
+        showError(error.message ?? "更新任务状态和位置失败");
 
         // 清理更新状态
         setUpdatingTasks((prev) => {
@@ -817,7 +815,7 @@ const KanbanPage: NextPage = () => {
 
     // 乐观更新：将开始计时的任务移动到第一位
     const currentStatusTasks =
-      (tasksByStatus)[task.status] ||
+      (tasksByStatus)[task.status] ??
       [];
     const newOrder = [
       taskId,
@@ -993,15 +991,15 @@ const KanbanPage: NextPage = () => {
   const getTotalTaskCountForStatus = (status: TaskStatus) => {
     switch (status) {
       case TaskStatus.IDEA:
-        return ideaTasks.data?.pages?.[0]?.totalCount || 0;
+        return ideaTasks.data?.pages?.[0]?.totalCount ?? 0;
       case TaskStatus.TODO:
-        return todoTasks.data?.pages?.[0]?.totalCount || 0;
+        return todoTasks.data?.pages?.[0]?.totalCount ?? 0;
       case TaskStatus.IN_PROGRESS:
-        return inProgressTasks.data?.pages?.[0]?.totalCount || 0;
+        return inProgressTasks.data?.pages?.[0]?.totalCount ?? 0;
       case TaskStatus.WAITING:
-        return waitingTasks.data?.pages?.[0]?.totalCount || 0;
+        return waitingTasks.data?.pages?.[0]?.totalCount ?? 0;
       case TaskStatus.DONE:
-        return doneTasks.data?.pages?.[0]?.totalCount || 0;
+        return doneTasks.data?.pages?.[0]?.totalCount ?? 0;
       default:
         return 0;
     }
@@ -1033,7 +1031,7 @@ const KanbanPage: NextPage = () => {
   // 处理删除任务
   const handleDeleteTask = async (taskId: string) => {
     const task = getAllTasks().find((t) => t.id === taskId);
-    const taskTitle = task?.title || "此任务";
+    const taskTitle = task?.title ?? "此任务";
 
     const confirmed = await showConfirm({
       title: "确认删除任务",
@@ -1107,7 +1105,7 @@ const KanbanPage: NextPage = () => {
     if (!task) return;
 
     const currentStatusTasks =
-      (tasksByStatus)[task.status] ||
+      (tasksByStatus)[task.status] ??
       [];
     if (currentStatusTasks.length <= 1) return; // 如果只有一个任务或没有任务，无需移动
 
@@ -1225,7 +1223,7 @@ const KanbanPage: NextPage = () => {
         const targetStatusTasks =
           (tasksByStatus)[
             targetStatus
-          ] || [];
+          ] ?? [];
         const targetTaskIndex = targetStatusTasks.findIndex(
           (task: TaskWithRelations) => task.id === overId,
         );
@@ -1252,7 +1250,7 @@ const KanbanPage: NextPage = () => {
         const targetStatusTasks =
           (tasksByStatus)[
             targetStatus
-          ] || [];
+          ] ?? [];
         const newTaskIds = [
           ...targetStatusTasks.map((t: TaskWithRelations) => t.id),
         ];
@@ -1285,7 +1283,7 @@ const KanbanPage: NextPage = () => {
     const statusTasks =
       (tasksByStatus)[
         currentStatus
-      ] || [];
+      ] ?? [];
     const currentIndex = statusTasks.findIndex(
       (task: TaskWithRelations) => task.id === draggedTaskId,
     );
@@ -1420,7 +1418,7 @@ const KanbanPage: NextPage = () => {
                 const tasks =
                   (tasksByStatus)[
                     column.status
-                  ] || [];
+                  ] ?? [];
 
                 return (
                   <KanbanColumn
@@ -1484,7 +1482,7 @@ const KanbanPage: NextPage = () => {
         <TaskModal
           isOpen={isTaskModalOpen}
           onClose={handleTaskModalClose}
-          taskId={editingTaskId || undefined}
+          taskId={editingTaskId ?? undefined}
           onSuccess={handleTaskModalSuccess}
         />
 
@@ -1492,7 +1490,7 @@ const KanbanPage: NextPage = () => {
         <TimeEntryModal
           isOpen={isTimeEntryModalOpen}
           onClose={() => setIsTimeEntryModalOpen(false)}
-          taskId={timeEntryTaskId || ""}
+          taskId={timeEntryTaskId ?? ""}
           taskTitle={timeEntryTaskTitle}
         />
 
@@ -1500,7 +1498,7 @@ const KanbanPage: NextPage = () => {
         <TaskFeedbackModal
           isOpen={isFeedbackModalOpen}
           onClose={handleFeedbackModalClose}
-          taskId={feedbackTaskId || ""}
+          taskId={feedbackTaskId ?? ""}
           taskTitle={feedbackTaskTitle}
           onSuccess={handleFeedbackSuccess}
         />
@@ -1509,7 +1507,7 @@ const KanbanPage: NextPage = () => {
         <PostponeTaskModal
           isOpen={isPostponeModalOpen}
           onClose={() => setIsPostponeModalOpen(false)}
-          taskId={postponeTaskId || ""}
+          taskId={postponeTaskId ?? ""}
           taskTitle={postponeTaskTitle}
           currentDueDate={postponeTaskDueDate}
           currentDueTime={postponeTaskDueTime}
@@ -1896,7 +1894,7 @@ function TaskCard({
     // 如果有具体时间，设置到deadline
     if (task.dueTime) {
       const [hours, minutes] = task.dueTime.split(":");
-      deadline.setHours(parseInt(hours || "0"), parseInt(minutes || "0"), 0, 0);
+      deadline.setHours(parseInt(hours ?? "0"), parseInt(minutes ?? "0"), 0, 0);
     } else {
       // 没有具体时间，设置为当天23:59
       deadline.setHours(23, 59, 59, 999);
@@ -2199,7 +2197,7 @@ function TaskCard({
               backgroundColor: task.project.color
                 ? `${task.project.color}20`
                 : "#f3f4f6",
-              color: task.project.color || "#374151",
+              color: task.project.color ?? "#374151",
             }}
           >
             {task.project.name}

@@ -93,11 +93,11 @@ export default function TagModal({
         // 编辑模式：使用标签数据填充表单
         setFormData({
           name: tag.name,
-          color: tag.color || "#3B82F6",
+          color: tag.color ?? "#3B82F6",
           type: tag.type,
-          category: tag.category || "",
-          description: tag.description || "",
-          icon: tag.icon || "",
+          category: tag.category ?? "",
+          description: tag.description ?? "",
+          icon: tag.icon ?? "",
         });
       } else {
         // 创建模式：重置表单为默认值

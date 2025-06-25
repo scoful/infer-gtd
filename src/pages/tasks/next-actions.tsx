@@ -258,7 +258,7 @@ const NextActionsPage: NextPage = () => {
 
   // 按上下文分组任务
   const contextGroups = useMemo((): ContextGroup[] => {
-    const tasks = tasksData?.tasks || [];
+    const tasks = tasksData?.tasks ?? [];
 
     // 筛选下一步行动（TODO和IN_PROGRESS状态）
     const nextActionTasks = tasks.filter(
@@ -487,7 +487,7 @@ const NextActionsPage: NextPage = () => {
         <TaskModal
           isOpen={isTaskModalOpen}
           onClose={handleTaskModalClose}
-          taskId={editingTaskId || undefined}
+          taskId={editingTaskId ?? undefined}
           onSuccess={handleTaskModalSuccess}
         />
       </MainLayout>
@@ -639,7 +639,7 @@ function NextActionCard({
                       backgroundColor: task.project.color
                         ? `${task.project.color}20`
                         : "#f3f4f6",
-                      color: task.project.color || "#374151",
+                      color: task.project.color ?? "#374151",
                     }}
                   >
                     {task.project.name}
@@ -654,7 +654,7 @@ function NextActionCard({
                       backgroundColor: tagRelation.tag.color
                         ? `${tagRelation.tag.color}20`
                         : "#f3f4f6",
-                      color: tagRelation.tag.color || "#374151",
+                      color: tagRelation.tag.color ?? "#374151",
                     }}
                   >
                     {tagRelation.tag.name}

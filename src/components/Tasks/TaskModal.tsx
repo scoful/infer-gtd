@@ -104,20 +104,20 @@ export default function TaskModal({
         // 编辑模式：使用任务详情填充表单
         // 按照sortOrder排序标签
         const sortedTags = [...taskDetail.tags].sort(
-          (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
+          (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
         );
 
         setFormData({
           title: taskDetail.title,
-          description: taskDetail.description || "",
+          description: taskDetail.description ?? "",
           type: taskDetail.type,
-          priority: taskDetail.priority || undefined,
+          priority: taskDetail.priority ?? undefined,
           status: taskDetail.status,
           dueDate: taskDetail.dueDate
             ? taskDetail.dueDate.toISOString().split("T")[0]
             : undefined,
-          dueTime: taskDetail.dueTime || undefined,
-          projectId: taskDetail.projectId || undefined,
+          dueTime: taskDetail.dueTime ?? undefined,
+          projectId: taskDetail.projectId ?? undefined,
           tagIds: sortedTags.map((t) => t.tag.id),
         });
       } else if (!isEditing) {
@@ -303,7 +303,7 @@ export default function TaskModal({
                         加载失败
                       </h3>
                       <p className="mb-4 text-sm text-gray-600">
-                        {taskError.message || "无法加载任务详情，请重试"}
+                        {taskError.message ?? "无法加载任务详情，请重试"}
                       </p>
                       <button
                         type="button"
@@ -429,7 +429,7 @@ export default function TaskModal({
                         <select
                           id="priority"
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                          value={formData.priority || ""}
+                          value={formData.priority ?? ""}
                           onChange={(e) =>
                             setFormData({
                               ...formData,
@@ -473,7 +473,7 @@ export default function TaskModal({
                           <select
                             id="project"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                            value={formData.projectId || ""}
+                            value={formData.projectId ?? ""}
                             onChange={(e) =>
                               setFormData({
                                 ...formData,
@@ -506,7 +506,7 @@ export default function TaskModal({
                             type="date"
                             id="dueDate"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                            value={formData.dueDate || ""}
+                            value={formData.dueDate ?? ""}
                             onChange={(e) =>
                               setFormData({
                                 ...formData,
@@ -531,7 +531,7 @@ export default function TaskModal({
                             type="time"
                             id="dueTime"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                            value={formData.dueTime || ""}
+                            value={formData.dueTime ?? ""}
                             onChange={(e) =>
                               setFormData({
                                 ...formData,

@@ -230,7 +230,7 @@ const WaitingPage: NextPage = () => {
 
   // 按等待类型分组任务
   const waitingGroups = useMemo((): WaitingGroup[] => {
-    const tasks = tasksData?.tasks || [];
+    const tasks = tasksData?.tasks ?? [];
 
     // 定义等待类型组
     const waitingTypes: Omit<WaitingGroup, "tasks">[] = [
@@ -466,7 +466,7 @@ const WaitingPage: NextPage = () => {
         <TaskModal
           isOpen={isTaskModalOpen}
           onClose={handleTaskModalClose}
-          taskId={editingTaskId || undefined}
+          taskId={editingTaskId ?? undefined}
           onSuccess={handleTaskModalSuccess}
         />
       </MainLayout>
@@ -628,7 +628,7 @@ function WaitingTaskCard({
                       backgroundColor: task.project.color
                         ? `${task.project.color}20`
                         : "#f3f4f6",
-                      color: task.project.color || "#374151",
+                      color: task.project.color ?? "#374151",
                     }}
                   >
                     {task.project.name}

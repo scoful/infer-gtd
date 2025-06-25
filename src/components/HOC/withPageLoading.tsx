@@ -70,7 +70,7 @@ export function withPageLoading<P extends object>(
                     key={index}
                     className="rounded-md bg-red-50 p-3 text-sm text-red-600"
                   >
-                    {error?.message || "未知错误"}
+                    {error?.message ?? "未知错误"}
                   </div>
                 ))}
               </div>
@@ -91,7 +91,7 @@ export function withPageLoading<P extends object>(
                 {errorMessage}
               </h2>
               <p className="mb-4 text-sm text-gray-600">
-                {errors[0]?.message || "请检查网络连接后重试"}
+                {errors[0]?.message ?? "请检查网络连接后重试"}
               </p>
               <button
                 onClick={() => window.location.reload()}
@@ -164,12 +164,12 @@ export function LoadingStateRenderer({
     usePageLoadingState(loadingStates);
 
   if (isAnyLoading) {
-    return loadingComponent || <PageLoading message={loadingMessage} />;
+    return loadingComponent ?? <PageLoading message={loadingMessage} />;
   }
 
   if (hasAnyError) {
     return (
-      errorComponent || (
+      errorComponent ?? (
         <div className="p-4 text-center text-red-600">
           <p className="text-sm font-medium">{errorMessage}</p>
           <p className="mt-1 text-xs">{errors[0]?.message}</p>

@@ -201,7 +201,7 @@ export function QueryLoading({
   if (error) {
     return (
       <div className="p-4 text-center text-red-600">
-        {errorComponent || (
+        {errorComponent ?? (
           <div>
             <p className="text-sm font-medium">加载失败</p>
             <p className="mt-1 text-xs">{error.message}</p>
@@ -214,7 +214,7 @@ export function QueryLoading({
   if (isLoading) {
     return (
       <div>
-        {loadingComponent || <SectionLoading message={loadingMessage} />}
+        {loadingComponent ?? <SectionLoading message={loadingMessage} />}
       </div>
     );
   }

@@ -124,8 +124,8 @@ const WeeklyReviewPage: NextPage = () => {
     // 优先级分布
     const priorityStats = tasks.reduce(
       (acc, task) => {
-        const priority = task.priority || "NONE";
-        acc[priority] = (acc[priority] || 0) + 1;
+        const priority = task.priority ?? "NONE";
+        acc[priority] = (acc[priority] ?? 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
@@ -134,7 +134,7 @@ const WeeklyReviewPage: NextPage = () => {
     // 状态分布
     const statusStats = tasks.reduce(
       (acc, task) => {
-        acc[task.status] = (acc[task.status] || 0) + 1;
+        acc[task.status] = (acc[task.status] ?? 0) + 1;
         return acc;
       },
       {} as Record<TaskStatus, number>,
@@ -142,7 +142,7 @@ const WeeklyReviewPage: NextPage = () => {
 
     // 时间统计
     const totalTimeSpent = entries.reduce((total, entry) => {
-      return total + (entry.duration || 0);
+      return total + (entry.duration ?? 0);
     }, 0);
 
     // 每日完成任务数
@@ -150,7 +150,7 @@ const WeeklyReviewPage: NextPage = () => {
       (acc, task) => {
         if (task.completedAt) {
           const day = new Date(task.completedAt).toLocaleDateString("zh-CN");
-          acc[day] = (acc[day] || 0) + 1;
+          acc[day] = (acc[day] ?? 0) + 1;
         }
         return acc;
       },
@@ -459,7 +459,7 @@ const WeeklyReviewPage: NextPage = () => {
                     const date = new Date(weekRange.start);
                     date.setDate(date.getDate() + i);
                     const dateStr = date.toLocaleDateString("zh-CN");
-                    const count = weekStats.dailyCompletion[dateStr] || 0;
+                    const count = weekStats.dailyCompletion[dateStr] ?? 0;
                     const maxCount = Math.max(
                       ...Object.values(weekStats.dailyCompletion),
                       1,
@@ -664,7 +664,7 @@ function getPriorityLabel(priority: string): string {
     [Priority.URGENT]: "紧急",
     NONE: "无",
   };
-  return labels[priority as keyof typeof labels] || "无";
+  return labels[priority as keyof typeof labels] ?? "无";
 }
 
 function getPriorityColor(priority: string): string {
@@ -675,7 +675,7 @@ function getPriorityColor(priority: string): string {
     [Priority.URGENT]: "bg-red-400",
     NONE: "bg-gray-400",
   };
-  return colors[priority as keyof typeof colors] || "bg-gray-400";
+  return colors[priority as keyof typeof colors] ?? "bg-gray-400";
 }
 
 function getPriorityBgColor(priority: Priority): string {

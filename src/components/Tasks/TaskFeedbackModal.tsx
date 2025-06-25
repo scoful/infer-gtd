@@ -64,7 +64,7 @@ export default function TaskFeedbackModal({
   useEffect(() => {
     if (taskDetail) {
       setFormData({
-        feedback: taskDetail.feedback || "",
+        feedback: taskDetail.feedback ?? "",
         tagIds: taskDetail.tags.map((t) => t.tag.id),
       });
     } else if (taskError) {
@@ -84,7 +84,7 @@ export default function TaskFeedbackModal({
       onClose();
     },
     onError: (error) => {
-      showError(error.message || "保存失败");
+      showError(error.message ?? "保存失败");
     },
   });
 

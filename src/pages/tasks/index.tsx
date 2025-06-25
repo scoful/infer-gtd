@@ -223,7 +223,7 @@ const TaskListPage: NextPage = () => {
       showSuccess(result.message);
     },
     onError: (error) => {
-      showError(error.message || "批量重新安排任务失败");
+      showError(error.message ?? "批量重新安排任务失败");
     },
   });
 
@@ -357,10 +357,10 @@ const TaskListPage: NextPage = () => {
   }, []);
 
   // 任务数据处理 - 合并所有页面的数据
-  const tasks = tasksData?.pages.flatMap((page) => page.tasks) || [];
+  const tasks = tasksData?.pages.flatMap((page) => page.tasks) ?? [];
   const hasMorePages = hasNextPage;
   // 获取总数（从第一页获取，因为总数在所有页面都是一样的）
-  const totalCount = tasksData?.pages[0]?.totalCount || 0;
+  const totalCount = tasksData?.pages[0]?.totalCount ?? 0;
 
   // 处理批量重新安排
   const handleBatchDuplicate = useCallback(async () => {
@@ -823,7 +823,7 @@ const TaskListPage: NextPage = () => {
                           />
                           <span
                             className="ml-2 flex items-center text-sm text-gray-700"
-                            style={{ color: tag.color || "#374151" }}
+                            style={{ color: tag.color ?? "#374151" }}
                           >
                             {tag.icon && (
                               <span className="mr-1">{tag.icon}</span>
@@ -1110,7 +1110,7 @@ const TaskListPage: NextPage = () => {
         <TimeEntryModal
           isOpen={isTimeEntryModalOpen}
           onClose={() => setIsTimeEntryModalOpen(false)}
-          taskId={timeEntryTaskId || ""}
+          taskId={timeEntryTaskId ?? ""}
           taskTitle={timeEntryTaskTitle}
         />
 
@@ -1118,7 +1118,7 @@ const TaskListPage: NextPage = () => {
         <TaskModal
           isOpen={isTaskModalOpen}
           onClose={handleTaskModalClose}
-          taskId={editingTaskId || undefined}
+          taskId={editingTaskId ?? undefined}
           onSuccess={handleTaskModalSuccess}
         />
 
@@ -1126,7 +1126,7 @@ const TaskListPage: NextPage = () => {
         <TaskFeedbackModal
           isOpen={isFeedbackModalOpen}
           onClose={handleFeedbackModalClose}
-          taskId={feedbackTaskId || ""}
+          taskId={feedbackTaskId ?? ""}
           taskTitle={feedbackTaskTitle}
           onSuccess={handleFeedbackSuccess}
         />
@@ -1211,7 +1211,7 @@ function TaskListCard({
     // 如果有具体时间，设置到deadline
     if (task.dueTime) {
       const [hours, minutes] = task.dueTime.split(":");
-      deadline.setHours(parseInt(hours || "0"), parseInt(minutes || "0"), 0, 0);
+      deadline.setHours(parseInt(hours ?? "0"), parseInt(minutes ?? "0"), 0, 0);
     } else {
       // 没有具体时间，设置为当天23:59
       deadline.setHours(23, 59, 59, 999);
@@ -1386,7 +1386,7 @@ function TaskListCard({
                   backgroundColor: task.project.color
                     ? `${task.project.color}20`
                     : "#f3f4f6",
-                  color: task.project.color || "#374151",
+                  color: task.project.color ?? "#374151",
                 }}
               >
                 📁 {task.project.name}
@@ -1698,7 +1698,7 @@ function TimeTrackingTaskCard({
                   backgroundColor: task.project.color
                     ? `${task.project.color}20`
                     : "#f3f4f6",
-                  color: task.project.color || "#374151",
+                  color: task.project.color ?? "#374151",
                 }}
               >
                 📁 {task.project.name}

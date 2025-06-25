@@ -437,7 +437,7 @@ export const journalRouter = createTRPCRouter({
           input.month ? input.month - 1 : 0,
           1,
         );
-        const endDate = new Date(input.year, input.month ? input.month : 12, 0);
+        const endDate = new Date(input.year, input.month ?? 12, 0);
 
         const journals = await ctx.db.journal.findMany({
           where: {
@@ -592,8 +592,8 @@ export const journalRouter = createTRPCRouter({
           const dayOfWeek = journal.date.getDay();
           const dateKey = journal.date.toISOString().split("T")[0]!;
 
-          writingTimes[hour] = (writingTimes[hour] || 0) + 1;
-          weeklyPattern[dayOfWeek] = (weeklyPattern[dayOfWeek] || 0) + 1;
+          writingTimes[hour] = (writingTimes[hour] ?? 0) + 1;
+          weeklyPattern[dayOfWeek] = (weeklyPattern[dayOfWeek] ?? 0) + 1;
           dailyWordCounts[dateKey] = journal.content.length;
         });
 

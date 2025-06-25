@@ -430,7 +430,7 @@ export const projectRouter = createTRPCRouter({
             },
             {} as Record<string, number>,
           ),
-          totalTimeSpent: totalTimeSpent._sum.totalTimeSpent || 0,
+          totalTimeSpent: totalTimeSpent._sum.totalTimeSpent ?? 0,
         };
       } catch (error) {
         if (error instanceof TRPCError) {
