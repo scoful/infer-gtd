@@ -1,7 +1,7 @@
 import React from "react";
 import { type TRPCClientError } from "@trpc/client";
 import { type AppRouter } from "@/server/api/root";
-import { PageLoading, QueryLoading } from "@/components/UI";
+import { PageLoading } from "@/components/UI";
 
 interface LoadingState {
   isLoading: boolean;

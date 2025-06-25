@@ -16,7 +16,7 @@ import { TagType } from "@prisma/client";
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
+import { SectionLoading, ConfirmModal, QueryLoading } from "@/components/UI";
 import {
   TagDisplay,
   TagList,

@@ -1,4 +1,3 @@
-import React from "react";
 import { type ReactNode } from "react";
 import { type TRPCClientError } from "@trpc/client";
 import { type AppRouter } from "@/server/api/root";

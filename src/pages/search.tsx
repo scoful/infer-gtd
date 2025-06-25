@@ -6,7 +6,6 @@ import { useRouter } from "next/router";
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
-  BookmarkIcon,
   XMarkIcon,
   CalendarIcon,
   ClockIcon,
@@ -15,6 +14,7 @@ import {
   DocumentTextIcon,
   CheckIcon,
   AdjustmentsHorizontalIcon,
+  BookmarkIcon,
 } from "@heroicons/react/24/outline";
 import { TaskStatus, type TaskType, Priority, TagType } from "@prisma/client";
 

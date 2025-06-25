@@ -5,8 +5,8 @@ import { useSession } from "next-auth/react";
 import {
   PlusIcon,
   LightBulbIcon,
-  ClockIcon,
   TagIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";

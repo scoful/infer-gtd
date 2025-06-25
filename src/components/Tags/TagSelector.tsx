@@ -3,7 +3,6 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
   PlusIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { TagType } from "@prisma/client";
 

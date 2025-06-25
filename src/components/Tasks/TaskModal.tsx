@@ -4,7 +4,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
 
 import { api } from "@/utils/api";
-import { ButtonLoading, QueryLoading } from "@/components/UI";
+import { ButtonLoading } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { TagSelector } from "@/components/Tags";
 

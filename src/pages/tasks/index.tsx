@@ -19,7 +19,7 @@ import { TaskStatus, TaskType, Priority } from "@prisma/client";
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
+import { SectionLoading, ConfirmModal, QueryLoading } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
 import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";

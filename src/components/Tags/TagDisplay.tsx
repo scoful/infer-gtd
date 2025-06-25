@@ -142,7 +142,7 @@ interface SortableTagProps extends TagDisplayProps {
 
 const SortableTag: React.FC<SortableTagProps> = ({
   id,
-  isDragging,
+  isDragging: _isDragging,
   ...props
 }) => {
   const {

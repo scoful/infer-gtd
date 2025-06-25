@@ -20,7 +20,7 @@ import { TaskStatus, type TaskType, Priority } from "@prisma/client";
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading } from "@/components/UI";
+import { SectionLoading, QueryLoading } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { TagList, type TagData } from "@/components/Tags";

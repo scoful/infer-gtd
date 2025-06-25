@@ -14,7 +14,6 @@ import {
   MagnifyingGlassIcon,
   ChartBarIcon,
   TagIcon,
-  Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon,
   UserCircleIcon,
@@ -157,7 +156,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [collapsedExpandedItems, setCollapsedExpandedItems] = useState<
     Set<string>
   >(new Set());
-  const { isCollapsed, isLoaded, toggleSidebar } = useSidebarState();
+  const { isCollapsed, toggleSidebar } = useSidebarState();
   const { refreshPage } = useRefresh();
 
   // 监听路由变化，自动展开相关菜单
@@ -317,7 +316,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
               const isActive = isActivePath(item.href);
               const hasChildren = item.children && item.children.length > 0;
               const isExpanded = expandedItems.has(item.name);
-              const hasActiveChildItem = hasActiveChild(item);
               const parentActive = isParentActive(item);
 
               return (
@@ -447,7 +445,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 const isCollapsedExpanded = collapsedExpandedItems.has(
                   item.name,
                 );
-                const hasActiveChildItem = hasActiveChild(item);
                 const parentActive = isParentActive(item);
 
                 return (

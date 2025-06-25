@@ -9,7 +9,6 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { data: sessionData, status } = useSession();
-  const router = useRouter();
 
   // 加载中状态
   if (status === "loading") {
