@@ -7,10 +7,12 @@
 在 GitHub 仓库设置中添加以下 Secrets：
 
 ```
-ALIYUN_DOCKER_HUB_REGISTRY=registry.cn-hangzhou.aliyuncs.com/your-namespace
+ALIYUN_DOCKER_HUB_REGISTRY=registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd
 ALIYUN_DOCKER_HUB_USERNAME=your-aliyun-username
 ALIYUN_DOCKER_HUB_PASSWORD=your-aliyun-password
 ```
+
+**注意**：`ALIYUN_DOCKER_HUB_REGISTRY` 必须包含完整的镜像路径（registry + namespace + repository）！
 
 ### 2. 服务器环境准备
 
@@ -54,7 +56,7 @@ AUTH_GITHUB_SECRET="your-github-oauth-app-secret"
 
 # 应用配置
 NEXTAUTH_URL="https://your-domain.com"
-DOCKER_IMAGE="registry.cn-hangzhou.aliyuncs.com/your-namespace/infer-gtd:latest"
+DOCKER_IMAGE="registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd:latest"
 
 # 部署脚本使用
 ALIYUN_USERNAME="your-aliyun-username"

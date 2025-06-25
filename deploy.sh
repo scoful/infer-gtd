@@ -6,8 +6,8 @@
 set -e
 
 # 配置变量
-REGISTRY="registry.cn-hangzhou.aliyuncs.com"
-NAMESPACE="your-namespace"  # 请替换为您的阿里云命名空间
+REGISTRY="registry.cn-guangzhou.aliyuncs.com"
+NAMESPACE="scoful"
 IMAGE_NAME="infer-gtd"
 DEFAULT_TAG="latest"
 

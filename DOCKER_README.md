@@ -25,7 +25,7 @@
 在 GitHub 仓库设置中添加以下 Secrets：
 
 ```
-ALIYUN_DOCKER_HUB_REGISTRY=registry.cn-hangzhou.aliyuncs.com/your-namespace
+ALIYUN_DOCKER_HUB_REGISTRY=registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd
 ALIYUN_DOCKER_HUB_USERNAME=your-aliyun-username
 ALIYUN_DOCKER_HUB_PASSWORD=your-aliyun-password
 ```
@@ -49,7 +49,7 @@ AUTH_GITHUB_SECRET="your-github-oauth-app-secret"
 NEXTAUTH_URL="https://your-domain.com"
 
 # Docker 镜像地址
-DOCKER_IMAGE="registry.cn-hangzhou.aliyuncs.com/your-namespace/infer-gtd:latest"
+DOCKER_IMAGE="registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd:latest"
 ```
 
 ## 生产环境部署
@@ -71,10 +71,10 @@ DOCKER_IMAGE="registry.cn-hangzhou.aliyuncs.com/your-namespace/infer-gtd:latest"
 
 ```bash
 # 1. 设置环境变量
-export DOCKER_IMAGE="registry.cn-hangzhou.aliyuncs.com/your-namespace/infer-gtd:latest"
+export DOCKER_IMAGE="registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd:latest"
 
 # 2. 登录阿里云镜像仓库
-echo "$ALIYUN_PASSWORD" | docker login --username "$ALIYUN_USERNAME" --password-stdin registry.cn-hangzhou.aliyuncs.com
+echo "$ALIYUN_PASSWORD" | docker login --username "$ALIYUN_USERNAME" --password-stdin registry.cn-guangzhou.aliyuncs.com
 
 # 3. 拉取镜像
 docker pull $DOCKER_IMAGE

@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     # 使用阿里云镜像仓库的镜像
-    # 格式: registry.cn-hangzhou.aliyuncs.com/your-namespace/infer-gtd:tag
-    image: ${DOCKER_IMAGE:-registry.cn-hangzhou.aliyuncs.com/your-namespace/infer-gtd:latest}
+    # 格式: registry.cn-guangzhou.aliyuncs.com/namespace/repository:tag
+    image: ${DOCKER_IMAGE:-registry.cn-guangzhou.aliyuncs.com/scoful/infer-gtd:latest}
     container_name: gtd-app
     ports:
       - "${APP_PORT:-3000}:3000"
