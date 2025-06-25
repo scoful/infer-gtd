@@ -1,17 +1,16 @@
-import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
-  createNoteSchema,
-  updateNoteSchema,
-  getNotesSchema,
-  noteIdSchema,
   archiveNoteSchema,
-  linkNoteToTaskSchema,
-  unlinkNoteFromTaskSchema,
   batchNoteOperationSchema,
-  searchNotesSchema,
+  createNoteSchema,
+  getNotesSchema,
   getNoteStatsSchema,
+  linkNoteToTaskSchema,
+  noteIdSchema,
+  searchNotesSchema,
+  unlinkNoteFromTaskSchema,
+  updateNoteSchema,
 } from "@/server/api/schemas/note";
 
 export const noteRouter = createTRPCRouter({

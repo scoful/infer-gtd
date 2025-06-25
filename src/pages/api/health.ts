@@ -16,7 +16,7 @@ export default async function handler(
   try {
     // 检查数据库连接
     await db.$queryRaw`SELECT 1`;
-    
+
     return res.status(200).json({
       status: "healthy",
       timestamp: new Date().toISOString(),
@@ -24,7 +24,7 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Health check failed:", error);
-    
+
     return res.status(503).json({
       status: "unhealthy",
       timestamp: new Date().toISOString(),

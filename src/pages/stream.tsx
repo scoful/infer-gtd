@@ -1,12 +1,12 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
-  PlusIcon,
-  LightBulbIcon,
-  TagIcon,
   ClockIcon,
+  LightBulbIcon,
+  PlusIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";

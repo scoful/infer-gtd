@@ -1,27 +1,23 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import {
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  XMarkIcon,
-  CalendarIcon,
-  ClockIcon,
-  TagIcon,
-  FolderIcon,
-  DocumentTextIcon,
-  CheckIcon,
   AdjustmentsHorizontalIcon,
   BookmarkIcon,
+  CalendarIcon,
+  CheckIcon,
+  DocumentTextIcon,
+  FolderIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { TaskStatus, type TaskType, Priority, TagType } from "@prisma/client";
+import { Priority, TaskStatus, type TaskType } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading } from "@/components/UI";
+import { SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 
 // 搜索结果类型

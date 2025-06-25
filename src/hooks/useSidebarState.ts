@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const SIDEBAR_STORAGE_KEY = "smart-gtd-sidebar-collapsed";
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TaskStatus, TaskType, Priority } from "@prisma/client";
+import { Priority, TaskStatus, TaskType } from "@prisma/client";
 
 // 基础任务创建 Schema
 export const createTaskSchema = z.object({

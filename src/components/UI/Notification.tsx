@@ -1,9 +1,9 @@
 import React from "react";
 import {
   CheckCircleIcon,
-  XCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
+  XCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 

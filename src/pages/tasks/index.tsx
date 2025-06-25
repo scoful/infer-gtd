@@ -1,32 +1,29 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useState, useMemo, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  PlusIcon,
+  ChartBarIcon,
+  ClockIcon,
   FunnelIcon,
-  Squares2X2Icon,
   ListBulletIcon,
   MagnifyingGlassIcon,
-  CheckIcon,
-  XMarkIcon,
-  ClockIcon,
-  ChartBarIcon,
+  PlusIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
-import { TaskStatus, TaskType, Priority } from "@prisma/client";
+import { Priority, TaskStatus, TaskType } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { SectionLoading, ConfirmModal, QueryLoading } from "@/components/UI";
+import { ConfirmModal, QueryLoading, SectionLoading } from "@/components/UI";
 import TaskModal from "@/components/Tasks/TaskModal";
 import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useConfirm } from "@/hooks";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
-import { TagList, type TagData } from "@/components/Tags";
+import { type TagData, TagList } from "@/components/Tags";
 
 // 视图模式类型
 type ViewMode = "list" | "compact" | "detailed" | "timeTracking";

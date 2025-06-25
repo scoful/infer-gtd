@@ -1,23 +1,19 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-  CalendarIcon,
   ChartBarIcon,
+  ChatBubbleLeftRightIcon,
   CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  TrophyIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  DocumentTextIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
   LightBulbIcon,
-  ChatBubbleLeftRightIcon,
+  TrophyIcon,
 } from "@heroicons/react/24/outline";
-import { TaskStatus, Priority } from "@prisma/client";
+import { Priority, TaskStatus } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";

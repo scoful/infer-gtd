@@ -1,6 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { ChartBarIcon, ArrowTrendingUpIcon } from "@heroicons/react/24/outline";
+import { ArrowTrendingUpIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";

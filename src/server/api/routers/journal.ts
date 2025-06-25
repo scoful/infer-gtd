@@ -3,13 +3,13 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   createJournalSchema,
-  updateJournalSchema,
   getJournalByDateSchema,
   getJournalsSchema,
-  journalIdSchema,
-  searchJournalsSchema,
   getJournalStatsSchema,
   getJournalTimelineSchema,
+  journalIdSchema,
+  searchJournalsSchema,
+  updateJournalSchema,
 } from "@/server/api/schemas/journal";
 
 export const journalRouter = createTRPCRouter({

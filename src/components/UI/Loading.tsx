@@ -1,6 +1,4 @@
 import { type ReactNode } from "react";
-import { type TRPCClientError } from "@trpc/client";
-import { type AppRouter } from "@/server/api/root";
 
 // 基础Loading Spinner组件
 interface LoadingSpinnerProps {

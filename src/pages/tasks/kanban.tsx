@@ -1,39 +1,39 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { TaskStatus, TaskType, type Task } from "@prisma/client";
+import { type Task, TaskStatus, TaskType } from "@prisma/client";
 import {
-  PlusIcon,
-  ClockIcon,
-  PlayIcon,
-  PauseIcon,
-  EllipsisVerticalIcon,
-  TrashIcon,
+  ArrowPathIcon,
   ArrowUpIcon,
   ChartBarIcon,
-  ArrowPathIcon,
   ChatBubbleLeftEllipsisIcon,
+  ClockIcon,
+  EllipsisVerticalIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
+  type CollisionDetection,
   DndContext,
   type DragEndEvent,
+  type DragOverEvent,
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
-  useSensor,
-  useSensors,
   pointerWithin,
   useDroppable,
-  type CollisionDetection,
-  type DragOverEvent,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import {
-  SortableContext,
-  verticalListSortingStrategy,
   arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import { api } from "@/utils/api";
@@ -43,11 +43,11 @@ import TaskModal from "@/components/Tasks/TaskModal";
 import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
 import PostponeTaskModal from "@/components/Tasks/PostponeTaskModal";
-import { PageLoading, ConfirmModal } from "@/components/UI";
+import { ConfirmModal, PageLoading } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useConfirm } from "@/hooks";
-import { TagList, type TagData } from "@/components/Tags";
+import { type TagData, TagList } from "@/components/Tags";
 
 // 看板列配置
 const KANBAN_COLUMNS = [
@@ -700,7 +700,7 @@ const KanbanPage: NextPage = () => {
         // 如果状态变为已完成，触发反馈收集
         if (variables.status === TaskStatus.DONE) {
           // 从所有任务数据中查找任务信息，优先从tasksByStatus中查找
-          let task = (Object.values(tasksByStatus))
+          let task = Object.values(tasksByStatus)
             .flat()
             .find((t) => t.id === variables.id);
 
@@ -712,9 +712,7 @@ const KanbanPage: NextPage = () => {
             task: task,
             taskTitle: task?.title,
             allTasksCount: getAllTasks().length,
-            tasksByStatusCount: (
-              Object.values(tasksByStatus)
-            ).flat().length,
+            tasksByStatusCount: Object.values(tasksByStatus).flat().length,
           });
 
           if (task) {
@@ -814,9 +812,7 @@ const KanbanPage: NextPage = () => {
     });
 
     // 乐观更新：将开始计时的任务移动到第一位
-    const currentStatusTasks =
-      (tasksByStatus)[task.status] ??
-      [];
+    const currentStatusTasks = tasksByStatus[task.status] ?? [];
     const newOrder = [
       taskId,
       ...currentStatusTasks
@@ -1104,9 +1100,7 @@ const KanbanPage: NextPage = () => {
     const task = getAllTasks().find((t) => t.id === taskId);
     if (!task) return;
 
-    const currentStatusTasks =
-      (tasksByStatus)[task.status] ??
-      [];
+    const currentStatusTasks = tasksByStatus[task.status] ?? [];
     if (currentStatusTasks.length <= 1) return; // 如果只有一个任务或没有任务，无需移动
 
     // 乐观更新：立即将任务移动到第一位
@@ -1150,7 +1144,7 @@ const KanbanPage: NextPage = () => {
   // 拖拽开始
   const handleDragStart = (event: DragStartEvent) => {
     const taskId = event.active.id as string;
-    const task = (Object.values(tasksByStatus))
+    const task = Object.values(tasksByStatus)
       .flat()
       .find((t) => t.id === taskId);
 
@@ -1188,7 +1182,7 @@ const KanbanPage: NextPage = () => {
     // 如果拖拽到自己身上，不执行任何操作
     if (draggedTaskId === overId) return;
 
-    const draggedTask = (Object.values(tasksByStatus))
+    const draggedTask = Object.values(tasksByStatus)
       .flat()
       .find((task) => task.id === draggedTaskId);
 
@@ -1220,10 +1214,7 @@ const KanbanPage: NextPage = () => {
 
       if (over.data?.current?.type === "task") {
         // 拖拽到具体任务上，插入到该任务之前
-        const targetStatusTasks =
-          (tasksByStatus)[
-            targetStatus
-          ] ?? [];
+        const targetStatusTasks = tasksByStatus[targetStatus] ?? [];
         const targetTaskIndex = targetStatusTasks.findIndex(
           (task: TaskWithRelations) => task.id === overId,
         );
@@ -1247,10 +1238,7 @@ const KanbanPage: NextPage = () => {
 
       // 乐观更新排序 - 立即在目标位置显示任务
       if (targetInsertIndex !== undefined) {
-        const targetStatusTasks =
-          (tasksByStatus)[
-            targetStatus
-          ] ?? [];
+        const targetStatusTasks = tasksByStatus[targetStatus] ?? [];
         const newTaskIds = [
           ...targetStatusTasks.map((t: TaskWithRelations) => t.id),
         ];
@@ -1280,10 +1268,7 @@ const KanbanPage: NextPage = () => {
     }
 
     // 处理同状态内的排序
-    const statusTasks =
-      (tasksByStatus)[
-        currentStatus
-      ] ?? [];
+    const statusTasks = tasksByStatus[currentStatus] ?? [];
     const currentIndex = statusTasks.findIndex(
       (task: TaskWithRelations) => task.id === draggedTaskId,
     );
@@ -1340,7 +1325,7 @@ const KanbanPage: NextPage = () => {
 
   // 获取当前拖拽的任务
   const activeTask = activeId
-    ? (Object.values(tasksByStatus))
+    ? Object.values(tasksByStatus)
         .flat()
         .find((task) => task.id === activeId)
     : null;
@@ -1415,10 +1400,7 @@ const KanbanPage: NextPage = () => {
           >
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
               {KANBAN_COLUMNS.map((column) => {
-                const tasks =
-                  (tasksByStatus)[
-                    column.status
-                  ] ?? [];
+                const tasks = tasksByStatus[column.status] ?? [];
 
                 return (
                   <KanbanColumn

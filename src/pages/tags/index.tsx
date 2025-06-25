@@ -1,28 +1,23 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
-import { useState, useMemo, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  PencilIcon,
-  TrashIcon,
-  TagIcon,
   ChartBarIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TagIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { TagType } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { SectionLoading, ConfirmModal, QueryLoading } from "@/components/UI";
-import {
-  TagDisplay,
-  TagList,
-  TagGroupDisplay,
-  type TagData,
-} from "@/components/Tags";
+import { ConfirmModal, QueryLoading, SectionLoading } from "@/components/UI";
+import { type TagData, TagDisplay, TagGroupDisplay } from "@/components/Tags";
 import TagModal from "@/components/Tags/TagModal";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { useConfirm } from "@/hooks";
@@ -739,7 +734,8 @@ function TagManagementCard({
   viewMode,
   getTagTypeLabel,
 }: TagManagementCardProps) {
-  const usageCount = ((tag as any)._count?.taskTags ?? 0) + ((tag as any)._count?.noteTags ?? 0);
+  const usageCount =
+    ((tag as any)._count?.taskTags ?? 0) + ((tag as any)._count?.noteTags ?? 0);
 
   return (
     <div
@@ -819,7 +815,9 @@ function TagManagementCard({
               <span>使用次数: {usageCount}</span>
               {tag.category && <span>分类: {tag.category}</span>}
             </div>
-            <span>{new Date((tag as any).createdAt).toLocaleDateString("zh-CN")}</span>
+            <span>
+              {new Date((tag as any).createdAt).toLocaleDateString("zh-CN")}
+            </span>
           </div>
         </div>
       </div>

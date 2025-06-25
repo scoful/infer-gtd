@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { TaskStatus, TaskType, Priority, TagType } from "@prisma/client";
+import { Priority, TagType, TaskStatus, TaskType } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 // 高级搜索 Schema

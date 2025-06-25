@@ -20,7 +20,7 @@ const config = {
   transpilePackages: ["next-auth"],
 
   // Docker 部署优化
-  output: 'standalone',
+  output: "standalone",
 };
 
 export default config;

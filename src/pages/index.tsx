@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 import {
-  PlusIcon,
-  ClockIcon,
-  DocumentTextIcon,
   BookOpenIcon,
   ChartBarIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";

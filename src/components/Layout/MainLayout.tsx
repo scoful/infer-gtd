@@ -1,29 +1,29 @@
-import { type ReactNode, useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { type ReactNode, useEffect, useState } from "react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
+  ArrowRightOnRectangleIcon,
+  Bars3Icon,
+  BoltIcon,
+  BookOpenIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  ClockIcon,
+  DocumentTextIcon,
   HomeIcon,
   LightBulbIcon,
   ListBulletIcon,
-  BoltIcon,
-  ClockIcon,
-  ViewColumnsIcon,
-  DocumentTextIcon,
-  BookOpenIcon,
   MagnifyingGlassIcon,
-  ChartBarIcon,
-  TagIcon,
-  Bars3Icon,
-  XMarkIcon,
-  UserCircleIcon,
-  ArrowRightOnRectangleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
   Squares2X2Icon,
-  CalendarIcon,
+  TagIcon,
+  UserCircleIcon,
+  ViewColumnsIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 import { useSidebarState } from "@/hooks";
