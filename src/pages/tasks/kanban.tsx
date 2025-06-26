@@ -1383,7 +1383,7 @@ const KanbanPage: NextPage = () => {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
               {KANBAN_COLUMNS.map((column) => {
                 const tasks = tasksByStatus[column.status] ?? [];
 
