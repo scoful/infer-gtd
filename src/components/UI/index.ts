@@ -24,3 +24,12 @@ export {
   default as ConfirmModal,
   type ConfirmModalProps,
 } from "./ConfirmModal";
+
+// MarkdownEditor组件导出
+export {
+  default as MarkdownEditor,
+  SimpleMarkdownEditor,
+} from "./MarkdownEditor";
+
+// MarkdownRenderer组件导出
+export { default as MarkdownRenderer } from "./MarkdownRenderer";
