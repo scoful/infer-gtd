@@ -394,7 +394,7 @@ const KanbanPage: NextPage = () => {
     // 处理每个状态的任务数据
     const processStatusTasks = (
       pages: any[] | undefined,
-      originalStatus: TaskStatus,
+      _originalStatus: TaskStatus,
     ) => {
       if (!pages) return;
 
@@ -882,21 +882,6 @@ const KanbanPage: NextPage = () => {
     }
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
-  };
-
-  // 紧凑的时间格式化（用于空间受限的地方）
-  const formatTimeCompact = (seconds: number) => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (days > 0) {
-      return `${days}d`;
-    }
-    if (hours > 0) {
-      return `${hours}h`;
     }
     return `${minutes}m`;
   };
@@ -1563,7 +1548,7 @@ function KanbanColumn({
   onPostponeTask,
   formatTimeSpent,
   isTimerActive,
-  isUpdating,
+  isUpdating: _isUpdating,
   optimisticUpdates,
   updatingTasks,
   timerLoadingTasks,
@@ -1784,7 +1769,7 @@ interface TaskCardProps {
 
 function TaskCard({
   task,
-  onStatusChange,
+  onStatusChange: _onStatusChange,
   onStartTimer,
   onPauseTimer,
   onEdit,
@@ -1847,21 +1832,6 @@ function TaskCard({
     MEDIUM: "bg-blue-100 text-blue-800",
     HIGH: "bg-orange-100 text-orange-800",
     URGENT: "bg-red-100 text-red-800",
-  };
-
-  // 紧凑的时间格式化（用于空间受限的地方）
-  const formatTimeCompact = (seconds: number) => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (days > 0) {
-      return `${days}d`;
-    }
-    if (hours > 0) {
-      return `${hours}h`;
-    }
-    return `${minutes}m`;
   };
 
   // 计算限时任务的剩余时间和紧急程度

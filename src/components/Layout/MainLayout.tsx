@@ -223,12 +223,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
     return router.pathname.startsWith(href);
   };
 
-  // 检查是否有子项处于激活状态
-  const hasActiveChild = (item: NavigationItem) => {
-    if (!item.children) return false;
-    return item.children.some((child) => isActivePath(child.href));
-  };
-
   // 检查父菜单是否应该激活（当任何子页面激活时）
   const isParentActive = (item: NavigationItem) => {
     if (item.name === "任务管理") {

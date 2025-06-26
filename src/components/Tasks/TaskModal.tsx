@@ -135,7 +135,7 @@ export default function TaskModal({
   } = api.project.getAll.useQuery({ limit: 50 }, { enabled: isOpen });
 
   // 获取标签列表 - 现在已经有了标签API
-  const { data: tags, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
+  const { isLoading: isLoadingTags } = api.tag.getAll.useQuery(
     { limit: 100 },
     { enabled: isOpen },
   );

@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   ClockIcon,
@@ -29,8 +29,6 @@ export default function TimeEntryModal({
   taskId,
   taskTitle,
 }: TimeEntryModalProps) {
-  const [selectedDate, setSelectedDate] = useState<string>("");
-
   // 获取时间记录
   const { data: timeEntries, isLoading } = api.task.getTimeEntries.useQuery(
     { taskId, limit: 100 },
@@ -205,7 +203,7 @@ export default function TimeEntryModal({
                                     new Date(a.startTime).getTime() -
                                     new Date(b.startTime).getTime(),
                                 )
-                                .map((entry, index) => (
+                                .map((entry, _index) => (
                                   <div
                                     key={entry.id}
                                     className="flex items-center justify-between rounded-md bg-gray-50 p-3"

@@ -1175,7 +1175,7 @@ function TaskListCard({
   isSelected,
   onSelect,
   onEdit,
-  onStatusChange,
+  onStatusChange: _onStatusChange,
   formatTimeSpent,
   isTimerActive,
   viewMode,

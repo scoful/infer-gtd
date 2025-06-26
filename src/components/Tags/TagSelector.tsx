@@ -546,7 +546,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 className="flex w-full items-center p-3 text-left text-sm text-blue-600 hover:bg-blue-50"
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
-                创建标签 "{searchQuery}"
+                创建标签 &ldquo;{searchQuery}&rdquo;
               </button>
             </div>
           )}

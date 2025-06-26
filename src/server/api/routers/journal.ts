@@ -353,7 +353,7 @@ export const journalRouter = createTRPCRouter({
           }
         }
 
-        const [totalJournals, totalWords, templatesUsed] = await Promise.all([
+        const [totalJournals, , templatesUsed] = await Promise.all([
           ctx.db.journal.count({ where }),
           // 移除不支持的 aggregate 操作
           Promise.resolve(0),

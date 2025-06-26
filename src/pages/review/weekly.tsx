@@ -56,14 +56,13 @@ const WeeklyReviewPage: NextPage = () => {
   const weekRange = useMemo(() => getWeekRange(currentWeek), [currentWeek]);
 
   // 获取本周任务统计
-  const { data: weeklyStats, isLoading: statsLoading } =
-    api.task.getStats.useQuery(
-      {
-        startDate: weekRange.start,
-        endDate: weekRange.end,
-      },
-      { enabled: !!sessionData },
-    );
+  const { isLoading: statsLoading } = api.task.getStats.useQuery(
+    {
+      startDate: weekRange.start,
+      endDate: weekRange.end,
+    },
+    { enabled: !!sessionData },
+  );
 
   // 获取本周任务列表
   const { data: weeklyTasks, isLoading: tasksLoading } =

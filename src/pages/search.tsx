@@ -459,8 +459,8 @@ interface AdvancedFiltersProps {
 const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   taskStatus,
   setTaskStatus,
-  taskType,
-  setTaskType,
+  taskType: _taskType,
+  setTaskType: _setTaskType,
   priority,
   setPriority,
   tagIds,
@@ -471,10 +471,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   setCreatedAfter,
   createdBefore,
   setCreatedBefore,
-  dueAfter,
-  setDueAfter,
-  dueBefore,
-  setDueBefore,
+  dueAfter: _dueAfter,
+  setDueAfter: _setDueAfter,
+  dueBefore: _dueBefore,
+  setDueBefore: _setDueBefore,
   isCompleted,
   setIsCompleted,
   isOverdue,
@@ -790,7 +790,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           {query && (
             <>
               ，关键词:{" "}
-              <span className="font-medium text-gray-900">"{query}"</span>
+              <span className="font-medium text-gray-900">
+                &ldquo;{query}&rdquo;
+              </span>
             </>
           )}
         </p>

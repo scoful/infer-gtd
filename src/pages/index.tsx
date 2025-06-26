@@ -18,15 +18,6 @@ import { QueryLoading, SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import TaskModal from "@/components/Tasks/TaskModal";
 
-interface QuickAction {
-  name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-  color: string;
-  onClick?: () => void;
-}
-
 const Home: NextPage = () => {
   const { data: sessionData } = useSession();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);

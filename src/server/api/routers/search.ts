@@ -71,18 +71,6 @@ const savedSearchSchema = z.object({
   isPublic: z.boolean().default(false),
 });
 
-const updateSavedSearchSchema = z.object({
-  id: z.string().cuid("无效的搜索ID"),
-  name: z
-    .string()
-    .min(1, "搜索名称不能为空")
-    .max(100, "搜索名称过长")
-    .optional(),
-  description: z.string().max(500, "描述过长").optional(),
-  searchParams: advancedSearchSchema.optional(),
-  isPublic: z.boolean().optional(),
-});
-
 const searchIdSchema = z.object({
   id: z.string().cuid("无效的搜索ID"),
 });

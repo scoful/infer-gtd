@@ -107,13 +107,6 @@ const StreamPage: NextPage = () => {
     return date.toLocaleString("zh-CN");
   };
 
-  const formatDate = (date: Date) => {
-    if (!isClient) {
-      return ""; // 服务端渲染时返回空字符串
-    }
-    return date.toDateString();
-  };
-
   // 计算今日新增想法数量
   const getTodayIdeasCount = () => {
     if (!isClient || !ideasData?.tasks) {
