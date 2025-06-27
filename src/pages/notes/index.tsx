@@ -433,9 +433,9 @@ function NoteCard({
   onArchive,
 }: NoteCardProps) {
   // 获取显示的预览内容
-  const getDisplayPreview = (maxLength: number = 150) => {
+  const getDisplayPreview = (maxLength = 150) => {
     // 优先显示摘要
-    if (note.summary && note.summary.trim()) {
+    if (note.summary?.trim()) {
       return note.summary.length > maxLength
         ? note.summary.substring(0, maxLength) + "..."
         : note.summary;
