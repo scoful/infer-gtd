@@ -9,7 +9,7 @@ echo "🚀 Starting GTD Application..."
 
 # 检查数据库连接
 echo "📡 Checking database connection..."
-npx prisma db push --accept-data-loss || {
+npx prisma db push --accept-data-loss --skip-generate > /dev/null 2>&1 || {
     echo "❌ Database connection failed"
     exit 1
 }
@@ -21,20 +21,12 @@ npx prisma migrate deploy || {
     exit 1
 }
 
-# 生成 Prisma 客户端（确保最新）
+# 生成 Prisma 客户端
 echo "⚙️ Generating Prisma client..."
 npx prisma generate || {
     echo "❌ Prisma client generation failed"
     exit 1
 }
-
-# 可选：数据库种子（如果需要）
-if [ "$RUN_SEED" = "true" ]; then
-    echo "🌱 Running database seed..."
-    npx prisma db seed || {
-        echo "⚠️ Database seed failed (continuing anyway)"
-    }
-fi
 
 echo "✅ Database setup completed successfully"
 
