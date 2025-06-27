@@ -71,6 +71,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 
+# 复制启动脚本
+COPY scripts/docker-entrypoint.sh ./scripts/
+RUN chmod +x ./scripts/docker-entrypoint.sh
+
 # 安装 Prisma 客户端（仅生产依赖）
 RUN pnpm add @prisma/client prisma --prod
 
@@ -102,5 +106,6 @@ LABEL org.opencontainers.image.created=$BUILD_DATE \
       org.opencontainers.image.title="GTD Task Management System" \
       org.opencontainers.image.description="Next.js + tRPC + Prisma GTD Application"
 
-# 启动命令
+# 设置入口点和启动命令
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
 CMD ["node", "server.js"]

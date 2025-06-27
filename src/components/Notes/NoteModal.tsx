@@ -17,6 +17,7 @@ interface NoteModalProps {
 interface NoteFormData {
   title: string;
   content: string;
+  summary?: string;
   projectId?: string;
   tagIds: string[];
   linkedTaskIds: string[];
@@ -31,6 +32,7 @@ export default function NoteModal({
   const [formData, setFormData] = useState<NoteFormData>({
     title: "",
     content: "",
+    summary: "",
     tagIds: [],
     linkedTaskIds: [],
   });
@@ -105,6 +107,7 @@ export default function NoteModal({
         setFormData({
           title: noteDetail.title,
           content: noteDetail.content,
+          summary: noteDetail.summary ?? "",
           projectId: noteDetail.projectId ?? undefined,
           tagIds: noteDetail.tags.map((t) => t.tag.id),
           linkedTaskIds: noteDetail.linkedTasks.map((t) => t.id),
@@ -120,6 +123,7 @@ export default function NoteModal({
     setFormData({
       title: "",
       content: "",
+      summary: "",
       tagIds: [],
       linkedTaskIds: [],
     });
@@ -264,6 +268,30 @@ export default function NoteModal({
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         placeholder="输入笔记标题..."
                       />
+                    </div>
+
+                    {/* 笔记摘要 */}
+                    <div>
+                      <label
+                        htmlFor="summary"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        笔记摘要
+                      </label>
+                      <textarea
+                        id="summary"
+                        rows={3}
+                        value={formData.summary}
+                        onChange={(e) =>
+                          setFormData({ ...formData, summary: e.target.value })
+                        }
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        placeholder="输入笔记摘要，用于在列表中预览（可选）..."
+                        maxLength={300}
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        摘要将在笔记列表中显示，帮助快速了解笔记内容（最多300字符）
+                      </p>
                     </div>
 
                     {/* 笔记内容 */}

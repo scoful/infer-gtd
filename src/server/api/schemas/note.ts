@@ -4,6 +4,7 @@ import { z } from "zod";
 export const createNoteSchema = z.object({
   title: z.string().min(1, "笔记标题不能为空").max(200, "笔记标题过长"),
   content: z.string().min(1, "笔记内容不能为空"),
+  summary: z.string().max(300, "摘要过长").optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
   linkedTaskIds: z.array(z.string().cuid("无效的任务ID")).optional(),
@@ -18,6 +19,7 @@ export const updateNoteSchema = z.object({
     .max(200, "笔记标题过长")
     .optional(),
   content: z.string().min(1, "笔记内容不能为空").optional(),
+  summary: z.string().max(300, "摘要过长").optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
   linkedTaskIds: z.array(z.string().cuid("无效的任务ID")).optional(),

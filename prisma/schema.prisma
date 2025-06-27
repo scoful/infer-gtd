@@ -189,6 +189,7 @@ model Note {
     id          String   @id @default(cuid())
     title       String
     content     String   // Markdown content
+    summary     String?  // Optional summary for preview
     isArchived  Boolean  @default(false)
 
     createdAt   DateTime @default(now())

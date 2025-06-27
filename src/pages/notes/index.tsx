@@ -393,6 +393,7 @@ interface NoteCardProps {
     id: string;
     title: string;
     content: string;
+    summary?: string | null;
     isArchived: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -431,23 +432,23 @@ function NoteCard({
   onEdit,
   onArchive,
 }: NoteCardProps) {
-  // 截取内容预览
-  const getContentPreview = (content: string, maxLength: number = 150) => {
-    // 移除 Markdown 语法
-    const plainText = content
+  // 获取显示的预览内容
+  const getDisplayPreview = (maxLength: number = 150) => {
+    // 优先显示摘要
+    if (note.summary && note.summary.trim()) {
+      return note.summary.length > maxLength
+        ? note.summary.substring(0, maxLength) + "..."
+        : note.summary;
+    }
+
+    // 如果没有摘要，则从内容生成预览
+    const plainText = note.content
       .replace(/#{1,6}\s+/g, "") // 移除标题
       .replace(/\*\*(.*?)\*\*/g, "$1") // 移除粗体
       .replace(/\*(.*?)\*/g, "$1") // 移除斜体
       .replace(/`(.*?)`/g, "$1") // 移除行内代码
       .replace(/\[(.*?)\]\(.*?\)/g, "$1") // 移除链接
-      .replace(/!\[.*?\]\(.*?\)/g, "") // 移除图片
-      .replace(/```[\s\S]*?```/g, "[代码块]") // 移除代码块
-      .replace(/`([^`]+)`/g, "$1") // 移除行内代码标记
-      .replace(/>\s*/g, "") // 移除引用标记
-      .replace(/[-*+]\s+/g, "") // 移除列表标记
-      .replace(/\d+\.\s+/g, "") // 移除有序列表标记
       .replace(/\n+/g, " ") // 替换换行为空格
-      .replace(/\s+/g, " ") // 合并多个空格
       .trim();
 
     return plainText.length > maxLength
@@ -504,7 +505,7 @@ function NoteCard({
 
             {/* 内容预览 */}
             <p className="mb-3 line-clamp-2 text-sm text-gray-600">
-              {getContentPreview(note.content, 200)}
+              {getDisplayPreview(200)}
             </p>
 
             {/* 元数据 */}
@@ -613,7 +614,7 @@ function NoteCard({
 
       {/* 内容预览 */}
       <p className="mb-4 line-clamp-3 text-sm text-gray-600">
-        {getContentPreview(note.content)}
+        {getDisplayPreview()}
       </p>
 
       {/* 项目和标签 */}
