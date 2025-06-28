@@ -129,13 +129,60 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 });
 
 /**
+ * Enhanced logging middleware with structured logging
+ */
+const loggingMiddleware = t.middleware(async ({ next, path, type, ctx }) => {
+  const start = Date.now();
+  const requestId = `trpc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Import logger dynamically to avoid circular dependencies
+  const { logTrpcOperation } = await import("@/utils/logger");
+
+  try {
+    const result = await next();
+    const duration = Date.now() - start;
+
+    // 只记录 query 和 mutation 类型
+    if (type === "query" || type === "mutation") {
+      logTrpcOperation(
+        path,
+        type,
+        duration,
+        true,
+        ctx.session?.user?.id,
+      );
+    }
+
+    return result;
+  } catch (error) {
+    const duration = Date.now() - start;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // 只记录 query 和 mutation 类型
+    if (type === "query" || type === "mutation") {
+      logTrpcOperation(
+        path,
+        type,
+        duration,
+        false,
+        ctx.session?.user?.id,
+        errorMessage,
+      );
+    }
+
+    // Re-throw the error
+    throw error;
+  }
+});
+
+/**
  * Public (unauthenticated) procedure
  *
  * This is the base piece you use to build new queries and mutations on your tRPC API. It does not
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure.use(timingMiddleware).use(loggingMiddleware);
 
 /**
  * Protected (authenticated) procedure
@@ -147,6 +194,7 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
   .use(timingMiddleware)
+  .use(loggingMiddleware)
   .use(({ ctx, next }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });

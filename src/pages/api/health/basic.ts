@@ -1,5 +1,6 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import fs from "fs";
+import { logHealthCheck, loggers } from "@/utils/logger";
 import path from "path";
 
 /**
@@ -24,7 +25,7 @@ export default async function handler(
         startupStatus = fs.readFileSync(statusFilePath, "utf8").trim();
       }
     } catch (error) {
-      console.warn("Could not read startup status file:", error);
+      loggers.health.warn({ error: error instanceof Error ? error.message : String(error) }, "无法读取启动状态文件");
     }
 
     // 检查应用基本状态
@@ -44,6 +45,12 @@ export default async function handler(
     const status = isReady ? "ready" : isStarting ? "starting" : "unhealthy";
     const httpStatus = isReady ? 200 : isStarting ? 202 : 503;
 
+    logHealthCheck("basic", status as "healthy" | "unhealthy" | "starting", {
+      startupStatus,
+      ready: isReady,
+      starting: isStarting
+    });
+
     return res.status(httpStatus).json({
       status,
       timestamp: new Date().toISOString(),
@@ -52,7 +59,9 @@ export default async function handler(
       starting: isStarting,
     });
   } catch (error) {
-    console.error("Basic health check failed:", error);
+    logHealthCheck("basic", "unhealthy", {
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
 
     return res.status(503).json({
       status: "unhealthy",

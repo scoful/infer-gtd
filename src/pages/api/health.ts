@@ -1,6 +1,7 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { db } from "@/server/db";
 import fs from "fs";
+import { logHealthCheck, loggers } from "@/utils/logger";
 
 /**
  * 完整健康检查 API 端点
@@ -24,7 +25,7 @@ export default async function handler(
         startupStatus = fs.readFileSync(statusFilePath, "utf8").trim();
       }
     } catch (error) {
-      console.warn("Could not read startup status file:", error);
+      loggers.health.warn({ error: error instanceof Error ? error.message : String(error) }, "无法读取启动状态文件");
     }
 
     // 如果应用还在启动中，返回启动状态
@@ -41,6 +42,8 @@ export default async function handler(
         "APP_STARTING"
       ].includes(startupStatus);
 
+      logHealthCheck("application", isStarting ? "starting" : "unhealthy", { startupStatus });
+
       return res.status(isStarting ? 202 : 503).json({
         status: isStarting ? "starting" : "unhealthy",
         timestamp: new Date().toISOString(),
@@ -52,6 +55,8 @@ export default async function handler(
     // 应用已就绪，检查数据库连接
     await db.$queryRaw`SELECT 1`;
 
+    logHealthCheck("application", "healthy", { database: "connected", startupStatus });
+
     return res.status(200).json({
       status: "healthy",
       timestamp: new Date().toISOString(),
@@ -59,7 +64,10 @@ export default async function handler(
       startupStatus,
     });
   } catch (error) {
-    console.error("Health check failed:", error);
+    logHealthCheck("application", "unhealthy", {
+      database: "disconnected",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
 
     return res.status(503).json({
       status: "unhealthy",
