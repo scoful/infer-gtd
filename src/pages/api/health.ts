@@ -1,9 +1,10 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { db } from "@/server/db";
+import fs from "fs";
 
 /**
- * 健康检查 API 端点
- * 用于 Docker 容器健康监控
+ * 完整健康检查 API 端点
+ * 包含数据库连接检查，用于完整的应用健康监控
  */
 export default async function handler(
   req: NextApiRequest,
@@ -14,13 +15,48 @@ export default async function handler(
   }
 
   try {
-    // 检查数据库连接
+    // 检查启动状态
+    const statusFilePath = "/tmp/app-status/startup.status";
+    let startupStatus = "UNKNOWN";
+
+    try {
+      if (fs.existsSync(statusFilePath)) {
+        startupStatus = fs.readFileSync(statusFilePath, "utf8").trim();
+      }
+    } catch (error) {
+      console.warn("Could not read startup status file:", error);
+    }
+
+    // 如果应用还在启动中，返回启动状态
+    if (startupStatus !== "READY") {
+      const isStarting = [
+        "STARTING",
+        "DB_CONNECTING",
+        "DB_CONNECTED",
+        "MIGRATING",
+        "RESETTING_DB",
+        "MIGRATED",
+        "GENERATING_CLIENT",
+        "DB_READY",
+        "APP_STARTING"
+      ].includes(startupStatus);
+
+      return res.status(isStarting ? 202 : 503).json({
+        status: isStarting ? "starting" : "unhealthy",
+        timestamp: new Date().toISOString(),
+        startupStatus,
+        database: "pending",
+      });
+    }
+
+    // 应用已就绪，检查数据库连接
     await db.$queryRaw`SELECT 1`;
 
     return res.status(200).json({
       status: "healthy",
       timestamp: new Date().toISOString(),
       database: "connected",
+      startupStatus,
     });
   } catch (error) {
     console.error("Health check failed:", error);

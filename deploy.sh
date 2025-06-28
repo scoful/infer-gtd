@@ -106,38 +106,68 @@ start_services() {
 
     # 启动服务
     docker-compose -f docker-compose.yml up -d
-    
-    log_info "等待服务启动..."
-    sleep 10
-    
-    # 检查服务状态
+
+    log_info "等待容器启动..."
+    sleep 5
+
+    # 检查容器状态
     if docker-compose -f docker-compose.yml ps | grep -q "Up"; then
-        log_info "服务启动成功"
+        log_info "容器启动成功"
     else
-        log_error "服务启动失败"
+        log_error "容器启动失败"
         docker-compose -f docker-compose.yml logs
         exit 1
     fi
 }
 
+# 等待应用启动完成
+wait_for_startup() {
+    log_info "等待应用启动完成..."
+
+    local max_attempts=60  # 增加到 60 次，总共 5 分钟
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        # 使用基础健康检查端点，不依赖数据库
+        local response=$(curl -s -w "%{http_code}" http://localhost:3001/api/health/basic 2>/dev/null || echo "000")
+        local http_code="${response: -3}"
+
+        if [ "$http_code" = "200" ]; then
+            log_info "应用启动完成"
+            return 0
+        elif [ "$http_code" = "202" ]; then
+            log_info "应用启动中... ($attempt/$max_attempts)"
+        else
+            log_warn "应用启动检查失败，HTTP状态码: $http_code ($attempt/$max_attempts)"
+        fi
+
+        sleep 5
+        ((attempt++))
+    done
+
+    log_error "应用启动超时，请检查容器日志"
+    docker-compose -f docker-compose.yml logs --tail=50
+    return 1
+}
+
 # 健康检查
 health_check() {
-    log_info "执行健康检查..."
-    
-    local max_attempts=30
+    log_info "执行完整健康检查..."
+
+    local max_attempts=10  # 减少到 10 次，因为应用已经启动完成
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         if curl -f http://localhost:3001/api/health &> /dev/null; then
             log_info "健康检查通过"
             return 0
         fi
-        
+
         log_warn "健康检查失败，重试 $attempt/$max_attempts"
-        sleep 5
+        sleep 3
         ((attempt++))
     done
-    
+
     log_error "健康检查失败，服务可能未正常启动"
     return 1
 }
@@ -218,7 +248,10 @@ main() {
     pull_image "$tag"
     stop_services
     start_services
-    
+
+    # 等待应用启动完成
+    wait_for_startup
+
     if [ "$health_check_flag" = true ]; then
         health_check
     fi

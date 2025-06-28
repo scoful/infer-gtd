@@ -7,20 +7,27 @@ FROM node:20-alpine AS base
 # 安装必要的系统依赖
 RUN apk add --no-cache libc6-compat curl
 
-# 安装 pnpm
-RUN npm install -g pnpm@9.6.0
+# 配置 npm 镜像源并安装 pnpm
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm@9.6.0
 
 # 设置工作目录
 WORKDIR /app
 
-# 复制 package 文件
-COPY package.json pnpm-lock.yaml ./
+# 设置 pnpm 环境变量
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+# 复制 package 文件和配置
+COPY package.json pnpm-lock.yaml .npmrc ./
 
 # 依赖安装阶段
 FROM base AS deps
 
-# 安装依赖（跳过 postinstall 脚本）
-RUN pnpm install --frozen-lockfile --prod=false --ignore-scripts
+# 配置 pnpm 镜像源并安装依赖
+RUN pnpm config set registry https://registry.npmmirror.com && \
+    pnpm config set store-dir ~/.pnpm-store && \
+    pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
 # 构建阶段
 FROM base AS builder
@@ -32,6 +39,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 生成 Prisma 客户端
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN pnpm prisma generate
 
 # 设置构建环境变量
@@ -46,10 +54,11 @@ RUN pnpm build
 FROM node:20-alpine AS runner
 
 # 安装运行时依赖
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl netcat-openbsd
 
-# 安装 pnpm（用于 Prisma 客户端生成）
-RUN npm install -g pnpm@9.6.0
+# 配置 npm 镜像源并安装 pnpm（用于 Prisma 客户端生成）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm@9.6.0
 
 # 设置生产环境
 ENV NODE_ENV=production
@@ -75,10 +84,12 @@ COPY --from=builder /app/package.json ./package.json
 COPY scripts/docker-entrypoint.sh ./scripts/
 RUN chmod +x ./scripts/docker-entrypoint.sh
 
-# 安装 Prisma 客户端（仅生产依赖）
-RUN pnpm add @prisma/client prisma --prod
+# 配置 pnpm 镜像源并安装 Prisma 客户端（仅生产依赖）
+RUN pnpm config set registry https://registry.npmmirror.com && \
+    pnpm add @prisma/client prisma --prod
 
 # 生成 Prisma 客户端
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN npx prisma generate
 
 # 设置文件权限

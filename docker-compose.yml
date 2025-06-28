@@ -12,13 +12,15 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health/basic"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 120s  # 增加启动等待时间
     deploy:
       resources:
         limits:
