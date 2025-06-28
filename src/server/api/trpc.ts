@@ -144,13 +144,7 @@ const loggingMiddleware = t.middleware(async ({ next, path, type, ctx }) => {
 
     // 只记录 query 和 mutation 类型
     if (type === "query" || type === "mutation") {
-      logTrpcOperation(
-        path,
-        type,
-        duration,
-        true,
-        ctx.session?.user?.id,
-      );
+      logTrpcOperation(path, type, duration, true, ctx.session?.user?.id);
     }
 
     return result;
@@ -182,7 +176,9 @@ const loggingMiddleware = t.middleware(async ({ next, path, type, ctx }) => {
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware).use(loggingMiddleware);
+export const publicProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(loggingMiddleware);
 
 /**
  * Protected (authenticated) procedure

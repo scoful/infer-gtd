@@ -23,10 +23,7 @@ export const env = createEnv({
       .enum(["debug", "info", "warn", "error"])
       .default("info")
       .optional(),
-    LOG_FORMAT: z
-      .enum(["json", "pretty"])
-      .default("json")
-      .optional(),
+    LOG_FORMAT: z.enum(["json", "pretty"]).default("json").optional(),
   },
 
   /**

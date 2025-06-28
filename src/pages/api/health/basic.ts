@@ -19,27 +19,30 @@ export default async function handler(
     // 检查启动状态文件
     const statusFilePath = "/tmp/app-status/startup.status";
     let startupStatus = "UNKNOWN";
-    
+
     try {
       if (fs.existsSync(statusFilePath)) {
         startupStatus = fs.readFileSync(statusFilePath, "utf8").trim();
       }
     } catch (error) {
-      loggers.health.warn({ error: error instanceof Error ? error.message : String(error) }, "无法读取启动状态文件");
+      loggers.health.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        "无法读取启动状态文件",
+      );
     }
 
     // 检查应用基本状态
     const isReady = startupStatus === "READY";
     const isStarting = [
       "STARTING",
-      "DB_CONNECTING", 
+      "DB_CONNECTING",
       "DB_CONNECTED",
       "MIGRATING",
       "RESETTING_DB",
       "MIGRATED",
       "GENERATING_CLIENT",
       "DB_READY",
-      "APP_STARTING"
+      "APP_STARTING",
     ].includes(startupStatus);
 
     const status = isReady ? "ready" : isStarting ? "starting" : "unhealthy";
@@ -48,7 +51,7 @@ export default async function handler(
     logHealthCheck("basic", status as "healthy" | "unhealthy" | "starting", {
       startupStatus,
       ready: isReady,
-      starting: isStarting
+      starting: isStarting,
     });
 
     return res.status(httpStatus).json({
@@ -60,7 +63,7 @@ export default async function handler(
     });
   } catch (error) {
     logHealthCheck("basic", "unhealthy", {
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     });
 
     return res.status(503).json({

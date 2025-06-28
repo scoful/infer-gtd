@@ -25,7 +25,10 @@ export default async function handler(
         startupStatus = fs.readFileSync(statusFilePath, "utf8").trim();
       }
     } catch (error) {
-      loggers.health.warn({ error: error instanceof Error ? error.message : String(error) }, "无法读取启动状态文件");
+      loggers.health.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        "无法读取启动状态文件",
+      );
     }
 
     // 如果应用还在启动中，返回启动状态
@@ -39,10 +42,12 @@ export default async function handler(
         "MIGRATED",
         "GENERATING_CLIENT",
         "DB_READY",
-        "APP_STARTING"
+        "APP_STARTING",
       ].includes(startupStatus);
 
-      logHealthCheck("application", isStarting ? "starting" : "unhealthy", { startupStatus });
+      logHealthCheck("application", isStarting ? "starting" : "unhealthy", {
+        startupStatus,
+      });
 
       return res.status(isStarting ? 202 : 503).json({
         status: isStarting ? "starting" : "unhealthy",
@@ -55,7 +60,10 @@ export default async function handler(
     // 应用已就绪，检查数据库连接
     await db.$queryRaw`SELECT 1`;
 
-    logHealthCheck("application", "healthy", { database: "connected", startupStatus });
+    logHealthCheck("application", "healthy", {
+      database: "connected",
+      startupStatus,
+    });
 
     return res.status(200).json({
       status: "healthy",
@@ -66,7 +74,7 @@ export default async function handler(
   } catch (error) {
     logHealthCheck("application", "unhealthy", {
       database: "disconnected",
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     });
 
     return res.status(503).json({

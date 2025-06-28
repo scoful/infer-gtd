@@ -5,11 +5,11 @@ import { logApiCall, generateRequestId } from "@/utils/logger";
 export function middleware(request: NextRequest) {
   const start = Date.now();
   const requestId = generateRequestId();
-  
+
   // 添加请求ID到响应头
   const response = NextResponse.next();
   response.headers.set("x-request-id", requestId);
-  
+
   // 记录API调用（仅对API路由）
   if (request.nextUrl.pathname.startsWith("/api/")) {
     // 在响应完成后记录日志
@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
     response.headers.set("x-request-start", start.toString());
     response.headers.set("x-request-id", requestId);
   }
-  
+
   return response;
 }
 

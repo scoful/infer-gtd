@@ -46,20 +46,26 @@ const createPrismaClient = () => {
 
   // 监听数据库警告事件
   prisma.$on("warn", (e) => {
-    loggers.db.warn({
-      message: e.message,
-      target: e.target,
-      timestamp: e.timestamp,
-    }, "数据库警告");
+    loggers.db.warn(
+      {
+        message: e.message,
+        target: e.target,
+        timestamp: e.timestamp,
+      },
+      "数据库警告",
+    );
   });
 
   // 监听数据库信息事件
   prisma.$on("info", (e) => {
-    loggers.db.info({
-      message: e.message,
-      target: e.target,
-      timestamp: e.timestamp,
-    }, "数据库信息");
+    loggers.db.info(
+      {
+        message: e.message,
+        target: e.target,
+        timestamp: e.timestamp,
+      },
+      "数据库信息",
+    );
   });
 
   return prisma;

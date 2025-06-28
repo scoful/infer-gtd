@@ -2,7 +2,8 @@ import pino from "pino";
 import { env } from "@/env";
 
 // 日志级别配置
-const LOG_LEVEL = env.LOG_LEVEL || (env.NODE_ENV === "production" ? "info" : "debug");
+const LOG_LEVEL =
+  env.LOG_LEVEL || (env.NODE_ENV === "production" ? "info" : "debug");
 
 // 检查运行环境
 const isDevelopment = env.NODE_ENV === "development";
@@ -11,21 +12,30 @@ const isServer = typeof window === "undefined";
 // 创建自定义的美化输出函数（避免 worker 线程问题）
 const prettyPrint = (obj: any) => {
   const timestamp = obj.time || new Date().toISOString();
-  const level = obj.level >= 50 ? 'ERROR' : obj.level >= 40 ? 'WARN' : obj.level >= 30 ? 'INFO' : 'DEBUG';
-  const module = obj.module ? `[${obj.module}]` : '';
-  const msg = obj.msg || '';
+  const level =
+    obj.level >= 50
+      ? "ERROR"
+      : obj.level >= 40
+        ? "WARN"
+        : obj.level >= 30
+          ? "INFO"
+          : "DEBUG";
+  const module = obj.module ? `[${obj.module}]` : "";
+  const msg = obj.msg || "";
 
   if (isDevelopment && isServer) {
     // 开发环境美化输出
     const colors = {
-      ERROR: '\x1b[31m', // 红色
-      WARN: '\x1b[33m',  // 黄色
-      INFO: '\x1b[36m',  // 青色
-      DEBUG: '\x1b[37m', // 白色
-      RESET: '\x1b[0m'   // 重置
+      ERROR: "\x1b[31m", // 红色
+      WARN: "\x1b[33m", // 黄色
+      INFO: "\x1b[36m", // 青色
+      DEBUG: "\x1b[37m", // 白色
+      RESET: "\x1b[0m", // 重置
     };
 
-    console.log(`${colors[level as keyof typeof colors]}[${timestamp}] ${level} ${module}${colors.RESET} ${msg}`);
+    console.log(
+      `${colors[level as keyof typeof colors]}[${timestamp}] ${level} ${module}${colors.RESET} ${msg}`,
+    );
 
     // 输出额外的结构化数据
     const extraData = { ...obj };
@@ -35,17 +45,21 @@ const prettyPrint = (obj: any) => {
     delete extraData.module;
 
     if (Object.keys(extraData).length > 0) {
-      console.log(`${colors[level as keyof typeof colors]}    ${JSON.stringify(extraData, null, 2)}${colors.RESET}`);
+      console.log(
+        `${colors[level as keyof typeof colors]}    ${JSON.stringify(extraData, null, 2)}${colors.RESET}`,
+      );
     }
   } else {
     // 生产环境JSON输出
-    console.log(JSON.stringify({
-      timestamp,
-      level,
-      module: obj.module,
-      message: msg,
-      ...obj
-    }));
+    console.log(
+      JSON.stringify({
+        timestamp,
+        level,
+        module: obj.module,
+        message: msg,
+        ...obj,
+      }),
+    );
   }
 };
 
@@ -61,13 +75,14 @@ const baseConfig: pino.LoggerOptions = {
 };
 
 // 创建主 logger
-export const logger = isDevelopment && isServer
-  ? pino(baseConfig, {
-      write: (obj: string) => {
-        prettyPrint(JSON.parse(obj));
-      }
-    })
-  : pino(baseConfig);
+export const logger =
+  isDevelopment && isServer
+    ? pino(baseConfig, {
+        write: (obj: string) => {
+          prettyPrint(JSON.parse(obj));
+        },
+      })
+    : pino(baseConfig);
 
 // 创建不同模块的子 logger
 export const createModuleLogger = (module: string) => {
@@ -91,9 +106,9 @@ export const loggers = {
 
 // 请求日志中间件辅助函数
 export const createRequestLogger = (requestId?: string) => {
-  return logger.child({ 
+  return logger.child({
     requestId: requestId || generateRequestId(),
-    type: "request" 
+    type: "request",
   });
 };
 
@@ -106,7 +121,7 @@ export const generateRequestId = (): string => {
 export const logError = (
   logger: pino.Logger,
   error: unknown,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ) => {
   const errorInfo = {
     ...context,
@@ -125,7 +140,7 @@ export const logPerformance = (
   logger: pino.Logger,
   operation: string,
   duration: number,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ) => {
   logger.info(
     {
@@ -134,7 +149,7 @@ export const logPerformance = (
       ...context,
       type: "performance",
     },
-    `${operation} 执行完成，耗时 ${duration}ms`
+    `${operation} 执行完成，耗时 ${duration}ms`,
   );
 };
 
@@ -143,7 +158,7 @@ export const logDatabaseOperation = (
   operation: string,
   table: string,
   duration?: number,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ) => {
   loggers.db.info(
     {
@@ -153,7 +168,7 @@ export const logDatabaseOperation = (
       ...context,
       type: "database",
     },
-    `数据库操作: ${operation} on ${table}${duration ? ` (${duration}ms)` : ""}`
+    `数据库操作: ${operation} on ${table}${duration ? ` (${duration}ms)` : ""}`,
   );
 };
 
@@ -164,7 +179,7 @@ export const logApiCall = (
   statusCode: number,
   duration: number,
   requestId?: string,
-  userId?: string
+  userId?: string,
 ) => {
   loggers.api.info(
     {
@@ -176,7 +191,7 @@ export const logApiCall = (
       userId,
       type: "api",
     },
-    `${method} ${path} - ${statusCode} (${duration}ms)`
+    `${method} ${path} - ${statusCode} (${duration}ms)`,
   );
 };
 
@@ -187,7 +202,7 @@ export const logTrpcOperation = (
   duration: number,
   success: boolean,
   userId?: string,
-  error?: string
+  error?: string,
 ) => {
   const level = success ? "info" : "error";
   loggers.trpc[level](
@@ -200,7 +215,7 @@ export const logTrpcOperation = (
       error,
       type: "trpc",
     },
-    `tRPC ${type}: ${procedure} ${success ? "成功" : "失败"} (${duration}ms)`
+    `tRPC ${type}: ${procedure} ${success ? "成功" : "失败"} (${duration}ms)`,
   );
 };
 
@@ -208,7 +223,7 @@ export const logTrpcOperation = (
 export const logUserAction = (
   action: string,
   userId: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ) => {
   logger.info(
     {
@@ -217,7 +232,7 @@ export const logUserAction = (
       ...details,
       type: "user_action",
     },
-    `用户操作: ${action}`
+    `用户操作: ${action}`,
   );
 };
 
@@ -225,7 +240,7 @@ export const logUserAction = (
 export const logSystemEvent = (
   event: string,
   status: "success" | "error" | "info",
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ) => {
   const level = status === "error" ? "error" : "info";
   loggers.app[level](
@@ -235,7 +250,7 @@ export const logSystemEvent = (
       ...details,
       type: "system",
     },
-    `系统事件: ${event}`
+    `系统事件: ${event}`,
   );
 };
 
@@ -243,7 +258,7 @@ export const logSystemEvent = (
 export const logDockerEvent = (
   event: string,
   status: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ) => {
   loggers.docker.info(
     {
@@ -252,7 +267,7 @@ export const logDockerEvent = (
       ...details,
       type: "docker",
     },
-    `Docker: ${event} - ${status}`
+    `Docker: ${event} - ${status}`,
   );
 };
 
@@ -260,7 +275,7 @@ export const logDockerEvent = (
 export const logHealthCheck = (
   component: string,
   status: "healthy" | "unhealthy" | "starting",
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ) => {
   const level = status === "unhealthy" ? "error" : "info";
   loggers.health[level](
@@ -270,7 +285,7 @@ export const logHealthCheck = (
       ...details,
       type: "health",
     },
-    `健康检查: ${component} - ${status}`
+    `健康检查: ${component} - ${status}`,
   );
 };
 
