@@ -21,15 +21,18 @@ import {
   QueryLoading,
   SectionLoading,
   MarkdownRenderer,
+  ConfirmModal,
 } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
+import { useConfirm } from "@/hooks/useConfirm";
 import { NoteModal } from "@/components/Notes";
 
 const NoteDetailPage: NextPage = () => {
   const router = useRouter();
   const { data: sessionData } = useSession();
   const { showSuccess, showError } = useGlobalNotifications();
+  const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
   const noteId = router.query.id as string;
 
   // 状态管理
@@ -78,6 +81,10 @@ const NoteDetailPage: NextPage = () => {
     onError: (error) => {
       showError(error.message ?? "删除失败");
     },
+    onSettled: () => {
+      setLoading(false);
+      hideConfirm();
+    },
   });
 
   // 处理返回
@@ -100,10 +107,24 @@ const NoteDetailPage: NextPage = () => {
   };
 
   // 处理删除
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!note) return;
-    if (confirm("确定要删除这个笔记吗？此操作不可撤销。")) {
-      deleteNote.mutate({ id: note.id });
+
+    const confirmed = await showConfirm({
+      title: "确认删除笔记",
+      message: `确定要删除笔记"${note.title}"吗？\n\n此操作无法撤销，笔记的所有内容都将被永久删除。`,
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (confirmed) {
+      try {
+        setLoading(true);
+        await deleteNote.mutateAsync({ id: note.id });
+      } catch (error) {
+        console.error("删除笔记失败:", error);
+      }
     }
   };
 
@@ -331,6 +352,19 @@ const NoteDetailPage: NextPage = () => {
           onClose={() => setIsNoteModalOpen(false)}
           noteId={noteId}
           onSuccess={handleNoteModalSuccess}
+        />
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
         />
       </MainLayout>
     </AuthGuard>

@@ -44,6 +44,15 @@ export default function TaskFeedbackModal({
     }
   }, [taskId, isOpen]);
 
+  // 获取标签列表
+  const { data: tagsData, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
+    { limit: 100 },
+    {
+      enabled: isOpen,
+      staleTime: 5 * 60 * 1000, // 5分钟缓存
+    },
+  );
+
   // 获取任务详情（包含反馈和标签信息）
   const {
     data: taskDetail,
@@ -195,11 +204,17 @@ export default function TaskFeedbackModal({
                         onTagsChange={handleTagsChange}
                         placeholder="选择或创建标签..."
                         allowCreate={true}
+                        disabled={isLoadingTags}
                         size="md"
                         gridLayout={true}
                         closeOnSelect={false}
                         sortable={true}
                       />
+                      {isLoadingTags && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          加载标签列表中...
+                        </p>
+                      )}
                     </div>
 
                     {/* 操作按钮 */}

@@ -65,6 +65,15 @@ export default function NoteModal({
     },
   );
 
+  // 获取标签列表
+  const { data: tagsData, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
+    { limit: 100 },
+    {
+      enabled: isOpen,
+      staleTime: 5 * 60 * 1000, // 5分钟缓存
+    },
+  );
+
   // 获取任务列表（用于关联）
   const { data: tasksData } = api.task.getAll.useQuery(
     { limit: 100 },
@@ -348,8 +357,17 @@ export default function NoteModal({
                         onTagsChange={(tagIds: string[]) =>
                           setFormData({ ...formData, tagIds })
                         }
+                        placeholder="选择或创建标签..."
+                        allowCreate={true}
+                        disabled={isLoadingTags}
+                        sortable={true}
                         maxTags={10}
                       />
+                      {isLoadingTags && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          加载标签列表中...
+                        </p>
+                      )}
                     </div>
 
                     {/* 关联任务 */}
