@@ -409,10 +409,10 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       {isOpen && !disabled && isPositionCalculated && (
         <div
           ref={dropdownRef}
-          className={`absolute z-40 w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg ${dropdownPosition === "top" ? "bottom-full mb-1" : "top-full mt-1"} `}
+          className={`absolute z-[60] w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-xl ${dropdownPosition === "top" ? "bottom-full mb-1" : "top-full mt-1"} `}
           style={{
             maxHeight: (() => {
-              if (!containerRef.current) return "400px";
+              if (!containerRef.current) return "650px";
 
               const rect = containerRef.current.getBoundingClientRect();
               const viewportHeight = window.innerHeight;
@@ -421,14 +421,14 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 // 向上弹出时，使用可用的上方空间
                 const availableSpace = rect.top - 20; // 留20px边距
                 // 如果显示创建表单，需要更多空间
-                const minHeight = showCreateForm ? 300 : 200;
-                return `${Math.min(400, Math.max(minHeight, availableSpace))}px`;
+                const minHeight = showCreateForm ? 550 : 450;
+                return `${Math.min(650, Math.max(minHeight, availableSpace))}px`;
               } else {
                 // 向下弹出时，使用可用的下方空间
                 const availableSpace = viewportHeight - rect.bottom - 20; // 留20px边距
                 // 如果显示创建表单，需要更多空间
-                const minHeight = showCreateForm ? 250 : 150;
-                return `${Math.min(400, Math.max(minHeight, availableSpace))}px`;
+                const minHeight = showCreateForm ? 500 : 400;
+                return `${Math.min(650, Math.max(minHeight, availableSpace))}px`;
               }
             })(),
           }}
@@ -466,7 +466,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           <div
             className="flex-1 overflow-y-auto"
             style={{
-              maxHeight: showCreateForm ? "80px" : "200px",
+              maxHeight: showCreateForm ? "220px" : "450px",
             }}
           >
             {isLoading ? (
@@ -474,22 +474,22 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 <SectionLoading />
               </div>
             ) : unselectedTags.length > 0 ? (
-              <div className="p-3">
+              <div className="px-3 pt-2 pb-6">
                 {gridLayout ? (
                   // 网格布局
                   <div
                     className="grid gap-2"
                     style={{
                       gridTemplateColumns:
-                        "repeat(auto-fit, minmax(min(120px, 100%), 1fr))",
+                        "repeat(auto-fit, minmax(min(140px, 100%), 1fr))",
                     }}
                   >
                     {unselectedTags.map((tag) => (
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-100 p-2 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm active:scale-95 active:bg-gray-100 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
-                        style={{ alignItems: "center", minHeight: "36px" }}
+                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md active:scale-95 active:bg-blue-100 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
+                        style={{ alignItems: "center", minHeight: "42px" }}
                         title={
                           maxTags && selectedTagIds.length >= maxTags
                             ? "已达到最大标签数量限制"
@@ -512,7 +512,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className="flex cursor-pointer items-center justify-between rounded-md p-2 transition-colors hover:bg-gray-50"
+                        className="flex cursor-pointer items-center justify-between rounded-md p-3 transition-colors hover:bg-blue-50 hover:border-blue-200 border border-transparent"
                         style={{ alignItems: "center" }}
                       >
                         <TagDisplay
@@ -532,7 +532,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 )}
               </div>
             ) : (
-              <div className="p-4 text-center text-sm text-gray-500">
+              <div className="px-4 py-6 text-center text-sm text-gray-500">
                 {searchQuery ? "未找到匹配的标签" : "暂无可用标签"}
               </div>
             )}
