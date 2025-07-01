@@ -45,7 +45,7 @@ const NotesPage: NextPage = () => {
   const [sortBy, setSortBy] = useState<SortOption>("updatedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // 模态框状态
+  // 编辑笔记模态框状态
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
@@ -127,8 +127,7 @@ const NotesPage: NextPage = () => {
 
   // 处理新建笔记
   const handleCreateNote = () => {
-    setEditingNoteId(null);
-    setIsNoteModalOpen(true);
+    void router.push("/notes/new");
   };
 
   // 处理编辑笔记
@@ -375,13 +374,15 @@ const NotesPage: NextPage = () => {
           </QueryLoading>
         </div>
 
-        {/* 笔记模态框 */}
-        <NoteModal
-          isOpen={isNoteModalOpen}
-          onClose={handleNoteModalClose}
-          noteId={editingNoteId ?? undefined}
-          onSuccess={handleNoteModalSuccess}
-        />
+        {/* 笔记编辑模态框 */}
+        {editingNoteId && (
+          <NoteModal
+            isOpen={isNoteModalOpen}
+            onClose={handleNoteModalClose}
+            noteId={editingNoteId}
+            onSuccess={handleNoteModalSuccess}
+          />
+        )}
       </MainLayout>
     </AuthGuard>
   );

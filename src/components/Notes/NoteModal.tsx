@@ -10,7 +10,7 @@ import { TagSelector } from "@/components/Tags";
 interface NoteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  noteId?: string;
+  noteId: string; // 现在是必需的，因为只用于编辑
   onSuccess?: () => void;
 }
 
@@ -37,7 +37,8 @@ export default function NoteModal({
     linkedTaskIds: [],
   });
 
-  const isEditing = !!noteId;
+  // 现在只支持编辑模式
+  const isEditing = true;
   const { showSuccess, showError } = useGlobalNotifications();
 
   // 获取笔记详情（编辑模式）
@@ -46,9 +47,9 @@ export default function NoteModal({
     isLoading: isLoadingNote,
     error: noteError,
   } = api.note.getById.useQuery(
-    { id: noteId! },
+    { id: noteId },
     {
-      enabled: isEditing && isOpen,
+      enabled: isOpen, // noteId现在总是存在
       refetchOnMount: true,
       staleTime: 0,
       refetchOnWindowFocus: false,
@@ -82,19 +83,6 @@ export default function NoteModal({
       staleTime: 5 * 60 * 1000, // 5分钟缓存
     },
   );
-
-  // 创建笔记
-  const createNote = api.note.create.useMutation({
-    onSuccess: (result) => {
-      showSuccess(`笔记 "${result.title}" 创建成功`);
-      onSuccess?.();
-      onClose();
-      resetForm();
-    },
-    onError: (error) => {
-      showError(error.message ?? "创建笔记失败");
-    },
-  });
 
   // 更新笔记
   const updateNote = api.note.update.useMutation({
@@ -159,20 +147,17 @@ export default function NoteModal({
         projectId: formData.projectId ?? undefined,
       };
 
-      if (isEditing) {
-        await updateNote.mutateAsync({
-          id: noteId,
-          ...submitData,
-        });
-      } else {
-        await createNote.mutateAsync(submitData);
-      }
+      // 现在只支持编辑模式
+      await updateNote.mutateAsync({
+        id: noteId,
+        ...submitData,
+      });
     } catch (error) {
-      console.error("保存笔记失败:", error);
+      console.error("更新笔记失败:", error);
     }
   };
 
-  const isSubmitting = createNote.isPending || updateNote.isPending;
+  const isSubmitting = updateNote.isPending;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -206,7 +191,7 @@ export default function NoteModal({
                     as="h3"
                     className="text-lg leading-6 font-medium text-gray-900"
                   >
-                    {isEditing ? "编辑笔记" : "新建笔记"}
+                    编辑笔记
                   </Dialog.Title>
                   <button
                     type="button"
@@ -316,6 +301,13 @@ export default function NoteModal({
                         placeholder="开始编写你的笔记内容..."
                         height={350}
                         preview="live"
+                        enableJetBrainsShortcuts={true}
+                        autoSave={true}
+                        onAutoSave={(content) => {
+                          // 自动保存到本地存储作为草稿
+                          const draftKey = `note-draft-${noteId || 'new'}`;
+                          localStorage.setItem(draftKey, content);
+                        }}
                       />
                     </div>
 
