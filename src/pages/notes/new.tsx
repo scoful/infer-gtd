@@ -154,9 +154,9 @@ const NewNotePage: NextPage = () => {
           <meta name="description" content="创建新的笔记" />
         </Head>
 
-        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="space-y-6">
           {/* 头部 */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button
                 onClick={handleBack}
@@ -245,7 +245,7 @@ const NewNotePage: NextPage = () => {
                     关联项目
                   </label>
                   <div className="relative mt-1">
-                    <FolderIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <FolderIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <select
                       id="project"
                       value={formData.projectId || ""}

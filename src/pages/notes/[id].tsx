@@ -190,20 +190,24 @@ const NoteDetailPage: NextPage = () => {
             <div className="space-y-6">
               {/* 页面头部 */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center">
                   <button
                     onClick={handleBack}
-                    className="flex items-center text-gray-600 hover:text-gray-900"
+                    className="mr-4 rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                   >
-                    <ArrowLeftIcon className="mr-2 h-5 w-5" />
-                    返回列表
+                    <ArrowLeftIcon className="h-5 w-5" />
                   </button>
-                  {isFetching && !isLoading && (
-                    <div className="flex items-center text-sm text-blue-600">
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                      刷新中...
-                    </div>
-                  )}
+                  <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      笔记详情
+                    </h1>
+                    {isFetching && !isLoading && (
+                      <div className="flex items-center text-sm text-blue-600">
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                        刷新中...
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
