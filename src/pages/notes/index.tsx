@@ -7,7 +7,8 @@ import {
   ArchiveBoxIcon,
   DocumentTextIcon,
   EyeIcon,
-
+  PencilIcon,
+  TrashIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   Squares2X2Icon,
@@ -22,8 +23,10 @@ import {
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { QueryLoading, SectionLoading } from "@/components/UI";
+import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
+import { useConfirm } from "@/hooks/useConfirm";
 import { NoteModal } from "@/components/Notes";
 
 // 视图模式类型
@@ -35,6 +38,8 @@ type SortOption = "updatedAt" | "createdAt" | "title";
 const NotesPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const router = useRouter();
+  const { showSuccess, showError } = useGlobalNotifications();
+  const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
 
   // 状态管理
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,6 +53,9 @@ const NotesPage: NextPage = () => {
   // 编辑笔记模态框状态
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+
+  // 批量选择状态
+  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
 
   // 构建查询参数
   const queryParams = useMemo(
@@ -101,6 +109,37 @@ const NotesPage: NextPage = () => {
     },
   );
 
+  // 删除笔记
+  const deleteNote = api.note.delete.useMutation({
+    onSuccess: () => {
+      showSuccess("笔记已删除");
+      void refetch();
+    },
+    onError: (error) => {
+      showError(error.message ?? "删除失败");
+    },
+    onSettled: () => {
+      setLoading(false);
+      hideConfirm();
+    },
+  });
+
+  // 批量删除笔记
+  const batchDeleteNotes = api.note.batchOperation.useMutation({
+    onSuccess: (result) => {
+      showSuccess(result.message);
+      void refetch();
+      setSelectedNotes(new Set());
+    },
+    onError: (error) => {
+      showError(error.message ?? "批量删除失败");
+    },
+    onSettled: () => {
+      setLoading(false);
+      hideConfirm();
+    },
+  });
+
   // 注册页面刷新函数
   usePageRefresh(() => {
     void refetch();
@@ -150,6 +189,84 @@ const NotesPage: NextPage = () => {
   // 处理查看笔记详情
   const handleViewNote = (noteId: string) => {
     void router.push(`/notes/${noteId}`);
+  };
+
+  // 处理删除笔记
+  const handleDeleteNote = async (noteId: string) => {
+    const note = notes.find((n) => n.id === noteId);
+    const noteTitle = note?.title ?? "此笔记";
+
+    const confirmed = await showConfirm({
+      title: "确认删除笔记",
+      message: `确定要删除笔记"${noteTitle}"吗？\n\n此操作无法撤销，笔记的所有内容都将被永久删除。`,
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (confirmed) {
+      try {
+        setLoading(true);
+        await deleteNote.mutateAsync({ id: noteId });
+      } catch (error) {
+        console.error("删除笔记失败:", error);
+      }
+    }
+  };
+
+  // 处理笔记选择
+  const handleNoteSelect = (noteId: string, selected: boolean) => {
+    setSelectedNotes((prev) => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(noteId);
+      } else {
+        newSet.delete(noteId);
+      }
+      return newSet;
+    });
+  };
+
+  // 处理全选
+  const handleSelectAll = () => {
+    if (notes.length === 0) return;
+
+    const allNoteIds = notes.map((note) => note.id);
+    const allSelected = allNoteIds.every((id) => selectedNotes.has(id));
+
+    if (allSelected) {
+      setSelectedNotes(new Set());
+    } else {
+      setSelectedNotes(new Set(allNoteIds));
+    }
+  };
+
+  // 处理批量删除
+  const handleBatchDelete = async () => {
+    if (selectedNotes.size === 0) return;
+
+    const noteCount = selectedNotes.size;
+    const confirmed = await showConfirm({
+      title: "确认删除笔记",
+      message: `确定要删除选中的 ${noteCount} 篇笔记吗？\n\n删除后无法恢复，请谨慎操作。`,
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await batchDeleteNotes.mutateAsync({
+        noteIds: Array.from(selectedNotes),
+        operation: "delete",
+      });
+    } catch (error) {
+      console.error("批量删除失败:", error);
+    }
   };
 
   return (
@@ -318,6 +435,43 @@ const NotesPage: NextPage = () => {
             </div>
           </div>
 
+          {/* 批量操作栏 */}
+          {selectedNotes.size > 0 && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-blue-900">
+                    已选择 {selectedNotes.size} 篇笔记
+                  </span>
+                  <button
+                    onClick={() => setSelectedNotes(new Set())}
+                    className="text-sm text-blue-600 hover:text-blue-500"
+                  >
+                    取消选择
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* 批量删除按钮 */}
+                  <button
+                    onClick={handleBatchDelete}
+                    disabled={batchDeleteNotes.isPending}
+                    className="flex items-center gap-1 rounded border border-red-300 bg-white px-3 py-1 text-sm text-red-600 hover:border-red-400 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    title={`删除选中的 ${selectedNotes.size} 篇笔记`}
+                  >
+                    {batchDeleteNotes.isPending ? (
+                      <>
+                        <div className="h-3 w-3 animate-spin rounded-full border border-red-600 border-t-transparent"></div>
+                        删除中...
+                      </>
+                    ) : (
+                      <>🗑️ 删除 ({selectedNotes.size})</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 笔记列表 */}
           <QueryLoading
             isLoading={isLoading}
@@ -326,6 +480,28 @@ const NotesPage: NextPage = () => {
             loadingComponent={<SectionLoading message="加载笔记列表中..." />}
           >
             {notes.length > 0 ? (
+              <>
+                {/* 全选控制 */}
+                <div className="mb-4 flex items-center justify-between">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={
+                        notes.length > 0 &&
+                        notes.every((note) => selectedNotes.has(note.id))
+                      }
+                      onChange={handleSelectAll}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      全选 ({notes.length} 篇笔记)
+                    </span>
+                  </label>
+
+                  <div className="text-sm text-gray-500">
+                    {selectedNotes.size > 0 && `已选择 ${selectedNotes.size} 篇`}
+                  </div>
+                </div>
               <div
                 className={`${
                   viewMode === "grid"
@@ -338,15 +514,19 @@ const NotesPage: NextPage = () => {
                     key={note.id}
                     note={note}
                     viewMode={viewMode}
+                    isSelected={selectedNotes.has(note.id)}
+                    onSelect={(selected) => handleNoteSelect(note.id, selected)}
                     onView={() => handleViewNote(note.id)}
                     onEdit={() => handleEditNote(note.id)}
                     onArchive={() => {
                       // TODO: 实现归档笔记功能
                       console.log("归档笔记", note.id);
                     }}
+                    onDelete={() => handleDeleteNote(note.id)}
                   />
                 ))}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">
                 <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
@@ -383,6 +563,19 @@ const NotesPage: NextPage = () => {
             onSuccess={handleNoteModalSuccess}
           />
         )}
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
+        />
       </MainLayout>
     </AuthGuard>
   );
@@ -420,18 +613,24 @@ interface NoteCardProps {
     };
   };
   viewMode: ViewMode;
+  isSelected: boolean;
+  onSelect: (selected: boolean) => void;
   onView: () => void;
   onEdit: () => void;
   onArchive: () => void;
+  onDelete: () => void;
 }
 
 // 笔记卡片组件
 function NoteCard({
   note,
   viewMode,
+  isSelected,
+  onSelect,
   onView,
   onEdit,
   onArchive,
+  onDelete,
 }: NoteCardProps) {
   // 获取显示的预览内容
   const getDisplayPreview = (maxLength = 150) => {
@@ -486,11 +685,26 @@ function NoteCard({
   if (viewMode === "list") {
     return (
       <div
-        className="cursor-pointer rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md"
-        onClick={onView}
+        className={`rounded-lg border bg-white p-6 transition-shadow hover:shadow-md ${
+          isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
+        }`}
       >
         <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-3">
+            {/* 选择框 */}
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => {
+                e.stopPropagation();
+                onSelect(e.target.checked);
+              }}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <div
+              className="min-w-0 flex-1 cursor-pointer"
+              onClick={onView}
+            >
             {/* 标题和状态 */}
             <div className="mb-2 flex items-center gap-2">
               <h3 className="truncate text-lg font-medium text-gray-900">
@@ -522,6 +736,7 @@ function NoteCard({
                 </div>
               )}
             </div>
+            </div>
           </div>
 
           {/* 操作按钮 */}
@@ -534,7 +749,7 @@ function NoteCard({
               className="text-gray-400 hover:text-gray-600"
               title="编辑笔记"
             >
-              <EyeIcon className="h-5 w-5" />
+              <PencilIcon className="h-5 w-5" />
             </button>
             <button
               onClick={(e) => {
@@ -545,6 +760,16 @@ function NoteCard({
               title={note.isArchived ? "取消归档" : "归档笔记"}
             >
               <ArchiveBoxIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="text-gray-400 hover:text-red-600"
+              title="删除笔记"
+            >
+              <TrashIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -586,15 +811,33 @@ function NoteCard({
   // 网格视图
   return (
     <div
-      className="cursor-pointer rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md"
-      onClick={onView}
+      className={`rounded-lg border bg-white p-6 transition-shadow hover:shadow-md ${
+        isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
+      }`}
     >
-      {/* 标题和状态 */}
+      {/* 选择框 */}
       <div className="mb-3 flex items-start justify-between">
-        <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
-          {note.title}
-        </h3>
-        <div className="ml-2 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => {
+            e.stopPropagation();
+            onSelect(e.target.checked);
+          }}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* 标题和状态 */}
+      <div
+        className="mb-3 cursor-pointer"
+        onClick={onView}
+      >
+        <div className="flex items-start justify-between">
+          <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
+            {note.title}
+          </h3>
+          <div className="ml-2 flex items-center gap-2">
           {note.isArchived && (
             <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
               已归档
@@ -666,6 +909,7 @@ function NoteCard({
             {note._count.linkedTasks}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
