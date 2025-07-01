@@ -48,31 +48,54 @@ const NewNotePage: NextPage = () => {
     },
   );
 
-  // 从草稿恢复内容
+  // 恢复本地草稿
   useEffect(() => {
     const draftKey = 'note-draft-new';
     const savedDraft = localStorage.getItem(draftKey);
-    if (savedDraft && savedDraft.trim()) {
-      setFormData(prev => ({ ...prev, content: savedDraft }));
+    if (savedDraft) {
+      try {
+        console.log('尝试恢复草稿:', savedDraft);
+        const draft = JSON.parse(savedDraft) as Partial<NoteFormData>;
+        setFormData(prev => ({
+          ...prev,
+          ...draft,
+          tagIds: draft.tagIds || [],
+        }));
+        console.log('草稿恢复成功');
+      } catch (error) {
+        console.error('恢复草稿失败，清除无效草稿:', error);
+        localStorage.removeItem(draftKey);
+      }
     }
   }, []);
 
   // 创建笔记
   const createNote = api.note.create.useMutation({
     onSuccess: (result) => {
-      showSuccess(`笔记 "${result.title}" 创建成功`);
+      showSuccess(`笔记创建成功`);
       // 清除草稿
       localStorage.removeItem('note-draft-new');
-      // 跳转到笔记详情页
+      setIsSubmitting(false);
       void router.push(`/notes/${result.id}`);
     },
     onError: (error) => {
-      showError(error.message ?? "创建笔记失败");
-    },
-    onSettled: () => {
+      showError(error.message ?? "创建失败");
       setIsSubmitting(false);
     },
   });
+
+  // 最终提交（创建笔记）
+  const finalSubmit = () => {
+    const saveData = {
+      title: formData.title.trim(),
+      content: formData.content.trim(),
+      summary: formData.summary?.trim() || undefined,
+      projectId: formData.projectId || undefined,
+      tagIds: formData.tagIds,
+    };
+
+    createNote.mutate(saveData);
+  };
 
   // 处理返回
   const handleBack = () => {
@@ -82,31 +105,45 @@ const NewNotePage: NextPage = () => {
   // 处理提交
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       showError("请输入笔记标题");
       return;
     }
-    
+
     if (!formData.content.trim()) {
       showError("请输入笔记内容");
       return;
     }
 
     setIsSubmitting(true);
-    createNote.mutate({
-      title: formData.title.trim(),
-      content: formData.content.trim(),
-      summary: formData.summary?.trim() || undefined,
-      projectId: formData.projectId || undefined,
-      tagIds: formData.tagIds,
-    });
+    finalSubmit();
   };
 
-  // 处理草稿保存
+  // 处理自动保存（本地草稿保存）
   const handleAutoSave = (content: string) => {
+    console.log('🚀 handleAutoSave 被调用 - 保存到本地草稿:', {
+      contentLength: content.length,
+      content: content.substring(0, 50)
+    });
+
+    // 准备保存数据
+    const draftData = {
+      title: formData.title,
+      content: content,
+      summary: formData.summary,
+      projectId: formData.projectId,
+      tagIds: formData.tagIds,
+    };
+
+    // 保存到本地存储
     const draftKey = 'note-draft-new';
-    localStorage.setItem(draftKey, content);
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(draftData));
+      console.log('✅ 草稿已保存到本地');
+    } catch (error) {
+      console.error('❌ 保存草稿失败:', error);
+    }
   };
 
   return (
@@ -194,6 +231,7 @@ const NewNotePage: NextPage = () => {
                     preview="live"
                     enableJetBrainsShortcuts={true}
                     autoSave={true}
+                    autoSaveType="local"
                     onAutoSave={handleAutoSave}
                   />
                 </div>

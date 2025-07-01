@@ -84,7 +84,7 @@ export default function NoteModal({
     },
   );
 
-  // 更新笔记
+  // 更新笔记（手动提交）
   const updateNote = api.note.update.useMutation({
     onSuccess: (result) => {
       showSuccess(`笔记 "${result.title}" 更新成功`);
@@ -93,6 +93,18 @@ export default function NoteModal({
     },
     onError: (error) => {
       showError(error.message ?? "更新笔记失败");
+    },
+  });
+
+  // 自动保存笔记（不关闭模态框）
+  const autoSaveNote = api.note.update.useMutation({
+    onSuccess: () => {
+      // 自动保存成功，不显示通知，不关闭模态框
+      console.log('✅ 笔记自动保存成功');
+    },
+    onError: (error) => {
+      console.error('❌ 笔记自动保存失败:', error.message);
+      // 自动保存失败也不显示错误通知，避免打扰用户
     },
   });
 
@@ -303,10 +315,28 @@ export default function NoteModal({
                         preview="live"
                         enableJetBrainsShortcuts={true}
                         autoSave={true}
+                        autoSaveType="server"
+                        autoSaveStatus={
+                          autoSaveNote.isPending ? 'saving' :
+                          autoSaveNote.isSuccess ? 'saved' :
+                          'unsaved'
+                        }
                         onAutoSave={(content) => {
-                          // 自动保存到本地存储作为草稿
-                          const draftKey = `note-draft-${noteId || 'new'}`;
-                          localStorage.setItem(draftKey, content);
+                          // 自动保存到服务器
+                          if (!content.trim() || !noteId) return;
+
+                          const saveData = {
+                            title: formData.title.trim() || "无标题笔记",
+                            content: content.trim(),
+                            summary: formData.summary?.trim() || undefined,
+                            projectId: formData.projectId || undefined,
+                            tagIds: formData.tagIds,
+                          };
+
+                          autoSaveNote.mutate({
+                            id: noteId,
+                            ...saveData,
+                          });
                         }}
                       />
                     </div>

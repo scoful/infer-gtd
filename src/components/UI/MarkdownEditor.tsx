@@ -24,6 +24,8 @@ interface MarkdownEditorProps {
   enableJetBrainsShortcuts?: boolean; // 新增：是否启用JetBrains快捷键
   autoSave?: boolean; // 新增：是否启用自动保存
   onAutoSave?: (value: string) => void; // 新增：自动保存回调
+  autoSaveType?: 'local' | 'server'; // 新增：自动保存类型
+  autoSaveStatus?: 'saved' | 'saving' | 'unsaved'; // 新增：外部控制的保存状态
 }
 
 export default function MarkdownEditor({
@@ -38,18 +40,29 @@ export default function MarkdownEditor({
   enableJetBrainsShortcuts = true,
   autoSave = false,
   onAutoSave,
+  autoSaveType = 'server',
+  autoSaveStatus,
 }: MarkdownEditorProps) {
   const [mounted, setMounted] = useState(false);
   const [currentPreview, setCurrentPreview] = useState<
     "edit" | "preview" | "live"
   >(preview);
   const [lastSavedValue, setLastSavedValue] = useState(value);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
 
   // 确保组件在客户端挂载后才渲染
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // 初始化lastSavedValue
+  useEffect(() => {
+    if (mounted) {
+      setLastSavedValue(value);
+      setSaveStatus('saved');
+    }
+  }, [mounted]); // 只在mounted变化时执行
 
   // 全局键盘事件监听器
   useEffect(() => {
@@ -155,17 +168,34 @@ export default function MarkdownEditor({
 
   // 自动保存功能
   useEffect(() => {
-    if (autoSave && onAutoSave && value !== lastSavedValue) {
+    if (autoSave && onAutoSave && mounted && value !== lastSavedValue) {
+      setSaveStatus('unsaved');
+
       // 清除之前的定时器
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
 
-      // 设置新的定时器（2秒防抖）
+      // 设置新的定时器（5秒防抖，API保存需要更长间隔）
       autoSaveTimeoutRef.current = setTimeout(() => {
-        onAutoSave(value);
-        setLastSavedValue(value);
-      }, 2000);
+        console.log('🔄 自动保存定时器触发');
+        setSaveStatus('saving');
+        try {
+          console.log('📤 调用 onAutoSave:', value.substring(0, 50));
+          onAutoSave(value);
+          setLastSavedValue(value);
+
+          // 对于本地保存，立即设置为已保存状态
+          // 对于服务器保存，保持saving状态（由外部组件控制）
+          if (autoSaveType === 'local') {
+            setSaveStatus('saved');
+          }
+          console.log('✅ onAutoSave 调用完成');
+        } catch (error) {
+          console.error('❌ 自动保存失败:', error);
+          setSaveStatus('unsaved');
+        }
+      }, 5000); // 改为5秒，避免频繁API调用
     }
 
     return () => {
@@ -173,7 +203,7 @@ export default function MarkdownEditor({
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [value, autoSave, onAutoSave, lastSavedValue]);
+  }, [value, autoSave, onAutoSave, lastSavedValue, mounted]);
 
   // 处理内容变化
   const handleChange = (val?: string) => {
@@ -300,8 +330,22 @@ export default function MarkdownEditor({
           )}
           {autoSave && (
             <div>
-              <span className="font-medium text-green-600">自动保存：</span>
-              <span className="ml-1 text-green-600">已启用</span>
+              <span className="font-medium">自动保存：</span>
+              <span className={`ml-1 ${
+                (autoSaveStatus || saveStatus) === 'saved' ? 'text-green-600' :
+                (autoSaveStatus || saveStatus) === 'saving' ? 'text-yellow-600' :
+                'text-gray-600'
+              }`}>
+                {autoSaveType === 'local' ? (
+                  (autoSaveStatus || saveStatus) === 'saved' ? '已保存草稿到本地' :
+                  (autoSaveStatus || saveStatus) === 'saving' ? '保存草稿到本地中...' :
+                  '未保存 (5秒后自动保存草稿)'
+                ) : (
+                  (autoSaveStatus || saveStatus) === 'saved' ? '已保存到服务器' :
+                  (autoSaveStatus || saveStatus) === 'saving' ? '保存到服务器中...' :
+                  '未保存 (5秒后自动保存)'
+                )}
+              </span>
             </div>
           )}
         </div>
