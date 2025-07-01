@@ -2,11 +2,10 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   ArchiveBoxIcon,
   DocumentTextIcon,
-  EyeIcon,
   PencilIcon,
   TrashIcon,
   MagnifyingGlassIcon,
@@ -18,6 +17,7 @@ import {
   FolderIcon,
   CalendarIcon,
   LinkIcon,
+  EllipsisVerticalIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";
@@ -121,6 +121,17 @@ const NotesPage: NextPage = () => {
     onSettled: () => {
       setLoading(false);
       hideConfirm();
+    },
+  });
+
+  // 归档笔记
+  const archiveNote = api.note.archive.useMutation({
+    onSuccess: (result) => {
+      showSuccess(`笔记已${result.note.isArchived ? "归档" : "取消归档"}`);
+      void refetch();
+    },
+    onError: (error) => {
+      showError(error.message ?? "操作失败");
     },
   });
 
@@ -239,6 +250,17 @@ const NotesPage: NextPage = () => {
     } else {
       setSelectedNotes(new Set(allNoteIds));
     }
+  };
+
+  // 处理归档笔记
+  const handleArchiveNote = (noteId: string) => {
+    const note = notes.find((n) => n.id === noteId);
+    if (!note) return;
+
+    archiveNote.mutate({
+      id: noteId,
+      isArchived: !note.isArchived,
+    });
   };
 
   // 处理批量删除
@@ -518,10 +540,7 @@ const NotesPage: NextPage = () => {
                     onSelect={(selected) => handleNoteSelect(note.id, selected)}
                     onView={() => handleViewNote(note.id)}
                     onEdit={() => handleEditNote(note.id)}
-                    onArchive={() => {
-                      // TODO: 实现归档笔记功能
-                      console.log("归档笔记", note.id);
-                    }}
+                    onArchive={() => handleArchiveNote(note.id)}
                     onDelete={() => handleDeleteNote(note.id)}
                   />
                 ))}
@@ -632,6 +651,25 @@ function NoteCard({
   onArchive,
   onDelete,
 }: NoteCardProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
   // 获取显示的预览内容
   const getDisplayPreview = (maxLength = 150) => {
     // 优先显示摘要
@@ -815,7 +853,7 @@ function NoteCard({
         isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
       }`}
     >
-      {/* 选择框 */}
+      {/* 顶部区域：选择框和菜单 */}
       <div className="mb-3 flex items-start justify-between">
         <input
           type="checkbox"
@@ -826,6 +864,59 @@ function NoteCard({
           }}
           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
+
+        {/* 三个竖点菜单 */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
+            className="text-gray-400 hover:text-gray-600"
+            title="更多操作"
+          >
+            <EllipsisVerticalIcon className="h-5 w-5" />
+          </button>
+
+          {/* 下拉菜单 */}
+          {isMenuOpen && (
+            <div className="absolute right-0 top-6 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMenuOpen(false);
+                  onEdit();
+                }}
+                className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <PencilIcon className="mr-2 h-4 w-4" />
+                编辑
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMenuOpen(false);
+                  onArchive();
+                }}
+                className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <ArchiveBoxIcon className="mr-2 h-4 w-4" />
+                {note.isArchived ? "取消归档" : "归档"}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMenuOpen(false);
+                  onDelete();
+                }}
+                className="flex w-full items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+              >
+                <TrashIcon className="mr-2 h-4 w-4" />
+                删除
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 标题和状态 */}
@@ -837,22 +928,11 @@ function NoteCard({
           <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
             {note.title}
           </h3>
-          <div className="ml-2 flex items-center gap-2">
           {note.isArchived && (
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
               已归档
             </span>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            className="text-gray-400 hover:text-gray-600"
-            title="编辑笔记"
-          >
-            <EyeIcon className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
@@ -909,7 +989,6 @@ function NoteCard({
             {note._count.linkedTasks}
           </div>
         )}
-      </div>
       </div>
     </div>
   );
