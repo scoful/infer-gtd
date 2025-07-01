@@ -20,8 +20,8 @@ const prettyPrint = (obj: any) => {
         : obj.level >= 30
           ? "INFO"
           : "DEBUG";
-  const module = obj.module ? `[${obj.module}]` : "";
-  const msg = obj.msg || "";
+  const moduleInfo = obj.module ? `[${obj.module}]` : "";
+  const msg = obj.msg ?? "";
 
   if (isDevelopment && isServer) {
     // 开发环境美化输出
@@ -34,7 +34,7 @@ const prettyPrint = (obj: any) => {
     };
 
     console.log(
-      `${colors[level as keyof typeof colors]}[${timestamp}] ${level} ${module}${colors.RESET} ${msg}`,
+      `${colors[level as keyof typeof colors]}[${timestamp}] ${level} ${moduleInfo}${colors.RESET} ${msg}`,
     );
 
     // 输出额外的结构化数据

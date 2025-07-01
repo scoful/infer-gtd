@@ -100,10 +100,10 @@ export default function NoteModal({
   const autoSaveNote = api.note.update.useMutation({
     onSuccess: () => {
       // 自动保存成功，不显示通知，不关闭模态框
-      console.log('✅ 笔记自动保存成功');
+      console.log("✅ 笔记自动保存成功");
     },
     onError: (error) => {
-      console.error('❌ 笔记自动保存失败:', error.message);
+      console.error("❌ 笔记自动保存失败:", error.message);
       // 自动保存失败也不显示错误通知，避免打扰用户
     },
   });
@@ -317,9 +317,11 @@ export default function NoteModal({
                         autoSave={true}
                         autoSaveType="server"
                         autoSaveStatus={
-                          autoSaveNote.isPending ? 'saving' :
-                          autoSaveNote.isSuccess ? 'saved' :
-                          'unsaved'
+                          autoSaveNote.isPending
+                            ? "saving"
+                            : autoSaveNote.isSuccess
+                              ? "saved"
+                              : "unsaved"
                         }
                         onAutoSave={(content) => {
                           // 自动保存到服务器

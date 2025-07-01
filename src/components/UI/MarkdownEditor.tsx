@@ -24,8 +24,8 @@ interface MarkdownEditorProps {
   enableJetBrainsShortcuts?: boolean; // 新增：是否启用JetBrains快捷键
   autoSave?: boolean; // 新增：是否启用自动保存
   onAutoSave?: (value: string) => void; // 新增：自动保存回调
-  autoSaveType?: 'local' | 'server'; // 新增：自动保存类型
-  autoSaveStatus?: 'saved' | 'saving' | 'unsaved'; // 新增：外部控制的保存状态
+  autoSaveType?: "local" | "server"; // 新增：自动保存类型
+  autoSaveStatus?: "saved" | "saving" | "unsaved"; // 新增：外部控制的保存状态
 }
 
 export default function MarkdownEditor({
@@ -40,7 +40,7 @@ export default function MarkdownEditor({
   enableJetBrainsShortcuts = true,
   autoSave = false,
   onAutoSave,
-  autoSaveType = 'server',
+  autoSaveType = "server",
   autoSaveStatus,
 }: MarkdownEditorProps) {
   const [mounted, setMounted] = useState(false);
@@ -48,8 +48,10 @@ export default function MarkdownEditor({
     "edit" | "preview" | "live"
   >(preview);
   const [lastSavedValue, setLastSavedValue] = useState(value);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
+    "saved",
+  );
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // 确保组件在客户端挂载后才渲染
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function MarkdownEditor({
   useEffect(() => {
     if (mounted) {
       setLastSavedValue(value);
-      setSaveStatus('saved');
+      setSaveStatus("saved");
     }
   }, [mounted]); // 只在mounted变化时执行
 
@@ -71,31 +73,33 @@ export default function MarkdownEditor({
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
       // 检查焦点是否在MDEditor的textarea上
       const activeElement = document.activeElement;
-      if (!activeElement || activeElement.tagName !== 'TEXTAREA') return;
+      if (!activeElement || activeElement.tagName !== "TEXTAREA") return;
 
       // 检查是否是MDEditor的textarea
-      const mdEditorContainer = activeElement.closest('.w-md-editor');
+      const mdEditorContainer = activeElement.closest(".w-md-editor");
       if (!mdEditorContainer) return;
 
       const textarea = activeElement as HTMLTextAreaElement;
       const { selectionStart, selectionEnd, value: textValue } = textarea;
 
       // Ctrl+Y - 删除当前行
-      if (event.ctrlKey && event.key === 'y') {
+      if (event.ctrlKey && event.key === "y") {
         event.preventDefault();
 
-        const lines = textValue.split('\n');
-        const currentLineIndex = textValue.substring(0, selectionStart).split('\n').length - 1;
+        const lines = textValue.split("\n");
+        const currentLineIndex =
+          textValue.substring(0, selectionStart).split("\n").length - 1;
 
         if (currentLineIndex >= 0 && currentLineIndex < lines.length) {
           lines.splice(currentLineIndex, 1);
-          const newValue = lines.join('\n');
+          const newValue = lines.join("\n");
           onChange(newValue);
 
           // 设置光标位置到行首
           setTimeout(() => {
             const beforeLines = lines.slice(0, currentLineIndex);
-            const newPosition = beforeLines.join('\n').length + (beforeLines.length > 0 ? 1 : 0);
+            const newPosition =
+              beforeLines.join("\n").length + (beforeLines.length > 0 ? 1 : 0);
             textarea.setSelectionRange(newPosition, newPosition);
             textarea.focus();
           }, 0);
@@ -103,26 +107,32 @@ export default function MarkdownEditor({
       }
 
       // Ctrl+Shift+↑ - 向上移动行
-      if (event.ctrlKey && event.shiftKey && event.key === 'ArrowUp') {
+      if (event.ctrlKey && event.shiftKey && event.key === "ArrowUp") {
         event.preventDefault();
 
-        const lines = textValue.split('\n');
-        const currentLineIndex = textValue.substring(0, selectionStart).split('\n').length - 1;
+        const lines = textValue.split("\n");
+        const currentLineIndex =
+          textValue.substring(0, selectionStart).split("\n").length - 1;
 
         if (currentLineIndex > 0) {
           // 交换当前行和上一行
           const currentLine = lines[currentLineIndex];
           const previousLine = lines[currentLineIndex - 1];
-          lines[currentLineIndex - 1] = currentLine;
-          lines[currentLineIndex] = previousLine;
+          if (currentLine !== undefined && previousLine !== undefined) {
+            lines[currentLineIndex - 1] = currentLine;
+            lines[currentLineIndex] = previousLine;
+          }
 
-          onChange(lines.join('\n'));
+          onChange(lines.join("\n"));
 
           // 计算新的光标位置
           setTimeout(() => {
             const beforeLines = lines.slice(0, currentLineIndex - 1);
-            const currentLineStart = beforeLines.join('\n').length + (beforeLines.length > 0 ? 1 : 0);
-            const currentLineOffset = selectionStart - (textValue.substring(0, selectionStart).lastIndexOf('\n') + 1);
+            const currentLineStart =
+              beforeLines.join("\n").length + (beforeLines.length > 0 ? 1 : 0);
+            const currentLineOffset =
+              selectionStart -
+              (textValue.substring(0, selectionStart).lastIndexOf("\n") + 1);
             const newPosition = currentLineStart + currentLineOffset;
             textarea.setSelectionRange(newPosition, newPosition);
             textarea.focus();
@@ -131,26 +141,32 @@ export default function MarkdownEditor({
       }
 
       // Ctrl+Shift+↓ - 向下移动行
-      if (event.ctrlKey && event.shiftKey && event.key === 'ArrowDown') {
+      if (event.ctrlKey && event.shiftKey && event.key === "ArrowDown") {
         event.preventDefault();
 
-        const lines = textValue.split('\n');
-        const currentLineIndex = textValue.substring(0, selectionStart).split('\n').length - 1;
+        const lines = textValue.split("\n");
+        const currentLineIndex =
+          textValue.substring(0, selectionStart).split("\n").length - 1;
 
         if (currentLineIndex < lines.length - 1) {
           // 交换当前行和下一行
           const currentLine = lines[currentLineIndex];
           const nextLine = lines[currentLineIndex + 1];
-          lines[currentLineIndex] = nextLine;
-          lines[currentLineIndex + 1] = currentLine;
+          if (currentLine !== undefined && nextLine !== undefined) {
+            lines[currentLineIndex] = nextLine;
+            lines[currentLineIndex + 1] = currentLine;
+          }
 
-          onChange(lines.join('\n'));
+          onChange(lines.join("\n"));
 
           // 计算新的光标位置
           setTimeout(() => {
             const beforeLines = lines.slice(0, currentLineIndex + 1);
-            const currentLineStart = beforeLines.join('\n').length + (beforeLines.length > 0 ? 1 : 0);
-            const currentLineOffset = selectionStart - (textValue.substring(0, selectionStart).lastIndexOf('\n') + 1);
+            const currentLineStart =
+              beforeLines.join("\n").length + (beforeLines.length > 0 ? 1 : 0);
+            const currentLineOffset =
+              selectionStart -
+              (textValue.substring(0, selectionStart).lastIndexOf("\n") + 1);
             const newPosition = currentLineStart + currentLineOffset;
             textarea.setSelectionRange(newPosition, newPosition);
             textarea.focus();
@@ -159,17 +175,17 @@ export default function MarkdownEditor({
       }
     };
 
-    document.addEventListener('keydown', handleGlobalKeyDown);
+    document.addEventListener("keydown", handleGlobalKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown);
+      document.removeEventListener("keydown", handleGlobalKeyDown);
     };
   }, [mounted, enableJetBrainsShortcuts, onChange]);
 
   // 自动保存功能
   useEffect(() => {
     if (autoSave && onAutoSave && mounted && value !== lastSavedValue) {
-      setSaveStatus('unsaved');
+      setSaveStatus("unsaved");
 
       // 清除之前的定时器
       if (autoSaveTimeoutRef.current) {
@@ -178,22 +194,22 @@ export default function MarkdownEditor({
 
       // 设置新的定时器（5秒防抖，API保存需要更长间隔）
       autoSaveTimeoutRef.current = setTimeout(() => {
-        console.log('🔄 自动保存定时器触发');
-        setSaveStatus('saving');
+        console.log("🔄 自动保存定时器触发");
+        setSaveStatus("saving");
         try {
-          console.log('📤 调用 onAutoSave:', value.substring(0, 50));
+          console.log("📤 调用 onAutoSave:", value.substring(0, 50));
           onAutoSave(value);
           setLastSavedValue(value);
 
           // 对于本地保存，立即设置为已保存状态
           // 对于服务器保存，保持saving状态（由外部组件控制）
-          if (autoSaveType === 'local') {
-            setSaveStatus('saved');
+          if (autoSaveType === "local") {
+            setSaveStatus("saved");
           }
-          console.log('✅ onAutoSave 调用完成');
+          console.log("✅ onAutoSave 调用完成");
         } catch (error) {
-          console.error('❌ 自动保存失败:', error);
-          setSaveStatus('unsaved');
+          console.error("❌ 自动保存失败:", error);
+          setSaveStatus("unsaved");
         }
       }, 5000); // 改为5秒，避免频繁API调用
     }
@@ -209,8 +225,6 @@ export default function MarkdownEditor({
   const handleChange = (val?: string) => {
     onChange(val || "");
   };
-
-
 
   // 预览模式切换按钮
   const PreviewModeToggle = () => (
@@ -331,20 +345,26 @@ export default function MarkdownEditor({
           {autoSave && (
             <div>
               <span className="font-medium">自动保存：</span>
-              <span className={`ml-1 ${
-                (autoSaveStatus || saveStatus) === 'saved' ? 'text-green-600' :
-                (autoSaveStatus || saveStatus) === 'saving' ? 'text-yellow-600' :
-                'text-gray-600'
-              }`}>
-                {autoSaveType === 'local' ? (
-                  (autoSaveStatus || saveStatus) === 'saved' ? '已保存草稿到本地' :
-                  (autoSaveStatus || saveStatus) === 'saving' ? '保存草稿到本地中...' :
-                  '未保存 (5秒后自动保存草稿)'
-                ) : (
-                  (autoSaveStatus || saveStatus) === 'saved' ? '已保存到服务器' :
-                  (autoSaveStatus || saveStatus) === 'saving' ? '保存到服务器中...' :
-                  '未保存 (5秒后自动保存)'
-                )}
+              <span
+                className={`ml-1 ${
+                  (autoSaveStatus || saveStatus) === "saved"
+                    ? "text-green-600"
+                    : (autoSaveStatus || saveStatus) === "saving"
+                      ? "text-yellow-600"
+                      : "text-gray-600"
+                }`}
+              >
+                {autoSaveType === "local"
+                  ? (autoSaveStatus || saveStatus) === "saved"
+                    ? "已保存草稿到本地"
+                    : (autoSaveStatus || saveStatus) === "saving"
+                      ? "保存草稿到本地中..."
+                      : "未保存 (5秒后自动保存草稿)"
+                  : (autoSaveStatus || saveStatus) === "saved"
+                    ? "已保存到服务器"
+                    : (autoSaveStatus || saveStatus) === "saving"
+                      ? "保存到服务器中..."
+                      : "未保存 (5秒后自动保存)"}
               </span>
             </div>
           )}

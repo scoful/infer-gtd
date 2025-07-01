@@ -50,20 +50,20 @@ const NewNotePage: NextPage = () => {
 
   // 恢复本地草稿
   useEffect(() => {
-    const draftKey = 'note-draft-new';
+    const draftKey = "note-draft-new";
     const savedDraft = localStorage.getItem(draftKey);
     if (savedDraft) {
       try {
-        console.log('尝试恢复草稿:', savedDraft);
+        console.log("尝试恢复草稿:", savedDraft);
         const draft = JSON.parse(savedDraft) as Partial<NoteFormData>;
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           ...draft,
           tagIds: draft.tagIds || [],
         }));
-        console.log('草稿恢复成功');
+        console.log("草稿恢复成功");
       } catch (error) {
-        console.error('恢复草稿失败，清除无效草稿:', error);
+        console.error("恢复草稿失败，清除无效草稿:", error);
         localStorage.removeItem(draftKey);
       }
     }
@@ -74,7 +74,7 @@ const NewNotePage: NextPage = () => {
     onSuccess: (result) => {
       showSuccess(`笔记创建成功`);
       // 清除草稿
-      localStorage.removeItem('note-draft-new');
+      localStorage.removeItem("note-draft-new");
       setIsSubmitting(false);
       void router.push(`/notes/${result.id}`);
     },
@@ -122,9 +122,9 @@ const NewNotePage: NextPage = () => {
 
   // 处理自动保存（本地草稿保存）
   const handleAutoSave = (content: string) => {
-    console.log('🚀 handleAutoSave 被调用 - 保存到本地草稿:', {
+    console.log("🚀 handleAutoSave 被调用 - 保存到本地草稿:", {
       contentLength: content.length,
-      content: content.substring(0, 50)
+      content: content.substring(0, 50),
     });
 
     // 准备保存数据
@@ -137,12 +137,12 @@ const NewNotePage: NextPage = () => {
     };
 
     // 保存到本地存储
-    const draftKey = 'note-draft-new';
+    const draftKey = "note-draft-new";
     try {
       localStorage.setItem(draftKey, JSON.stringify(draftData));
-      console.log('✅ 草稿已保存到本地');
+      console.log("✅ 草稿已保存到本地");
     } catch (error) {
-      console.error('❌ 保存草稿失败:', error);
+      console.error("❌ 保存草稿失败:", error);
     }
   };
 
@@ -245,7 +245,7 @@ const NewNotePage: NextPage = () => {
                     关联项目
                   </label>
                   <div className="relative mt-1">
-                    <FolderIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <FolderIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <select
                       id="project"
                       value={formData.projectId || ""}
@@ -290,14 +290,18 @@ const NewNotePage: NextPage = () => {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                 >
                   取消
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !formData.title.trim() || !formData.content.trim()}
-                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={
+                    isSubmitting ||
+                    !formData.title.trim() ||
+                    !formData.content.trim()
+                  }
+                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

@@ -521,29 +521,32 @@ const NotesPage: NextPage = () => {
                   </label>
 
                   <div className="text-sm text-gray-500">
-                    {selectedNotes.size > 0 && `已选择 ${selectedNotes.size} 篇`}
+                    {selectedNotes.size > 0 &&
+                      `已选择 ${selectedNotes.size} 篇`}
                   </div>
                 </div>
-              <div
-                className={`${
-                  viewMode === "grid"
-                    ? "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-                    : "space-y-4"
-                }`}
-              >
-                {notes.map((note) => (
-                  <NoteCard
-                    key={note.id}
-                    note={note}
-                    viewMode={viewMode}
-                    isSelected={selectedNotes.has(note.id)}
-                    onSelect={(selected) => handleNoteSelect(note.id, selected)}
-                    onView={() => handleViewNote(note.id)}
-                    onEdit={() => handleEditNote(note.id)}
-                    onArchive={() => handleArchiveNote(note.id)}
-                    onDelete={() => handleDeleteNote(note.id)}
-                  />
-                ))}
+                <div
+                  className={`${
+                    viewMode === "grid"
+                      ? "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                      : "space-y-4"
+                  }`}
+                >
+                  {notes.map((note) => (
+                    <NoteCard
+                      key={note.id}
+                      note={note}
+                      viewMode={viewMode}
+                      isSelected={selectedNotes.has(note.id)}
+                      onSelect={(selected) =>
+                        handleNoteSelect(note.id, selected)
+                      }
+                      onView={() => handleViewNote(note.id)}
+                      onEdit={() => handleEditNote(note.id)}
+                      onArchive={() => handleArchiveNote(note.id)}
+                      onDelete={() => handleDeleteNote(note.id)}
+                    />
+                  ))}
                 </div>
               </>
             ) : (
@@ -663,11 +666,11 @@ function NoteCard({
     };
 
     if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
   // 获取显示的预览内容
@@ -739,41 +742,38 @@ function NoteCard({
               }}
               className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <div
-              className="min-w-0 flex-1 cursor-pointer"
-              onClick={onView}
-            >
-            {/* 标题和状态 */}
-            <div className="mb-2 flex items-center gap-2">
-              <h3 className="truncate text-lg font-medium text-gray-900">
-                {note.title}
-              </h3>
-              {note.isArchived && (
-                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                  <ArchiveBoxIcon className="mr-1 h-3 w-3" />
-                  已归档
-                </span>
-              )}
-            </div>
-
-            {/* 内容预览 */}
-            <p className="mb-3 line-clamp-2 text-sm text-gray-600">
-              {getDisplayPreview(200)}
-            </p>
-
-            {/* 元数据 */}
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              <div className="flex items-center">
-                <CalendarIcon className="mr-1 h-3 w-3" />
-                更新于 {formatDate(note.updatedAt)}
+            <div className="min-w-0 flex-1 cursor-pointer" onClick={onView}>
+              {/* 标题和状态 */}
+              <div className="mb-2 flex items-center gap-2">
+                <h3 className="truncate text-lg font-medium text-gray-900">
+                  {note.title}
+                </h3>
+                {note.isArchived && (
+                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                    <ArchiveBoxIcon className="mr-1 h-3 w-3" />
+                    已归档
+                  </span>
+                )}
               </div>
-              {note._count.linkedTasks > 0 && (
+
+              {/* 内容预览 */}
+              <p className="mb-3 line-clamp-2 text-sm text-gray-600">
+                {getDisplayPreview(200)}
+              </p>
+
+              {/* 元数据 */}
+              <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center">
-                  <LinkIcon className="mr-1 h-3 w-3" />
-                  {note._count.linkedTasks} 个关联任务
+                  <CalendarIcon className="mr-1 h-3 w-3" />
+                  更新于 {formatDate(note.updatedAt)}
                 </div>
-              )}
-            </div>
+                {note._count.linkedTasks > 0 && (
+                  <div className="flex items-center">
+                    <LinkIcon className="mr-1 h-3 w-3" />
+                    {note._count.linkedTasks} 个关联任务
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -880,7 +880,7 @@ function NoteCard({
 
           {/* 下拉菜单 */}
           {isMenuOpen && (
-            <div className="absolute right-0 top-6 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute top-6 right-0 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -920,10 +920,7 @@ function NoteCard({
       </div>
 
       {/* 标题和状态 */}
-      <div
-        className="mb-3 cursor-pointer"
-        onClick={onView}
-      >
+      <div className="mb-3 cursor-pointer" onClick={onView}>
         <div className="flex items-start justify-between">
           <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
             {note.title}
