@@ -323,11 +323,12 @@ export default function NoteModal({
                         }
                         onAutoSave={(content) => {
                           // 自动保存到服务器
+                          // 只检查是否有实际内容，但保留原始格式（包括换行）
                           if (!content.trim() || !noteId) return;
 
                           const saveData = {
-                            title: formData.title.trim() || "无标题笔记",
-                            content: content.trim(),
+                            title: formData.title.trim() || "无标题笔记", // 标题仍然trim
+                            content: content, // 保留原始内容格式
                             summary: formData.summary?.trim() || undefined,
                             projectId: formData.projectId || undefined,
                             tagIds: formData.tagIds,

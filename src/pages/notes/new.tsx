@@ -87,8 +87,8 @@ const NewNotePage: NextPage = () => {
   // 最终提交（创建笔记）
   const finalSubmit = () => {
     const saveData = {
-      title: formData.title.trim(),
-      content: formData.content.trim(),
+      title: formData.title.trim(), // 标题仍然trim，避免前后空格
+      content: formData.content, // 内容保持原始格式
       summary: formData.summary?.trim() || undefined,
       projectId: formData.projectId || undefined,
       tagIds: formData.tagIds,
