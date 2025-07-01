@@ -45,7 +45,7 @@ export default function TaskFeedbackModal({
   }, [taskId, isOpen]);
 
   // 获取标签列表
-  const { data: tagsData, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
+  const { isLoading: isLoadingTags } = api.tag.getAll.useQuery(
     { limit: 100 },
     {
       enabled: isOpen,

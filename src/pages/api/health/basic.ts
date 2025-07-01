@@ -1,7 +1,6 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import fs from "fs";
 import { logHealthCheck, loggers } from "@/utils/logger";
-import path from "path";
 
 /**
  * 基础健康检查 API 端点

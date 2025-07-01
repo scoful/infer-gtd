@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { logApiCall, generateRequestId } from "@/utils/logger";
+import { generateRequestId } from "@/utils/logger";
 
 export function middleware(request: NextRequest) {
   const start = Date.now();

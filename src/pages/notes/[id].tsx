@@ -36,7 +36,6 @@ const NoteDetailPage: NextPage = () => {
   const noteId = router.query.id as string;
 
   // 状态管理
-  const [isEditing, setIsEditing] = useState(false);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
   // 获取笔记详情
@@ -157,7 +156,7 @@ const NoteDetailPage: NextPage = () => {
                 笔记不存在
               </h1>
               <p className="mb-4 text-gray-600">
-                {error.message || "找不到指定的笔记"}
+                {error.message ?? "找不到指定的笔记"}
               </p>
               <button
                 onClick={handleBack}
@@ -177,7 +176,7 @@ const NoteDetailPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>{note?.title || "笔记详情"} | Infer GTD</title>
+          <title>{note?.title ?? "笔记详情"} | Infer GTD</title>
           <meta name="description" content="笔记详情页面" />
         </Head>
 
@@ -280,7 +279,7 @@ const NoteDetailPage: NextPage = () => {
                           backgroundColor: note.project.color
                             ? `${note.project.color}20`
                             : "#f3f4f6",
-                          color: note.project.color || "#6b7280",
+                          color: note.project.color ?? "#6b7280",
                         }}
                       >
                         <FolderIcon className="mr-1 h-4 w-4" />
@@ -295,7 +294,7 @@ const NoteDetailPage: NextPage = () => {
                           backgroundColor: tag.color
                             ? `${tag.color}20`
                             : "#f3f4f6",
-                          color: tag.color || "#6b7280",
+                          color: tag.color ?? "#6b7280",
                         }}
                       >
                         <TagIcon className="mr-1 h-4 w-4" />

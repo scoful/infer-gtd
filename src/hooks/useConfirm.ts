@@ -23,7 +23,9 @@ export function useConfirm() {
     confirmText: "确认",
     cancelText: "取消",
     type: "danger",
-    onConfirm: () => {},
+    onConfirm: () => {
+      // Default empty function
+    },
   });
 
   const showConfirm = useCallback(

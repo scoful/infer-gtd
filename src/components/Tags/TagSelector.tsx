@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
@@ -268,7 +268,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   };
 
   // 计算下拉菜单最佳位置
-  const calculateDropdownPosition = () => {
+  const calculateDropdownPosition = useCallback(() => {
     if (!containerRef.current) return "bottom";
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -300,7 +300,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     } else {
       return "bottom";
     }
-  };
+  }, [showCreateForm]);
 
   // 关闭下拉菜单的函数
   const closeDropdown = () => {
@@ -343,7 +343,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       const position = calculateDropdownPosition();
       setDropdownPosition(position);
     }
-  }, [showCreateForm]);
+  }, [showCreateForm, isOpen, calculateDropdownPosition]);
 
   // 获取尺寸相关的样式
   const sizeClasses = {
@@ -512,7 +512,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className="flex cursor-pointer items-center justify-between rounded-md p-3 transition-colors hover:bg-blue-50 hover:border-blue-200 border border-transparent"
+                        className="flex cursor-pointer items-center justify-between rounded-md border border-transparent p-3 transition-colors hover:border-blue-200 hover:bg-blue-50"
                         style={{ alignItems: "center" }}
                       >
                         <TagDisplay

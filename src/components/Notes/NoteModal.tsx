@@ -66,7 +66,7 @@ export default function NoteModal({
   );
 
   // 获取标签列表
-  const { data: tagsData, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
+  const { isLoading: isLoadingTags } = api.tag.getAll.useQuery(
     { limit: 100 },
     {
       enabled: isOpen,
@@ -156,7 +156,7 @@ export default function NoteModal({
     try {
       const submitData = {
         ...formData,
-        projectId: formData.projectId || undefined,
+        projectId: formData.projectId ?? undefined,
       };
 
       if (isEditing) {
@@ -329,7 +329,7 @@ export default function NoteModal({
                       </label>
                       <select
                         id="project"
-                        value={formData.projectId || ""}
+                        value={formData.projectId ?? ""}
                         onChange={(e) =>
                           setFormData({
                             ...formData,

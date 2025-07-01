@@ -7,7 +7,7 @@ import {
   ArchiveBoxIcon,
   DocumentTextIcon,
   EyeIcon,
-  FunnelIcon,
+
   MagnifyingGlassIcon,
   PlusIcon,
   Squares2X2Icon,
@@ -238,7 +238,7 @@ const NotesPage: NextPage = () => {
               {/* 项目筛选 */}
               <div className="relative">
                 <select
-                  value={selectedProject || ""}
+                  value={selectedProject ?? ""}
                   onChange={(e) => setSelectedProject(e.target.value || null)}
                   className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
