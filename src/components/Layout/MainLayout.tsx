@@ -117,12 +117,6 @@ const navigation: NavigationItem[] = [
         icon: ListBulletIcon,
         description: "管理所有日记",
       },
-      {
-        name: "今日日记",
-        href: "/journal/today",
-        icon: PlusIcon,
-        description: "写今日日记",
-      },
     ],
   },
   {
@@ -247,9 +241,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (href === "/journal/list") {
       return router.pathname === "/journal/list";
     }
-    if (href === "/journal/today") {
-      return router.pathname === "/journal/today";
-    }
+
     if (href === "/notes") {
       return (
         router.pathname === "/notes" || router.pathname.startsWith("/notes/")

@@ -12,7 +12,6 @@ import {
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import DateNavigation from "@/components/Journal/DateNavigation";
-import JournalEditor from "@/components/Journal/JournalEditor";
 import MarkdownRenderer from "@/components/UI/MarkdownRenderer";
 import { api } from "@/utils/api";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
@@ -20,7 +19,6 @@ import { usePageRefresh } from "@/hooks/usePageRefresh";
 const JournalPage: NextPage = () => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isEditing, setIsEditing] = useState(false);
 
   // 获取当前日期的日记
   const {
@@ -77,7 +75,6 @@ const JournalPage: NextPage = () => {
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
-    setIsEditing(false);
   };
 
   const handleEdit = () => {
@@ -91,18 +88,11 @@ const JournalPage: NextPage = () => {
       return;
     }
 
-    setIsEditing(true);
+    // 跳转到新建日记页面（来自首页）
+    void router.push("/journal/new?from=index");
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    void refetchCurrentJournal();
-    void refetchRecentJournals();
-  };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-  };
 
   const goToToday = () => {
     // 检查今天是否已有日记
@@ -113,8 +103,8 @@ const JournalPage: NextPage = () => {
       // 如果今天已有日记，跳转到日记首页并设置为今天
       setCurrentDate(today);
     } else {
-      // 如果今天没有日记，跳转到今日日记编辑页面
-      void router.push("/journal/today");
+      // 如果今天没有日记，跳转到新建日记页面（来自首页）
+      void router.push("/journal/new?from=index");
     }
   };
 
@@ -161,14 +151,6 @@ const JournalPage: NextPage = () => {
                 <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
                 <p className="mt-2 text-sm text-gray-500">加载日记中...</p>
               </div>
-            </div>
-          ) : isEditing ? (
-            <div className="rounded-lg border border-gray-200 bg-white">
-              <JournalEditor
-                date={currentDate}
-                onSave={handleSave}
-                onCancel={handleCancelEdit}
-              />
             </div>
           ) : currentJournal ? (
             <div className="rounded-lg border border-gray-200 bg-white">

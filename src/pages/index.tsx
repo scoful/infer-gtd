@@ -128,8 +128,8 @@ const Home: NextPage = () => {
       description: "今日反思记录",
       color: "bg-orange-500 hover:bg-orange-600",
       onClick: () => {
-        // 直接跳转到今日日记页面，让 JournalEditor 处理创建或编辑逻辑
-        void router.push("/journal/today");
+        // 跳转到新建日记页面（来自首页）
+        void router.push("/journal/new?from=home");
       },
     },
   ];
