@@ -205,7 +205,20 @@ const JournalListPage: NextPage = () => {
 
   // 新建日记
   const handleNewJournal = () => {
-    void router.push("/journal/today");
+    // 检查今天是否已有日记
+    const today = new Date();
+    const todayJournal = journals.find(journal => {
+      const journalDate = new Date(journal.date);
+      return journalDate.toDateString() === today.toDateString();
+    });
+
+    if (todayJournal) {
+      // 如果今天已有日记，跳转到该日记的详情页面
+      void router.push(`/journal/${todayJournal.id}`);
+    } else {
+      // 如果今天没有日记，跳转到今日日记编辑页面
+      void router.push("/journal/today");
+    }
   };
 
   return (

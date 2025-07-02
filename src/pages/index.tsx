@@ -1,6 +1,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 import {
@@ -19,6 +20,7 @@ import { usePageRefresh } from "@/hooks/usePageRefresh";
 import TaskModal from "@/components/Tasks/TaskModal";
 
 const Home: NextPage = () => {
+  const router = useRouter();
   const { data: sessionData } = useSession();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
@@ -121,10 +123,14 @@ const Home: NextPage = () => {
     },
     {
       name: "写日记",
-      href: "/journal/today",
+      href: "#",
       icon: BookOpenIcon,
       description: "今日反思记录",
       color: "bg-orange-500 hover:bg-orange-600",
+      onClick: () => {
+        // 直接跳转到今日日记页面，让 JournalEditor 处理创建或编辑逻辑
+        void router.push("/journal/today");
+      },
     },
   ];
 

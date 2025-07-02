@@ -81,6 +81,16 @@ const JournalPage: NextPage = () => {
   };
 
   const handleEdit = () => {
+    // 检查是否为今天的日期
+    const today = new Date();
+    const isToday = currentDate.toDateString() === today.toDateString();
+
+    if (!isToday) {
+      // 如果不是今天，提示用户只能为今天创建日记
+      alert("只能为今天创建新日记。如需查看或编辑其他日期的日记，请从日记列表中选择。");
+      return;
+    }
+
     setIsEditing(true);
   };
 
@@ -95,7 +105,17 @@ const JournalPage: NextPage = () => {
   };
 
   const goToToday = () => {
-    void router.push("/journal/today");
+    // 检查今天是否已有日记
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    if (hasJournalDates.has(todayKey)) {
+      // 如果今天已有日记，跳转到日记首页并设置为今天
+      setCurrentDate(today);
+    } else {
+      // 如果今天没有日记，跳转到今日日记编辑页面
+      void router.push("/journal/today");
+    }
   };
 
   return (
@@ -155,12 +175,6 @@ const JournalPage: NextPage = () => {
               {/* 日记头部 */}
               <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <CalendarIcon className="mr-1 h-4 w-4" />
-                    {new Date(currentJournal.createdAt).toLocaleDateString(
-                      "zh-CN"
-                    )}
-                  </div>
                   {currentJournal.updatedAt !== currentJournal.createdAt && (
                     <div className="flex items-center text-sm text-gray-500">
                       <ClockIcon className="mr-1 h-4 w-4" />
