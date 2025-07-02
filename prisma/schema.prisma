@@ -191,6 +191,7 @@ model Note {
     content     String   // Markdown content
     summary     String?  // Optional summary for preview
     isArchived  Boolean  @default(false)
+    isPinned    Boolean  @default(false)
 
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
@@ -210,6 +211,8 @@ model Note {
     @@index([title])
     @@index([projectId])
     @@index([updatedAt])
+    @@index([isPinned])
+    @@index([isPinned, updatedAt])
 }
 
 model Journal {

@@ -8,6 +8,7 @@ import {
   getNoteStatsSchema,
   linkNoteToTaskSchema,
   noteIdSchema,
+  pinNoteSchema,
   searchNotesSchema,
   unlinkNoteFromTaskSchema,
   updateNoteSchema,
@@ -145,7 +146,11 @@ export const noteRouter = createTRPCRouter({
           }),
         };
 
-        const orderBy = { [sortBy]: sortOrder };
+        // 构建排序规则：置顶笔记优先，然后按指定字段排序
+        const orderBy = [
+          { isPinned: "desc" as const }, // 置顶笔记优先
+          { [sortBy]: sortOrder },
+        ];
 
         const notes = await ctx.db.note.findMany({
           where,
@@ -455,6 +460,58 @@ export const noteRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "归档笔记失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 置顶/取消置顶笔记
+  pin: protectedProcedure
+    .input(pinNoteSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // 验证笔记所有权
+        const note = await ctx.db.note.findUnique({
+          where: { id: input.id },
+          select: { createdById: true, title: true, isPinned: true },
+        });
+
+        if (!note || note.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "笔记不存在或无权限操作",
+          });
+        }
+
+        if (note.isPinned === input.isPinned) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: input.isPinned
+              ? "笔记已经是置顶状态"
+              : "笔记已经是非置顶状态",
+          });
+        }
+
+        // 更新置顶状态
+        const updatedNote = await ctx.db.note.update({
+          where: { id: input.id },
+          data: { isPinned: input.isPinned },
+        });
+
+        return {
+          success: true,
+          message: input.isPinned
+            ? `笔记 "${note.title}" 已置顶`
+            : `笔记 "${note.title}" 已取消置顶`,
+          note: updatedNote,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "置顶笔记失败",
           cause: error,
         });
       }

@@ -18,7 +18,9 @@ import {
   CalendarIcon,
   LinkIcon,
   EllipsisVerticalIcon,
+  BookmarkIcon,
 } from "@heroicons/react/24/outline";
+import { BookmarkIcon as BookmarkSolidIcon } from "@heroicons/react/24/solid";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -128,6 +130,17 @@ const NotesPage: NextPage = () => {
   const archiveNote = api.note.archive.useMutation({
     onSuccess: (result) => {
       showSuccess(`笔记已${result.note.isArchived ? "归档" : "取消归档"}`);
+      void refetch();
+    },
+    onError: (error) => {
+      showError(error.message ?? "操作失败");
+    },
+  });
+
+  // 置顶笔记
+  const pinNote = api.note.pin.useMutation({
+    onSuccess: (result) => {
+      showSuccess(`笔记已${result.note.isPinned ? "置顶" : "取消置顶"}`);
       void refetch();
     },
     onError: (error) => {
@@ -260,6 +273,17 @@ const NotesPage: NextPage = () => {
     archiveNote.mutate({
       id: noteId,
       isArchived: !note.isArchived,
+    });
+  };
+
+  // 处理置顶笔记
+  const handlePinNote = (noteId: string) => {
+    const note = notes.find((n) => n.id === noteId);
+    if (!note) return;
+
+    pinNote.mutate({
+      id: noteId,
+      isPinned: !note.isPinned,
     });
   };
 
@@ -545,6 +569,7 @@ const NotesPage: NextPage = () => {
                       onEdit={() => handleEditNote(note.id)}
                       onArchive={() => handleArchiveNote(note.id)}
                       onDelete={() => handleDeleteNote(note.id)}
+                      onPin={() => handlePinNote(note.id)}
                     />
                   ))}
                 </div>
@@ -611,6 +636,7 @@ interface NoteCardProps {
     content: string;
     summary?: string | null;
     isArchived: boolean;
+    isPinned: boolean;
     createdAt: Date;
     updatedAt: Date;
     project?: {
@@ -641,6 +667,7 @@ interface NoteCardProps {
   onEdit: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  onPin: () => void;
 }
 
 // 笔记卡片组件
@@ -653,6 +680,7 @@ function NoteCard({
   onEdit,
   onArchive,
   onDelete,
+  onPin,
 }: NoteCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -748,6 +776,12 @@ function NoteCard({
                 <h3 className="truncate text-lg font-medium text-gray-900">
                   {note.title}
                 </h3>
+                {note.isPinned && (
+                  <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                    <BookmarkSolidIcon className="mr-1 h-3 w-3" />
+                    置顶
+                  </span>
+                )}
                 {note.isArchived && (
                   <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                     <ArchiveBoxIcon className="mr-1 h-3 w-3" />
@@ -788,6 +822,24 @@ function NoteCard({
               title="编辑笔记"
             >
               <PencilIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPin();
+              }}
+              className={`${
+                note.isPinned
+                  ? "text-yellow-500 hover:text-yellow-600"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+              title={note.isPinned ? "取消置顶" : "置顶笔记"}
+            >
+              {note.isPinned ? (
+                <BookmarkSolidIcon className="h-5 w-5" />
+              ) : (
+                <BookmarkIcon className="h-5 w-5" />
+              )}
             </button>
             <button
               onClick={(e) => {
@@ -896,6 +948,21 @@ function NoteCard({
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsMenuOpen(false);
+                  onPin();
+                }}
+                className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                {note.isPinned ? (
+                  <BookmarkSolidIcon className="mr-2 h-4 w-4 text-yellow-500" />
+                ) : (
+                  <BookmarkIcon className="mr-2 h-4 w-4" />
+                )}
+                {note.isPinned ? "取消置顶" : "置顶"}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMenuOpen(false);
                   onArchive();
                 }}
                 className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -925,11 +992,19 @@ function NoteCard({
           <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
             {note.title}
           </h3>
-          {note.isArchived && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-              已归档
-            </span>
-          )}
+          <div className="ml-2 flex flex-col gap-1">
+            {note.isPinned && (
+              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                <BookmarkSolidIcon className="mr-1 h-3 w-3" />
+                置顶
+              </span>
+            )}
+            {note.isArchived && (
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                已归档
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

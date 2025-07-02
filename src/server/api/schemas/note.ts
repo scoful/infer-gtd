@@ -48,6 +48,12 @@ export const archiveNoteSchema = z.object({
   isArchived: z.boolean(),
 });
 
+// 笔记置顶 Schema
+export const pinNoteSchema = z.object({
+  id: z.string().cuid("无效的笔记ID"),
+  isPinned: z.boolean(),
+});
+
 // 笔记任务关联 Schema
 export const linkNoteToTaskSchema = z.object({
   noteId: z.string().cuid("无效的笔记ID"),
