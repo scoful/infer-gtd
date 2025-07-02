@@ -275,7 +275,7 @@ const SearchPage: NextPage = () => {
                   { value: "tasks", label: "任务", icon: CheckIcon },
                   { value: "notes", label: "笔记", icon: DocumentTextIcon },
                   { value: "projects", label: "项目", icon: FolderIcon },
-                  { value: "journals", label: "日志", icon: CalendarIcon },
+                  { value: "journals", label: "日记", icon: CalendarIcon },
                 ].map((option) => {
                   const Icon = option.icon;
                   return (
@@ -919,12 +919,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </div>
       )}
 
-      {/* 日志结果 */}
+      {/* 日记结果 */}
       {searchIn.includes("journals") && journals.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
             <CalendarIcon className="mr-2 h-5 w-5" />
-            日志 ({journals.length})
+            日记 ({journals.length})
           </h3>
           <div className="space-y-3">
             {journals.map((journal) => (

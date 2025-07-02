@@ -13,12 +13,12 @@ import {
 } from "@/server/api/schemas/journal";
 
 export const journalRouter = createTRPCRouter({
-  // 创建日志
+  // 创建日记
   create: protectedProcedure
     .input(createJournalSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // 检查该日期是否已有日志
+        // 检查该日期是否已有日记
         const existingJournal = await ctx.db.journal.findFirst({
           where: {
             date: input.date,
@@ -29,11 +29,11 @@ export const journalRouter = createTRPCRouter({
         if (existingJournal) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "该日期已有日志记录，请使用更新功能",
+            message: "该日期已有日记记录，请使用更新功能",
           });
         }
 
-        // 创建日志
+        // 创建日记
         const journal = await ctx.db.journal.create({
           data: {
             ...input,
@@ -48,13 +48,13 @@ export const journalRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "创建日志失败",
+          message: "创建日记失败",
           cause: error,
         });
       }
     }),
 
-  // 根据日期获取日志
+  // 根据日期获取日记
   getByDate: protectedProcedure
     .input(getJournalByDateSchema)
     .query(async ({ ctx, input }) => {
@@ -70,17 +70,17 @@ export const journalRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "获取日志失败",
+          message: "获取日记失败",
           cause: error,
         });
       }
     }),
 
-  // 获取日志列表
+  // 获取日记列表
   getAll: protectedProcedure
     .input(getJournalsSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortOrder, startDate, endDate, template } =
+      const { limit, cursor, search, sortBy = "date", sortOrder, startDate, endDate, template } =
         input;
 
       try {
@@ -112,11 +112,14 @@ export const journalRouter = createTRPCRouter({
           };
         }
 
+        // 获取总数
+        const totalCount = await ctx.db.journal.count({ where });
+
         const journals = await ctx.db.journal.findMany({
           where,
           take: limit + 1,
           cursor: cursor ? { id: cursor } : undefined,
-          orderBy: { date: sortOrder },
+          orderBy: { [sortBy]: sortOrder },
         });
 
         let nextCursor: typeof cursor | undefined = undefined;
@@ -126,19 +129,26 @@ export const journalRouter = createTRPCRouter({
         }
 
         return {
-          journals,
+          journals: journals.map((journal) => ({
+            ...journal,
+            preview:
+              journal.content.substring(0, 150) +
+              (journal.content.length > 150 ? "..." : ""),
+            wordCount: journal.content.length,
+          })),
           nextCursor,
+          totalCount,
         };
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "获取日志列表失败",
+          message: "获取日记列表失败",
           cause: error,
         });
       }
     }),
 
-  // 根据ID获取日志详情
+  // 根据ID获取日记详情
   getById: protectedProcedure
     .input(journalIdSchema)
     .query(async ({ ctx, input }) => {
@@ -150,7 +160,7 @@ export const journalRouter = createTRPCRouter({
         if (!journal || journal.createdById !== ctx.session.user.id) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "日志不存在或无权限访问",
+            message: "日记不存在或无权限访问",
           });
         }
 
@@ -161,20 +171,20 @@ export const journalRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "获取日志详情失败",
+          message: "获取日记详情失败",
           cause: error,
         });
       }
     }),
 
-  // 更新日志
+  // 更新日记
   update: protectedProcedure
     .input(updateJournalSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
 
       try {
-        // 验证日志所有权
+        // 验证日记所有权
         const existingJournal = await ctx.db.journal.findUnique({
           where: { id },
           select: { createdById: true },
@@ -186,11 +196,11 @@ export const journalRouter = createTRPCRouter({
         ) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "日志不存在或无权限修改",
+            message: "日记不存在或无权限修改",
           });
         }
 
-        // 更新日志
+        // 更新日记
         const journal = await ctx.db.journal.update({
           where: { id },
           data: updateData,
@@ -203,18 +213,18 @@ export const journalRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "更新日志失败",
+          message: "更新日记失败",
           cause: error,
         });
       }
     }),
 
-  // 删除日志
+  // 删除日记
   delete: protectedProcedure
     .input(journalIdSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // 验证日志所有权
+        // 验证日记所有权
         const journal = await ctx.db.journal.findUnique({
           where: { id: input.id },
           select: { createdById: true, date: true },
@@ -223,11 +233,11 @@ export const journalRouter = createTRPCRouter({
         if (!journal || journal.createdById !== ctx.session.user.id) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "日志不存在或无权限删除",
+            message: "日记不存在或无权限删除",
           });
         }
 
-        // 删除日志
+        // 删除日记
         await ctx.db.journal.delete({
           where: { id: input.id },
         });
@@ -242,13 +252,13 @@ export const journalRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "删除日志失败",
+          message: "删除日记失败",
           cause: error,
         });
       }
     }),
 
-  // 创建或更新日志（upsert）
+  // 创建或更新日记（upsert）
   upsert: protectedProcedure
     .input(createJournalSchema)
     .mutation(async ({ ctx, input }) => {
@@ -275,13 +285,13 @@ export const journalRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "保存日志失败",
+          message: "保存日记失败",
           cause: error,
         });
       }
     }),
 
-  // 搜索日志
+  // 搜索日记
   search: protectedProcedure
     .input(searchJournalsSchema)
     .query(async ({ ctx, input }) => {
@@ -328,13 +338,13 @@ export const journalRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "搜索日志失败",
+          message: "搜索日记失败",
           cause: error,
         });
       }
     }),
 
-  // 获取日志统计
+  // 获取日记统计
   getStats: protectedProcedure
     .input(getJournalStatsSchema)
     .query(async ({ ctx, input }) => {
@@ -421,13 +431,13 @@ export const journalRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "获取日志统计失败",
+          message: "获取日记统计失败",
           cause: error,
         });
       }
     }),
 
-  // 获取日志时间线
+  // 获取日记时间线
   getTimeline: protectedProcedure
     .input(getJournalTimelineSchema)
     .query(async ({ ctx, input }) => {
@@ -467,7 +477,7 @@ export const journalRouter = createTRPCRouter({
           wordCount: journal.content.length,
         }));
 
-        // 生成日历数据（显示哪些日期有日志）
+        // 生成日历数据（显示哪些日期有日记）
         const calendar: Record<string, boolean> = {};
         journals.forEach((journal) => {
           const dateKey = journal.date.toISOString().split("T")[0];
@@ -486,13 +496,13 @@ export const journalRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "获取日志时间线失败",
+          message: "获取日记时间线失败",
           cause: error,
         });
       }
     }),
 
-  // 获取最近的日志
+  // 获取最近的日记
   getRecent: protectedProcedure
     .input(
       z.object({
@@ -525,13 +535,13 @@ export const journalRouter = createTRPCRouter({
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "获取最近日志失败",
+          message: "获取最近日记失败",
           cause: error,
         });
       }
     }),
 
-  // 获取日志模板使用统计
+  // 获取日记模板使用统计
   getTemplateStats: protectedProcedure.query(async ({ ctx }) => {
     try {
       const templateStats = await ctx.db.journal.groupBy({
@@ -640,7 +650,7 @@ export const journalRouter = createTRPCRouter({
       }
     }),
 
-  // 批量删除日志
+  // 批量删除日记
   batchDelete: protectedProcedure
     .input(
       z.object({
@@ -651,7 +661,7 @@ export const journalRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        // 验证所有日志的所有权
+        // 验证所有日记的所有权
         const journals = await ctx.db.journal.findMany({
           where: {
             id: { in: input.journalIds },
@@ -663,7 +673,7 @@ export const journalRouter = createTRPCRouter({
         if (journals.length !== input.journalIds.length) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "部分日志不存在或无权限操作",
+            message: "部分日记不存在或无权限操作",
           });
         }
 
@@ -682,7 +692,7 @@ export const journalRouter = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "批量删除日志失败",
+          message: "批量删除日记失败",
           cause: error,
         });
       }

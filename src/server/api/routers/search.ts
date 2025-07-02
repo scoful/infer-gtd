@@ -325,7 +325,7 @@ export const searchRouter = createTRPCRouter({
           results.totalCount += projects.length;
         }
 
-        // 搜索日志
+        // 搜索日记
         if (searchIn.includes("journals")) {
           const journalWhere: any = {
             createdById: ctx.session.user.id,

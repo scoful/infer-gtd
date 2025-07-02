@@ -120,7 +120,7 @@ const Home: NextPage = () => {
       color: "bg-purple-500 hover:bg-purple-600",
     },
     {
-      name: "写日志",
+      name: "写日记",
       href: "/journal/today",
       icon: BookOpenIcon,
       description: "今日反思记录",
@@ -446,18 +446,18 @@ const Home: NextPage = () => {
               </div>
             </div>
 
-            {/* 最近日志 */}
+            {/* 最近日记 */}
             <div className="rounded-lg bg-white shadow">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="mb-4 text-lg font-medium text-gray-900">
-                  最近日志
+                  最近日记
                 </h3>
                 <QueryLoading
                   isLoading={isLoadingJournals}
                   error={journalsError}
-                  loadingMessage="加载日志中..."
+                  loadingMessage="加载日记中..."
                   loadingComponent={
-                    <SectionLoading size="sm" message="加载日志中..." />
+                    <SectionLoading size="sm" message="加载日记中..." />
                   }
                 >
                   {recentJournals && recentJournals.length > 0 ? (
@@ -474,7 +474,7 @@ const Home: NextPage = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">暂无日志</p>
+                    <p className="text-sm text-gray-500">暂无日记</p>
                   )}
                 </QueryLoading>
                 <div className="mt-4">
@@ -482,7 +482,7 @@ const Home: NextPage = () => {
                     href="/journal"
                     className="text-sm font-medium text-blue-600 hover:text-blue-500"
                   >
-                    查看所有日志 →
+                    查看所有日记 →
                   </Link>
                 </div>
               </div>

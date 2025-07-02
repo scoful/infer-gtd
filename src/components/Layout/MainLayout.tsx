@@ -19,6 +19,7 @@ import {
   LightBulbIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
+  PlusIcon,
   Squares2X2Icon,
   TagIcon,
   UserCircleIcon,
@@ -99,10 +100,30 @@ const navigation: NavigationItem[] = [
     description: "知识管理和文档",
   },
   {
-    name: "日志",
+    name: "日记",
     href: "/journal",
     icon: BookOpenIcon,
     description: "每日反思和记录",
+    children: [
+      {
+        name: "日记首页",
+        href: "/journal",
+        icon: BookOpenIcon,
+        description: "日期导航和浏览",
+      },
+      {
+        name: "日记列表",
+        href: "/journal/list",
+        icon: ListBulletIcon,
+        description: "管理所有日记",
+      },
+      {
+        name: "今日日记",
+        href: "/journal/today",
+        icon: PlusIcon,
+        description: "写今日日记",
+      },
+    ],
   },
   {
     name: "搜索",
@@ -143,6 +164,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
       if (window.location.pathname.startsWith("/tasks")) {
         initialExpanded.add("任务管理");
       }
+      if (window.location.pathname.startsWith("/journal")) {
+        initialExpanded.add("日记");
+      }
       if (
         window.location.pathname.startsWith("/analytics") ||
         window.location.pathname.startsWith("/review")
@@ -163,6 +187,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     if (router.pathname.startsWith("/tasks")) {
       setExpandedItems((prev) => new Set(prev).add("任务管理"));
+    }
+    if (router.pathname.startsWith("/journal")) {
+      setExpandedItems((prev) => new Set(prev).add("日记"));
     }
     if (
       router.pathname.startsWith("/analytics") ||
@@ -214,6 +241,25 @@ export default function MainLayout({ children }: MainLayoutProps) {
         router.pathname === "/tags" || router.pathname.startsWith("/tags/")
       );
     }
+    if (href === "/journal") {
+      return router.pathname === "/journal"; // 只匹配精确路径
+    }
+    if (href === "/journal/list") {
+      return router.pathname === "/journal/list";
+    }
+    if (href === "/journal/today") {
+      return router.pathname === "/journal/today";
+    }
+    if (href === "/notes") {
+      return (
+        router.pathname === "/notes" || router.pathname.startsWith("/notes/")
+      );
+    }
+    if (href === "/search") {
+      return (
+        router.pathname === "/search" || router.pathname.startsWith("/search/")
+      );
+    }
     if (href === "/analytics") {
       return router.pathname === "/analytics";
     }
@@ -227,6 +273,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const isParentActive = (item: NavigationItem) => {
     if (item.name === "任务管理") {
       return router.pathname.startsWith("/tasks");
+    }
+    if (item.name === "日记") {
+      return router.pathname.startsWith("/journal");
     }
     if (item.name === "统计分析") {
       return (
