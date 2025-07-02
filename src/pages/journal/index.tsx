@@ -111,8 +111,13 @@ const JournalPage: NextPage = () => {
       return;
     }
 
-    // 跳转到新建日记页面（来自首页）
-    void router.push("/journal/new?from=index");
+    // 如果当前日期已有日记，跳转到编辑页面
+    if (currentJournal) {
+      void router.push(`/journal/${currentJournal.id}?edit=true`);
+    } else {
+      // 如果当前日期没有日记，跳转到新建日记页面
+      void router.push("/journal/new?from=index");
+    }
   };
 
 
@@ -209,7 +214,7 @@ const JournalPage: NextPage = () => {
                   onClick={handleEdit}
                   className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  编辑
+                  {currentJournal ? "编辑" : "创建"}
                 </button>
               </div>
 

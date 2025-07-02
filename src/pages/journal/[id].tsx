@@ -1,7 +1,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -22,10 +22,17 @@ import { useConfirm } from "@/hooks/useConfirm";
 
 const JournalDetailPage: NextPage = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, edit } = router.query;
   const { showSuccess, showError } = useGlobalNotifications();
   const { showConfirm, confirmState, hideConfirm } = useConfirm();
   const [isEditing, setIsEditing] = useState(false);
+
+  // 检查 URL 参数，如果有 edit=true 则直接进入编辑模式
+  useEffect(() => {
+    if (edit === 'true') {
+      setIsEditing(true);
+    }
+  }, [edit]);
 
   // 获取日记详情
   const {
@@ -62,10 +69,14 @@ const JournalDetailPage: NextPage = () => {
   const handleSave = () => {
     setIsEditing(false);
     void refetch();
+    // 清除 URL 中的 edit 参数
+    void router.replace(`/journal/${id}`, undefined, { shallow: true });
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
+    // 清除 URL 中的 edit 参数
+    void router.replace(`/journal/${id}`, undefined, { shallow: true });
   };
 
   const handleDelete = async () => {
