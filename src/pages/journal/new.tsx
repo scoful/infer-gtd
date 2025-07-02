@@ -202,27 +202,29 @@ const NewJournalPage: NextPage = () => {
           <meta name="description" content="创建今日日记" />
         </Head>
 
-        <div className="mx-auto max-w-4xl px-4 py-8">
-          {/* 页面标题 */}
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="space-y-6">
+          {/* 头部 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <button
                 onClick={handleBack}
-                className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+                className="mr-4 rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               >
-                <ArrowLeftIcon className="mr-1 h-4 w-4" />
-                返回
+                <ArrowLeftIcon className="h-5 w-5" />
               </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">新建日记</h1>
-                <div className="flex items-center text-sm text-gray-500">
-                  <CalendarIcon className="mr-1 h-4 w-4" />
-                  {today.toLocaleDateString("zh-CN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    weekday: "long",
-                  })}
+              <div className="flex items-center">
+                <BookOpenIcon className="mr-2 h-6 w-6 text-orange-600" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">新建日记</h1>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <CalendarIcon className="mr-1 h-4 w-4" />
+                    {today.toLocaleDateString("zh-CN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      weekday: "long",
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
@@ -233,48 +235,31 @@ const NewJournalPage: NextPage = () => {
             <div className="rounded-lg bg-white shadow">
               <div className="px-6 py-4">
                 {/* 工具栏 */}
-                <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
-                  <div className="flex items-center space-x-2">
-                    {/* 模板按钮 */}
-                    {formData.content.trim() === "" && (
-                      <button
-                        type="button"
-                        onClick={() => applyTemplate(defaultTemplate)}
-                        className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        <BookOpenIcon className="mr-1 h-4 w-4" />
-                        使用模板
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2">
+                {formData.content.trim() === "" && (
+                  <div className="mb-6 border-b border-gray-200 pb-4">
                     <button
                       type="button"
-                      onClick={handleBack}
-                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      onClick={() => applyTemplate(defaultTemplate)}
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
-                      取消
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !formData.content.trim()}
-                      className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isSubmitting ? "保存中..." : "保存日记"}
+                      <BookOpenIcon className="mr-1 h-4 w-4" />
+                      使用模板
                     </button>
                   </div>
-                </div>
+                )}
 
                 {/* 日记内容 */}
-                <div>
+                <div className="mb-6">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    日记内容 *
+                  </label>
                   <MarkdownEditor
                     value={formData.content}
                     onChange={(content) =>
                       setFormData({ ...formData, content })
                     }
                     placeholder="开始写今天的日记..."
-                    height={500}
+                    height={400}
                     preview="live"
                     enableJetBrainsShortcuts={true}
                     autoSave={true}
@@ -282,6 +267,34 @@ const NewJournalPage: NextPage = () => {
                     onAutoSave={handleAutoSave}
                   />
                 </div>
+              </div>
+
+              {/* 底部按钮 */}
+              <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !formData.content.trim()}
+                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                      保存中...
+                    </>
+                  ) : (
+                    <>
+                      <BookOpenIcon className="mr-2 h-4 w-4" />
+                      保存日记
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </form>
