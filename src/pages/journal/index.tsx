@@ -19,11 +19,13 @@ import { usePageRefresh } from "@/hooks/usePageRefresh";
 const JournalPage: NextPage = () => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
 
   // 获取当前日期的日记
   const {
     data: currentJournal,
     isLoading,
+    isFetching: isFetchingCurrentJournal,
     refetch: refetchCurrentJournal,
   } = api.journal.getByDate.useQuery(
     { date: currentDate },
@@ -37,6 +39,7 @@ const JournalPage: NextPage = () => {
   // 获取最近的日记列表（用于显示有日记的日期）
   const {
     data: recentJournals,
+    isFetching: isFetchingRecentJournals,
     refetch: refetchRecentJournals
   } = api.journal.getRecent.useQuery(
     { limit: 30 },
@@ -59,10 +62,30 @@ const JournalPage: NextPage = () => {
     }) || []
   );
 
+  // 计算刷新状态
+  const isFetching = isFetchingCurrentJournal || isFetchingRecentJournals;
+  const isRealInitialLoading = isLoading;
+  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
+
+  // 监听查询状态变化，在刷新完成后重置标志
+  useEffect(() => {
+    if (isManualRefreshing && !isFetching) {
+      setIsManualRefreshing(false);
+    }
+  }, [isManualRefreshing, isFetching]);
+
+  // 刷新所有数据
+  const refetchAll = async () => {
+    setIsManualRefreshing(true); // 标记为手动刷新
+    await Promise.all([
+      refetchCurrentJournal(),
+      refetchRecentJournals(),
+    ]);
+  };
+
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void refetchCurrentJournal();
-    void refetchRecentJournals();
+    void refetchAll();
   }, [refetchCurrentJournal, refetchRecentJournals]);
 
   // 监听路由变化，当返回到日记首页时刷新数据
@@ -120,7 +143,15 @@ const JournalPage: NextPage = () => {
           {/* 页面标题和快速操作 */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">日记</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">日记</h1>
+                {isDataRefreshing && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    刷新中...
+                  </div>
+                )}
+              </div>
               <p className="mt-1 text-sm text-gray-600">每日反思和记录</p>
             </div>
 
