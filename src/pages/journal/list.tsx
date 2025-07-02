@@ -45,6 +45,8 @@ const JournalListPage: NextPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedJournals, setSelectedJournals] = useState<Set<string>>(new Set());
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
+  const [isSearching, setIsSearching] = useState(false); // 搜索操作
 
   // 筛选状态
   const [startDate, setStartDate] = useState<string>("");
@@ -111,9 +113,27 @@ const JournalListPage: NextPage = () => {
     },
   });
 
+  // 计算刷新状态
+  const isRealInitialLoading = isLoading;
+  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing && !isSearching;
+
+  // 监听查询状态变化，在刷新完成后重置标志
+  useEffect(() => {
+    if ((isManualRefreshing || isSearching) && !isFetching) {
+      setIsManualRefreshing(false);
+      setIsSearching(false);
+    }
+  }, [isManualRefreshing, isSearching, isFetching]);
+
+  // 刷新所有数据
+  const refetchAll = async () => {
+    setIsManualRefreshing(true); // 标记为手动刷新
+    await refetch();
+  };
+
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void refetch();
+    void refetchAll();
   }, [refetch]);
 
   // 处理数据
@@ -123,6 +143,7 @@ const JournalListPage: NextPage = () => {
   // 处理搜索
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSearching(true); // 标记为搜索操作
     void refetch();
   };
 
@@ -221,7 +242,15 @@ const JournalListPage: NextPage = () => {
           {/* 页面标题和操作 */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">日记列表</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">日记列表</h1>
+                {isDataRefreshing && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    刷新中...
+                  </div>
+                )}
+              </div>
               <p className="mt-1 text-sm text-gray-600">
                 管理和浏览所有日记记录
               </p>
@@ -259,7 +288,7 @@ const JournalListPage: NextPage = () => {
                     disabled={isFetching}
                     className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isFetching ? (
+                    {isSearching ? (
                       <>
                         <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                         搜索中...
