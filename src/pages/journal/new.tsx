@@ -2,7 +2,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeftIcon,
   BookOpenIcon,
@@ -31,7 +31,14 @@ const NewJournalPage: NextPage = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const today = new Date();
+
+  // 使用 useMemo 缓存今天的日期，避免每次渲染都创建新的 Date 对象
+  const today = useMemo(() => {
+    const date = new Date();
+    // 重置时间为当天的开始，确保日期比较的一致性
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
 
   // 检查今天是否已有日记
   const { data: existingJournal } = api.journal.getByDate.useQuery(
