@@ -977,7 +977,7 @@ function getStatusColor(status: TaskStatus): string {
     [TaskStatus.IN_PROGRESS]: "bg-yellow-100 text-yellow-800",
     [TaskStatus.WAITING]: "bg-orange-100 text-orange-800",
     [TaskStatus.DONE]: "bg-green-100 text-green-800",
-    [TaskStatus.ARCHIVED]: "bg-gray-100 text-gray-800",
+    [TaskStatus.ARCHIVED]: "bg-orange-100 text-orange-700",
   };
   return colors[status];
 }

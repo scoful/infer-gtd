@@ -783,7 +783,7 @@ function NoteCard({
                   </span>
                 )}
                 {note.isArchived && (
-                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                  <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
                     <ArchiveBoxIcon className="mr-1 h-3 w-3" />
                     已归档
                   </span>
@@ -846,7 +846,11 @@ function NoteCard({
                 e.stopPropagation();
                 onArchive();
               }}
-              className="text-gray-400 hover:text-gray-600"
+              className={`${
+                note.isArchived
+                  ? "text-orange-500 hover:text-orange-600"
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
               title={note.isArchived ? "取消归档" : "归档笔记"}
             >
               <ArchiveBoxIcon className="h-5 w-5" />
@@ -965,9 +969,15 @@ function NoteCard({
                   setIsMenuOpen(false);
                   onArchive();
                 }}
-                className="flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className={`flex w-full items-center px-3 py-2 text-sm ${
+                  note.isArchived
+                    ? "text-orange-700 hover:bg-orange-50"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
               >
-                <ArchiveBoxIcon className="mr-2 h-4 w-4" />
+                <ArchiveBoxIcon className={`mr-2 h-4 w-4 ${
+                  note.isArchived ? "text-orange-500" : ""
+                }`} />
                 {note.isArchived ? "取消归档" : "归档"}
               </button>
               <button
@@ -1000,7 +1010,7 @@ function NoteCard({
               </span>
             )}
             {note.isArchived && (
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
                 已归档
               </span>
             )}
