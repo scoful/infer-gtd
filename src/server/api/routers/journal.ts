@@ -18,10 +18,21 @@ export const journalRouter = createTRPCRouter({
     .input(createJournalSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // 检查该日期是否已有日记
+        // 标准化日期为当天的开始时间，确保一致性
+        const normalizedDate = new Date(input.date);
+        normalizedDate.setHours(0, 0, 0, 0);
+
+        // 检查该日期是否已有日记（使用日期范围查询）
+        const startOfDay = new Date(normalizedDate);
+        const endOfDay = new Date(normalizedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
         const existingJournal = await ctx.db.journal.findFirst({
           where: {
-            date: input.date,
+            date: {
+              gte: startOfDay,
+              lte: endOfDay,
+            },
             createdById: ctx.session.user.id,
           },
         });
@@ -37,6 +48,7 @@ export const journalRouter = createTRPCRouter({
         const journal = await ctx.db.journal.create({
           data: {
             ...input,
+            date: normalizedDate, // 使用标准化的日期
             createdById: ctx.session.user.id,
           },
         });
@@ -59,9 +71,19 @@ export const journalRouter = createTRPCRouter({
     .input(getJournalByDateSchema)
     .query(async ({ ctx, input }) => {
       try {
+        // 将日期标准化为当天的开始和结束时间，避免时分秒差异导致的查询问题
+        const startOfDay = new Date(input.date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(input.date);
+        endOfDay.setHours(23, 59, 59, 999);
+
         const journal = await ctx.db.journal.findFirst({
           where: {
-            date: input.date,
+            date: {
+              gte: startOfDay,
+              lte: endOfDay,
+            },
             createdById: ctx.session.user.id,
           },
         });
@@ -263,11 +285,15 @@ export const journalRouter = createTRPCRouter({
     .input(createJournalSchema)
     .mutation(async ({ ctx, input }) => {
       try {
+        // 标准化日期为当天的开始时间，确保一致性
+        const normalizedDate = new Date(input.date);
+        normalizedDate.setHours(0, 0, 0, 0);
+
         // 使用 upsert 操作
         const journal = await ctx.db.journal.upsert({
           where: {
             date_createdById: {
-              date: input.date,
+              date: normalizedDate,
               createdById: ctx.session.user.id,
             },
           },
@@ -277,6 +303,7 @@ export const journalRouter = createTRPCRouter({
           },
           create: {
             ...input,
+            date: normalizedDate, // 使用标准化的日期
             createdById: ctx.session.user.id,
           },
         });
@@ -506,7 +533,7 @@ export const journalRouter = createTRPCRouter({
   getRecent: protectedProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(20).default(5),
+        limit: z.number().min(1).max(50).default(5),
       }),
     )
     .query(async ({ ctx, input }) => {

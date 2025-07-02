@@ -1,6 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
   BookOpenIcon,
@@ -26,25 +26,54 @@ const JournalPage: NextPage = () => {
   const {
     data: currentJournal,
     isLoading,
-    refetch,
-  } = api.journal.getByDate.useQuery({ date: currentDate });
+    refetch: refetchCurrentJournal,
+  } = api.journal.getByDate.useQuery(
+    { date: currentDate },
+    {
+      staleTime: 30 * 1000, // 30秒缓存
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    }
+  );
 
   // 获取最近的日记列表（用于显示有日记的日期）
-  const { data: recentJournals } = api.journal.getRecent.useQuery({
-    limit: 30,
-  });
+  const {
+    data: recentJournals,
+    refetch: refetchRecentJournals
+  } = api.journal.getRecent.useQuery(
+    { limit: 30 },
+    {
+      staleTime: 30 * 1000, // 30秒缓存
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+    }
+  );
 
   // 构建有日记的日期集合
   const hasJournalDates = new Set(
-    recentJournals?.map((journal) =>
-      new Date(journal.date).toISOString().split("T")[0]
-    ) || []
+    recentJournals?.map((journal) => {
+      // 使用本地时区的日期，避免 UTC 时区转换导致的日期偏移
+      const date = new Date(journal.date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }) || []
   );
 
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void refetch();
-  }, [refetch]);
+    void refetchCurrentJournal();
+    void refetchRecentJournals();
+  }, [refetchCurrentJournal, refetchRecentJournals]);
+
+  // 监听路由变化，当返回到日记首页时刷新数据
+  useEffect(() => {
+    if (router.isReady) {
+      void refetchCurrentJournal();
+      void refetchRecentJournals();
+    }
+  }, [router.isReady, router.asPath, refetchCurrentJournal, refetchRecentJournals]);
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
@@ -57,7 +86,8 @@ const JournalPage: NextPage = () => {
 
   const handleSave = () => {
     setIsEditing(false);
-    void refetch();
+    void refetchCurrentJournal();
+    void refetchRecentJournals();
   };
 
   const handleCancelEdit = () => {
@@ -135,8 +165,15 @@ const JournalPage: NextPage = () => {
                     <div className="flex items-center text-sm text-gray-500">
                       <ClockIcon className="mr-1 h-4 w-4" />
                       更新于{" "}
-                      {new Date(currentJournal.updatedAt).toLocaleDateString(
-                        "zh-CN"
+                      {new Date(currentJournal.updatedAt).toLocaleString(
+                        "zh-CN",
+                        {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
                       )}
                     </div>
                   )}

@@ -14,14 +14,17 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import MarkdownRenderer from "@/components/UI/MarkdownRenderer";
 import JournalEditor from "@/components/Journal/JournalEditor";
+import { ConfirmModal } from "@/components/UI";
 import { api } from "@/utils/api";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { useConfirm } from "@/hooks/useConfirm";
 
 const JournalDetailPage: NextPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const { showSuccess, showError } = useGlobalNotifications();
+  const { showConfirm, confirmState, hideConfirm } = useConfirm();
   const [isEditing, setIsEditing] = useState(false);
 
   // 获取日记详情
@@ -65,8 +68,16 @@ const JournalDetailPage: NextPage = () => {
     setIsEditing(false);
   };
 
-  const handleDelete = () => {
-    if (confirm("确定要删除这篇日记吗？此操作无法撤销。")) {
+  const handleDelete = async () => {
+    const confirmed = await showConfirm({
+      title: "删除日记",
+      message: "确定要删除这篇日记吗？此操作无法撤销。",
+      confirmText: "删除",
+      cancelText: "取消",
+      type: "danger",
+    });
+
+    if (confirmed) {
       deleteJournal.mutate({ id: id as string });
     }
   };
@@ -224,6 +235,19 @@ const JournalDetailPage: NextPage = () => {
             </div>
           </div>
         )}
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
+        />
       </MainLayout>
     </AuthGuard>
   );

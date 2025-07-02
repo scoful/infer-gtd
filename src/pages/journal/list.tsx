@@ -36,7 +36,7 @@ const JournalListPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const router = useRouter();
   const { showSuccess, showError } = useGlobalNotifications();
-  const { confirm } = useConfirm();
+  const { showConfirm, confirmState, hideConfirm, setLoading } = useConfirm();
 
   // 状态管理
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -171,7 +171,7 @@ const JournalListPage: NextPage = () => {
     const journal = journals.find((j) => j.id === journalId);
     if (!journal) return;
 
-    const confirmed = await confirm({
+    const confirmed = await showConfirm({
       title: "删除日记",
       message: `确定要删除 ${new Date(journal.date).toLocaleDateString("zh-CN")} 的日记吗？此操作无法撤销。`,
       confirmText: "删除",
@@ -188,7 +188,7 @@ const JournalListPage: NextPage = () => {
   const handleBatchDelete = async () => {
     if (selectedJournals.size === 0) return;
 
-    const confirmed = await confirm({
+    const confirmed = await showConfirm({
       title: "批量删除日记",
       message: `确定要删除选中的 ${selectedJournals.size} 篇日记吗？此操作无法撤销。`,
       confirmText: "删除",
@@ -528,6 +528,19 @@ const JournalListPage: NextPage = () => {
             )}
           </QueryLoading>
         </div>
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
+        />
       </MainLayout>
     </AuthGuard>
   );

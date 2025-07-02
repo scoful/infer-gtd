@@ -53,8 +53,12 @@ export default function DateNavigation({
 
   // 检查该日期是否有日记
   const hasJournal = (date: Date) => {
-    const dateKey = date.toISOString().split("T")[0];
-    return hasJournalDates.has(dateKey!);
+    // 使用本地时区的日期，避免 UTC 时区转换导致的日期偏移
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateKey = `${year}-${month}-${day}`;
+    return hasJournalDates.has(dateKey);
   };
 
   // 格式化日期显示

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import {
   DocumentTextIcon,
-  EyeIcon,
   CalendarIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
@@ -26,28 +25,41 @@ export default function JournalEditor({
   const { showSuccess, showError } = useGlobalNotifications();
   const [content, setContent] = useState("");
   const [template, setTemplate] = useState<string | undefined>();
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // 获取 tRPC utils 用于缓存失效
+  const utils = api.useUtils();
 
   // 获取指定日期的日记
   const { data: existingJournal, isLoading } = api.journal.getByDate.useQuery(
-    { date },
-    {
-      onSuccess: (data) => {
-        if (data) {
-          setContent(data.content);
-          setTemplate(data.template || undefined);
-          setHasUnsavedChanges(false);
-        }
-      },
-    }
+    { date }
   );
 
-  // 保存日记
+  // 监听日记数据变化，设置编辑器内容
+  useEffect(() => {
+    if (existingJournal) {
+      setContent(existingJournal.content);
+      setTemplate(existingJournal.template || undefined);
+      setHasUnsavedChanges(false);
+    } else {
+      // 如果没有现有日记，清空内容
+      setContent("");
+      setTemplate(undefined);
+      setHasUnsavedChanges(false);
+    }
+  }, [existingJournal]);
+
+  // 手动保存日记
   const saveJournal = api.journal.upsert.useMutation({
     onSuccess: (data) => {
       showSuccess("日记保存成功");
       setHasUnsavedChanges(false);
+
+      // 失效相关的查询缓存，确保其他页面能看到最新数据
+      void utils.journal.getByDate.invalidate({ date });
+      void utils.journal.getRecent.invalidate();
+      void utils.journal.getAll.invalidate();
+
       onSave?.(data);
     },
     onError: (error) => {
@@ -55,22 +67,22 @@ export default function JournalEditor({
     },
   });
 
-  // 自动保存逻辑
-  const autoSave = useCallback(() => {
-    if (content.trim() && hasUnsavedChanges) {
-      saveJournal.mutate({
-        date,
-        content: content.trim(),
-        template,
-      });
-    }
-  }, [content, hasUnsavedChanges, date, template, saveJournal]);
+  // 自动保存日记（用于 MarkdownEditor 的自动保存功能）
+  const autoSaveJournal = api.journal.upsert.useMutation({
+    onSuccess: () => {
+      setHasUnsavedChanges(false);
+      // 自动保存成功时不显示通知，避免干扰用户
 
-  // 设置自动保存定时器
-  useEffect(() => {
-    const timer = setTimeout(autoSave, 3000); // 3秒后自动保存
-    return () => clearTimeout(timer);
-  }, [autoSave]);
+      // 失效相关的查询缓存，确保其他页面能看到最新数据
+      void utils.journal.getByDate.invalidate({ date });
+      void utils.journal.getRecent.invalidate();
+      void utils.journal.getAll.invalidate();
+    },
+    onError: (error) => {
+      // 自动保存失败时也不显示错误通知，避免干扰用户
+      console.error("自动保存日记失败:", error);
+    },
+  });
 
   // 监听内容变化
   const handleContentChange = (newContent: string) => {
@@ -93,9 +105,11 @@ export default function JournalEditor({
   };
 
   // 取消编辑
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (hasUnsavedChanges) {
-      if (confirm("有未保存的更改，确定要离开吗？")) {
+      // 使用浏览器原生的 confirm，因为这是一个简单的确认对话框
+      // 而且 JournalEditor 组件通常在其他组件内部使用，不适合添加模态框
+      if (window.confirm("有未保存的更改，确定要离开吗？")) {
         onCancel?.();
       }
     } else {
@@ -172,18 +186,7 @@ export default function JournalEditor({
             </button>
           )}
 
-          {/* 预览切换 */}
-          <button
-            onClick={() => setIsPreviewMode(!isPreviewMode)}
-            className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ${
-              isPreviewMode
-                ? "bg-blue-100 text-blue-700"
-                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <EyeIcon className="mr-1 h-4 w-4" />
-            {isPreviewMode ? "编辑" : "预览"}
-          </button>
+
 
           {/* 保存按钮 */}
           <button
@@ -212,7 +215,29 @@ export default function JournalEditor({
           value={content}
           onChange={handleContentChange}
           placeholder="开始写今天的日记..."
-          previewMode={isPreviewMode}
+          height={400}
+          preview="live"
+          enableJetBrainsShortcuts={true}
+          autoSave={true}
+          autoSaveType="server"
+          autoSaveStatus={
+            autoSaveJournal.isPending
+              ? "saving"
+              : autoSaveJournal.isSuccess
+                ? "saved"
+                : "unsaved"
+          }
+          onAutoSave={(content) => {
+            // 自动保存到服务器
+            // 只检查是否有实际内容，但保留原始格式（包括换行）
+            if (!content.trim()) return;
+
+            autoSaveJournal.mutate({
+              date,
+              content: content, // 保留原始内容格式
+              template,
+            });
+          }}
           className="h-full"
         />
       </div>
