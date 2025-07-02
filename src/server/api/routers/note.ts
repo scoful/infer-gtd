@@ -152,38 +152,42 @@ export const noteRouter = createTRPCRouter({
           { [sortBy]: sortOrder },
         ];
 
-        const notes = await ctx.db.note.findMany({
-          where,
-          take: limit + 1,
-          cursor: cursor ? { id: cursor } : undefined,
-          orderBy,
-          include: {
-            project: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
+        // 并行获取笔记列表和总数
+        const [notes, totalCount] = await Promise.all([
+          ctx.db.note.findMany({
+            where,
+            take: limit + 1,
+            cursor: cursor ? { id: cursor } : undefined,
+            orderBy,
+            include: {
+              project: {
+                select: {
+                  id: true,
+                  name: true,
+                  color: true,
+                },
+              },
+              tags: {
+                include: {
+                  tag: true,
+                },
+              },
+              linkedTasks: {
+                select: {
+                  id: true,
+                  title: true,
+                  status: true,
+                },
+              },
+              _count: {
+                select: {
+                  linkedTasks: true,
+                },
               },
             },
-            tags: {
-              include: {
-                tag: true,
-              },
-            },
-            linkedTasks: {
-              select: {
-                id: true,
-                title: true,
-                status: true,
-              },
-            },
-            _count: {
-              select: {
-                linkedTasks: true,
-              },
-            },
-          },
-        });
+          }),
+          ctx.db.note.count({ where }),
+        ]);
 
         let nextCursor: typeof cursor | undefined = undefined;
         if (notes.length > limit) {
@@ -194,6 +198,7 @@ export const noteRouter = createTRPCRouter({
         return {
           notes,
           nextCursor,
+          totalCount,
         };
       } catch (error) {
         throw new TRPCError({

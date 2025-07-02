@@ -68,7 +68,7 @@ const NotesPage: NextPage = () => {
       includeArchived,
       sortBy,
       sortOrder,
-      limit: 50,
+      limit: 20, // 每页显示20条笔记
     }),
     [
       searchQuery,
@@ -80,17 +80,21 @@ const NotesPage: NextPage = () => {
     ],
   );
 
-  // 获取笔记数据
+  // 获取笔记数据 - 使用无限查询支持分页
   const {
     data: notesData,
     isLoading,
     isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
-  } = api.note.getAll.useQuery(queryParams, {
+  } = api.note.getAll.useInfiniteQuery(queryParams, {
     enabled: !!sessionData,
     staleTime: 30 * 1000, // 30秒缓存
     refetchOnWindowFocus: true,
     refetchOnMount: true,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
   // 获取项目数据用于筛选
@@ -169,6 +173,12 @@ const NotesPage: NextPage = () => {
     void refetch();
   }, [refetch]);
 
+  // 笔记数据处理 - 合并所有页面的数据
+  const notes = notesData?.pages.flatMap((page) => page.notes) ?? [];
+  const hasMorePages = hasNextPage;
+  // 获取总数（从第一页获取，因为总数在所有页面都是一样的）
+  const totalCount = notesData?.pages[0]?.totalCount ?? 0;
+
   // 处理搜索
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -185,8 +195,6 @@ const NotesPage: NextPage = () => {
   // 检查是否有活跃的筛选条件
   const hasActiveFilters =
     searchQuery || selectedProject || selectedTag || includeArchived;
-
-  const notes = notesData?.notes ?? [];
 
   // 处理新建笔记
   const handleCreateNote = () => {
@@ -539,8 +547,8 @@ const NotesPage: NextPage = () => {
                       onChange={handleSelectAll}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">
-                      全选 ({notes.length} 篇笔记)
+                    <span className="ml-2 text-sm text-gray-700">
+                      全选 ({notes.length}/{totalCount} 篇笔记)
                     </span>
                   </label>
 
@@ -573,6 +581,28 @@ const NotesPage: NextPage = () => {
                     />
                   ))}
                 </div>
+
+                {/* 加载更多 */}
+                {hasMorePages && (
+                  <div className="py-4 text-center">
+                    <button
+                      onClick={() => {
+                        void fetchNextPage();
+                      }}
+                      disabled={isFetchingNextPage}
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isFetchingNextPage ? (
+                        <>
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-600 border-t-transparent"></div>
+                          加载中...
+                        </>
+                      ) : (
+                        "加载更多"
+                      )}
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <div className="rounded-lg border border-gray-200 bg-white py-12 text-center">

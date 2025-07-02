@@ -30,7 +30,7 @@ export const getNotesSchema = z.object({
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagId: z.string().cuid("无效的标签ID").optional(),
   includeArchived: z.boolean().default(false),
-  limit: z.number().min(1).max(100).default(50),
+  limit: z.number().min(1).max(100).default(20),
   cursor: z.string().cuid().optional(),
   search: z.string().max(100).optional(),
   sortBy: z.enum(["createdAt", "updatedAt", "title"]).default("updatedAt"),
