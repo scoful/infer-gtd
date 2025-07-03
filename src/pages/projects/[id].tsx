@@ -25,7 +25,7 @@ import { QueryLoading, SectionLoading, ConfirmModal } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { useConfirm } from "@/hooks/useConfirm";
-import { ProjectModal } from "@/components/Projects";
+import { ProjectModal, ProjectTaskList, ProjectNoteList } from "@/components/Projects";
 import TaskModal from "@/components/Tasks/TaskModal";
 
 const ProjectDetailPage: NextPage = () => {
@@ -147,6 +147,10 @@ const ProjectDetailPage: NextPage = () => {
 
   const handleCreateTask = () => {
     setIsTaskModalOpen(true);
+  };
+
+  const handleCreateNote = () => {
+    void router.push(`/notes/new?projectId=${project?.id}`);
   };
 
   if (!projectId) {
@@ -427,37 +431,17 @@ const ProjectDetailPage: NextPage = () => {
                   )}
 
                   {activeTab === "tasks" && (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium text-gray-900">项目任务</h3>
-                        <button
-                          onClick={handleCreateTask}
-                          className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                        >
-                          <PlusIcon className="mr-2 h-4 w-4" />
-                          新建任务
-                        </button>
-                      </div>
-                      {/* 这里可以集成任务列表组件 */}
-                      <p className="text-gray-500">任务列表功能开发中...</p>
-                    </div>
+                    <ProjectTaskList
+                      projectId={project.id}
+                      onCreateTask={handleCreateTask}
+                    />
                   )}
 
                   {activeTab === "notes" && (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium text-gray-900">项目笔记</h3>
-                        <Link
-                          href={`/notes/new?projectId=${project.id}`}
-                          className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                        >
-                          <PlusIcon className="mr-2 h-4 w-4" />
-                          新建笔记
-                        </Link>
-                      </div>
-                      {/* 这里可以集成笔记列表组件 */}
-                      <p className="text-gray-500">笔记列表功能开发中...</p>
-                    </div>
+                    <ProjectNoteList
+                      projectId={project.id}
+                      onCreateNote={handleCreateNote}
+                    />
                   )}
                 </div>
 

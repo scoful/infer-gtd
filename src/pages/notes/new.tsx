@@ -48,6 +48,17 @@ const NewNotePage: NextPage = () => {
     },
   );
 
+  // 处理URL参数中的projectId
+  useEffect(() => {
+    if (router.isReady && router.query.projectId) {
+      const projectId = router.query.projectId as string;
+      setFormData((prev) => ({
+        ...prev,
+        projectId,
+      }));
+    }
+  }, [router.isReady, router.query.projectId]);
+
   // 恢复本地草稿
   useEffect(() => {
     const draftKey = "note-draft-new";
@@ -60,6 +71,8 @@ const NewNotePage: NextPage = () => {
           ...prev,
           ...draft,
           tagIds: draft.tagIds || [],
+          // 如果URL中有projectId参数，优先使用URL参数
+          projectId: router.query.projectId as string || draft.projectId,
         }));
         console.log("草稿恢复成功");
       } catch (error) {
@@ -67,7 +80,7 @@ const NewNotePage: NextPage = () => {
         localStorage.removeItem(draftKey);
       }
     }
-  }, []);
+  }, [router.query.projectId]);
 
   // 创建笔记
   const createNote = api.note.create.useMutation({
