@@ -249,10 +249,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname === "/journal/list";
     }
 
+    if (href === "/projects") {
+      return router.pathname === "/projects"; // 只匹配精确路径
+    }
     if (href === "/notes") {
-      return (
-        router.pathname === "/notes" || router.pathname.startsWith("/notes/")
-      );
+      return router.pathname === "/notes"; // 只匹配精确路径
     }
     if (href === "/search") {
       return (
@@ -324,6 +325,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
       event.preventDefault();
       // 触发当前页面的数据刷新
       refreshPage(href);
+    } else {
+      // 如果不是当前页面，执行跳转
+      event.preventDefault();
+      void router.push(href);
     }
 
     // 关闭移动端侧边栏

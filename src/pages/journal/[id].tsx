@@ -117,25 +117,30 @@ const JournalDetailPage: NextPage = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <AuthGuard>
-        <MainLayout>
+  return (
+    <AuthGuard>
+      <MainLayout>
+        <Head>
+          <title>
+            {journal ? (() => {
+              const d = new Date(journal.date);
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            })() : "日记详情"} 日记 | Infer GTD
+          </title>
+          <meta name="description" content="查看日记详情" />
+        </Head>
+
+        {isLoading ? (
           <div className="flex h-96 items-center justify-center">
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
               <p className="mt-2 text-sm text-gray-500">加载日记中...</p>
             </div>
           </div>
-        </MainLayout>
-      </AuthGuard>
-    );
-  }
-
-  if (!journal) {
-    return (
-      <AuthGuard>
-        <MainLayout>
+        ) : !journal ? (
           <div className="flex h-96 items-center justify-center">
             <div className="text-center">
               <h3 className="text-lg font-medium text-gray-900">
@@ -152,28 +157,7 @@ const JournalDetailPage: NextPage = () => {
               </button>
             </div>
           </div>
-        </MainLayout>
-      </AuthGuard>
-    );
-  }
-
-  return (
-    <AuthGuard>
-      <MainLayout>
-        <Head>
-          <title>
-            {(() => {
-              const d = new Date(journal.date);
-              const year = d.getFullYear();
-              const month = String(d.getMonth() + 1).padStart(2, '0');
-              const day = String(d.getDate()).padStart(2, '0');
-              return `${year}-${month}-${day}`;
-            })()} 日记 | Infer GTD
-          </title>
-          <meta name="description" content="查看日记详情" />
-        </Head>
-
-        {isEditing ? (
+        ) : isEditing ? (
           <div className="flex h-full flex-col">
             {/* 编辑模式标题 */}
             <div className="border-b border-gray-200 bg-white px-4 py-4">

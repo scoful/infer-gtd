@@ -143,13 +143,15 @@ const NoteDetailPage: NextPage = () => {
     });
   };
 
-  if (error) {
-    return (
-      <AuthGuard>
-        <MainLayout>
-          <Head>
-            <title>笔记不存在 | Infer GTD</title>
-          </Head>
+  return (
+    <AuthGuard>
+      <MainLayout>
+        <Head>
+          <title>{note?.title ?? "笔记详情"} | Infer GTD</title>
+          <meta name="description" content="笔记详情页面" />
+        </Head>
+
+        {error ? (
           <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
               <h1 className="mb-2 text-2xl font-bold text-gray-900">
@@ -167,25 +169,13 @@ const NoteDetailPage: NextPage = () => {
               </button>
             </div>
           </div>
-        </MainLayout>
-      </AuthGuard>
-    );
-  }
-
-  return (
-    <AuthGuard>
-      <MainLayout>
-        <Head>
-          <title>{note?.title ?? "笔记详情"} | Infer GTD</title>
-          <meta name="description" content="笔记详情页面" />
-        </Head>
-
-        <QueryLoading
-          isLoading={isLoading}
-          error={null}
-          loadingMessage="加载笔记详情中..."
-          loadingComponent={<SectionLoading message="加载笔记详情中..." />}
-        >
+        ) : (
+          <QueryLoading
+            isLoading={isLoading}
+            error={null}
+            loadingMessage="加载笔记详情中..."
+            loadingComponent={<SectionLoading message="加载笔记详情中..." />}
+          >
           {note && (
             <div className="space-y-6">
               {/* 页面头部 */}
@@ -348,6 +338,7 @@ const NoteDetailPage: NextPage = () => {
             </div>
           )}
         </QueryLoading>
+        )}
 
         {/* 编辑模态框 */}
         <NoteModal

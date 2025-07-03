@@ -17,6 +17,7 @@ import {
   FolderIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
+import { TaskStatus } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -27,6 +28,16 @@ import { useGlobalNotifications } from "@/components/Layout/NotificationProvider
 import { useConfirm } from "@/hooks/useConfirm";
 import { ProjectModal, ProjectTaskList, ProjectNoteList } from "@/components/Projects";
 import TaskModal from "@/components/Tasks/TaskModal";
+
+// 任务状态配置
+const TASK_STATUS_CONFIG = {
+  [TaskStatus.IDEA]: { label: "想法", color: "bg-gray-100 text-gray-800" },
+  [TaskStatus.TODO]: { label: "待办", color: "bg-blue-100 text-blue-800" },
+  [TaskStatus.IN_PROGRESS]: { label: "进行中", color: "bg-yellow-100 text-yellow-800" },
+  [TaskStatus.WAITING]: { label: "等待中", color: "bg-purple-100 text-purple-800" },
+  [TaskStatus.DONE]: { label: "已完成", color: "bg-green-100 text-green-800" },
+  [TaskStatus.ARCHIVED]: { label: "已归档", color: "bg-gray-100 text-gray-800" },
+};
 
 const ProjectDetailPage: NextPage = () => {
   const router = useRouter();
@@ -127,10 +138,46 @@ const ProjectDetailPage: NextPage = () => {
 
   const handleDeleteProject = async () => {
     if (!project) return;
-    
+
+    // 检查项目是否有关联内容
+    const taskCount = project._count?.tasks || 0;
+    const noteCount = project._count?.notes || 0;
+    const hasRelatedContent = taskCount > 0 || noteCount > 0;
+
+    let confirmMessage = `确定要删除项目 "${project.name}" 吗？此操作不可撤销。`;
+    let confirmTitle = "删除项目";
+
+    if (hasRelatedContent) {
+      confirmTitle = "无法删除项目";
+      confirmMessage = `项目 "${project.name}" 包含 ${taskCount} 个任务和 ${noteCount} 篇笔记。\n\n请先处理这些关联内容：\n• 删除或移动所有任务到其他项目\n• 删除或移动所有笔记到其他项目\n\n或者您可以选择归档项目作为替代方案。`;
+
+      const action = await showConfirm({
+        title: confirmTitle,
+        message: confirmMessage,
+        confirmText: "归档项目",
+        cancelText: "取消",
+        type: "warning",
+      });
+
+      if (action) {
+        // 用户选择归档项目
+        setLoading(true);
+        try {
+          await archiveProject.mutateAsync({
+            id: project.id,
+            isArchived: true,
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+      return;
+    }
+
+    // 项目没有关联内容，可以直接删除
     const confirmed = await showConfirm({
-      title: "删除项目",
-      message: `确定要删除项目 "${project.name}" 吗？此操作不可撤销。`,
+      title: confirmTitle,
+      message: confirmMessage,
       confirmText: "删除",
       type: "danger",
     });
@@ -153,11 +200,16 @@ const ProjectDetailPage: NextPage = () => {
     void router.push(`/notes/new?projectId=${project?.id}`);
   };
 
-  if (!projectId) {
-    return (
-      <AuthGuard>
-        <MainLayout>
-          <div className="container mx-auto px-4 py-8">
+  return (
+    <AuthGuard>
+      <MainLayout>
+        <Head>
+          <title>{project?.name || "项目详情"} | Smart GTD</title>
+          <meta name="description" content="查看项目详情和管理项目内容" />
+        </Head>
+
+        <div className="container mx-auto px-4 py-8">
+          {!projectId ? (
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-900">项目不存在</h1>
               <Link
@@ -168,27 +220,13 @@ const ProjectDetailPage: NextPage = () => {
                 返回项目列表
               </Link>
             </div>
-          </div>
-        </MainLayout>
-      </AuthGuard>
-    );
-  }
-
-  return (
-    <AuthGuard>
-      <MainLayout>
-        <Head>
-          <title>{project?.name || "项目详情"} | Smart GTD</title>
-          <meta name="description" content="查看项目详情和管理项目内容" />
-        </Head>
-
-        <div className="container mx-auto px-4 py-8">
-          <QueryLoading
-            isLoading={isLoading}
-            error={error}
-            loadingMessage="加载项目详情中..."
-            loadingComponent={<SectionLoading message="加载项目详情中..." />}
-          >
+          ) : (
+            <QueryLoading
+              isLoading={isLoading}
+              error={error}
+              loadingMessage="加载项目详情中..."
+              loadingComponent={<SectionLoading message="加载项目详情中..." />}
+            >
             {project && (
               <>
                 {/* 页面头部 */}
@@ -384,9 +422,14 @@ const ProjectDetailPage: NextPage = () => {
                               <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
                                   <h4 className="font-medium text-gray-900">{task.title}</h4>
-                                  <p className="text-sm text-gray-500">
-                                    状态: {task.status} | 创建于 {new Date(task.createdAt).toLocaleDateString()}
-                                  </p>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${TASK_STATUS_CONFIG[task.status as TaskStatus]?.color || "bg-gray-100 text-gray-800"}`}>
+                                      {TASK_STATUS_CONFIG[task.status as TaskStatus]?.label || task.status}
+                                    </span>
+                                    <span className="text-sm text-gray-500">
+                                      创建于 {new Date(task.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
                                 </div>
                                 <Link
                                   href={`/tasks?id=${task.id}`}
@@ -480,6 +523,7 @@ const ProjectDetailPage: NextPage = () => {
               </>
             )}
           </QueryLoading>
+          )}
         </div>
       </MainLayout>
     </AuthGuard>

@@ -67,7 +67,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
             <div className="min-w-0 flex-1">
               <button
                 onClick={onView}
-                className="text-left hover:text-blue-600"
+                className="text-left hover:text-blue-600 cursor-pointer"
               >
                 <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                   {project.name}
@@ -191,7 +191,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
           <div className="flex items-center space-x-2">
             <button
               onClick={onView}
-              className="text-left hover:text-blue-600"
+              className="text-left hover:text-blue-600 cursor-pointer"
             >
               <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                 {project.name}
@@ -390,9 +390,45 @@ const ProjectsPage: NextPage = () => {
   };
 
   const handleDeleteProject = async (project: any) => {
+    // 检查项目是否有关联内容
+    const taskCount = project._count?.tasks || 0;
+    const noteCount = project._count?.notes || 0;
+    const hasRelatedContent = taskCount > 0 || noteCount > 0;
+
+    let confirmMessage = `确定要删除项目 "${project.name}" 吗？此操作不可撤销。`;
+    let confirmTitle = "删除项目";
+
+    if (hasRelatedContent) {
+      confirmTitle = "无法删除项目";
+      confirmMessage = `项目 "${project.name}" 包含 ${taskCount} 个任务和 ${noteCount} 篇笔记。\n\n请先处理这些关联内容：\n• 删除或移动所有任务到其他项目\n• 删除或移动所有笔记到其他项目\n\n或者您可以选择归档项目作为替代方案。`;
+
+      const action = await showConfirm({
+        title: confirmTitle,
+        message: confirmMessage,
+        confirmText: "归档项目",
+        cancelText: "取消",
+        type: "warning",
+      });
+
+      if (action) {
+        // 用户选择归档项目
+        setLoading(true);
+        try {
+          await archiveProject.mutateAsync({
+            id: project.id,
+            isArchived: true,
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+      return;
+    }
+
+    // 项目没有关联内容，可以直接删除
     const confirmed = await showConfirm({
-      title: "删除项目",
-      message: `确定要删除项目 "${project.name}" 吗？此操作不可撤销。`,
+      title: confirmTitle,
+      message: confirmMessage,
       confirmText: "删除",
       type: "danger",
     });
