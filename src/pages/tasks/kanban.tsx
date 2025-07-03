@@ -1348,7 +1348,7 @@ const KanbanPage: NextPage = () => {
           )}
 
           {/* 页面标题和操作 */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
@@ -1577,7 +1577,7 @@ function KanbanColumn({
       {/* 列标题 */}
       <div className={`${column.headerColor} rounded-t-lg border-b px-4 py-3`}>
         <div>
-          <h3 className="text-sm font-medium text-gray-900">{column.title}</h3>
+          <h3 className="text-base font-medium text-gray-900">{column.title}</h3>
           <p className="text-xs text-gray-500">
             {totalTaskCount !== undefined
               ? `${tasks.length}/${totalTaskCount} 个任务`

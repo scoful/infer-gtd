@@ -350,16 +350,16 @@ const TagManagementPage: NextPage = () => {
         <div className="space-y-6">
           {/* 页面标题和统计 */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div>
+            <div>
+              <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">标签管理</h1>
+                {isFetching && !isLoading && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    刷新中...
+                  </div>
+                )}
               </div>
-              {isFetching && !isLoading && (
-                <div className="flex items-center text-sm text-blue-600">
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                  刷新中...
-                </div>
-              )}
             </div>
 
             {/* 统计信息 */}

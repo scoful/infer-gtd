@@ -204,15 +204,17 @@ const SearchPage: NextPage = () => {
 
         <div className="space-y-6">
           {/* 页面标题 */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">高级搜索</h1>
-              {isFetching && !isLoading && (
-                <div className="flex items-center text-sm text-blue-600">
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                  刷新中...
-                </div>
-              )}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">高级搜索</h1>
+                {isFetching && !isLoading && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    刷新中...
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -326,7 +328,7 @@ const SearchPage: NextPage = () => {
                         void refetch();
                       }}
                     >
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="text-base font-medium text-gray-900">
                         {search.name}
                       </h4>
                       {search.description && (
@@ -813,7 +815,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{task.title}</h4>
+                    <h4 className="text-base font-medium text-gray-900">{task.title}</h4>
                     {task.description && (
                       <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                         {task.description}
@@ -866,7 +868,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 key={note.id}
                 className="rounded-lg border border-gray-200 p-4"
               >
-                <h4 className="font-medium text-gray-900">{note.title}</h4>
+                <h4 className="text-base font-medium text-gray-900">{note.title}</h4>
                 <p className="mt-1 line-clamp-3 text-sm text-gray-600">
                   {note.content}
                 </p>
@@ -900,7 +902,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 key={project.id}
                 className="rounded-lg border border-gray-200 p-4"
               >
-                <h4 className="font-medium text-gray-900">{project.name}</h4>
+                <h4 className="text-base font-medium text-gray-900">{project.name}</h4>
                 {project.description && (
                   <p className="mt-1 text-sm text-gray-600">
                     {project.description}
@@ -932,7 +934,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 key={journal.id}
                 className="rounded-lg border border-gray-200 p-4"
               >
-                <h4 className="font-medium text-gray-900">
+                <h4 className="text-base font-medium text-gray-900">
                   {new Date(journal.date).toLocaleDateString("zh-CN")}
                 </h4>
                 <p className="mt-1 line-clamp-3 text-sm text-gray-600">

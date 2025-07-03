@@ -143,7 +143,7 @@ const Home: NextPage = () => {
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* 欢迎区域 */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">

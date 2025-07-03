@@ -460,11 +460,11 @@ const ProjectsPage: NextPage = () => {
           <meta name="description" content="管理您的项目和工作领域" />
         </Head>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
           {/* 页面标题和操作 */}
-          <div className="mb-8 flex flex-col items-start justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">项目管理</h1>
+              <h1 className="text-2xl font-bold text-gray-900">项目管理</h1>
               <p className="mt-2 text-gray-600">
                 管理您的项目和工作领域，跟踪进度和成果
               </p>

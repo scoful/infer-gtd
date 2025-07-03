@@ -139,19 +139,21 @@ const StreamPage: NextPage = () => {
 
         <div className="space-y-6">
           {/* 页面标题 */}
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">思绪流</h1>
-              {isFetching && !isLoading && (
-                <div className="flex items-center text-sm text-blue-600">
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                  刷新中...
-                </div>
-              )}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">思绪流</h1>
+                {isFetching && !isLoading && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    刷新中...
+                  </div>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                快速捕捉灵感，随时记录想法，轻松转换为可执行任务
+              </p>
             </div>
-            <p className="mt-1 text-sm text-gray-500">
-              快速捕捉灵感，随时记录想法，轻松转换为可执行任务
-            </p>
           </div>
 
           {/* 快速添加想法 */}
@@ -264,7 +266,7 @@ const StreamPage: NextPage = () => {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="mb-2 text-sm font-medium text-gray-900">
+                          <h4 className="mb-2 text-base font-medium text-gray-900">
                             {idea.title}
                           </h4>
                           {idea.description && (

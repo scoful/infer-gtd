@@ -317,7 +317,7 @@ const NoteDetailPage: NextPage = () => {
                         className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
                       >
                         <div>
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="text-base font-medium text-gray-900">
                             {task.title}
                           </h4>
                           <p className="text-sm text-gray-500">

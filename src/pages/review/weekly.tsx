@@ -250,7 +250,7 @@ const WeeklyReviewPage: NextPage = () => {
 
         <div className="space-y-6">
           {/* 页面标题和周导航 */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">每周回顾</h1>
@@ -550,7 +550,7 @@ const WeeklyReviewPage: NextPage = () => {
                     >
                       <div className="mb-2 flex items-center justify-between">
                         <div className="flex-1">
-                          <h4 className="text-sm font-medium text-gray-900">
+                          <h4 className="text-base font-medium text-gray-900">
                             {task.title}
                           </h4>
                           {task.description && (

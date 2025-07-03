@@ -208,7 +208,7 @@ const ProjectDetailPage: NextPage = () => {
           <meta name="description" content="查看项目详情和管理项目内容" />
         </Head>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
           {!projectId ? (
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-900">项目不存在</h1>
@@ -255,7 +255,7 @@ const ProjectDetailPage: NextPage = () => {
                       
                       <div>
                         <div className="flex items-center space-x-2">
-                          <h1 className="text-3xl font-bold text-gray-900">
+                          <h1 className="text-2xl font-bold text-gray-900">
                             {project.name}
                           </h1>
                           {project.isArchived && (
@@ -421,7 +421,7 @@ const ProjectDetailPage: NextPage = () => {
                             {project.tasks.slice(0, 5).map((task) => (
                               <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
-                                  <h4 className="font-medium text-gray-900">{task.title}</h4>
+                                  <h4 className="text-base font-medium text-gray-900">{task.title}</h4>
                                   <div className="flex items-center space-x-2 mt-1">
                                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${TASK_STATUS_CONFIG[task.status as TaskStatus]?.color || "bg-gray-100 text-gray-800"}`}>
                                       {TASK_STATUS_CONFIG[task.status as TaskStatus]?.label || task.status}
@@ -452,7 +452,7 @@ const ProjectDetailPage: NextPage = () => {
                             {project.notes.slice(0, 5).map((note) => (
                               <div key={note.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
-                                  <h4 className="font-medium text-gray-900">{note.title}</h4>
+                                  <h4 className="text-base font-medium text-gray-900">{note.title}</h4>
                                   <p className="text-sm text-gray-500">
                                     更新于 {new Date(note.updatedAt).toLocaleDateString()}
                                   </p>
