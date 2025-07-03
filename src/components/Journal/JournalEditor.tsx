@@ -124,7 +124,12 @@ export default function JournalEditor({
   };
 
   // 默认模板
-  const defaultTemplate = `# ${date.toLocaleDateString("zh-CN")} 日记
+  const defaultTemplate = `# ${(() => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })()} 日记
 
 ## 今日完成
 - 
@@ -159,12 +164,12 @@ export default function JournalEditor({
         <div className="flex items-center space-x-4">
           <div className="flex items-center text-sm text-gray-600">
             <CalendarIcon className="mr-1 h-4 w-4" />
-            {date.toLocaleDateString("zh-CN", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              weekday: "long",
-            })}
+            {(() => {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            })()}
           </div>
           {hasUnsavedChanges && (
             <div className="flex items-center text-sm text-orange-600">

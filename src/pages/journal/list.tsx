@@ -625,12 +625,11 @@ function JournalCard({
   }, []);
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "long",
-    });
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const getPreview = () => {
@@ -679,7 +678,13 @@ function JournalCard({
                 </span>
                 <span className="flex items-center">
                   <ClockIcon className="mr-1 h-3 w-3" />
-                  {new Date(journal.updatedAt).toLocaleDateString("zh-CN")}
+                  {(() => {
+                    const d = new Date(journal.updatedAt);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  })()}
                 </span>
               </div>
             </div>
@@ -797,7 +802,13 @@ function JournalCard({
           </span>
           <span className="flex items-center">
             <ClockIcon className="mr-1 h-3 w-3" />
-            {new Date(journal.updatedAt).toLocaleDateString("zh-CN")}
+            {(() => {
+              const d = new Date(journal.updatedAt);
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            })()}
           </span>
         </div>
       </div>

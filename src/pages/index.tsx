@@ -471,7 +471,13 @@ const Home: NextPage = () => {
                       {recentJournals.slice(0, 3).map((journal) => (
                         <div key={journal.id}>
                           <p className="text-sm font-medium text-gray-900">
-                            {new Date(journal.date).toLocaleDateString("zh-CN")}
+                            {(() => {
+                              const d = new Date(journal.date);
+                              const year = d.getFullYear();
+                              const month = String(d.getMonth() + 1).padStart(2, '0');
+                              const day = String(d.getDate()).padStart(2, '0');
+                              return `${year}-${month}-${day}`;
+                            })()}
                           </p>
                           <p className="truncate text-sm text-gray-500">
                             {journal.preview}

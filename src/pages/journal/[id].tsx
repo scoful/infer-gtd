@@ -162,8 +162,13 @@ const JournalDetailPage: NextPage = () => {
       <MainLayout>
         <Head>
           <title>
-            {new Date(journal.date).toLocaleDateString("zh-CN")} 日记 | Infer
-            GTD
+            {(() => {
+              const d = new Date(journal.date);
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            })()} 日记 | Infer GTD
           </title>
           <meta name="description" content="查看日记详情" />
         </Head>
@@ -211,26 +216,37 @@ const JournalDetailPage: NextPage = () => {
                 </button>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {new Date(journal.date).toLocaleDateString("zh-CN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      weekday: "long",
-                    })}
+                    {(() => {
+                      const d = new Date(journal.date);
+                      const year = d.getFullYear();
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const day = String(d.getDate()).padStart(2, '0');
+                      return `${year}-${month}-${day}`;
+                    })()}
                   </h1>
                   <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
                     <div className="flex items-center">
                       <CalendarIcon className="mr-1 h-4 w-4" />
                       创建于{" "}
-                      {new Date(journal.createdAt).toLocaleDateString("zh-CN")}
+                      {(() => {
+                        const d = new Date(journal.createdAt);
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                      })()}
                     </div>
                     {journal.updatedAt !== journal.createdAt && (
                       <div className="flex items-center">
                         <ClockIcon className="mr-1 h-4 w-4" />
                         更新于{" "}
-                        {new Date(journal.updatedAt).toLocaleDateString(
-                          "zh-CN"
-                        )}
+                        {(() => {
+                          const d = new Date(journal.updatedAt);
+                          const year = d.getFullYear();
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const day = String(d.getDate()).padStart(2, '0');
+                          return `${year}-${month}-${day}`;
+                        })()}
                       </div>
                     )}
                   </div>

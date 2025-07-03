@@ -168,7 +168,12 @@ const NewJournalPage: NextPage = () => {
   };
 
   // 默认模板
-  const defaultTemplate = `# ${today.toLocaleDateString("zh-CN")} 日记
+  const defaultTemplate = `# ${(() => {
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })()} 日记
 
 ## 今日完成
 - 
