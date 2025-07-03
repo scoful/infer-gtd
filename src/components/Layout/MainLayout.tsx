@@ -15,6 +15,7 @@ import {
   ChevronUpIcon,
   ClockIcon,
   DocumentTextIcon,
+  FolderIcon,
   HomeIcon,
   LightBulbIcon,
   ListBulletIcon,
@@ -86,6 +87,12 @@ const navigation: NavigationItem[] = [
         description: "可视化任务管理",
       },
     ],
+  },
+  {
+    name: "项目管理",
+    href: "/projects",
+    icon: FolderIcon,
+    description: "项目和工作领域管理",
   },
   {
     name: "标签管理",

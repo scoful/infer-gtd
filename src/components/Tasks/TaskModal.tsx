@@ -13,6 +13,7 @@ interface TaskModalProps {
   onClose: () => void;
   taskId?: string;
   onSuccess?: () => void;
+  defaultProjectId?: string; // 默认项目ID
 }
 
 interface TaskFormData {
@@ -53,6 +54,7 @@ export default function TaskModal({
   onClose,
   taskId,
   onSuccess,
+  defaultProjectId,
 }: TaskModalProps) {
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
@@ -60,6 +62,7 @@ export default function TaskModal({
     type: TaskType.NORMAL,
     status: TaskStatus.IDEA,
     tagIds: [],
+    projectId: defaultProjectId, // 设置默认项目ID
   });
 
   const isEditing = !!taskId;
@@ -172,6 +175,7 @@ export default function TaskModal({
       type: TaskType.NORMAL,
       status: TaskStatus.IDEA,
       tagIds: [],
+      projectId: defaultProjectId, // 重置时保持默认项目ID
     });
   };
 

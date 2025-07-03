@@ -384,6 +384,8 @@ export const projectRouter = createTRPCRouter({
           priorityCounts,
           totalTimeSpent,
           totalNotes,
+          recentTasks,
+          recentNotes,
         ] = await Promise.all([
           ctx.db.task.count({ where }),
           ctx.db.task.count({ where: { ...where, status: TaskStatus.DONE } }),
@@ -402,7 +404,34 @@ export const projectRouter = createTRPCRouter({
             _sum: { totalTimeSpent: true },
           }),
           ctx.db.note.count({ where: { projectId: input.id } }),
+          // 获取最近的任务和笔记用于计算活跃天数
+          ctx.db.task.findMany({
+            where,
+            select: { createdAt: true, updatedAt: true },
+            orderBy: { updatedAt: "desc" },
+          }),
+          ctx.db.note.findMany({
+            where: { projectId: input.id },
+            select: { createdAt: true, updatedAt: true },
+            orderBy: { updatedAt: "desc" },
+          }),
         ]);
+
+        // 计算活跃天数（基于任务和笔记的创建/更新日期）
+        const allDates = [
+          ...recentTasks.map(t => t.createdAt),
+          ...recentTasks.map(t => t.updatedAt),
+          ...recentNotes.map(n => n.createdAt),
+          ...recentNotes.map(n => n.updatedAt),
+        ];
+
+        const uniqueDays = new Set(
+          allDates.map(date =>
+            new Date(date).toISOString().split('T')[0]
+          )
+        );
+
+        const activeDays = uniqueDays.size;
 
         const completionRate =
           totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
@@ -413,6 +442,7 @@ export const projectRouter = createTRPCRouter({
           completedTasks,
           completionRate: Math.round(completionRate * 100) / 100,
           totalNotes,
+          activeDays, // 添加活跃天数
           statusCounts: statusCounts.reduce(
             (acc, item) => {
               acc[item.status] = item._count.status;
