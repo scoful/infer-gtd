@@ -22,7 +22,7 @@ import { useConfirm } from "@/hooks/useConfirm";
 
 const JournalDetailPage: NextPage = () => {
   const router = useRouter();
-  const { id, edit } = router.query;
+  const { id, edit, from } = router.query;
   const { showSuccess, showError } = useGlobalNotifications();
   const { showConfirm, confirmState, hideConfirm } = useConfirm();
   const [isEditing, setIsEditing] = useState(false);
@@ -69,14 +69,38 @@ const JournalDetailPage: NextPage = () => {
   const handleSave = () => {
     setIsEditing(false);
     void refetch();
-    // 清除 URL 中的 edit 参数
-    void router.replace(`/journal/${id}`, undefined, { shallow: true });
+
+    // 如果是从其他页面进入编辑模式，返回到来源页面
+    if (from) {
+      if (from === 'index') {
+        void router.push('/journal');
+      } else if (from === 'list') {
+        void router.push('/journal/list');
+      } else {
+        void router.push('/journal');
+      }
+    } else {
+      // 如果没有来源信息，清除 URL 中的 edit 参数，留在当前详情页
+      void router.replace(`/journal/${id}`, undefined, { shallow: true });
+    }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // 清除 URL 中的 edit 参数
-    void router.replace(`/journal/${id}`, undefined, { shallow: true });
+
+    // 如果是从其他页面进入编辑模式，返回到来源页面
+    if (from) {
+      if (from === 'index') {
+        void router.push('/journal');
+      } else if (from === 'list') {
+        void router.push('/journal/list');
+      } else {
+        void router.push('/journal');
+      }
+    } else {
+      // 如果没有来源信息，清除 URL 中的 edit 参数，留在当前详情页
+      void router.replace(`/journal/${id}`, undefined, { shallow: true });
+    }
   };
 
   const handleDelete = async () => {
@@ -152,22 +176,14 @@ const JournalDetailPage: NextPage = () => {
                 <button
                   onClick={handleCancelEdit}
                   className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+                  title="取消编辑"
                 >
-                  <ArrowLeftIcon className="mr-1 h-4 w-4" />
-                  取消编辑
+                  <ArrowLeftIcon className="h-4 w-4" />
                 </button>
                 <div>
                   <h1 className="text-xl font-semibold text-gray-900">
                     编辑日记
                   </h1>
-                  <p className="text-sm text-gray-500">
-                    {new Date(journal.date).toLocaleDateString("zh-CN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      weekday: "long",
-                    })}
-                  </p>
                 </div>
               </div>
             </div>
@@ -191,7 +207,7 @@ const JournalDetailPage: NextPage = () => {
                   className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
                 >
                   <ArrowLeftIcon className="mr-1 h-4 w-4" />
-                  返回
+                  
                 </button>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">

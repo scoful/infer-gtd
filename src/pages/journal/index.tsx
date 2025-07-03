@@ -113,7 +113,7 @@ const JournalPage: NextPage = () => {
 
     // 如果当前日期已有日记，跳转到编辑页面
     if (currentJournal) {
-      void router.push(`/journal/${currentJournal.id}?edit=true`);
+      void router.push(`/journal/${currentJournal.id}?edit=true&from=index`);
     } else {
       // 如果当前日期没有日记，跳转到新建日记页面
       void router.push("/journal/new?from=index");

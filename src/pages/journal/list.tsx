@@ -656,7 +656,11 @@ function JournalCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-2">
                 <CalendarIcon className="h-4 w-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3
+                  className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={onView}
+                  title="点击查看日记详情"
+                >
                   {formatDate(journal.date)}
                 </h3>
                 {journal.template && (
@@ -767,7 +771,11 @@ function JournalCard({
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
           <CalendarIcon className="h-4 w-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3
+            className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+            onClick={onView}
+            title="点击查看日记详情"
+          >
             {formatDate(journal.date)}
           </h3>
         </div>
