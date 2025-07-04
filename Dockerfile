@@ -1,14 +1,24 @@
 # 多阶段构建 Dockerfile for Next.js + tRPC + Prisma 应用
 # 优化 CI/CD 构建和生产部署
+#
+# 构建参数说明：
+# - USE_CHINA_MIRROR: 是否使用国内镜像源加速（默认false，适合GitHub Actions）
+#   本地构建时可设置为true: docker build --build-arg USE_CHINA_MIRROR=true .
+#   GitHub Actions构建时保持默认: docker build .
 
 # 基础镜像
 FROM node:20-alpine AS base
 
+# 构建参数：是否使用国内镜像源（默认不使用，适合GitHub Actions）
+ARG USE_CHINA_MIRROR=false
+
 # 安装必要的系统依赖
 RUN apk add --no-cache libc6-compat curl
 
-# 配置 npm 镜像源并安装 pnpm
-RUN npm config set registry https://registry.npmmirror.com && \
+# 根据构建参数配置 npm 镜像源并安装 pnpm
+RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
+        npm config set registry https://registry.npmmirror.com; \
+    fi && \
     npm install -g pnpm@9.6.0
 
 # 设置工作目录
@@ -24,8 +34,13 @@ COPY package.json pnpm-lock.yaml .npmrc ./
 # 依赖安装阶段
 FROM base AS deps
 
-# 配置 pnpm 镜像源并安装依赖
-RUN pnpm config set registry https://registry.npmmirror.com && \
+# 传递构建参数
+ARG USE_CHINA_MIRROR=false
+
+# 根据构建参数配置 pnpm 镜像源并安装依赖
+RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
+        pnpm config set registry https://registry.npmmirror.com; \
+    fi && \
     pnpm config set store-dir ~/.pnpm-store && \
     pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
@@ -56,8 +71,13 @@ FROM node:20-alpine AS runner
 # 安装运行时依赖
 RUN apk add --no-cache curl netcat-openbsd
 
-# 配置 npm 镜像源并安装 pnpm（用于 Prisma 客户端生成）
-RUN npm config set registry https://registry.npmmirror.com && \
+# 传递构建参数
+ARG USE_CHINA_MIRROR=false
+
+# 根据构建参数配置 npm 镜像源并安装 pnpm（用于 Prisma 客户端生成）
+RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
+        npm config set registry https://registry.npmmirror.com; \
+    fi && \
     npm install -g pnpm@9.6.0
 
 # 设置生产环境
@@ -84,13 +104,18 @@ COPY --from=builder /app/package.json ./package.json
 COPY scripts/docker-entrypoint.sh ./scripts/
 RUN chmod +x ./scripts/docker-entrypoint.sh
 
-# 配置 pnpm 镜像源并安装 Prisma 客户端（仅生产依赖）
-RUN pnpm config set registry https://registry.npmmirror.com && \
+# 传递构建参数
+ARG USE_CHINA_MIRROR=false
+
+# 根据构建参数配置 pnpm 镜像源并安装 Prisma 客户端（仅生产依赖）
+RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
+        pnpm config set registry https://registry.npmmirror.com; \
+    fi && \
     pnpm add @prisma/client prisma --prod
 
 # 生成 Prisma 客户端
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
-RUN npx prisma generate
+RUN ./node_modules/.bin/prisma generate
 
 # 设置文件权限
 RUN chown -R nextjs:nodejs /app
