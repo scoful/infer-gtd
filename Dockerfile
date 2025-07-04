@@ -117,6 +117,9 @@ RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN npx prisma generate
 
+# 创建日志目录并设置权限
+RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
+
 # 设置文件权限
 RUN chown -R nextjs:nodejs /app
 

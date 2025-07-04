@@ -3,7 +3,7 @@ import { createNextApiHandler } from "@trpc/server/adapters/next";
 import { env } from "@/env";
 import { appRouter } from "@/server/api/root";
 import { createTRPCContext } from "@/server/api/trpc";
-import { loggers, logError } from "@/utils/logger";
+import { serverLoggers, logServerError } from "@/utils/logger-server";
 
 // export API handler
 export default createNextApiHandler({
@@ -13,7 +13,7 @@ export default createNextApiHandler({
     const requestId =
       (req.headers["x-request-id"] as string) || `api_${Date.now()}`;
 
-    logError(loggers.trpc, error, {
+    logServerError(serverLoggers.trpc, error, {
       path: path ?? "<no-path>",
       requestId,
       method: req.method,

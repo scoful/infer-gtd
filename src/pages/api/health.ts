@@ -1,7 +1,7 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { db } from "@/server/db";
 import fs from "fs";
-import { logHealthCheck, loggers } from "@/utils/logger";
+import { logHealthCheck, serverLoggers } from "@/utils/logger-server";
 
 /**
  * 完整健康检查 API 端点
@@ -25,7 +25,7 @@ export default async function handler(
         startupStatus = fs.readFileSync(statusFilePath, "utf8").trim();
       }
     } catch (error) {
-      loggers.health.warn(
+      serverLoggers.health.warn(
         { error: error instanceof Error ? error.message : String(error) },
         "无法读取启动状态文件",
       );
