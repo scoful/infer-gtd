@@ -5,7 +5,6 @@ import {
   DocumentTextIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  EyeIcon,
   PencilIcon,
   StarIcon,
   ArchiveBoxIcon,
@@ -21,6 +20,7 @@ import { useGlobalNotifications } from "@/components/Layout/NotificationProvider
 interface ProjectNoteListProps {
   projectId: string;
   onCreateNote: () => void;
+  onEditNote?: (noteId: string) => void;
 }
 
 // 笔记卡片组件
@@ -55,30 +55,24 @@ function NoteCard({ note, onView, onEdit, onPin }: NoteCardProps) {
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
       {/* 头部 */}
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-2 flex-1 min-w-0">
-          <button
-            onClick={onView}
-            className="text-left hover:text-blue-600 flex-1 min-w-0"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 truncate">
-              {note.title}
-            </h3>
-          </button>
-          
-          {note.isPinned && (
-            <StarIconSolid className="h-5 w-5 text-yellow-500 flex-shrink-0" />
-          )}
-          
+        <button
+          onClick={onView}
+          className="text-left hover:text-blue-600 flex-1 min-w-0"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 truncate">
+            {note.title}
+          </h3>
+        </button>
+
+        <div className="flex items-center space-x-2 flex-shrink-0">
           {note.isArchived && (
-            <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 flex-shrink-0">
+            <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">
               <ArchiveBoxIcon className="mr-1 h-3 w-3" />
               已归档
             </span>
           )}
-        </div>
 
-        {/* 操作按钮 */}
-        <div className="flex items-center space-x-1 flex-shrink-0">
+          {/* 置顶操作按钮 */}
           <button
             onClick={onPin}
             className={`p-1 rounded hover:bg-gray-100 ${
@@ -92,7 +86,8 @@ function NoteCard({ note, onView, onEdit, onPin }: NoteCardProps) {
               <StarIcon className="h-4 w-4" />
             )}
           </button>
-          
+
+          {/* 编辑按钮 */}
           <button
             onClick={onEdit}
             className="p-1 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100"
@@ -155,29 +150,12 @@ function NoteCard({ note, onView, onEdit, onPin }: NoteCardProps) {
         </div>
       </div>
 
-      {/* 快速操作 */}
-      <div className="mt-4 flex items-center space-x-2">
-        <button
-          onClick={onView}
-          className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200"
-        >
-          <EyeIcon className="h-3 w-3 mr-1" />
-          查看
-        </button>
-        
-        <button
-          onClick={onEdit}
-          className="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
-        >
-          <PencilIcon className="h-3 w-3 mr-1" />
-          编辑
-        </button>
-      </div>
+
     </div>
   );
 }
 
-export default function ProjectNoteList({ projectId, onCreateNote }: ProjectNoteListProps) {
+export default function ProjectNoteList({ projectId, onCreateNote, onEditNote }: ProjectNoteListProps) {
   const router = useRouter();
   const { showSuccess, showError } = useGlobalNotifications();
 
@@ -225,11 +203,23 @@ export default function ProjectNoteList({ projectId, onCreateNote }: ProjectNote
   }, [notesData]);
 
   const handleViewNote = (noteId: string) => {
-    void router.push(`/notes/${noteId}`);
+    if (onEditNote) {
+      // 使用传入的编辑回调函数（打开模态框）
+      onEditNote(noteId);
+    } else {
+      // 降级到跳转页面
+      void router.push(`/notes/${noteId}`);
+    }
   };
 
   const handleEditNote = (noteId: string) => {
-    void router.push(`/notes/${noteId}`);
+    if (onEditNote) {
+      // 使用传入的编辑回调函数（打开模态框）
+      onEditNote(noteId);
+    } else {
+      // 降级到跳转页面
+      void router.push(`/notes/${noteId}`);
+    }
   };
 
   const handlePinNote = async (noteId: string) => {

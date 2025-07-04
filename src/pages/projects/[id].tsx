@@ -3,7 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -28,6 +28,7 @@ import { useGlobalNotifications } from "@/components/Layout/NotificationProvider
 import { useConfirm } from "@/hooks/useConfirm";
 import { ProjectModal, ProjectTaskList, ProjectNoteList } from "@/components/Projects";
 import TaskModal from "@/components/Tasks/TaskModal";
+import { NoteModal } from "@/components/Notes";
 
 // 任务状态配置
 const TASK_STATUS_CONFIG = {
@@ -49,14 +50,21 @@ const ProjectDetailPage: NextPage = () => {
   const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
 
   // 状态管理
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新状态
+
+  // 状态管理
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "notes">("overview");
 
   // 获取项目详情
   const {
     data: project,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = api.project.getById.useQuery(
@@ -81,9 +89,26 @@ const ProjectDetailPage: NextPage = () => {
     },
   );
 
+  // 计算刷新状态
+  const isRealInitialLoading = isLoading;
+  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
+
+  // 监听查询状态变化，在刷新完成后重置标志
+  useEffect(() => {
+    if (isManualRefreshing && !isFetching) {
+      setIsManualRefreshing(false);
+    }
+  }, [isManualRefreshing, isFetching]);
+
+  // 刷新所有数据
+  const refetchAll = async () => {
+    setIsManualRefreshing(true); // 标记为手动刷新
+    await refetch();
+  };
+
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void refetch();
+    void refetchAll();
   }, [refetch]);
 
   // 项目操作相关的mutations
@@ -200,6 +225,42 @@ const ProjectDetailPage: NextPage = () => {
     void router.push(`/notes/new?projectId=${project?.id}`);
   };
 
+  // 处理任务编辑
+  const handleEditTask = (taskId: string) => {
+    setEditingTaskId(taskId);
+    setIsTaskModalOpen(true);
+  };
+
+  // 处理任务模态框关闭
+  const handleTaskModalClose = () => {
+    setIsTaskModalOpen(false);
+    setEditingTaskId(null);
+  };
+
+  // 处理任务模态框成功
+  const handleTaskModalSuccess = () => {
+    void refetch();
+    handleTaskModalClose();
+  };
+
+  // 处理笔记编辑
+  const handleEditNote = (noteId: string) => {
+    setEditingNoteId(noteId);
+    setIsNoteModalOpen(true);
+  };
+
+  // 处理笔记模态框关闭
+  const handleNoteModalClose = () => {
+    setIsNoteModalOpen(false);
+    setEditingNoteId(null);
+  };
+
+  // 处理笔记模态框成功
+  const handleNoteModalSuccess = () => {
+    void refetch();
+    handleNoteModalClose();
+  };
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -258,6 +319,12 @@ const ProjectDetailPage: NextPage = () => {
                           <h1 className="text-2xl font-bold text-gray-900">
                             {project.name}
                           </h1>
+                          {isDataRefreshing && (
+                            <div className="flex items-center text-sm text-blue-600">
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                              刷新中...
+                            </div>
+                          )}
                           {project.isArchived && (
                             <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800">
                               <ArchiveBoxIcon className="mr-1 h-4 w-4" />
@@ -431,12 +498,12 @@ const ProjectDetailPage: NextPage = () => {
                                     </span>
                                   </div>
                                 </div>
-                                <Link
-                                  href={`/tasks?id=${task.id}`}
+                                <button
+                                  onClick={() => handleEditTask(task.id)}
                                   className="text-blue-600 hover:text-blue-500 text-sm"
                                 >
-                                  查看
-                                </Link>
+                                  编辑
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -457,12 +524,12 @@ const ProjectDetailPage: NextPage = () => {
                                     更新于 {new Date(note.updatedAt).toLocaleDateString()}
                                   </p>
                                 </div>
-                                <Link
-                                  href={`/notes/${note.id}`}
+                                <button
+                                  onClick={() => handleEditNote(note.id)}
                                   className="text-blue-600 hover:text-blue-500 text-sm"
                                 >
-                                  查看
-                                </Link>
+                                  编辑
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -477,6 +544,7 @@ const ProjectDetailPage: NextPage = () => {
                     <ProjectTaskList
                       projectId={project.id}
                       onCreateTask={handleCreateTask}
+                      onEditTask={handleEditTask}
                     />
                   )}
 
@@ -484,6 +552,7 @@ const ProjectDetailPage: NextPage = () => {
                     <ProjectNoteList
                       projectId={project.id}
                       onCreateNote={handleCreateNote}
+                      onEditNote={handleEditNote}
                     />
                   )}
                 </div>
@@ -501,10 +570,18 @@ const ProjectDetailPage: NextPage = () => {
                 {/* 任务模态框 */}
                 <TaskModal
                   isOpen={isTaskModalOpen}
-                  onClose={() => setIsTaskModalOpen(false)}
-                  onSuccess={() => {
-                    void refetch();
-                  }}
+                  onClose={handleTaskModalClose}
+                  taskId={editingTaskId ?? undefined}
+                  onSuccess={handleTaskModalSuccess}
+                  defaultProjectId={project.id}
+                />
+
+                {/* 笔记模态框 */}
+                <NoteModal
+                  isOpen={isNoteModalOpen}
+                  onClose={handleNoteModalClose}
+                  noteId={editingNoteId ?? undefined}
+                  onSuccess={handleNoteModalSuccess}
                   defaultProjectId={project.id}
                 />
 

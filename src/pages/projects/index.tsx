@@ -2,7 +2,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -310,6 +310,7 @@ const ProjectsPage: NextPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新状态
 
   // 查询参数
   const queryParams = useMemo(() => ({
@@ -335,9 +336,26 @@ const ProjectsPage: NextPage = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
+  // 计算刷新状态
+  const isRealInitialLoading = isLoading;
+  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
+
+  // 监听查询状态变化，在刷新完成后重置标志
+  useEffect(() => {
+    if (isManualRefreshing && !isFetching) {
+      setIsManualRefreshing(false);
+    }
+  }, [isManualRefreshing, isFetching]);
+
+  // 刷新所有数据
+  const refetchAll = async () => {
+    setIsManualRefreshing(true); // 标记为手动刷新
+    await refetch();
+  };
+
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void refetch();
+    void refetchAll();
   }, [refetch]);
 
   // 项目操作相关的mutations
@@ -464,7 +482,15 @@ const ProjectsPage: NextPage = () => {
           {/* 页面标题和操作 */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">项目管理</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900">项目管理</h1>
+                {isDataRefreshing && (
+                  <div className="flex items-center text-sm text-blue-600">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    刷新中...
+                  </div>
+                )}
+              </div>
               <p className="mt-2 text-gray-600">
                 管理您的项目和工作领域，跟踪进度和成果
               </p>

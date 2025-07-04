@@ -12,7 +12,7 @@ import {
   PauseIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
-import { TaskStatus, Priority } from "@prisma/client";
+import { TaskStatus, Priority, TaskType } from "@prisma/client";
 
 import { api } from "@/utils/api";
 import { QueryLoading, SectionLoading } from "@/components/UI";
@@ -21,6 +21,7 @@ import { useGlobalNotifications } from "@/components/Layout/NotificationProvider
 interface ProjectTaskListProps {
   projectId: string;
   onCreateTask: () => void;
+  onEditTask?: (taskId: string) => void;
 }
 
 // 任务状态配置
@@ -61,8 +62,90 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
     return `${minutes}m`;
   };
 
+  // 计算限时任务的剩余时间和紧急程度
+  const getDeadlineInfo = (task: any) => {
+    if (task.type !== TaskType.DEADLINE || !task.dueDate) {
+      return null;
+    }
+
+    const now = new Date();
+    const deadline = new Date(task.dueDate);
+
+    // 如果有具体时间，设置到deadline
+    if (task.dueTime) {
+      const [hours, minutes] = task.dueTime.split(":");
+      deadline.setHours(parseInt(hours ?? "0"), parseInt(minutes ?? "0"), 0, 0);
+    } else {
+      // 没有具体时间，设置为当天23:59
+      deadline.setHours(23, 59, 59, 999);
+    }
+
+    const diffMs = deadline.getTime() - now.getTime();
+    const isOverdue = diffMs < 0;
+
+    const absDiffMs = Math.abs(diffMs);
+    const days = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(
+      (absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    );
+    const minutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    // 确定紧急程度
+    let urgencyLevel: "overdue" | "critical" | "urgent" | "warning" | "normal";
+    if (isOverdue) {
+      urgencyLevel = "overdue";
+    } else if (days === 0 && hours <= 2) {
+      urgencyLevel = "critical"; // 2小时内
+    } else if (days === 0) {
+      urgencyLevel = "urgent"; // 今天截止
+    } else if (days <= 1) {
+      urgencyLevel = "warning"; // 明天截止
+    } else {
+      urgencyLevel = "normal";
+    }
+
+    return {
+      isOverdue,
+      days,
+      hours,
+      minutes,
+      urgencyLevel,
+      deadline,
+      timeText: isOverdue
+        ? `已逾期 ${days > 0 ? `${days}天` : ""}${hours > 0 ? `${hours}小时` : ""}${days === 0 && hours === 0 ? `${minutes}分钟` : ""}`
+        : days > 0
+          ? `剩余 ${days}天${hours > 0 ? `${hours}小时` : ""}`
+          : hours > 0
+            ? `剩余 ${hours}小时${minutes > 0 ? `${minutes}分钟` : ""}`
+            : `剩余 ${minutes}分钟`,
+    };
+  };
+
+  const deadlineInfo = getDeadlineInfo(task);
+
+  // 限时任务的样式配置
+  const getDeadlineCardStyles = () => {
+    if (
+      task.type !== TaskType.DEADLINE ||
+      !deadlineInfo ||
+      task.status === TaskStatus.DONE
+    ) {
+      return "rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow";
+    }
+
+    const urgencyStyles = {
+      overdue: "rounded-lg border border-gray-200 border-l-4 border-l-red-600 bg-red-50 p-4 shadow-sm hover:shadow-md transition-shadow",
+      critical: "rounded-lg border border-gray-200 border-l-4 border-l-red-500 bg-red-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      urgent: "rounded-lg border border-gray-200 border-l-4 border-l-orange-500 bg-orange-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      warning: "rounded-lg border border-gray-200 border-l-4 border-l-yellow-500 bg-yellow-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      normal: "rounded-lg border border-gray-200 border-l-4 border-l-blue-500 bg-blue-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+    };
+
+    return urgencyStyles[deadlineInfo.urgencyLevel];
+  };
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`relative ${getDeadlineCardStyles()}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-2">
@@ -82,12 +165,47 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
             </p>
           )}
 
+          {/* 限时任务的倒计时显示 - 已完成任务不显示倒计时 */}
+          {task.type === TaskType.DEADLINE &&
+            deadlineInfo &&
+            task.status !== TaskStatus.DONE && (
+              <div className="mb-3">
+                <div
+                  className={`mb-1 text-xs font-medium ${
+                    deadlineInfo.urgencyLevel === "overdue"
+                      ? "text-red-700"
+                      : deadlineInfo.urgencyLevel === "critical"
+                        ? "text-red-600"
+                        : deadlineInfo.urgencyLevel === "urgent"
+                          ? "text-orange-600"
+                          : deadlineInfo.urgencyLevel === "warning"
+                            ? "text-yellow-600"
+                            : "text-blue-600"
+                  }`}
+                >
+                  {deadlineInfo.timeText}
+                </div>
+                {/* 具体截止时间另起一行显示 - 包含日期 */}
+                {task.dueDate && (
+                  <div className="text-xs text-gray-500">
+                    截止时间：
+                    {new Date(task.dueDate).toLocaleDateString("zh-CN", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })}
+                    {task.dueTime ? ` ${task.dueTime}` : " 全天"}
+                  </div>
+                )}
+              </div>
+            )}
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
                 {statusConfig.label}
               </span>
-              
+
               {task.totalTimeSpent > 0 && (
                 <div className="flex items-center text-xs text-gray-500">
                   <ClockIcon className="h-3 w-3 mr-1" />
@@ -95,7 +213,8 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
                 </div>
               )}
 
-              {task.dueDate && (
+              {/* 非限时任务仍显示简单的截止日期 */}
+              {task.dueDate && task.type !== TaskType.DEADLINE && (
                 <div className="flex items-center text-xs text-gray-500">
                   <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
                   {new Date(task.dueDate).toLocaleDateString()}
@@ -145,11 +264,43 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
           </button>
         )}
       </div>
+
+      {/* 限时任务的时间进度条 - 已完成任务不显示 */}
+      {task.type === TaskType.DEADLINE &&
+        deadlineInfo &&
+        !deadlineInfo.isOverdue &&
+        task.status !== TaskStatus.DONE && (
+          <div className="absolute right-0 bottom-0 left-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
+            <div
+              className={`h-full transition-all duration-300 ${
+                deadlineInfo.urgencyLevel === "critical"
+                  ? "bg-red-500"
+                  : deadlineInfo.urgencyLevel === "urgent"
+                    ? "bg-orange-500"
+                    : deadlineInfo.urgencyLevel === "warning"
+                      ? "bg-yellow-500"
+                      : "bg-blue-500"
+              }`}
+              style={{
+                width: `${Math.min(
+                  100,
+                  Math.max(
+                    0,
+                    ((Date.now() - new Date(task.createdAt).getTime()) /
+                      (deadlineInfo.deadline.getTime() -
+                        new Date(task.createdAt).getTime())) *
+                      100,
+                  ),
+                )}%`,
+              }}
+            />
+          </div>
+        )}
     </div>
   );
 }
 
-export default function ProjectTaskList({ projectId, onCreateTask }: ProjectTaskListProps) {
+export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }: ProjectTaskListProps) {
   const { showSuccess, showError } = useGlobalNotifications();
   
   // 状态管理
@@ -218,8 +369,13 @@ export default function ProjectTaskList({ projectId, onCreateTask }: ProjectTask
   };
 
   const handleEditTask = (taskId: string) => {
-    // 跳转到任务详情页面或打开编辑模态框
-    window.open(`/tasks?id=${taskId}`, '_blank');
+    if (onEditTask) {
+      // 使用传入的编辑回调函数（打开模态框）
+      onEditTask(taskId);
+    } else {
+      // 降级到跳转页面
+      window.open(`/tasks?id=${taskId}`, '_blank');
+    }
   };
 
   return (
