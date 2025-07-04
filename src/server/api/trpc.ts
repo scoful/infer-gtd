@@ -135,8 +135,8 @@ const loggingMiddleware = t.middleware(async ({ next, path, type, ctx }) => {
   const start = Date.now();
   const requestId = `trpc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Import logger dynamically to avoid circular dependencies
-  const { logTrpcOperation } = await import("@/utils/logger");
+  // Import server logger for tRPC operations
+  const { logTrpcOperation } = await import("@/utils/logger-server");
 
   try {
     const result = await next();

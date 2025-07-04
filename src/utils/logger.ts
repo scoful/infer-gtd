@@ -1,407 +1,47 @@
-import pino from "pino";
-import { env } from "@/env";
-
-// 日志级别配置
-const LOG_LEVEL =
-  env.LOG_LEVEL || (env.NODE_ENV === "production" ? "info" : "debug");
+/**
+ * 统一日志入口模块
+ *
+ * 此模块提供向后兼容的日志接口，自动选择合适的日志实现
+ * - Edge Runtime 环境：使用 logger-core
+ * - Node.js 环境：使用 logger-server（支持文件输出）
+ */
 
 // 检查运行环境
-const isDevelopment = env.NODE_ENV === "development";
 const isServer = typeof window === "undefined";
 
-// 日志文件配置（仅在服务器端使用）
-const getLogConfig = () => {
-  if (!isServer) return null;
+// 通用导出（向后兼容）
+export * from "./logger-core";
 
+// 动态选择日志实现
+let loggerModule: any;
+
+if (isServer) {
+  // 服务器端：尝试使用服务器日志模块
   try {
-    // 检查是否在 Edge Runtime 环境
-    if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
-      console.warn("Edge Runtime detected, file logging disabled");
-      return null;
-    }
-
-    // 使用 eval 动态导入，避免静态分析
-    const path = eval('require("path")');
-    const fs = eval('require("fs")');
-
-    const LOG_DIR = env.LOG_DIR || "/app/logs";
-    const LOG_FILE = path.join(LOG_DIR, "app.log");
-
-    // 确保日志目录存在
-    if (!fs.existsSync(LOG_DIR)) {
-      fs.mkdirSync(LOG_DIR, { recursive: true });
-    }
-
-    return { LOG_DIR, LOG_FILE };
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    loggerModule = require("./logger-server");
   } catch (error) {
-    console.warn("Failed to setup log configuration:", error);
-    return null;
+    console.warn("Failed to load server logger, using core logger:", error);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    loggerModule = require("./logger-core");
   }
-};
+} else {
+  // 客户端：使用核心日志模块
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  loggerModule = require("./logger-core");
+}
 
-// 创建自定义的美化输出函数（避免 worker 线程问题）
-const prettyPrint = (obj: any) => {
-  const timestamp = obj.time || new Date().toISOString();
-  const level =
-    obj.level >= 50
-      ? "ERROR"
-      : obj.level >= 40
-        ? "WARN"
-        : obj.level >= 30
-          ? "INFO"
-          : "DEBUG";
-  const moduleInfo = obj.module ? `[${obj.module}]` : "";
-  const msg = obj.msg ?? "";
+// 导出主要接口
+export const logger = loggerModule.serverLogger || loggerModule.coreLogger;
+export const loggers = loggerModule.serverLoggers || loggerModule.coreLoggers;
 
-  if (isDevelopment && isServer) {
-    // 开发环境美化输出
-    const colors = {
-      ERROR: "\x1b[31m", // 红色
-      WARN: "\x1b[33m", // 黄色
-      INFO: "\x1b[36m", // 青色
-      DEBUG: "\x1b[37m", // 白色
-      RESET: "\x1b[0m", // 重置
-    };
+// 导出服务器端特有功能（如果可用）
+export const logPerformance = loggerModule.logPerformance;
+export const logDatabaseOperation = loggerModule.logDatabaseOperation;
+export const logTrpcOperation = loggerModule.logTrpcOperation;
+export const logDockerEvent = loggerModule.logDockerEvent;
+export const logHealthCheck = loggerModule.logHealthCheck;
+export const logServerError = loggerModule.logServerError;
 
-    console.log(
-      `${colors[level as keyof typeof colors]}[${timestamp}] ${level} ${moduleInfo}${colors.RESET} ${msg}`,
-    );
-
-    // 输出额外的结构化数据
-    const extraData = { ...obj };
-    delete extraData.level;
-    delete extraData.time;
-    delete extraData.msg;
-    delete extraData.module;
-
-    if (Object.keys(extraData).length > 0) {
-      console.log(
-        `${colors[level as keyof typeof colors]}    ${JSON.stringify(extraData, null, 2)}${colors.RESET}`,
-      );
-    }
-  } else {
-    // 生产环境JSON输出
-    console.log(
-      JSON.stringify({
-        timestamp,
-        level,
-        module: obj.module,
-        message: msg,
-        ...obj,
-      }),
-    );
-  }
-};
-
-// 创建基础 logger 配置
-const baseConfig: pino.LoggerOptions = {
-  level: LOG_LEVEL,
-  timestamp: pino.stdTimeFunctions.isoTime,
-  formatters: {
-    level: (label) => {
-      return { level: label.toUpperCase() };
-    },
-  },
-};
-
-// 创建文件输出流（仅在服务器端）
-const createFileStream = () => {
-  if (!isServer) return null;
-
-  const logConfig = getLogConfig();
-  if (!logConfig) return null;
-
-  try {
-    return pino.destination({
-      dest: logConfig.LOG_FILE,
-      sync: false,
-      mkdir: true,
-    });
-  } catch (error) {
-    console.warn(`Failed to create log file stream:`, error);
-    return null;
-  }
-};
-
-// 创建多输出流
-const createStreams = () => {
-  const streams: pino.StreamEntry[] = [];
-
-  // 控制台输出流
-  if (isDevelopment && isServer) {
-    // 开发环境：美化输出到控制台
-    streams.push({
-      level: LOG_LEVEL as pino.Level,
-      stream: {
-        write: (obj: string) => {
-          prettyPrint(JSON.parse(obj));
-        },
-      },
-    });
-  } else if (isServer) {
-    // 生产环境：JSON格式输出到控制台（仅在服务器端）
-    try {
-      // 使用 eval 动态访问，完全避免静态分析
-      const stdout = eval(
-        'typeof process !== "undefined" && process.stdout ? process.stdout : null',
-      );
-      if (stdout) {
-        streams.push({
-          level: LOG_LEVEL as pino.Level,
-          stream: stdout,
-        });
-      }
-    } catch (error) {
-      console.warn("Failed to access process.stdout:", error);
-    }
-  }
-
-  // 文件输出流（仅在服务器端）
-  if (isServer) {
-    const fileStream = createFileStream();
-    if (fileStream) {
-      streams.push({
-        level: LOG_LEVEL as pino.Level,
-        stream: fileStream,
-      });
-    }
-  }
-
-  return streams;
-};
-
-// 创建主 logger
-export const logger = (() => {
-  if (!isServer) {
-    // 客户端环境：使用基础配置
-    return pino(baseConfig);
-  }
-
-  // 服务器端环境：尝试创建多流输出
-  try {
-    const streams = createStreams();
-    if (streams.length > 1 && pino.multistream) {
-      // 有多个流且支持 multistream
-      return pino(baseConfig, pino.multistream(streams));
-    } else if (streams.length === 1) {
-      // 只有一个流，直接使用
-      return pino(baseConfig, streams[0]!.stream);
-    } else {
-      // 没有可用流，使用基础配置
-      return pino(baseConfig);
-    }
-  } catch (error) {
-    console.warn(
-      "Failed to create multi-stream logger, falling back to basic logger:",
-      error,
-    );
-    return pino(baseConfig);
-  }
-})();
-
-// 创建不同模块的子 logger
-export const createModuleLogger = (module: string) => {
-  return logger.child({ module });
-};
-
-// 预定义的模块 logger
-export const loggers = {
-  app: createModuleLogger("APP"),
-  api: createModuleLogger("API"),
-  trpc: createModuleLogger("TRPC"),
-  db: createModuleLogger("DATABASE"),
-  auth: createModuleLogger("AUTH"),
-  docker: createModuleLogger("DOCKER"),
-  health: createModuleLogger("HEALTH"),
-  task: createModuleLogger("TASK"),
-  note: createModuleLogger("NOTE"),
-  journal: createModuleLogger("JOURNAL"),
-  search: createModuleLogger("SEARCH"),
-} as const;
-
-// 请求日志中间件辅助函数
-export const createRequestLogger = (requestId?: string) => {
-  return logger.child({
-    requestId: requestId || generateRequestId(),
-    type: "request",
-  });
-};
-
-// 生成请求ID
-export const generateRequestId = (): string => {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-// 错误日志辅助函数
-export const logError = (
-  logger: pino.Logger,
-  error: unknown,
-  context?: Record<string, unknown>,
-) => {
-  const errorInfo = {
-    ...context,
-    error: {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : "UnknownError",
-    },
-  };
-
-  logger.error(errorInfo, "操作失败");
-};
-
-// 性能监控日志
-export const logPerformance = (
-  logger: pino.Logger,
-  operation: string,
-  duration: number,
-  context?: Record<string, unknown>,
-) => {
-  logger.info(
-    {
-      operation,
-      duration,
-      ...context,
-      type: "performance",
-    },
-    `${operation} 执行完成，耗时 ${duration}ms`,
-  );
-};
-
-// 数据库操作日志
-export const logDatabaseOperation = (
-  operation: string,
-  table: string,
-  duration?: number,
-  context?: Record<string, unknown>,
-) => {
-  loggers.db.info(
-    {
-      operation,
-      table,
-      duration,
-      ...context,
-      type: "database",
-    },
-    `数据库操作: ${operation} on ${table}${duration ? ` (${duration}ms)` : ""}`,
-  );
-};
-
-// API 调用日志
-export const logApiCall = (
-  method: string,
-  path: string,
-  statusCode: number,
-  duration: number,
-  requestId?: string,
-  userId?: string,
-) => {
-  loggers.api.info(
-    {
-      method,
-      path,
-      statusCode,
-      duration,
-      requestId,
-      userId,
-      type: "api",
-    },
-    `${method} ${path} - ${statusCode} (${duration}ms)`,
-  );
-};
-
-// tRPC 操作日志
-export const logTrpcOperation = (
-  procedure: string,
-  type: "query" | "mutation",
-  duration: number,
-  success: boolean,
-  userId?: string,
-  error?: string,
-) => {
-  const level = success ? "info" : "error";
-  loggers.trpc[level](
-    {
-      procedure,
-      operationType: type,
-      duration,
-      success,
-      userId,
-      error,
-      type: "trpc",
-    },
-    `tRPC ${type}: ${procedure} ${success ? "成功" : "失败"} (${duration}ms)`,
-  );
-};
-
-// 用户操作日志
-export const logUserAction = (
-  action: string,
-  userId: string,
-  details?: Record<string, unknown>,
-) => {
-  logger.info(
-    {
-      action,
-      userId,
-      ...details,
-      type: "user_action",
-    },
-    `用户操作: ${action}`,
-  );
-};
-
-// 系统启动日志
-export const logSystemEvent = (
-  event: string,
-  status: "success" | "error" | "info",
-  details?: Record<string, unknown>,
-) => {
-  const level = status === "error" ? "error" : "info";
-  loggers.app[level](
-    {
-      event,
-      status,
-      ...details,
-      type: "system",
-    },
-    `系统事件: ${event}`,
-  );
-};
-
-// Docker 容器日志
-export const logDockerEvent = (
-  event: string,
-  status: string,
-  details?: Record<string, unknown>,
-) => {
-  loggers.docker.info(
-    {
-      event,
-      status,
-      ...details,
-      type: "docker",
-    },
-    `Docker: ${event} - ${status}`,
-  );
-};
-
-// 健康检查日志
-export const logHealthCheck = (
-  component: string,
-  status: "healthy" | "unhealthy" | "starting",
-  details?: Record<string, unknown>,
-) => {
-  const level = status === "unhealthy" ? "error" : "info";
-  loggers.health[level](
-    {
-      component,
-      status,
-      ...details,
-      type: "health",
-    },
-    `健康检查: ${component} - ${status}`,
-  );
-};
-
+// 默认导出
 export default logger;

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { generateRequestId } from "@/utils/logger";
+import {
+  generateRequestId,
+  coreLoggers,
+  logApiCall,
+} from "@/utils/logger-core";
 
 export function middleware(request: NextRequest) {
   const start = Date.now();
@@ -12,6 +16,18 @@ export function middleware(request: NextRequest) {
 
   // 记录API调用（仅对API路由）
   if (request.nextUrl.pathname.startsWith("/api/")) {
+    // 记录请求开始
+    coreLoggers.middleware.debug(
+      {
+        method: request.method,
+        path: request.nextUrl.pathname,
+        requestId,
+        userAgent: request.headers.get("user-agent"),
+        type: "request_start",
+      },
+      `API请求开始: ${request.method} ${request.nextUrl.pathname}`,
+    );
+
     // 在响应完成后记录日志
     response.headers.set("x-log-request", "true");
     response.headers.set("x-request-start", start.toString());
