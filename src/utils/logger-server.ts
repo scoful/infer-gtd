@@ -27,22 +27,9 @@ const getLogConfig = () => {
     const LOG_DIR = env.LOG_DIR || "/app/logs";
     const LOG_FILE = path.join(LOG_DIR, "app.log");
 
-    // 确保日志目录存在并设置权限
+    // 确保日志目录存在
     if (!fs.existsSync(LOG_DIR)) {
-      try {
-        fs.mkdirSync(LOG_DIR, { recursive: true, mode: 0o755 });
-      } catch (error) {
-        console.warn(`Failed to create log directory ${LOG_DIR}:`, error);
-        return null;
-      }
-    }
-
-    // 检查日志目录权限
-    try {
-      fs.accessSync(LOG_DIR, fs.constants.W_OK);
-    } catch (error) {
-      console.warn(`Log directory ${LOG_DIR} is not writable, disabling file logging:`, error);
-      return null;
+      fs.mkdirSync(LOG_DIR, { recursive: true });
     }
 
     return { LOG_DIR, LOG_FILE };
@@ -60,16 +47,6 @@ const createFileStream = () => {
   if (!logConfig) return null;
 
   try {
-    // 检查日志文件是否可写
-    if (fs.existsSync(logConfig.LOG_FILE)) {
-      try {
-        fs.accessSync(logConfig.LOG_FILE, fs.constants.W_OK);
-      } catch (error) {
-        console.warn(`Log file ${logConfig.LOG_FILE} is not writable, disabling file logging:`, error);
-        return null;
-      }
-    }
-
     return pino.destination({
       dest: logConfig.LOG_FILE,
       sync: false,

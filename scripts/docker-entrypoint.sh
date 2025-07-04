@@ -18,14 +18,10 @@ fi
 echo "$(date -Iseconds) [INFO] [DOCKER] 🚀 Starting GTD Application..."
 echo "STARTING" > /tmp/app-status/startup.status
 
-# 修复日志目录权限
-echo "$(date -Iseconds) [INFO] [DOCKER] 🔧 Checking log directory permissions..."
-if [ -f "./scripts/fix-log-permissions.sh" ]; then
-    chmod +x ./scripts/fix-log-permissions.sh
-    ./scripts/fix-log-permissions.sh
-else
-    echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Log permissions script not found, skipping..."
-fi
+# 确保日志目录存在
+LOG_DIR="${LOG_DIR:-/app/logs}"
+mkdir -p "$LOG_DIR"
+echo "$(date -Iseconds) [INFO] [DOCKER] 📁 Log directory ready: $LOG_DIR"
 
 # 辅助函数：解析迁移错误并提取迁移名称
 extract_migration_name_from_error() {

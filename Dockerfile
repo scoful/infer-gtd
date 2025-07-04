@@ -84,17 +84,17 @@ RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 创建非 root 用户
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# 注释：使用 root 用户运行以避免权限问题
+# RUN addgroup --system --gid 1001 nodejs
+# RUN adduser --system --uid 1001 nextjs
 
 # 设置工作目录
 WORKDIR /app
 
 # 复制构建产物
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 # 复制 Prisma 相关文件
 COPY --from=builder /app/prisma ./prisma
@@ -102,8 +102,7 @@ COPY --from=builder /app/package.json ./package.json
 
 # 复制启动脚本
 COPY scripts/docker-entrypoint.sh ./scripts/
-COPY scripts/fix-log-permissions.sh ./scripts/
-RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/fix-log-permissions.sh
+RUN chmod +x ./scripts/docker-entrypoint.sh
 
 # 传递构建参数
 ARG USE_CHINA_MIRROR=false
@@ -118,14 +117,11 @@ RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN npx prisma generate
 
-# 设置文件权限
-RUN chown -R nextjs:nodejs /app
+# 创建日志目录
+RUN mkdir -p /app/logs
 
-# 创建日志目录并设置权限（在切换用户前）
-RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs && chmod -R 755 /app/logs
-
-# 切换到非 root 用户
-USER nextjs
+# 注释：使用 root 用户运行，无需切换用户
+# USER nextjs
 
 # 暴露端口
 EXPOSE 3000
