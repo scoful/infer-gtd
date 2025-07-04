@@ -102,7 +102,8 @@ COPY --from=builder /app/package.json ./package.json
 
 # 复制启动脚本
 COPY scripts/docker-entrypoint.sh ./scripts/
-RUN chmod +x ./scripts/docker-entrypoint.sh
+COPY scripts/fix-log-permissions.sh ./scripts/
+RUN chmod +x ./scripts/docker-entrypoint.sh ./scripts/fix-log-permissions.sh
 
 # 传递构建参数
 ARG USE_CHINA_MIRROR=false
@@ -117,11 +118,11 @@ RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN npx prisma generate
 
-# 创建日志目录并设置权限
-RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
-
 # 设置文件权限
 RUN chown -R nextjs:nodejs /app
+
+# 创建日志目录并设置权限（在切换用户前）
+RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs && chmod -R 755 /app/logs
 
 # 切换到非 root 用户
 USER nextjs

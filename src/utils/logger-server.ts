@@ -29,14 +29,19 @@ const getLogConfig = () => {
 
     // 确保日志目录存在并设置权限
     if (!fs.existsSync(LOG_DIR)) {
-      fs.mkdirSync(LOG_DIR, { recursive: true, mode: 0o755 });
+      try {
+        fs.mkdirSync(LOG_DIR, { recursive: true, mode: 0o755 });
+      } catch (error) {
+        console.warn(`Failed to create log directory ${LOG_DIR}:`, error);
+        return null;
+      }
     }
 
-    // 检查日志文件权限
+    // 检查日志目录权限
     try {
       fs.accessSync(LOG_DIR, fs.constants.W_OK);
     } catch (error) {
-      console.warn(`Log directory ${LOG_DIR} is not writable:`, error);
+      console.warn(`Log directory ${LOG_DIR} is not writable, disabling file logging:`, error);
       return null;
     }
 
@@ -60,7 +65,7 @@ const createFileStream = () => {
       try {
         fs.accessSync(logConfig.LOG_FILE, fs.constants.W_OK);
       } catch (error) {
-        console.warn(`Log file ${logConfig.LOG_FILE} is not writable:`, error);
+        console.warn(`Log file ${logConfig.LOG_FILE} is not writable, disabling file logging:`, error);
         return null;
       }
     }

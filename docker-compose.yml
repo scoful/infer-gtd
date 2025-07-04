@@ -9,7 +9,7 @@ services:
     ports:
       - "${APP_PORT:-3001}:3000"
     volumes:
-      - ./logs:/app/logs  # 映射日志目录到本地
+      - ./logs:/app/logs:rw  # 映射日志目录到本地，确保读写权限
     env_file:
       - .env
     environment:
