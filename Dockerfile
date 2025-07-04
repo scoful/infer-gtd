@@ -96,11 +96,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# 复制 Prisma 相关文件和生成的客户端
+# 复制 Prisma 相关文件
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # 复制启动脚本
 COPY scripts/docker-entrypoint.sh ./scripts/
@@ -109,14 +107,15 @@ RUN chmod +x ./scripts/docker-entrypoint.sh
 # 传递构建参数
 ARG USE_CHINA_MIRROR=false
 
-# 根据构建参数配置 pnpm 镜像源并安装 Prisma CLI（仅用于运行时迁移）
+# 根据构建参数配置 pnpm 镜像源并安装 Prisma 相关包
 RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
         pnpm config set registry https://registry.npmmirror.com; \
     fi && \
-    pnpm add prisma --prod
+    pnpm add @prisma/client prisma --prod
 
-# Prisma 客户端已从 builder 阶段复制，无需重新生成
+# 生成 Prisma 客户端
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
+RUN npx prisma generate
 
 # 设置文件权限
 RUN chown -R nextjs:nodejs /app
