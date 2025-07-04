@@ -29,7 +29,7 @@ const JournalDetailPage: NextPage = () => {
 
   // 检查 URL 参数，如果有 edit=true 则直接进入编辑模式
   useEffect(() => {
-    if (edit === 'true') {
+    if (edit === "true") {
       setIsEditing(true);
     }
   }, [edit]);
@@ -43,7 +43,7 @@ const JournalDetailPage: NextPage = () => {
     { id: id as string },
     {
       enabled: !!id && typeof id === "string",
-    }
+    },
   );
 
   // 删除日记
@@ -72,12 +72,12 @@ const JournalDetailPage: NextPage = () => {
 
     // 如果是从其他页面进入编辑模式，返回到来源页面
     if (from) {
-      if (from === 'index') {
-        void router.push('/journal');
-      } else if (from === 'list') {
-        void router.push('/journal/list');
+      if (from === "index") {
+        void router.push("/journal");
+      } else if (from === "list") {
+        void router.push("/journal/list");
       } else {
-        void router.push('/journal');
+        void router.push("/journal");
       }
     } else {
       // 如果没有来源信息，清除 URL 中的 edit 参数，留在当前详情页
@@ -90,12 +90,12 @@ const JournalDetailPage: NextPage = () => {
 
     // 如果是从其他页面进入编辑模式，返回到来源页面
     if (from) {
-      if (from === 'index') {
-        void router.push('/journal');
-      } else if (from === 'list') {
-        void router.push('/journal/list');
+      if (from === "index") {
+        void router.push("/journal");
+      } else if (from === "list") {
+        void router.push("/journal/list");
       } else {
-        void router.push('/journal');
+        void router.push("/journal");
       }
     } else {
       // 如果没有来源信息，清除 URL 中的 edit 参数，留在当前详情页
@@ -122,13 +122,16 @@ const JournalDetailPage: NextPage = () => {
       <MainLayout>
         <Head>
           <title>
-            {journal ? (() => {
-              const d = new Date(journal.date);
-              const year = d.getFullYear();
-              const month = String(d.getMonth() + 1).padStart(2, '0');
-              const day = String(d.getDate()).padStart(2, '0');
-              return `${year}-${month}-${day}`;
-            })() : "日记详情"} 日记 | Infer GTD
+            {journal
+              ? (() => {
+                  const d = new Date(journal.date);
+                  const year = d.getFullYear();
+                  const month = String(d.getMonth() + 1).padStart(2, "0");
+                  const day = String(d.getDate()).padStart(2, "0");
+                  return `${year}-${month}-${day}`;
+                })()
+              : "日记详情"}{" "}
+            日记 | Infer GTD
           </title>
           <meta name="description" content="查看日记详情" />
         </Head>
@@ -143,9 +146,7 @@ const JournalDetailPage: NextPage = () => {
         ) : !journal ? (
           <div className="flex h-96 items-center justify-center">
             <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                日记不存在
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900">日记不存在</h3>
               <p className="mt-1 text-sm text-gray-500">
                 您要查看的日记不存在或已被删除
               </p>
@@ -196,15 +197,14 @@ const JournalDetailPage: NextPage = () => {
                   className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
                 >
                   <ArrowLeftIcon className="mr-1 h-4 w-4" />
-                  
                 </button>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
                     {(() => {
                       const d = new Date(journal.date);
                       const year = d.getFullYear();
-                      const month = String(d.getMonth() + 1).padStart(2, '0');
-                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, "0");
+                      const day = String(d.getDate()).padStart(2, "0");
                       return `${year}-${month}-${day}`;
                     })()}
                   </h1>
@@ -215,8 +215,8 @@ const JournalDetailPage: NextPage = () => {
                       {(() => {
                         const d = new Date(journal.createdAt);
                         const year = d.getFullYear();
-                        const month = String(d.getMonth() + 1).padStart(2, '0');
-                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const day = String(d.getDate()).padStart(2, "0");
                         return `${year}-${month}-${day}`;
                       })()}
                     </div>
@@ -227,8 +227,11 @@ const JournalDetailPage: NextPage = () => {
                         {(() => {
                           const d = new Date(journal.updatedAt);
                           const year = d.getFullYear();
-                          const month = String(d.getMonth() + 1).padStart(2, '0');
-                          const day = String(d.getDate()).padStart(2, '0');
+                          const month = String(d.getMonth() + 1).padStart(
+                            2,
+                            "0",
+                          );
+                          const day = String(d.getDate()).padStart(2, "0");
                           return `${year}-${month}-${day}`;
                         })()}
                       </div>

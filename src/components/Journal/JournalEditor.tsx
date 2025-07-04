@@ -31,9 +31,9 @@ export default function JournalEditor({
   const utils = api.useUtils();
 
   // 获取指定日期的日记
-  const { data: existingJournal, isLoading } = api.journal.getByDate.useQuery(
-    { date }
-  );
+  const { data: existingJournal, isLoading } = api.journal.getByDate.useQuery({
+    date,
+  });
 
   // 监听日记数据变化，设置编辑器内容
   useEffect(() => {
@@ -126,8 +126,8 @@ export default function JournalEditor({
   // 默认模板
   const defaultTemplate = `# ${(() => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   })()} 日记
 
@@ -166,8 +166,8 @@ export default function JournalEditor({
             <CalendarIcon className="mr-1 h-4 w-4" />
             {(() => {
               const year = date.getFullYear();
-              const month = String(date.getMonth() + 1).padStart(2, '0');
-              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, "0");
+              const day = String(date.getDate()).padStart(2, "0");
               return `${year}-${month}-${day}`;
             })()}
           </div>
@@ -190,8 +190,6 @@ export default function JournalEditor({
               使用模板
             </button>
           )}
-
-
 
           {/* 保存按钮 */}
           <button

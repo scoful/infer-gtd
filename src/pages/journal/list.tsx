@@ -44,7 +44,9 @@ const JournalListPage: NextPage = () => {
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedJournals, setSelectedJournals] = useState<Set<string>>(new Set());
+  const [selectedJournals, setSelectedJournals] = useState<Set<string>>(
+    new Set(),
+  );
   const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
   const [isSearching, setIsSearching] = useState(false); // 搜索操作
 
@@ -115,7 +117,8 @@ const JournalListPage: NextPage = () => {
 
   // 计算刷新状态
   const isRealInitialLoading = isLoading;
-  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing && !isSearching;
+  const isDataRefreshing =
+    isFetching && !isRealInitialLoading && isManualRefreshing && !isSearching;
 
   // 监听查询状态变化，在刷新完成后重置标志
   useEffect(() => {
@@ -273,14 +276,14 @@ const JournalListPage: NextPage = () => {
               {/* 搜索框和视图切换 */}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-1 items-center space-x-2">
-                  <div className="relative flex-1 max-w-md">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <div className="relative max-w-md flex-1">
+                    <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="搜索日记内容..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full rounded-md border-gray-300 pl-10 pr-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="block w-full rounded-md border-gray-300 py-2 pr-3 pl-10 text-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                   <button
@@ -391,7 +394,10 @@ const JournalListPage: NextPage = () => {
                     <select
                       value={`${sortBy}-${sortOrder}`}
                       onChange={(e) => {
-                        const [field, order] = e.target.value.split("-") as [SortOption, "asc" | "desc"];
+                        const [field, order] = e.target.value.split("-") as [
+                          SortOption,
+                          "asc" | "desc",
+                        ];
                         setSortBy(field);
                         setSortOrder(order);
                       }}
@@ -471,7 +477,9 @@ const JournalListPage: NextPage = () => {
                       type="checkbox"
                       checked={
                         journals.length > 0 &&
-                        journals.every((journal) => selectedJournals.has(journal.id))
+                        journals.every((journal) =>
+                          selectedJournals.has(journal.id),
+                        )
                       }
                       onChange={handleSelectAll}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -627,14 +635,17 @@ function JournalCard({
   const formatDate = (date: Date) => {
     const d = new Date(date);
     const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
   const getPreview = () => {
     if (journal.preview) return journal.preview;
-    return journal.content.substring(0, 150) + (journal.content.length > 150 ? "..." : "");
+    return (
+      journal.content.substring(0, 150) +
+      (journal.content.length > 150 ? "..." : "")
+    );
   };
 
   const getWordCount = () => {
@@ -643,20 +654,20 @@ function JournalCard({
 
   if (viewMode === "list") {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-md transition-shadow">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md">
         <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-3 flex-1">
+          <div className="flex flex-1 items-start space-x-3">
             <input
               type="checkbox"
               checked={isSelected}
               onChange={(e) => onSelect(e.target.checked)}
               className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-2">
+            <div className="min-w-0 flex-1">
+              <div className="mb-2 flex items-center space-x-2">
                 <CalendarIcon className="h-4 w-4 text-gray-400" />
                 <h3
-                  className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                  className="cursor-pointer text-lg font-medium text-gray-900 transition-colors hover:text-blue-600"
                   onClick={onView}
                   title="点击查看日记详情"
                 >
@@ -668,7 +679,7 @@ function JournalCard({
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-600 line-clamp-2">
+              <p className="line-clamp-2 text-sm text-gray-600">
                 {getPreview()}
               </p>
               <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
@@ -681,15 +692,15 @@ function JournalCard({
                   {(() => {
                     const d = new Date(journal.updatedAt);
                     const year = d.getFullYear();
-                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, "0");
+                    const day = String(d.getDate()).padStart(2, "0");
                     return `${year}-${month}-${day}`;
                   })()}
                 </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-1 ml-2 sm:ml-4 sm:space-x-2">
+          <div className="ml-2 flex items-center space-x-1 sm:ml-4 sm:space-x-2">
             <button
               onClick={onView}
               className="inline-flex items-center rounded-md border border-gray-300 bg-white px-1.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:px-2"
@@ -719,8 +730,8 @@ function JournalCard({
 
   // 网格视图
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md">
+      <div className="mb-3 flex items-start justify-between">
         <input
           type="checkbox"
           checked={isSelected}
@@ -737,7 +748,7 @@ function JournalCard({
             </svg>
           </button>
           {isMenuOpen && (
-            <div className="absolute right-0 top-8 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute top-8 right-0 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
               <button
                 onClick={() => {
                   onView();
@@ -777,7 +788,7 @@ function JournalCard({
         <div className="flex items-center space-x-2">
           <CalendarIcon className="h-4 w-4 text-gray-400" />
           <h3
-            className="text-lg font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+            className="cursor-pointer text-lg font-medium text-gray-900 transition-colors hover:text-blue-600"
             onClick={onView}
             title="点击查看日记详情"
           >
@@ -791,9 +802,7 @@ function JournalCard({
           </span>
         )}
 
-        <p className="text-sm text-gray-600 line-clamp-3">
-          {getPreview()}
-        </p>
+        <p className="line-clamp-3 text-sm text-gray-600">{getPreview()}</p>
 
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center">
@@ -805,8 +814,8 @@ function JournalCard({
             {(() => {
               const d = new Date(journal.updatedAt);
               const year = d.getFullYear();
-              const month = String(d.getMonth() + 1).padStart(2, '0');
-              const day = String(d.getDate()).padStart(2, '0');
+              const month = String(d.getMonth() + 1).padStart(2, "0");
+              const day = String(d.getDate()).padStart(2, "0");
               return `${year}-${month}-${day}`;
             })()}
           </span>

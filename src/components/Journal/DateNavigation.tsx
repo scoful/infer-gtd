@@ -55,8 +55,8 @@ export default function DateNavigation({
   const hasJournal = (date: Date) => {
     // 使用本地时区的日期，避免 UTC 时区转换导致的日期偏移
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     const dateKey = `${year}-${month}-${day}`;
     return hasJournalDates.has(dateKey);
   };
@@ -114,13 +114,13 @@ export default function DateNavigation({
 
           {/* 日期选择器 */}
           {showDatePicker && (
-            <div className="absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 transform">
+            <div className="absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 transform">
               <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
                 <input
                   type="date"
                   value={currentDate.toISOString().split("T")[0]}
                   onChange={handleDateSelect}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 />
                 <div className="mt-2 flex justify-end">
                   <button

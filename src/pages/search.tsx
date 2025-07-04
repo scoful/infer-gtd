@@ -815,7 +815,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="text-base font-medium text-gray-900">{task.title}</h4>
+                    <h4 className="text-base font-medium text-gray-900">
+                      {task.title}
+                    </h4>
                     {task.description && (
                       <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                         {task.description}
@@ -868,7 +870,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 key={note.id}
                 className="rounded-lg border border-gray-200 p-4"
               >
-                <h4 className="text-base font-medium text-gray-900">{note.title}</h4>
+                <h4 className="text-base font-medium text-gray-900">
+                  {note.title}
+                </h4>
                 <p className="mt-1 line-clamp-3 text-sm text-gray-600">
                   {note.content}
                 </p>
@@ -902,7 +906,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 key={project.id}
                 className="rounded-lg border border-gray-200 p-4"
               >
-                <h4 className="text-base font-medium text-gray-900">{project.name}</h4>
+                <h4 className="text-base font-medium text-gray-900">
+                  {project.name}
+                </h4>
                 {project.description && (
                   <p className="mt-1 text-sm text-gray-600">
                     {project.description}

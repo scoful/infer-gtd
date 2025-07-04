@@ -1005,9 +1005,11 @@ function NoteCard({
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                <ArchiveBoxIcon className={`mr-2 h-4 w-4 ${
-                  note.isArchived ? "text-orange-500" : ""
-                }`} />
+                <ArchiveBoxIcon
+                  className={`mr-2 h-4 w-4 ${
+                    note.isArchived ? "text-orange-500" : ""
+                  }`}
+                />
                 {note.isArchived ? "取消归档" : "归档"}
               </button>
               <button

@@ -503,7 +503,9 @@ function WaitingGroupCard({
           <div className="flex items-center gap-3">
             <Icon className="h-5 w-5" />
             <div>
-              <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                {group.name}
+              </h3>
               <p className="text-sm opacity-75">{group.description}</p>
             </div>
           </div>

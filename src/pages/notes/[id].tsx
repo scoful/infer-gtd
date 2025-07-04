@@ -176,168 +176,168 @@ const NoteDetailPage: NextPage = () => {
             loadingMessage="加载笔记详情中..."
             loadingComponent={<SectionLoading message="加载笔记详情中..." />}
           >
-          {note && (
-            <div className="space-y-6">
-              {/* 页面头部 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <button
-                    onClick={handleBack}
-                    className="mr-4 rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  >
-                    <ArrowLeftIcon className="h-5 w-5" />
-                  </button>
-                  <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      笔记详情
-                    </h1>
-                    {isFetching && !isLoading && (
-                      <div className="flex items-center text-sm text-blue-600">
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                        刷新中...
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleEdit}
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                  >
-                    <PencilIcon className="mr-2 h-4 w-4" />
-                    编辑
-                  </button>
-                  <button
-                    onClick={handleArchive}
-                    disabled={archiveNote.isPending}
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    <ArchiveBoxIcon className="mr-2 h-4 w-4" />
-                    {note.isArchived ? "取消归档" : "归档"}
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteNote.isPending}
-                    className="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
-                  >
-                    <TrashIcon className="mr-2 h-4 w-4" />
-                    删除
-                  </button>
-                </div>
-              </div>
-
-              {/* 笔记内容 */}
-              <div className="rounded-lg border border-gray-200 bg-white">
-                {/* 笔记头部信息 */}
-                <div className="border-b border-gray-200 px-6 py-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h1 className="mb-2 text-2xl font-bold text-gray-900">
-                        {note.title}
+            {note && (
+              <div className="space-y-6">
+                {/* 页面头部 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <button
+                      onClick={handleBack}
+                      className="mr-4 rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    >
+                      <ArrowLeftIcon className="h-5 w-5" />
+                    </button>
+                    <div className="flex items-center gap-4">
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        笔记详情
                       </h1>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <CalendarIcon className="mr-1 h-4 w-4" />
-                          创建于 {formatDate(note.createdAt)}
+                      {isFetching && !isLoading && (
+                        <div className="flex items-center text-sm text-blue-600">
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                          刷新中...
                         </div>
-                        {note.updatedAt.getTime() !==
-                          note.createdAt.getTime() && (
-                          <div className="flex items-center">
-                            <CalendarIcon className="mr-1 h-4 w-4" />
-                            更新于 {formatDate(note.updatedAt)}
-                          </div>
-                        )}
-                        {note.linkedTasks.length > 0 && (
-                          <div className="flex items-center">
-                            <LinkIcon className="mr-1 h-4 w-4" />
-                            {note.linkedTasks.length} 个关联任务
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
-                    {note.isArchived && (
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-                        <ArchiveBoxIcon className="mr-1 h-4 w-4" />
-                        已归档
-                      </span>
-                    )}
                   </div>
 
-                  {/* 项目和标签 */}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {note.project && (
-                      <span
-                        className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
-                        style={{
-                          backgroundColor: note.project.color
-                            ? `${note.project.color}20`
-                            : "#f3f4f6",
-                          color: note.project.color ?? "#6b7280",
-                        }}
-                      >
-                        <FolderIcon className="mr-1 h-4 w-4" />
-                        {note.project.name}
-                      </span>
-                    )}
-                    {note.tags.map(({ tag }) => (
-                      <span
-                        key={tag.id}
-                        className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
-                        style={{
-                          backgroundColor: tag.color
-                            ? `${tag.color}20`
-                            : "#f3f4f6",
-                          color: tag.color ?? "#6b7280",
-                        }}
-                      >
-                        <TagIcon className="mr-1 h-4 w-4" />
-                        {tag.name}
-                      </span>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleEdit}
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                    >
+                      <PencilIcon className="mr-2 h-4 w-4" />
+                      编辑
+                    </button>
+                    <button
+                      onClick={handleArchive}
+                      disabled={archiveNote.isPending}
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      <ArchiveBoxIcon className="mr-2 h-4 w-4" />
+                      {note.isArchived ? "取消归档" : "归档"}
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteNote.isPending}
+                      className="inline-flex items-center rounded-md border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm hover:bg-red-50 disabled:opacity-50"
+                    >
+                      <TrashIcon className="mr-2 h-4 w-4" />
+                      删除
+                    </button>
                   </div>
                 </div>
 
                 {/* 笔记内容 */}
-                <div className="px-6 py-6">
-                  <MarkdownRenderer content={note.content} />
-                </div>
-              </div>
-
-              {/* 关联任务 */}
-              {note.linkedTasks.length > 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white p-6">
-                  <h3 className="mb-4 text-lg font-medium text-gray-900">
-                    关联任务
-                  </h3>
-                  <div className="space-y-3">
-                    {note.linkedTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
-                      >
-                        <div>
-                          <h4 className="text-base font-medium text-gray-900">
-                            {task.title}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            状态: {task.status}
-                          </p>
+                <div className="rounded-lg border border-gray-200 bg-white">
+                  {/* 笔记头部信息 */}
+                  <div className="border-b border-gray-200 px-6 py-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h1 className="mb-2 text-2xl font-bold text-gray-900">
+                          {note.title}
+                        </h1>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <CalendarIcon className="mr-1 h-4 w-4" />
+                            创建于 {formatDate(note.createdAt)}
+                          </div>
+                          {note.updatedAt.getTime() !==
+                            note.createdAt.getTime() && (
+                            <div className="flex items-center">
+                              <CalendarIcon className="mr-1 h-4 w-4" />
+                              更新于 {formatDate(note.updatedAt)}
+                            </div>
+                          )}
+                          {note.linkedTasks.length > 0 && (
+                            <div className="flex items-center">
+                              <LinkIcon className="mr-1 h-4 w-4" />
+                              {note.linkedTasks.length} 个关联任务
+                            </div>
+                          )}
                         </div>
-                        <button
-                          onClick={() => router.push(`/tasks?id=${task.id}`)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          查看任务
-                        </button>
                       </div>
-                    ))}
+                      {note.isArchived && (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
+                          <ArchiveBoxIcon className="mr-1 h-4 w-4" />
+                          已归档
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 项目和标签 */}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {note.project && (
+                        <span
+                          className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
+                          style={{
+                            backgroundColor: note.project.color
+                              ? `${note.project.color}20`
+                              : "#f3f4f6",
+                            color: note.project.color ?? "#6b7280",
+                          }}
+                        >
+                          <FolderIcon className="mr-1 h-4 w-4" />
+                          {note.project.name}
+                        </span>
+                      )}
+                      {note.tags.map(({ tag }) => (
+                        <span
+                          key={tag.id}
+                          className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium"
+                          style={{
+                            backgroundColor: tag.color
+                              ? `${tag.color}20`
+                              : "#f3f4f6",
+                            color: tag.color ?? "#6b7280",
+                          }}
+                        >
+                          <TagIcon className="mr-1 h-4 w-4" />
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 笔记内容 */}
+                  <div className="px-6 py-6">
+                    <MarkdownRenderer content={note.content} />
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-        </QueryLoading>
+
+                {/* 关联任务 */}
+                {note.linkedTasks.length > 0 && (
+                  <div className="rounded-lg border border-gray-200 bg-white p-6">
+                    <h3 className="mb-4 text-lg font-medium text-gray-900">
+                      关联任务
+                    </h3>
+                    <div className="space-y-3">
+                      {note.linkedTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
+                        >
+                          <div>
+                            <h4 className="text-base font-medium text-gray-900">
+                              {task.title}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              状态: {task.status}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => router.push(`/tasks?id=${task.id}`)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            查看任务
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </QueryLoading>
         )}
 
         {/* 编辑模态框 */}

@@ -72,7 +72,7 @@ const NewNotePage: NextPage = () => {
           ...draft,
           tagIds: draft.tagIds || [],
           // 如果URL中有projectId参数，优先使用URL参数
-          projectId: router.query.projectId as string || draft.projectId,
+          projectId: (router.query.projectId as string) || draft.projectId,
         }));
         console.log("草稿恢复成功");
       } catch (error) {

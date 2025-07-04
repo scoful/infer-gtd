@@ -45,20 +45,27 @@ interface ProjectCardProps {
   onView: () => void;
 }
 
-function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }: ProjectCardProps) {
+function ProjectCard({
+  project,
+  viewMode,
+  onEdit,
+  onArchive,
+  onDelete,
+  onView,
+}: ProjectCardProps) {
   const isArchived = project.isArchived;
-  
+
   if (viewMode === "grid") {
     return (
       <div className="group relative rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
         {/* 项目颜色指示器 */}
         {project.color && (
           <div
-            className="absolute left-0 top-0 h-full w-1 rounded-l-lg"
+            className="absolute top-0 left-0 h-full w-1 rounded-l-lg"
             style={{ backgroundColor: project.color }}
           />
         )}
-        
+
         {/* 头部 */}
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
@@ -68,7 +75,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
             <div className="min-w-0 flex-1">
               <button
                 onClick={onView}
-                className="text-left hover:text-blue-600 cursor-pointer"
+                className="cursor-pointer text-left hover:text-blue-600"
               >
                 <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                   {project.name}
@@ -82,7 +89,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
               )}
             </div>
           </div>
-          
+
           {/* 操作菜单 */}
           <Menu as="div" className="relative">
             <Menu.Button className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">
@@ -97,7 +104,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95"
             >
-              <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <Menu.Items className="ring-opacity-5 absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none">
                 <Menu.Item>
                   {({ active }) => (
                     <button
@@ -150,14 +157,14 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
             </Transition>
           </Menu>
         </div>
-        
+
         {/* 描述 */}
         {project.description && (
-          <p className="mt-3 text-sm text-gray-600 line-clamp-2">
+          <p className="mt-3 line-clamp-2 text-sm text-gray-600">
             {project.description}
           </p>
         )}
-        
+
         {/* 统计信息 */}
         <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
           <div className="flex items-center space-x-4">
@@ -177,7 +184,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
       </div>
     );
   }
-  
+
   // 列表视图
   return (
     <div className="group flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
@@ -187,12 +194,12 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
           className="h-4 w-4 rounded-full border-2 border-gray-300"
           style={{ backgroundColor: project.color || "#e5e7eb" }}
         />
-        
+
         <div className="min-w-0 flex-1">
           <div className="flex items-center space-x-2">
             <button
               onClick={onView}
-              className="text-left hover:text-blue-600 cursor-pointer"
+              className="cursor-pointer text-left hover:text-blue-600"
             >
               <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                 {project.name}
@@ -206,13 +213,13 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
             )}
           </div>
           {project.description && (
-            <p className="mt-1 text-sm text-gray-600 line-clamp-1">
+            <p className="mt-1 line-clamp-1 text-sm text-gray-600">
               {project.description}
             </p>
           )}
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-6">
         {/* 统计信息 */}
         <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -228,7 +235,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
             {new Date(project.updatedAt).toLocaleDateString()}
           </div>
         </div>
-        
+
         {/* 操作菜单 */}
         <Menu as="div" className="relative">
           <Menu.Button className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">
@@ -243,7 +250,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+            <Menu.Items className="ring-opacity-5 absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black focus:outline-none">
               <Menu.Item>
                 {({ active }) => (
                   <button
@@ -315,11 +322,14 @@ const ProjectsPage: NextPage = () => {
   const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新状态
 
   // 查询参数
-  const queryParams = useMemo(() => ({
-    search: searchQuery.trim() || undefined,
-    includeArchived,
-    limit: 20,
-  }), [searchQuery, includeArchived]);
+  const queryParams = useMemo(
+    () => ({
+      search: searchQuery.trim() || undefined,
+      includeArchived,
+      limit: 20,
+    }),
+    [searchQuery, includeArchived],
+  );
 
   // 获取项目数据 - 使用无限查询支持分页
   const {
@@ -340,7 +350,8 @@ const ProjectsPage: NextPage = () => {
 
   // 计算刷新状态
   const isRealInitialLoading = isLoading;
-  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
+  const isDataRefreshing =
+    isFetching && !isRealInitialLoading && isManualRefreshing;
 
   // 监听查询状态变化，在刷新完成后重置标志
   useEffect(() => {
@@ -469,7 +480,7 @@ const ProjectsPage: NextPage = () => {
 
   // 合并所有页面的项目数据
   const projects = useMemo(() => {
-    return projectsData?.pages.flatMap(page => page.projects) ?? [];
+    return projectsData?.pages.flatMap((page) => page.projects) ?? [];
   }, [projectsData]);
 
   return (
@@ -502,7 +513,7 @@ const ProjectsPage: NextPage = () => {
                 setEditingProjectId(null);
                 setIsProjectModalOpen(true);
               }}
-              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
             >
               <PlusIcon className="mr-2 h-4 w-4" />
               新建项目
@@ -513,14 +524,14 @@ const ProjectsPage: NextPage = () => {
           <div className="mb-6 flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div className="flex flex-1 items-center space-x-4">
               {/* 搜索框 */}
-              <div className="relative flex-1 max-w-md">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div className="relative max-w-md flex-1">
+                <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="搜索项目..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
@@ -542,7 +553,7 @@ const ProjectsPage: NextPage = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg ${
+                className={`rounded-lg p-2 ${
                   viewMode === "grid"
                     ? "bg-blue-100 text-blue-600"
                     : "text-gray-400 hover:text-gray-600"
@@ -552,7 +563,7 @@ const ProjectsPage: NextPage = () => {
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg ${
+                className={`rounded-lg p-2 ${
                   viewMode === "list"
                     ? "bg-blue-100 text-blue-600"
                     : "text-gray-400 hover:text-gray-600"
@@ -598,7 +609,7 @@ const ProjectsPage: NextPage = () => {
                     <button
                       onClick={() => fetchNextPage()}
                       disabled={isFetchingNextPage}
-                      className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                      className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                     >
                       {isFetchingNextPage ? "加载中..." : "加载更多"}
                     </button>
@@ -606,9 +617,11 @@ const ProjectsPage: NextPage = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">暂无项目</h3>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  暂无项目
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
                   开始创建您的第一个项目来组织工作
                 </p>

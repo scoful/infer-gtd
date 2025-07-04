@@ -102,8 +102,16 @@ export const journalRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getJournalsSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, sortBy = "date", sortOrder, startDate, endDate, template } =
-        input;
+      const {
+        limit,
+        cursor,
+        search,
+        sortBy = "date",
+        sortOrder,
+        startDate,
+        endDate,
+        template,
+      } = input;
 
       try {
         const where: any = {

@@ -419,16 +419,14 @@ export const projectRouter = createTRPCRouter({
 
         // 计算活跃天数（基于任务和笔记的创建/更新日期）
         const allDates = [
-          ...recentTasks.map(t => t.createdAt),
-          ...recentTasks.map(t => t.updatedAt),
-          ...recentNotes.map(n => n.createdAt),
-          ...recentNotes.map(n => n.updatedAt),
+          ...recentTasks.map((t) => t.createdAt),
+          ...recentTasks.map((t) => t.updatedAt),
+          ...recentNotes.map((n) => n.createdAt),
+          ...recentNotes.map((n) => n.updatedAt),
         ];
 
         const uniqueDays = new Set(
-          allDates.map(date =>
-            new Date(date).toISOString().split('T')[0]
-          )
+          allDates.map((date) => new Date(date).toISOString().split("T")[0]),
         );
 
         const activeDays = uniqueDays.size;

@@ -18,6 +18,45 @@ import { api } from "@/utils/api";
 import { QueryLoading, SectionLoading } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 
+// 任务类型定义
+type TaskWithRelations = {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: TaskStatus;
+  type: TaskType;
+  priority?: Priority | null;
+  dueDate?: Date | null;
+  dueTime?: string | null;
+  completedAt?: Date | null;
+  totalTimeSpent: number;
+  isTimerActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  project?: { id: string; name: string; color?: string | null } | null;
+  tags: Array<{
+    tag: {
+      id: string;
+      name: string;
+      color?: string | null;
+      type: any;
+      category?: string | null;
+      isSystem: boolean;
+      description?: string | null;
+      icon?: string | null;
+    };
+  }>;
+  timeEntries: Array<{
+    id: string;
+    startTime: Date;
+    endTime?: Date | null;
+  }>;
+  _count?: {
+    timeEntries: number;
+    statusHistory: number;
+  };
+};
+
 interface ProjectTaskListProps {
   projectId: string;
   onCreateTask: () => void;
@@ -28,10 +67,19 @@ interface ProjectTaskListProps {
 const TASK_STATUS_CONFIG = {
   [TaskStatus.IDEA]: { label: "想法", color: "bg-gray-100 text-gray-800" },
   [TaskStatus.TODO]: { label: "待办", color: "bg-blue-100 text-blue-800" },
-  [TaskStatus.IN_PROGRESS]: { label: "进行中", color: "bg-yellow-100 text-yellow-800" },
-  [TaskStatus.WAITING]: { label: "等待中", color: "bg-purple-100 text-purple-800" },
+  [TaskStatus.IN_PROGRESS]: {
+    label: "进行中",
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  [TaskStatus.WAITING]: {
+    label: "等待中",
+    color: "bg-purple-100 text-purple-800",
+  },
   [TaskStatus.DONE]: { label: "已完成", color: "bg-green-100 text-green-800" },
-  [TaskStatus.ARCHIVED]: { label: "已归档", color: "bg-gray-100 text-gray-800" },
+  [TaskStatus.ARCHIVED]: {
+    label: "已归档",
+    color: "bg-gray-100 text-gray-800",
+  },
 };
 
 // 优先级配置
@@ -44,7 +92,7 @@ const PRIORITY_CONFIG = {
 
 // 任务卡片组件
 interface TaskCardProps {
-  task: any;
+  task: TaskWithRelations;
   onEdit: () => void;
   onStatusChange: (status: TaskStatus) => void;
 }
@@ -134,11 +182,16 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
     }
 
     const urgencyStyles = {
-      overdue: "rounded-lg border border-gray-200 border-l-4 border-l-red-600 bg-red-50 p-4 shadow-sm hover:shadow-md transition-shadow",
-      critical: "rounded-lg border border-gray-200 border-l-4 border-l-red-500 bg-red-25 p-4 shadow-sm hover:shadow-md transition-shadow",
-      urgent: "rounded-lg border border-gray-200 border-l-4 border-l-orange-500 bg-orange-25 p-4 shadow-sm hover:shadow-md transition-shadow",
-      warning: "rounded-lg border border-gray-200 border-l-4 border-l-yellow-500 bg-yellow-25 p-4 shadow-sm hover:shadow-md transition-shadow",
-      normal: "rounded-lg border border-gray-200 border-l-4 border-l-blue-500 bg-blue-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      overdue:
+        "rounded-lg border border-gray-200 border-l-4 border-l-red-600 bg-red-50 p-4 shadow-sm hover:shadow-md transition-shadow",
+      critical:
+        "rounded-lg border border-gray-200 border-l-4 border-l-red-500 bg-red-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      urgent:
+        "rounded-lg border border-gray-200 border-l-4 border-l-orange-500 bg-orange-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      warning:
+        "rounded-lg border border-gray-200 border-l-4 border-l-yellow-500 bg-yellow-25 p-4 shadow-sm hover:shadow-md transition-shadow",
+      normal:
+        "rounded-lg border border-gray-200 border-l-4 border-l-blue-500 bg-blue-25 p-4 shadow-sm hover:shadow-md transition-shadow",
     };
 
     return urgencyStyles[deadlineInfo.urgencyLevel];
@@ -147,9 +200,9 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
   return (
     <div className={`relative ${getDeadlineCardStyles()}`}>
       <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-2">
-            <h4 className="text-sm font-medium text-gray-900 truncate">
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-center space-x-2">
+            <h4 className="truncate text-sm font-medium text-gray-900">
               {task.title}
             </h4>
             {priorityConfig && (
@@ -158,9 +211,9 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
               </span>
             )}
           </div>
-          
+
           {task.description && (
-            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            <p className="mb-3 line-clamp-2 text-sm text-gray-600">
               {task.description}
             </p>
           )}
@@ -202,13 +255,15 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusConfig.color}`}
+              >
                 {statusConfig.label}
               </span>
 
               {task.totalTimeSpent > 0 && (
                 <div className="flex items-center text-xs text-gray-500">
-                  <ClockIcon className="h-3 w-3 mr-1" />
+                  <ClockIcon className="mr-1 h-3 w-3" />
                   {formatTimeSpent(task.totalTimeSpent)}
                 </div>
               )}
@@ -216,7 +271,7 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
               {/* 非限时任务仍显示简单的截止日期 */}
               {task.dueDate && task.type !== TaskType.DEADLINE && (
                 <div className="flex items-center text-xs text-gray-500">
-                  <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
+                  <ExclamationTriangleIcon className="mr-1 h-3 w-3" />
                   {new Date(task.dueDate).toLocaleDateString()}
                 </div>
               )}
@@ -224,7 +279,7 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
 
             <button
               onClick={onEdit}
-              className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              className="rounded p-1 text-gray-400 hover:text-gray-600"
             >
               <PencilIcon className="h-4 w-4" />
             </button>
@@ -237,19 +292,19 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
         {task.status !== TaskStatus.DONE && (
           <button
             onClick={() => onStatusChange(TaskStatus.DONE)}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200"
+            className="inline-flex items-center rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-200"
           >
-            <CheckCircleIcon className="h-3 w-3 mr-1" />
+            <CheckCircleIcon className="mr-1 h-3 w-3" />
             完成
           </button>
         )}
-        
+
         {task.status === TaskStatus.TODO && (
           <button
             onClick={() => onStatusChange(TaskStatus.IN_PROGRESS)}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded hover:bg-yellow-200"
+            className="inline-flex items-center rounded bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700 hover:bg-yellow-200"
           >
-            <PlayIcon className="h-3 w-3 mr-1" />
+            <PlayIcon className="mr-1 h-3 w-3" />
             开始
           </button>
         )}
@@ -257,9 +312,9 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
         {task.status === TaskStatus.IN_PROGRESS && (
           <button
             onClick={() => onStatusChange(TaskStatus.TODO)}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200"
+            className="inline-flex items-center rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
           >
-            <PauseIcon className="h-3 w-3 mr-1" />
+            <PauseIcon className="mr-1 h-3 w-3" />
             暂停
           </button>
         )}
@@ -300,21 +355,28 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
   );
 }
 
-export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }: ProjectTaskListProps) {
+export default function ProjectTaskList({
+  projectId,
+  onCreateTask,
+  onEditTask,
+}: ProjectTaskListProps) {
   const { showSuccess, showError } = useGlobalNotifications();
-  
+
   // 状态管理
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "">("");
   const [priorityFilter, setPriorityFilter] = useState<Priority | "">("");
 
   // 查询参数
-  const queryParams = useMemo(() => ({
-    id: projectId,
-    status: statusFilter || undefined,
-    priority: priorityFilter || undefined,
-    limit: 20,
-  }), [projectId, statusFilter, priorityFilter]);
+  const queryParams = useMemo(
+    () => ({
+      id: projectId,
+      status: statusFilter || undefined,
+      priority: priorityFilter || undefined,
+      limit: 20,
+    }),
+    [projectId, statusFilter, priorityFilter],
+  );
 
   // 获取项目任务数据
   const {
@@ -346,17 +408,18 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
 
   // 合并所有页面的任务数据
   const tasks = useMemo(() => {
-    return tasksData?.pages.flatMap(page => page.tasks) ?? [];
+    return tasksData?.pages.flatMap((page) => page.tasks) ?? [];
   }, [tasksData]);
 
   // 客户端搜索过滤
   const filteredTasks = useMemo(() => {
     if (!searchQuery.trim()) return tasks;
-    
+
     const query = searchQuery.toLowerCase();
-    return tasks.filter(task => 
-      task.title.toLowerCase().includes(query) ||
-      task.description?.toLowerCase().includes(query)
+    return tasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(query) ||
+        task.description?.toLowerCase().includes(query),
     );
   }, [tasks, searchQuery]);
 
@@ -374,7 +437,7 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
       onEditTask(taskId);
     } else {
       // 降级到跳转页面
-      window.open(`/tasks?id=${taskId}`, '_blank');
+      window.open(`/tasks?id=${taskId}`, "_blank");
     }
   };
 
@@ -384,14 +447,14 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-4">
         <div className="flex flex-1 items-center space-x-4">
           {/* 搜索框 */}
-          <div className="relative flex-1 max-w-md">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <div className="relative max-w-md flex-1">
+            <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="搜索任务..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
@@ -400,8 +463,10 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
             {/* 状态筛选 */}
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "")}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+              onChange={(e) =>
+                setStatusFilter(e.target.value as TaskStatus | "")
+              }
+              className="min-w-[120px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               <option value="">所有状态</option>
               {Object.entries(TASK_STATUS_CONFIG).map(([status, config]) => (
@@ -414,8 +479,10 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
             {/* 优先级筛选 */}
             <select
               value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value as Priority | "")}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[120px]"
+              onChange={(e) =>
+                setPriorityFilter(e.target.value as Priority | "")
+              }
+              className="min-w-[120px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
             >
               <option value="">所有优先级</option>
               {Object.entries(PRIORITY_CONFIG).map(([priority, config]) => (
@@ -453,7 +520,9 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
                   key={task.id}
                   task={task}
                   onEdit={() => handleEditTask(task.id)}
-                  onStatusChange={(status) => handleStatusChange(task.id, status)}
+                  onStatusChange={(status) =>
+                    handleStatusChange(task.id, status)
+                  }
                 />
               ))}
             </div>
@@ -464,7 +533,7 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
                 <button
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
-                  className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                  className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "加载中..." : "加载更多"}
                 </button>
@@ -472,7 +541,7 @@ export default function ProjectTaskList({ projectId, onCreateTask, onEditTask }:
             )}
           </div>
         ) : (
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">暂无任务</h3>
             <p className="mt-1 text-sm text-gray-500">

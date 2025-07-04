@@ -45,7 +45,7 @@ const NewJournalPage: NextPage = () => {
     { date: today },
     {
       enabled: !!sessionData,
-    }
+    },
   );
 
   // 如果今天已有日记，重定向到编辑页面
@@ -170,8 +170,8 @@ const NewJournalPage: NextPage = () => {
   // 默认模板
   const defaultTemplate = `# ${(() => {
     const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   })()} 日记
 

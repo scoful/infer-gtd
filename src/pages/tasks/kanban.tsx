@@ -1577,7 +1577,9 @@ function KanbanColumn({
       {/* 列标题 */}
       <div className={`${column.headerColor} rounded-t-lg border-b px-4 py-3`}>
         <div>
-          <h3 className="text-base font-medium text-gray-900">{column.title}</h3>
+          <h3 className="text-base font-medium text-gray-900">
+            {column.title}
+          </h3>
           <p className="text-xs text-gray-500">
             {totalTaskCount !== undefined
               ? `${tasks.length}/${totalTaskCount} 个任务`

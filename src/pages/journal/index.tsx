@@ -33,21 +33,21 @@ const JournalPage: NextPage = () => {
       staleTime: 30 * 1000, // 30秒缓存
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-    }
+    },
   );
 
   // 获取最近的日记列表（用于显示有日记的日期）
   const {
     data: recentJournals,
     isFetching: isFetchingRecentJournals,
-    refetch: refetchRecentJournals
+    refetch: refetchRecentJournals,
   } = api.journal.getRecent.useQuery(
     { limit: 30 },
     {
       staleTime: 30 * 1000, // 30秒缓存
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-    }
+    },
   );
 
   // 构建有日记的日期集合
@@ -56,16 +56,17 @@ const JournalPage: NextPage = () => {
       // 使用本地时区的日期，避免 UTC 时区转换导致的日期偏移
       const date = new Date(journal.date);
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
-    }) || []
+    }) || [],
   );
 
   // 计算刷新状态
   const isFetching = isFetchingCurrentJournal || isFetchingRecentJournals;
   const isRealInitialLoading = isLoading;
-  const isDataRefreshing = isFetching && !isRealInitialLoading && isManualRefreshing;
+  const isDataRefreshing =
+    isFetching && !isRealInitialLoading && isManualRefreshing;
 
   // 监听查询状态变化，在刷新完成后重置标志
   useEffect(() => {
@@ -77,10 +78,7 @@ const JournalPage: NextPage = () => {
   // 刷新所有数据
   const refetchAll = async () => {
     setIsManualRefreshing(true); // 标记为手动刷新
-    await Promise.all([
-      refetchCurrentJournal(),
-      refetchRecentJournals(),
-    ]);
+    await Promise.all([refetchCurrentJournal(), refetchRecentJournals()]);
   };
 
   // 注册页面刷新函数
@@ -94,7 +92,12 @@ const JournalPage: NextPage = () => {
       void refetchCurrentJournal();
       void refetchRecentJournals();
     }
-  }, [router.isReady, router.asPath, refetchCurrentJournal, refetchRecentJournals]);
+  }, [
+    router.isReady,
+    router.asPath,
+    refetchCurrentJournal,
+    refetchRecentJournals,
+  ]);
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
@@ -107,7 +110,9 @@ const JournalPage: NextPage = () => {
 
     if (!isToday) {
       // 如果不是今天，提示用户只能为今天创建日记
-      alert("只能为今天创建新日记。如需查看或编辑其他日期的日记，请从日记列表中选择。");
+      alert(
+        "只能为今天创建新日记。如需查看或编辑其他日期的日记，请从日记列表中选择。",
+      );
       return;
     }
 
@@ -120,12 +125,10 @@ const JournalPage: NextPage = () => {
     }
   };
 
-
-
   const goToToday = () => {
     // 检查今天是否已有日记
     const today = new Date();
-    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (hasJournalDates.has(todayKey)) {
       // 如果今天已有日记，跳转到日记首页并设置为今天
@@ -205,7 +208,7 @@ const JournalPage: NextPage = () => {
                           day: "2-digit",
                           hour: "2-digit",
                           minute: "2-digit",
-                        }
+                        },
                       )}
                     </div>
                   )}
