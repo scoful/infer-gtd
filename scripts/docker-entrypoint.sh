@@ -57,7 +57,7 @@ check_migration_applied_in_db() {
             echo "$(date -Iseconds) [INFO] [DOCKER] 📝 Checking: $table_column_info"
 
             # 尝试重新执行 ADD COLUMN 语句来检查是否已存在
-            local add_column_result=$(echo "$migration_content" | npx prisma db execute --stdin --schema=prisma/schema.prisma 2>&1 || echo "EXECUTION_FAILED")
+            local add_column_result=$(echo "$migration_content" | ./node_modules/.bin/prisma db execute --stdin --schema=prisma/schema.prisma 2>&1 || echo "EXECUTION_FAILED")
 
             if echo "$add_column_result" | grep -q "already exists\|duplicate column"; then
                 echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Column already exists - migration appears to be applied"
@@ -87,7 +87,7 @@ echo "$(date -Iseconds) [INFO] [DOCKER] 📡 Checking database connection..."
 echo "DB_CONNECTING" > /tmp/app-status/startup.status
 
 # 使用更安全的连接检查方式，避免意外修改数据库结构
-DB_CHECK_OUTPUT=$(echo "SELECT 1;" | npx prisma db execute --stdin --schema=prisma/schema.prisma 2>&1)
+DB_CHECK_OUTPUT=$(echo "SELECT 1;" | ./node_modules/.bin/prisma db execute --stdin --schema=prisma/schema.prisma 2>&1)
 DB_CHECK_EXIT_CODE=$?
 
 if [ $DB_CHECK_EXIT_CODE -ne 0 ]; then
@@ -102,7 +102,7 @@ echo "DB_CONNECTED" > /tmp/app-status/startup.status
 
 # 检查迁移状态
 echo "$(date -Iseconds) [INFO] [DOCKER] 🔍 Checking migration status..."
-MIGRATION_STATUS_OUTPUT=$(npx prisma migrate status 2>&1)
+MIGRATION_STATUS_OUTPUT=$(./node_modules/.bin/prisma migrate status 2>&1)
 MIGRATION_STATUS_EXIT_CODE=$?
 
 echo "$(date -Iseconds) [INFO] [DOCKER] Current migration status:"
@@ -111,7 +111,7 @@ echo "$MIGRATION_STATUS_OUTPUT"
 # 执行数据库迁移
 echo "$(date -Iseconds) [INFO] [DOCKER] 🔄 Running database migrations..."
 echo "MIGRATING" > /tmp/app-status/startup.status
-MIGRATION_OUTPUT=$(npx prisma migrate deploy 2>&1)
+MIGRATION_OUTPUT=$(./node_modules/.bin/prisma migrate deploy 2>&1)
 MIGRATION_EXIT_CODE=$?
 
 if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
@@ -119,7 +119,7 @@ if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
         echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Database schema exists but no migration history found"
         echo "$(date -Iseconds) [INFO] [DOCKER] 🔄 Resetting database and applying migrations..."
         echo "RESETTING_DB" > /tmp/app-status/startup.status
-        npx prisma migrate reset --force || {
+        ./node_modules/.bin/prisma migrate reset --force || {
             echo "$(date -Iseconds) [ERROR] [DOCKER] ❌ Database reset failed"
             echo "MIGRATION_FAILED" > /tmp/app-status/startup.status
             exit 1
@@ -142,7 +142,7 @@ if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
                 echo "$(date -Iseconds) [INFO] [DOCKER] 🔧 Marking migration as applied in migration history..."
 
                 # 标记迁移为已应用
-                RESOLVE_OUTPUT=$(npx prisma migrate resolve --applied "$MIGRATION_NAME" 2>&1)
+                RESOLVE_OUTPUT=$(./node_modules/.bin/prisma migrate resolve --applied "$MIGRATION_NAME" 2>&1)
                 RESOLVE_EXIT_CODE=$?
 
                 if [ $RESOLVE_EXIT_CODE -eq 0 ]; then
@@ -150,7 +150,7 @@ if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
 
                     # 再次尝试应用剩余的迁移
                     echo "$(date -Iseconds) [INFO] [DOCKER] 🔄 Applying remaining migrations..."
-                    MIGRATION_OUTPUT=$(npx prisma migrate deploy 2>&1)
+                    MIGRATION_OUTPUT=$(./node_modules/.bin/prisma migrate deploy 2>&1)
                     MIGRATION_EXIT_CODE=$?
 
                     if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
@@ -193,7 +193,7 @@ echo "MIGRATED" > /tmp/app-status/startup.status
 # 生成 Prisma 客户端
 echo "$(date -Iseconds) [INFO] [DOCKER] ⚙️ Generating Prisma client..."
 echo "GENERATING_CLIENT" > /tmp/app-status/startup.status
-npx prisma generate || {
+./node_modules/.bin/prisma generate || {
     echo "$(date -Iseconds) [ERROR] [DOCKER] ❌ Prisma client generation failed"
     echo "CLIENT_FAILED" > /tmp/app-status/startup.status
     exit 1
