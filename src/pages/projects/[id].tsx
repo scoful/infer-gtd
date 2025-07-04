@@ -529,9 +529,8 @@ const ProjectDetailPage: NextPage = () => {
                                       <span
                                         className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${TASK_STATUS_CONFIG[task.status]?.color || "bg-gray-100 text-gray-800"}`}
                                       >
-                                        {TASK_STATUS_CONFIG[
-                                          task.status
-                                        ]?.label || task.status}
+                                        {TASK_STATUS_CONFIG[task.status]
+                                          ?.label || task.status}
                                       </span>
                                       <span className="text-sm text-gray-500">
                                         创建于{" "}

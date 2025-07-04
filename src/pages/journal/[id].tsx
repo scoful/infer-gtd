@@ -81,7 +81,9 @@ const JournalDetailPage: NextPage = () => {
       }
     } else {
       // 如果没有来源信息，清除 URL 中的 edit 参数，留在当前详情页
-      void router.replace(`/journal/${id}`, undefined, { shallow: true });
+      void router.replace(`/journal/${id as string}`, undefined, {
+        shallow: true,
+      });
     }
   };
 
@@ -99,7 +101,9 @@ const JournalDetailPage: NextPage = () => {
       }
     } else {
       // 如果没有来源信息，清除 URL 中的 edit 参数，留在当前详情页
-      void router.replace(`/journal/${id}`, undefined, { shallow: true });
+      void router.replace(`/journal/${id as string}`, undefined, {
+        shallow: true,
+      });
     }
   };
 
