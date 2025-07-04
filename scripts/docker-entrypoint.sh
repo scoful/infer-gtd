@@ -57,7 +57,7 @@ check_migration_applied_in_db() {
             echo "$(date -Iseconds) [INFO] [DOCKER] 📝 Checking: $table_column_info"
 
             # 尝试重新执行 ADD COLUMN 语句来检查是否已存在
-            local add_column_result=$(echo "$migration_content" | npx prisma db execute --stdin 2>&1 || echo "EXECUTION_FAILED")
+            local add_column_result=$(echo "$migration_content" | npx prisma db execute --stdin --schema=prisma/schema.prisma 2>&1 || echo "EXECUTION_FAILED")
 
             if echo "$add_column_result" | grep -q "already exists\|duplicate column"; then
                 echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Column already exists - migration appears to be applied"
@@ -87,7 +87,7 @@ echo "$(date -Iseconds) [INFO] [DOCKER] 📡 Checking database connection..."
 echo "DB_CONNECTING" > /tmp/app-status/startup.status
 
 # 使用更安全的连接检查方式，避免意外修改数据库结构
-DB_CHECK_OUTPUT=$(echo "SELECT 1;" | npx prisma db execute --stdin 2>&1)
+DB_CHECK_OUTPUT=$(echo "SELECT 1;" | npx prisma db execute --stdin --schema=prisma/schema.prisma 2>&1)
 DB_CHECK_EXIT_CODE=$?
 
 if [ $DB_CHECK_EXIT_CODE -ne 0 ]; then
