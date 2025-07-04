@@ -1,6 +1,7 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { useState, useMemo, useEffect } from "react";
 import {
@@ -300,6 +301,7 @@ function ProjectCard({ project, viewMode, onEdit, onArchive, onDelete, onView }:
 }
 
 const ProjectsPage: NextPage = () => {
+  const router = useRouter();
   const { data: sessionData } = useSession();
   const { showSuccess, showError } = useGlobalNotifications();
   const { confirmState, showConfirm, hideConfirm, setLoading } = useConfirm();
@@ -462,7 +464,7 @@ const ProjectsPage: NextPage = () => {
   };
 
   const handleViewProject = (projectId: string) => {
-    window.location.href = `/projects/${projectId}`;
+    void router.push(`/projects/${projectId}`);
   };
 
   // 合并所有页面的项目数据
