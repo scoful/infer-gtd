@@ -1,5 +1,7 @@
 import pino from "pino";
 import { env } from "@/env";
+import path from "path";
+import fs from "fs";
 
 // 日志级别配置
 const LOG_LEVEL =
@@ -8,6 +10,21 @@ const LOG_LEVEL =
 // 检查运行环境
 const isDevelopment = env.NODE_ENV === "development";
 const isServer = typeof window === "undefined";
+
+// 日志文件配置
+const LOG_DIR = env.LOG_DIR || "/app/logs";
+const LOG_FILE = path.join(LOG_DIR, "app.log");
+
+// 确保日志目录存在（仅在服务器端）
+if (isServer) {
+  try {
+    if (!fs.existsSync(LOG_DIR)) {
+      fs.mkdirSync(LOG_DIR, { recursive: true });
+    }
+  } catch (error) {
+    console.warn(`Failed to create log directory ${LOG_DIR}:`, error);
+  }
+}
 
 // 创建自定义的美化输出函数（避免 worker 线程问题）
 const prettyPrint = (obj: any) => {
@@ -74,15 +91,63 @@ const baseConfig: pino.LoggerOptions = {
   },
 };
 
-// 创建主 logger
-export const logger =
-  isDevelopment && isServer
-    ? pino(baseConfig, {
+// 创建文件输出流（仅在服务器端且生产环境）
+const createFileStream = () => {
+  if (!isServer) return null;
+
+  try {
+    return pino.destination({
+      dest: LOG_FILE,
+      sync: false,
+      mkdir: true,
+    });
+  } catch (error) {
+    console.warn(`Failed to create log file stream:`, error);
+    return null;
+  }
+};
+
+// 创建多输出流
+const createStreams = () => {
+  const streams: pino.StreamEntry[] = [];
+
+  // 控制台输出流
+  if (isDevelopment && isServer) {
+    // 开发环境：美化输出到控制台
+    streams.push({
+      level: LOG_LEVEL as pino.Level,
+      stream: {
         write: (obj: string) => {
           prettyPrint(JSON.parse(obj));
         },
-      })
-    : pino(baseConfig);
+      },
+    });
+  } else {
+    // 生产环境：JSON格式输出到控制台
+    streams.push({
+      level: LOG_LEVEL as pino.Level,
+      stream: process.stdout,
+    });
+  }
+
+  // 文件输出流（仅在服务器端）
+  if (isServer) {
+    const fileStream = createFileStream();
+    if (fileStream) {
+      streams.push({
+        level: LOG_LEVEL as pino.Level,
+        stream: fileStream,
+      });
+    }
+  }
+
+  return streams;
+};
+
+// 创建主 logger
+export const logger = isServer
+  ? pino(baseConfig, pino.multistream(createStreams()))
+  : pino(baseConfig);
 
 // 创建不同模块的子 logger
 export const createModuleLogger = (module: string) => {

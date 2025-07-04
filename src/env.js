@@ -24,6 +24,7 @@ export const env = createEnv({
       .default("info")
       .optional(),
     LOG_FORMAT: z.enum(["json", "pretty"]).default("json").optional(),
+    LOG_DIR: z.string().default("/app/logs").optional(),
   },
 
   /**
@@ -48,6 +49,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     LOG_LEVEL: process.env.LOG_LEVEL,
     LOG_FORMAT: process.env.LOG_FORMAT,
+    LOG_DIR: process.env.LOG_DIR,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
