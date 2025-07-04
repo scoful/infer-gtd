@@ -33,54 +33,53 @@ extract_migration_name_from_error() {
     echo "$migration_name"
 }
 
-# 辅助函数：检查迁移是否已在数据库中应用（通过检查实际的数据库结构）
+# 辅助函数：通用检查迁移是否已在数据库中应用
 check_migration_applied_in_db() {
     local migration_name="$1"
 
-    echo "$(date -Iseconds) [INFO] [DOCKER] 🔍 Checking if migration changes exist in database..."
+    echo "$(date -Iseconds) [INFO] [DOCKER] 🔍 Attempting to verify if migration changes exist in database..."
 
-    # 根据迁移名称检查对应的数据库变更是否已存在
-    case "$migration_name" in
-        *"add_note_pin_feature"*)
-            # 检查 isPinned 列是否存在
-            local column_check=$(npx prisma db execute --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Note' AND column_name = 'isPinned';" 2>/dev/null | grep -c "isPinned" || echo "0")
-            if [ "$column_check" -gt 0 ]; then
-                echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Found isPinned column in Note table"
+    # 方法1: 检查迁移文件并尝试解析其内容
+    local migration_file="prisma/migrations/$migration_name/migration.sql"
+
+    if [ -f "$migration_file" ]; then
+        echo "$(date -Iseconds) [INFO] [DOCKER] 📄 Analyzing migration file: $migration_file"
+
+        # 读取迁移文件内容
+        local migration_content=$(cat "$migration_file")
+
+        # 检查是否包含 ALTER TABLE ADD COLUMN 语句
+        if echo "$migration_content" | grep -q "ALTER TABLE.*ADD COLUMN"; then
+            echo "$(date -Iseconds) [INFO] [DOCKER] 🔍 Detected ADD COLUMN operation, checking if already applied..."
+
+            # 提取表名和列名（简单解析）
+            local table_column_info=$(echo "$migration_content" | grep "ALTER TABLE.*ADD COLUMN" | head -1)
+            echo "$(date -Iseconds) [INFO] [DOCKER] 📝 Checking: $table_column_info"
+
+            # 尝试重新执行 ADD COLUMN 语句来检查是否已存在
+            local add_column_result=$(echo "$migration_content" | npx prisma db execute --stdin 2>&1 || echo "EXECUTION_FAILED")
+
+            if echo "$add_column_result" | grep -q "already exists\|duplicate column"; then
+                echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Column already exists - migration appears to be applied"
                 return 0
+            elif echo "$add_column_result" | grep -q "EXECUTION_FAILED"; then
+                echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Could not execute migration check"
+                return 1
             else
-                echo "$(date -Iseconds) [INFO] [DOCKER] ❌ isPinned column not found in Note table"
+                echo "$(date -Iseconds) [INFO] [DOCKER] ❌ Migration changes do not exist in database"
                 return 1
             fi
-            ;;
-        *"add_task_tag_sort_order"*)
-            # 检查 sortOrder 列是否存在于 TaskTag 表
-            local column_check=$(npx prisma db execute --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'TaskTag' AND column_name = 'sortOrder';" 2>/dev/null | grep -c "sortOrder" || echo "0")
-            if [ "$column_check" -gt 0 ]; then
-                echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Found sortOrder column in TaskTag table"
-                return 0
-            else
-                echo "$(date -Iseconds) [INFO] [DOCKER] ❌ sortOrder column not found in TaskTag table"
-                return 1
-            fi
-            ;;
-        *"add_note_summary"*)
-            # 检查 summary 列是否存在于 Note 表
-            local column_check=$(npx prisma db execute --stdin <<< "SELECT column_name FROM information_schema.columns WHERE table_name = 'Note' AND column_name = 'summary';" 2>/dev/null | grep -c "summary" || echo "0")
-            if [ "$column_check" -gt 0 ]; then
-                echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Found summary column in Note table"
-                return 0
-            else
-                echo "$(date -Iseconds) [INFO] [DOCKER] ❌ summary column not found in Note table"
-                return 1
-            fi
-            ;;
-        *)
-            # 对于其他迁移，尝试通用检查方法
-            echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Unknown migration type: $migration_name"
-            echo "$(date -Iseconds) [WARN] [DOCKER] Cannot verify if changes are applied, assuming they are not"
+        else
+            echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Migration type not recognized for automatic verification"
+            echo "$(date -Iseconds) [WARN] [DOCKER] Migration content preview:"
+            echo "$migration_content" | head -5
             return 1
-            ;;
-    esac
+        fi
+    else
+        echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Migration file not found: $migration_file"
+        echo "$(date -Iseconds) [WARN] [DOCKER] Cannot verify migration status"
+        return 1
+    fi
 }
 
 # 检查数据库连接
