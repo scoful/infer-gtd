@@ -87,7 +87,7 @@ echo "$(date -Iseconds) [INFO] [DOCKER] 📡 Checking database connection..."
 echo "DB_CONNECTING" > /tmp/app-status/startup.status
 
 # 使用更安全的连接检查方式，避免意外修改数据库结构
-DB_CHECK_OUTPUT=$(npx prisma db execute --stdin <<< "SELECT 1;" 2>&1)
+DB_CHECK_OUTPUT=$(echo "SELECT 1;" | npx prisma db execute --stdin 2>&1)
 DB_CHECK_EXIT_CODE=$?
 
 if [ $DB_CHECK_EXIT_CODE -ne 0 ]; then
@@ -139,7 +139,7 @@ if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
             # 检查迁移是否已在数据库中实际应用
             if check_migration_applied_in_db "$MIGRATION_NAME"; then
                 echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Migration changes already exist in database"
-                echo "$(date -Iseconds) [INFO] [DOCKER] � Marking migration as applied in migration history..."
+                echo "$(date -Iseconds) [INFO] [DOCKER] 🔧 Marking migration as applied in migration history..."
 
                 # 标记迁移为已应用
                 RESOLVE_OUTPUT=$(npx prisma migrate resolve --applied "$MIGRATION_NAME" 2>&1)
@@ -149,7 +149,7 @@ if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
                     echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Migration $MIGRATION_NAME marked as applied"
 
                     # 再次尝试应用剩余的迁移
-                    echo "$(date -Iseconds) [INFO] [DOCKER] � Applying remaining migrations..."
+                    echo "$(date -Iseconds) [INFO] [DOCKER] 🔄 Applying remaining migrations..."
                     MIGRATION_OUTPUT=$(npx prisma migrate deploy 2>&1)
                     MIGRATION_EXIT_CODE=$?
 
