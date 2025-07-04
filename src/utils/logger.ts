@@ -1,7 +1,5 @@
 import pino from "pino";
 import { env } from "@/env";
-import path from "path";
-import fs from "fs";
 
 // 日志级别配置
 const LOG_LEVEL =
@@ -11,20 +9,35 @@ const LOG_LEVEL =
 const isDevelopment = env.NODE_ENV === "development";
 const isServer = typeof window === "undefined";
 
-// 日志文件配置
-const LOG_DIR = env.LOG_DIR || "/app/logs";
-const LOG_FILE = path.join(LOG_DIR, "app.log");
+// 日志文件配置（仅在服务器端使用）
+const getLogConfig = () => {
+  if (!isServer) return null;
 
-// 确保日志目录存在（仅在服务器端）
-if (isServer) {
   try {
+    // 检查是否在 Edge Runtime 环境
+    if (typeof EdgeRuntime !== 'undefined') {
+      console.warn("Edge Runtime detected, file logging disabled");
+      return null;
+    }
+
+    // 使用 eval 动态导入，避免静态分析
+    const path = eval('require("path")');
+    const fs = eval('require("fs")');
+
+    const LOG_DIR = env.LOG_DIR || "/app/logs";
+    const LOG_FILE = path.join(LOG_DIR, "app.log");
+
+    // 确保日志目录存在
     if (!fs.existsSync(LOG_DIR)) {
       fs.mkdirSync(LOG_DIR, { recursive: true });
     }
+
+    return { LOG_DIR, LOG_FILE };
   } catch (error) {
-    console.warn(`Failed to create log directory ${LOG_DIR}:`, error);
+    console.warn("Failed to setup log configuration:", error);
+    return null;
   }
-}
+};
 
 // 创建自定义的美化输出函数（避免 worker 线程问题）
 const prettyPrint = (obj: any) => {
@@ -91,13 +104,16 @@ const baseConfig: pino.LoggerOptions = {
   },
 };
 
-// 创建文件输出流（仅在服务器端且生产环境）
+// 创建文件输出流（仅在服务器端）
 const createFileStream = () => {
   if (!isServer) return null;
 
+  const logConfig = getLogConfig();
+  if (!logConfig) return null;
+
   try {
     return pino.destination({
-      dest: LOG_FILE,
+      dest: logConfig.LOG_FILE,
       sync: false,
       mkdir: true,
     });
@@ -122,12 +138,20 @@ const createStreams = () => {
         },
       },
     });
-  } else {
-    // 生产环境：JSON格式输出到控制台
-    streams.push({
-      level: LOG_LEVEL as pino.Level,
-      stream: process.stdout,
-    });
+  } else if (isServer) {
+    // 生产环境：JSON格式输出到控制台（仅在服务器端）
+    try {
+      // 使用 eval 动态访问，完全避免静态分析
+      const stdout = eval('typeof process !== "undefined" && process.stdout ? process.stdout : null');
+      if (stdout) {
+        streams.push({
+          level: LOG_LEVEL as pino.Level,
+          stream: stdout,
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to access process.stdout:", error);
+    }
   }
 
   // 文件输出流（仅在服务器端）
@@ -145,9 +169,30 @@ const createStreams = () => {
 };
 
 // 创建主 logger
-export const logger = isServer
-  ? pino(baseConfig, pino.multistream(createStreams()))
-  : pino(baseConfig);
+export const logger = (() => {
+  if (!isServer) {
+    // 客户端环境：使用基础配置
+    return pino(baseConfig);
+  }
+
+  // 服务器端环境：尝试创建多流输出
+  try {
+    const streams = createStreams();
+    if (streams.length > 1 && pino.multistream) {
+      // 有多个流且支持 multistream
+      return pino(baseConfig, pino.multistream(streams));
+    } else if (streams.length === 1) {
+      // 只有一个流，直接使用
+      return pino(baseConfig, streams[0].stream);
+    } else {
+      // 没有可用流，使用基础配置
+      return pino(baseConfig);
+    }
+  } catch (error) {
+    console.warn("Failed to create multi-stream logger, falling back to basic logger:", error);
+    return pino(baseConfig);
+  }
+})();
 
 // 创建不同模块的子 logger
 export const createModuleLogger = (module: string) => {
