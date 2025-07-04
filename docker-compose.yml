@@ -17,6 +17,7 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
       - LOG_DIR=/app/logs
+      - USE_CHINA_MIRROR=true
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health/basic"]
