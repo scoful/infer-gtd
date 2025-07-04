@@ -15,7 +15,7 @@ const getLogConfig = () => {
 
   try {
     // 检查是否在 Edge Runtime 环境
-    if (typeof EdgeRuntime !== 'undefined') {
+    if (typeof (globalThis as any).EdgeRuntime !== "undefined") {
       console.warn("Edge Runtime detected, file logging disabled");
       return null;
     }
@@ -142,7 +142,9 @@ const createStreams = () => {
     // 生产环境：JSON格式输出到控制台（仅在服务器端）
     try {
       // 使用 eval 动态访问，完全避免静态分析
-      const stdout = eval('typeof process !== "undefined" && process.stdout ? process.stdout : null');
+      const stdout = eval(
+        'typeof process !== "undefined" && process.stdout ? process.stdout : null',
+      );
       if (stdout) {
         streams.push({
           level: LOG_LEVEL as pino.Level,
@@ -183,13 +185,16 @@ export const logger = (() => {
       return pino(baseConfig, pino.multistream(streams));
     } else if (streams.length === 1) {
       // 只有一个流，直接使用
-      return pino(baseConfig, streams[0].stream);
+      return pino(baseConfig, streams[0]!.stream);
     } else {
       // 没有可用流，使用基础配置
       return pino(baseConfig);
     }
   } catch (error) {
-    console.warn("Failed to create multi-stream logger, falling back to basic logger:", error);
+    console.warn(
+      "Failed to create multi-stream logger, falling back to basic logger:",
+      error,
+    );
     return pino(baseConfig);
   }
 })();
