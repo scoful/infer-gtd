@@ -167,7 +167,8 @@ const SearchPage: NextPage = () => {
 
     // 解析智能搜索参数
     const { searchIn: urlSearchIn, priority: urlPriority, status: urlStatus,
-            createdAfter: urlCreatedAfter, sortBy: urlSortBy, sortOrder: urlSortOrder } = router.query;
+            createdAfter: urlCreatedAfter, sortBy: urlSortBy, sortOrder: urlSortOrder,
+            searchBy: urlSearchBy } = router.query;
 
     if (urlSearchIn && typeof urlSearchIn === 'string') {
       const searchInArray = urlSearchIn.split(',');
@@ -195,7 +196,21 @@ const SearchPage: NextPage = () => {
     if (urlSortOrder && typeof urlSortOrder === 'string') {
       setSortOrder(urlSortOrder as "asc" | "desc");
     }
-  }, [router.query, query]);
+
+    // 处理标签搜索
+    if (urlSearchBy === 'tag' && urlQuery) {
+      // 查找匹配的标签
+      if (tags?.tags) {
+        const matchingTag = tags.tags.find(tag =>
+          tag.name.toLowerCase() === urlQuery.toLowerCase()
+        );
+        if (matchingTag) {
+          setTagIds([matchingTag.id]);
+          setQuery(''); // 清空查询词，使用标签筛选
+        }
+      }
+    }
+  }, [router.query, query, tags]);
 
   // 清空筛选
   const clearFilters = useCallback(() => {
@@ -283,7 +298,7 @@ const SearchPage: NextPage = () => {
                   <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                   <input
                     type="text"
-                    placeholder="搜索任务、笔记、项目..."
+                    placeholder="搜索任务、笔记、项目... (使用 #标签名 搜索标签)"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -299,6 +314,34 @@ const SearchPage: NextPage = () => {
                 {isLoading ? "搜索中..." : "搜索"}
               </button>
             </div>
+
+            {/* 标签搜索指示器 */}
+            {tagIds.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="text-sm text-gray-600">按标签筛选:</span>
+                {tagIds.map((tagId) => {
+                  const tag = tags?.tags?.find(t => t.id === tagId);
+                  return tag ? (
+                    <span
+                      key={tagId}
+                      className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      #{tag.name}
+                      <button
+                        onClick={() => setTagIds(tagIds.filter(id => id !== tagId))}
+                        className="ml-1 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            )}
 
             {/* 搜索范围 */}
             <div className="mt-4">

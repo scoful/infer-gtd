@@ -8,9 +8,9 @@ interface QuickSearchProps {
   className?: string;
 }
 
-export default function QuickSearch({ 
-  placeholder = "搜索任务、笔记、项目...", 
-  className = "" 
+export default function QuickSearch({
+  placeholder = "搜索任务、笔记、项目... (#标签)",
+  className = ""
 }: QuickSearchProps) {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -66,6 +66,10 @@ export default function QuickSearch({
     if (smartFilters[suggestion as keyof typeof smartFilters]) {
       // 智能搜索：跳转到带参数的搜索页面
       void router.push(`/search${smartFilters[suggestion as keyof typeof smartFilters]}`);
+    } else if (suggestion.startsWith('#')) {
+      // 标签搜索：跳转到搜索页面并设置标签查询
+      const tagName = suggestion.substring(1); // 移除 # 前缀
+      void router.push(`/search?q=${encodeURIComponent(tagName)}&searchBy=tag`);
     } else {
       // 普通搜索：设置查询词并搜索
       setQuery(suggestion);
@@ -85,8 +89,14 @@ export default function QuickSearch({
   const handleSearch = (searchQuery?: string) => {
     const finalQuery = searchQuery || query;
     if (finalQuery.trim()) {
-      // 跳转到搜索页面
-      void router.push(`/search?q=${encodeURIComponent(finalQuery.trim())}`);
+      // 检查是否是标签搜索
+      if (finalQuery.startsWith('#')) {
+        const tagName = finalQuery.substring(1).trim();
+        void router.push(`/search?q=${encodeURIComponent(tagName)}&searchBy=tag`);
+      } else {
+        // 普通搜索
+        void router.push(`/search?q=${encodeURIComponent(finalQuery.trim())}`);
+      }
       setShowSuggestions(false);
       inputRef.current?.blur();
     }

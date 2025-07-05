@@ -80,7 +80,8 @@ export default function SearchSuggestions({
       type: 'tag',
       text: `#${tag.name}`,
       icon: TagIcon,
-      id: tag.id
+      id: tag.id,
+      color: tag.color
     })) || []),
     ...(suggestions?.projects?.map((project: any) => ({
       type: 'project',
@@ -209,7 +210,15 @@ export default function SearchSuggestions({
                 onClick={() => onSelect(suggestion.text)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
-                <Icon className={`h-4 w-4 ${getTypeColor(suggestion.type)}`} />
+                <div className="flex items-center gap-2">
+                  <Icon className={`h-4 w-4 ${getTypeColor(suggestion.type)}`} />
+                  {suggestion.type === 'tag' && suggestion.color && (
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: suggestion.color }}
+                    />
+                  )}
+                </div>
                 <span className="flex-1 truncate">{suggestion.text}</span>
                 <span className={`text-xs ${getTypeColor(suggestion.type)}`}>
                   {getTypeLabel(suggestion.type)}
