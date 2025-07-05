@@ -283,7 +283,7 @@ export const searchRouter = createTRPCRouter({
 
         // 搜索项目
         // 注意：项目不支持标签系统，所以当有标签筛选时跳过项目搜索
-        if (searchIn.includes("projects") && !tagIds) {
+        if (searchIn.includes("projects") && (!tagIds || tagIds.length === 0)) {
           const projectWhere: any = {
             createdById: ctx.session.user.id,
             ...(query && {
@@ -323,7 +323,7 @@ export const searchRouter = createTRPCRouter({
 
         // 搜索日记
         // 注意：日记不支持标签系统，所以当有标签筛选时跳过日记搜索
-        if (searchIn.includes("journals") && !tagIds) {
+        if (searchIn.includes("journals") && (!tagIds || tagIds.length === 0)) {
           const journalWhere: any = {
             createdById: ctx.session.user.id,
             ...(query && {

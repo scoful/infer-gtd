@@ -159,7 +159,11 @@ const SearchPage: NextPage = () => {
     refetch,
   } = api.search.advanced.useQuery(searchParams, {
     enabled:
-      !!sessionData && (!!query.trim() || hasActiveFilters()),
+      !!sessionData && (
+        !!query.trim() ||
+        hasActiveFilters() ||
+        searchIn.length !== 4 // 当搜索范围不是默认的全部四种类型时，也启用搜索
+      ),
     staleTime: 30 * 1000,
   });
 
@@ -257,11 +261,63 @@ const SearchPage: NextPage = () => {
     pageSize,
   ]);
 
-  // 处理URL参数
+
+
+  // 计算活跃筛选条件数量
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (taskStatus.length > 0) count++;
+    if (taskType.length > 0) count++;
+    if (priority.length > 0) count++;
+    if (tagIds.length > 0) count++;
+    if (projectIds.length > 0) count++;
+    if (createdAfter !== null) count++;
+    if (createdBefore !== null) count++;
+    if (dueAfter !== null) count++;
+    if (dueBefore !== null) count++;
+    if (isCompleted !== null) count++;
+    if (isOverdue !== null) count++;
+    if (hasDescription !== null) count++;
+    return count;
+  }, [
+    taskStatus,
+    taskType,
+    priority,
+    tagIds,
+    projectIds,
+    createdAfter,
+    createdBefore,
+    dueAfter,
+    dueBefore,
+    isCompleted,
+    isOverdue,
+    hasDescription,
+  ]);
+
+  // 处理URL参数（只在路由准备好且参数变化时执行）
   useEffect(() => {
+    if (!router.isReady) return;
+
+    // 先清除所有筛选条件，避免累加
+    setTaskStatus([]);
+    setTaskType([]);
+    setPriority([]);
+    setTagIds([]);
+    setProjectIds([]);
+    setCreatedAfter(null);
+    setCreatedBefore(null);
+    setDueAfter(null);
+    setDueBefore(null);
+    setIsCompleted(null);
+    setIsOverdue(null);
+    setHasDescription(null);
+
+    // 处理查询词
     const urlQuery = router.query.q as string;
-    if (urlQuery && urlQuery !== query) {
+    if (urlQuery) {
       setQuery(urlQuery);
+    } else {
+      setQuery('');
     }
 
     // 解析智能搜索参数
@@ -269,9 +325,12 @@ const SearchPage: NextPage = () => {
             createdAfter: urlCreatedAfter, sortBy: urlSortBy, sortOrder: urlSortOrder,
             searchBy: urlSearchBy } = router.query;
 
+    // 重置搜索范围为默认值，然后应用URL参数
     if (urlSearchIn && typeof urlSearchIn === 'string') {
       const searchInArray = urlSearchIn.split(',');
       setSearchIn(searchInArray);
+    } else {
+      setSearchIn(["tasks", "notes", "projects", "journals"]);
     }
 
     if (urlPriority && typeof urlPriority === 'string') {
@@ -290,26 +349,27 @@ const SearchPage: NextPage = () => {
 
     if (urlSortBy && typeof urlSortBy === 'string') {
       setSortBy(urlSortBy);
+    } else {
+      setSortBy("relevance");
     }
 
     if (urlSortOrder && typeof urlSortOrder === 'string') {
       setSortOrder(urlSortOrder as "asc" | "desc");
+    } else {
+      setSortOrder("desc");
     }
 
-    // 处理标签搜索
-    if (urlSearchBy === 'tag' && urlQuery) {
-      // 查找匹配的标签
-      if (tags?.tags) {
-        const matchingTag = tags.tags.find(tag =>
-          tag.name.toLowerCase() === urlQuery.toLowerCase()
-        );
-        if (matchingTag) {
-          setTagIds([matchingTag.id]);
-          setQuery(''); // 清空查询词，使用标签筛选
-        }
+    // 处理标签搜索（需要等待标签数据加载）
+    if (urlSearchBy === 'tag' && urlQuery && tags?.tags) {
+      const matchingTag = tags.tags.find(tag =>
+        tag.name.toLowerCase() === urlQuery.toLowerCase()
+      );
+      if (matchingTag) {
+        setTagIds([matchingTag.id]);
+        setQuery(''); // 清空查询词，使用标签筛选
       }
     }
-  }, [router.query, query, tags]);
+  }, [router.isReady, router.query, tags?.tags]);
 
   // 清空筛选
   const clearFilters = useCallback(() => {
@@ -378,13 +438,18 @@ const SearchPage: NextPage = () => {
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className={`inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium ${
-                  showAdvanced
+                  showAdvanced || activeFiltersCount > 0
                     ? "border-blue-300 bg-blue-50 text-blue-700"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 <AdjustmentsHorizontalIcon className="mr-2 h-4 w-4" />
                 高级筛选
+                {activeFiltersCount > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center rounded-full bg-blue-600 px-2 py-1 text-xs font-medium text-white">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -414,39 +479,244 @@ const SearchPage: NextPage = () => {
               </button>
             </div>
 
-            {/* 标签搜索指示器 */}
-            {tagIds.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="text-sm text-gray-600">按标签筛选:</span>
-                {tagIds.map((tagId) => {
-                  const tag = tags?.tags?.find(t => t.id === tagId);
-                  return tag ? (
-                    <span
-                      key={tagId}
-                      className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
-                    >
+            {/* 活跃筛选条件摘要 */}
+            {activeFiltersCount > 0 && (
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-700">
+                    已启用 {activeFiltersCount} 个筛选条件
+                  </span>
+                  <button
+                    onClick={clearFilters}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    清除所有筛选
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {/* 标签筛选 */}
+                  {tagIds.length > 0 && tagIds.map((tagId) => {
+                    const tag = tags?.tags?.find(t => t.id === tagId);
+                    return tag ? (
                       <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: tag.color }}
-                      />
-                      #{tag.name}
+                        key={tagId}
+                        className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                      >
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: tag.color || '#3B82F6' }}
+                        />
+                        #{tag.name}
+                        <button
+                          onClick={() => setTagIds(tagIds.filter(id => id !== tagId))}
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ) : null;
+                  })}
+
+                  {/* 任务状态筛选 */}
+                  {taskStatus.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm text-green-800">
+                      状态: {taskStatus.map(status => {
+                        const statusLabels = {
+                          'IDEA': '想法',
+                          'TODO': '待办',
+                          'IN_PROGRESS': '进行中',
+                          'DONE': '已完成',
+                          'CANCELLED': '已取消'
+                        };
+                        return statusLabels[status as keyof typeof statusLabels] || status;
+                      }).join(', ')}
                       <button
-                        onClick={() => setTagIds(tagIds.filter(id => id !== tagId))}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
+                        onClick={() => setTaskStatus([])}
+                        className="ml-1 text-green-600 hover:text-green-800"
                       >
                         ×
                       </button>
                     </span>
-                  ) : null;
-                })}
+                  )}
+
+                  {/* 优先级筛选 */}
+                  {priority.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
+                      优先级: {priority.map(p => {
+                        const priorityLabels = {
+                          'LOW': '低',
+                          'MEDIUM': '中',
+                          'HIGH': '高',
+                          'URGENT': '紧急'
+                        };
+                        return priorityLabels[p as keyof typeof priorityLabels] || p;
+                      }).join(', ')}
+                      <button
+                        onClick={() => setPriority([])}
+                        className="ml-1 text-orange-600 hover:text-orange-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 项目筛选 */}
+                  {projectIds.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800">
+                      项目: {(() => {
+                        if (!projects?.projects) return `${projectIds.length} 个`;
+                        const selectedProjects = projects.projects.filter(p => projectIds.includes(p.id));
+                        if (selectedProjects.length <= 2) {
+                          return selectedProjects.map(p => p.name).join(', ');
+                        } else {
+                          return `${selectedProjects[0]?.name} 等 ${selectedProjects.length} 个`;
+                        }
+                      })()}
+                      <button
+                        onClick={() => setProjectIds([])}
+                        className="ml-1 text-purple-600 hover:text-purple-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 创建日期筛选 */}
+                  {(createdAfter || createdBefore) && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-800">
+                      创建日期: {(() => {
+                        if (createdAfter && createdBefore) {
+                          return `${createdAfter.toLocaleDateString()} - ${createdBefore.toLocaleDateString()}`;
+                        } else if (createdAfter) {
+                          return `≥ ${createdAfter.toLocaleDateString()}`;
+                        } else if (createdBefore) {
+                          return `≤ ${createdBefore.toLocaleDateString()}`;
+                        }
+                        return '日期筛选';
+                      })()}
+                      <button
+                        onClick={() => {
+                          setCreatedAfter(null);
+                          setCreatedBefore(null);
+                        }}
+                        className="ml-1 text-gray-600 hover:text-gray-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 截止日期筛选 */}
+                  {(dueAfter || dueBefore) && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-800">
+                      截止日期: {(() => {
+                        if (dueAfter && dueBefore) {
+                          return `${dueAfter.toLocaleDateString()} - ${dueBefore.toLocaleDateString()}`;
+                        } else if (dueAfter) {
+                          return `≥ ${dueAfter.toLocaleDateString()}`;
+                        } else if (dueBefore) {
+                          return `≤ ${dueBefore.toLocaleDateString()}`;
+                        }
+                        return '截止日期筛选';
+                      })()}
+                      <button
+                        onClick={() => {
+                          setDueAfter(null);
+                          setDueBefore(null);
+                        }}
+                        className="ml-1 text-yellow-600 hover:text-yellow-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 任务类型筛选 */}
+                  {taskType.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-cyan-100 px-3 py-1 text-sm text-cyan-800">
+                      类型: {taskType.map(type => {
+                        const typeLabels = {
+                          'TASK': '任务',
+                          'MILESTONE': '里程碑',
+                          'BUG': '缺陷',
+                          'FEATURE': '功能'
+                        };
+                        return typeLabels[type as keyof typeof typeLabels] || type;
+                      }).join(', ')}
+                      <button
+                        onClick={() => setTaskType([])}
+                        className="ml-1 text-cyan-600 hover:text-cyan-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 完成状态筛选 */}
+                  {isCompleted !== null && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-800">
+                      {isCompleted ? '已完成' : '未完成'}
+                      <button
+                        onClick={() => setIsCompleted(null)}
+                        className="ml-1 text-indigo-600 hover:text-indigo-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 逾期状态筛选 */}
+                  {isOverdue !== null && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-sm text-red-800">
+                      {isOverdue ? '已逾期' : '未逾期'}
+                      <button
+                        onClick={() => setIsOverdue(null)}
+                        className="ml-1 text-red-600 hover:text-red-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 描述筛选 */}
+                  {hasDescription !== null && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-3 py-1 text-sm text-teal-800">
+                      {hasDescription ? '有描述' : '无描述'}
+                      <button
+                        onClick={() => setHasDescription(null)}
+                        className="ml-1 text-teal-600 hover:text-teal-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
             {/* 搜索范围 */}
             <div className="mt-4">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                搜索范围
-              </label>
+              <div className="mb-2 flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">
+                  搜索范围
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSearchIn(["tasks", "notes", "projects", "journals"])}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    全选
+                  </button>
+                  <span className="text-xs text-gray-400">|</span>
+                  <button
+                    onClick={() => setSearchIn([])}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    不选
+                  </button>
+                </div>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: "tasks", label: "任务", icon: CheckIcon },
