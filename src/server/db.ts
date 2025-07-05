@@ -1,7 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
 import { env } from "@/env";
-import { loggers, logDatabaseOperation, logError } from "@/utils/logger";
+import {
+  serverLoggers,
+  logDatabaseOperation,
+  logServerError,
+} from "@/utils/logger-server";
 
 const createPrismaClient = () => {
   const prisma = new PrismaClient({
@@ -38,7 +42,7 @@ const createPrismaClient = () => {
 
   // 监听数据库错误事件
   prisma.$on("error", (e) => {
-    logError(loggers.db, new Error(e.message), {
+    logServerError(serverLoggers.db, new Error(e.message), {
       target: e.target,
       timestamp: e.timestamp,
     });
@@ -46,7 +50,7 @@ const createPrismaClient = () => {
 
   // 监听数据库警告事件
   prisma.$on("warn", (e) => {
-    loggers.db.warn(
+    serverLoggers.db.warn(
       {
         message: e.message,
         target: e.target,
@@ -58,7 +62,7 @@ const createPrismaClient = () => {
 
   // 监听数据库信息事件
   prisma.$on("info", (e) => {
-    loggers.db.info(
+    serverLoggers.db.info(
       {
         message: e.message,
         target: e.target,

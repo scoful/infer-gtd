@@ -58,7 +58,23 @@ export default async function handler(
     }
 
     // 应用已就绪，检查数据库连接
-    await db.$queryRaw`SELECT 1`;
+    try {
+      await db.$queryRaw`SELECT 1`;
+    } catch (dbError) {
+      logHealthCheck("application", "unhealthy", {
+        database: "disconnected",
+        startupStatus,
+        error: dbError instanceof Error ? dbError.message : String(dbError),
+      });
+
+      return res.status(503).json({
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        database: "disconnected",
+        startupStatus,
+        error: "Database connection failed",
+      });
+    }
 
     logHealthCheck("application", "healthy", {
       database: "connected",
