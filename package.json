@@ -21,7 +21,15 @@
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "version:patch": "node scripts/version-manager.js patch",
+    "version:minor": "node scripts/version-manager.js minor",
+    "version:major": "node scripts/version-manager.js major",
+    "version:show": "node scripts/version-manager.js show",
+    "version:set-env": "node scripts/version-manager.js set-env",
+    "hooks:install": "node scripts/install-hooks.js install",
+    "hooks:uninstall": "node scripts/install-hooks.js uninstall",
+    "setup:version": "node scripts/setup-version-management.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",

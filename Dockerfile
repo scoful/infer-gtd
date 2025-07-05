@@ -53,6 +53,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # 复制源代码
 COPY . .
 
+# 设置生产环境版本信息
+RUN node scripts/version-manager.js set-env production
+
 # 生成 Prisma 客户端
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN pnpm prisma generate
@@ -99,6 +102,9 @@ COPY --from=builder /app/.next/static ./.next/static
 # 复制 Prisma 相关文件
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
+
+# 复制版本信息文件
+COPY --from=builder /app/version.json ./public/version.json
 
 # 复制启动脚本
 COPY scripts/docker-entrypoint.sh ./scripts/

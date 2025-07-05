@@ -21,6 +21,16 @@ const config = {
 
   // Docker 部署优化
   output: "standalone",
+
+  // 版本管理配置
+  async rewrites() {
+    return [
+      {
+        source: '/version.json',
+        destination: '/api/version',
+      },
+    ];
+  },
 };
 
 export default config;

@@ -30,6 +30,7 @@ import {
 
 import { useSidebarState } from "@/hooks";
 import { useRefresh } from "@/contexts/RefreshContext";
+import VersionDisplay from "./VersionDisplay";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -451,6 +452,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
               );
             })}
           </nav>
+
+          {/* 版本信息显示 */}
+          <VersionDisplay position="sidebar" />
         </div>
       </div>
 
@@ -653,6 +657,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 );
               })}
             </nav>
+
+            {/* 版本信息显示 */}
+            <VersionDisplay collapsed={isCollapsed} position="sidebar" />
           </div>
         </div>
       </div>
@@ -732,6 +739,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
             {children}
           </div>
         </main>
+
+        {/* 移动端版本信息显示 */}
+        <div className="lg:hidden">
+          <VersionDisplay position="footer" />
+        </div>
       </div>
     </div>
   );
