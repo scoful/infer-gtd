@@ -533,6 +533,69 @@ export const searchRouter = createTRPCRouter({
     }
   }),
 
+  // 更新保存的搜索
+  updateSavedSearch: protectedProcedure
+    .input(z.object({
+      id: z.string().cuid("无效的搜索ID"),
+      name: z.string().min(1, "搜索名称不能为空").max(100, "搜索名称过长"),
+      description: z.string().max(500, "描述过长").optional(),
+      searchParams: advancedSearchSchema,
+    }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // 验证搜索所有权
+        const existingSearch = await ctx.db.savedSearch.findUnique({
+          where: { id: input.id },
+          select: { createdById: true, name: true },
+        });
+
+        if (!existingSearch || existingSearch.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "保存的搜索不存在或无权限操作",
+          });
+        }
+
+        // 检查名称是否与其他搜索冲突（排除当前搜索）
+        if (input.name !== existingSearch.name) {
+          const nameConflict = await ctx.db.savedSearch.findFirst({
+            where: {
+              name: input.name,
+              createdById: ctx.session.user.id,
+              id: { not: input.id },
+            },
+          });
+
+          if (nameConflict) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "搜索名称已存在",
+            });
+          }
+        }
+
+        const updatedSearch = await ctx.db.savedSearch.update({
+          where: { id: input.id },
+          data: {
+            name: input.name,
+            description: input.description,
+            searchParams: JSON.stringify(input.searchParams),
+          },
+        });
+
+        return updatedSearch;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "更新保存的搜索失败",
+          cause: error,
+        });
+      }
+    }),
+
   // 删除保存的搜索
   deleteSavedSearch: protectedProcedure
     .input(searchIdSchema)
@@ -567,6 +630,7 @@ export const searchRouter = createTRPCRouter({
         });
       }
     }),
+
 
 
 });

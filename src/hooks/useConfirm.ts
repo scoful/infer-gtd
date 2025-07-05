@@ -12,6 +12,7 @@ export interface ConfirmState extends ConfirmOptions {
   isOpen: boolean;
   isLoading: boolean;
   onConfirm: () => void;
+  onCancel?: () => void;
 }
 
 export function useConfirm() {
@@ -44,13 +45,28 @@ export function useConfirm() {
             setConfirmState((prev) => ({ ...prev, isOpen: false }));
           },
         });
+
+        // 添加取消处理，确保Promise总是会resolve
+        const handleCancel = () => {
+          resolve(false);
+          setConfirmState((prev) => ({ ...prev, isOpen: false }));
+        };
+
+        // 存储取消处理函数，以便在hideConfirm中使用
+        setConfirmState((prev) => ({ ...prev, onCancel: handleCancel }));
       });
     },
     [],
   );
 
   const hideConfirm = useCallback(() => {
-    setConfirmState((prev) => ({ ...prev, isOpen: false }));
+    setConfirmState((prev) => {
+      // 如果有onCancel函数，调用它
+      if (prev.onCancel) {
+        prev.onCancel();
+      }
+      return { ...prev, isOpen: false };
+    });
   }, []);
 
   const setLoading = useCallback((loading: boolean) => {

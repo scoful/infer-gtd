@@ -6,6 +6,7 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   BoltIcon,
+  BookmarkIcon,
   BookOpenIcon,
   CalendarIcon,
   ChartBarIcon,
@@ -133,6 +134,20 @@ const navigation: NavigationItem[] = [
     href: "/search",
     icon: MagnifyingGlassIcon,
     description: "全局内容搜索",
+    children: [
+      {
+        name: "高级搜索",
+        href: "/search",
+        icon: MagnifyingGlassIcon,
+        description: "高级搜索和筛选",
+      },
+      {
+        name: "保存的搜索",
+        href: "/search/saved",
+        icon: BookmarkIcon,
+        description: "管理保存的搜索",
+      },
+    ],
   },
   {
     name: "统计分析",
@@ -170,6 +185,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
       if (window.location.pathname.startsWith("/journal")) {
         initialExpanded.add("日记");
       }
+      if (window.location.pathname.startsWith("/search")) {
+        initialExpanded.add("搜索");
+      }
       if (
         window.location.pathname.startsWith("/analytics") ||
         window.location.pathname.startsWith("/review")
@@ -193,6 +211,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
     if (router.pathname.startsWith("/journal")) {
       setExpandedItems((prev) => new Set(prev).add("日记"));
+    }
+    if (router.pathname.startsWith("/search")) {
+      setExpandedItems((prev) => new Set(prev).add("搜索"));
     }
     if (
       router.pathname.startsWith("/analytics") ||
@@ -258,9 +279,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname === "/notes"; // 只匹配精确路径
     }
     if (href === "/search") {
-      return (
-        router.pathname === "/search" || router.pathname.startsWith("/search/")
-      );
+      return router.pathname === "/search"; // 只匹配精确路径
+    }
+    if (href === "/search/saved") {
+      return router.pathname === "/search/saved";
     }
     if (href === "/analytics") {
       return router.pathname === "/analytics";
@@ -278,6 +300,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
     if (item.name === "日记") {
       return router.pathname.startsWith("/journal");
+    }
+    if (item.name === "搜索") {
+      return router.pathname.startsWith("/search");
     }
     if (item.name === "统计分析") {
       return (

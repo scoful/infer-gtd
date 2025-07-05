@@ -24,6 +24,9 @@ import SearchResultItem from "@/components/Search/SearchResultItem";
 import SearchFilters from "@/components/Search/SearchFilters";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
+import { useConfirm } from "@/hooks";
+import SavedSearchModal, { type SavedSearchFormData } from "@/components/Search/SavedSearchModal";
+
 
 // 搜索结果类型
 interface SearchResults {
@@ -39,6 +42,7 @@ const SearchPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const router = useRouter();
   const { showSuccess, showError } = useGlobalNotifications();
+  const { showConfirm } = useConfirm();
 
   // 基础搜索状态
   const [query, setQuery] = useState("");
@@ -67,13 +71,14 @@ const SearchPage: NextPage = () => {
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // 保存的搜索
-  const [showSavedSearches, setShowSavedSearches] = useState(false);
-  const [saveSearchName, setSaveSearchName] = useState("");
+
 
   // 任务编辑模态框状态
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // 保存搜索
+  const [isSaveSearchModalOpen, setIsSaveSearchModalOpen] = useState(false);
 
   // 分页状态
   const [displayLimit, setDisplayLimit] = useState(20);
@@ -179,9 +184,9 @@ const SearchPage: NextPage = () => {
   const { data: projects, refetch: refetchProjects } =
     api.project.getAll.useQuery({ limit: 100 }, { enabled: !!sessionData });
 
-  // 获取保存的搜索
-  const { data: savedSearches, refetch: refetchSavedSearches } =
-    api.search.getSavedSearches.useQuery(undefined, { enabled: !!sessionData });
+
+
+
 
   // 注册页面刷新函数
   usePageRefresh(() => {
@@ -189,16 +194,14 @@ const SearchPage: NextPage = () => {
       refetch(),
       refetchTags(),
       refetchProjects(),
-      refetchSavedSearches(),
     ]);
-  }, [refetch, refetchTags, refetchProjects, refetchSavedSearches]);
+  }, [refetch, refetchTags, refetchProjects]);
 
   // 保存搜索
   const saveSearchMutation = api.search.saveSearch.useMutation({
     onSuccess: (data) => {
-      setSaveSearchName("");
-      void refetchSavedSearches();
       showSuccess(`搜索 "${data.name}" 保存成功`);
+      setIsSaveSearchModalOpen(false);
     },
     onError: (error) => {
       if (error.data?.code === "CONFLICT") {
@@ -209,16 +212,9 @@ const SearchPage: NextPage = () => {
     },
   });
 
-  // 删除保存的搜索
-  const deleteSavedSearchMutation = api.search.deleteSavedSearch.useMutation({
-    onSuccess: () => {
-      void refetchSavedSearches();
-      showSuccess("保存的搜索已删除");
-    },
-    onError: (error) => {
-      showError(error.message || "删除保存的搜索失败");
-    },
-  });
+
+
+
 
 
 
@@ -430,23 +426,168 @@ const SearchPage: NextPage = () => {
     setSortOrder("desc");
   }, []);
 
-  // 保存当前搜索
-  const handleSaveSearch = useCallback(() => {
-    if (!saveSearchName.trim()) {
-      showError("请输入搜索名称");
-      return;
-    }
 
+
+  // 保存当前搜索
+  const handleSaveCurrentSearch = useCallback((formData: SavedSearchFormData) => {
     saveSearchMutation.mutate({
-      name: saveSearchName.trim(),
+      ...formData,
       searchParams,
     });
-  }, [saveSearchName, searchParams, saveSearchMutation, showError]);
+  }, [saveSearchMutation, searchParams]);
 
-  // 删除保存的搜索
-  const handleDeleteSavedSearch = useCallback((searchId: string) => {
-    deleteSavedSearchMutation.mutate({ id: searchId });
-  }, [deleteSavedSearchMutation]);
+  // 生成搜索条件摘要
+  const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
+    const conditions = [];
+
+    if (searchParams.query) {
+      conditions.push(`关键词: "${searchParams.query}"`);
+    }
+
+    if (searchParams.searchIn && searchParams.searchIn.length > 0 && searchParams.searchIn.length < 4) {
+      const typeMap: Record<string, string> = {
+        tasks: "任务",
+        notes: "笔记",
+        projects: "项目",
+        journals: "日记"
+      };
+      const types = searchParams.searchIn.map((type: string) => typeMap[type] || type);
+      conditions.push(`范围: ${types.join("、")}`);
+    }
+
+    if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
+      const statusMap: Record<string, string> = {
+        IDEA: "想法",
+        TODO: "待办",
+        IN_PROGRESS: "进行中",
+        WAITING: "等待中",
+        COMPLETED: "已完成",
+        CANCELLED: "已取消"
+      };
+      const statuses = searchParams.taskStatus.map((status: string) => statusMap[status] || status);
+      conditions.push(`状态: ${statuses.join("、")}`);
+    }
+
+    if (searchParams.taskType && searchParams.taskType.length > 0) {
+      const typeMap: Record<string, string> = {
+        SINGLE: "单次任务",
+        RECURRING: "重复任务"
+      };
+      const types = searchParams.taskType.map((type: string) => typeMap[type] || type);
+      conditions.push(`任务类型: ${types.join("、")}`);
+    }
+
+    if (searchParams.priority && searchParams.priority.length > 0) {
+      const priorityMap: Record<string, string> = {
+        LOW: "低",
+        MEDIUM: "中",
+        HIGH: "高",
+        URGENT: "紧急"
+      };
+      const priorities = searchParams.priority.map((p: string) => priorityMap[p] || p);
+      conditions.push(`优先级: ${priorities.join("、")}`);
+    }
+
+    // 标签筛选
+    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags) {
+      const selectedTags = tags.filter(tag => searchParams.tagIds.includes(tag.id));
+      if (selectedTags.length > 0) {
+        const tagNames = selectedTags.map(tag => tag.name);
+        conditions.push(`标签: ${tagNames.join("、")}`);
+      }
+    }
+
+    // 项目筛选
+    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects) {
+      const selectedProjects = projects.filter(project => searchParams.projectIds.includes(project.id));
+      if (selectedProjects.length > 0) {
+        const projectNames = selectedProjects.map(project => project.name);
+        conditions.push(`项目: ${projectNames.join("、")}`);
+      }
+    }
+
+    // 时间筛选
+    if (searchParams.createdAfter || searchParams.createdBefore) {
+      if (searchParams.createdAfter && searchParams.createdBefore) {
+        conditions.push(`创建时间: ${searchParams.createdAfter} 至 ${searchParams.createdBefore}`);
+      } else if (searchParams.createdAfter) {
+        conditions.push(`创建时间: ${searchParams.createdAfter} 之后`);
+      } else {
+        conditions.push(`创建时间: ${searchParams.createdBefore} 之前`);
+      }
+    }
+
+    if (searchParams.updatedAfter || searchParams.updatedBefore) {
+      if (searchParams.updatedAfter && searchParams.updatedBefore) {
+        conditions.push(`更新时间: ${searchParams.updatedAfter} 至 ${searchParams.updatedBefore}`);
+      } else if (searchParams.updatedAfter) {
+        conditions.push(`更新时间: ${searchParams.updatedAfter} 之后`);
+      } else {
+        conditions.push(`更新时间: ${searchParams.updatedBefore} 之前`);
+      }
+    }
+
+    if (searchParams.dueAfter || searchParams.dueBefore) {
+      if (searchParams.dueAfter && searchParams.dueBefore) {
+        conditions.push(`截止时间: ${searchParams.dueAfter} 至 ${searchParams.dueBefore}`);
+      } else if (searchParams.dueAfter) {
+        conditions.push(`截止时间: ${searchParams.dueAfter} 之后`);
+      } else {
+        conditions.push(`截止时间: ${searchParams.dueBefore} 之前`);
+      }
+    }
+
+    // 时间跟踪筛选
+    if (searchParams.hasTimeTracking !== undefined) {
+      conditions.push(`时间跟踪: ${searchParams.hasTimeTracking ? "已启用" : "未启用"}`);
+    }
+
+    if (searchParams.minTimeSpent || searchParams.maxTimeSpent) {
+      if (searchParams.minTimeSpent && searchParams.maxTimeSpent) {
+        conditions.push(`耗时: ${searchParams.minTimeSpent}-${searchParams.maxTimeSpent}分钟`);
+      } else if (searchParams.minTimeSpent) {
+        conditions.push(`耗时: ≥${searchParams.minTimeSpent}分钟`);
+      } else {
+        conditions.push(`耗时: ≤${searchParams.maxTimeSpent}分钟`);
+      }
+    }
+
+    // 状态筛选
+    if (searchParams.isCompleted !== undefined) {
+      conditions.push(`完成状态: ${searchParams.isCompleted ? "已完成" : "未完成"}`);
+    }
+
+    if (searchParams.isOverdue !== undefined) {
+      conditions.push(`逾期状态: ${searchParams.isOverdue ? "已逾期" : "未逾期"}`);
+    }
+
+    if (searchParams.isRecurring !== undefined) {
+      conditions.push(`重复任务: ${searchParams.isRecurring ? "是" : "否"}`);
+    }
+
+    if (searchParams.hasDescription !== undefined) {
+      conditions.push(`描述: ${searchParams.hasDescription ? "有" : "无"}`);
+    }
+
+    // 排序
+    if (searchParams.sortBy && searchParams.sortBy !== "relevance") {
+      const sortMap: Record<string, string> = {
+        createdAt: "创建时间",
+        updatedAt: "更新时间",
+        dueDate: "截止时间",
+        priority: "优先级",
+        title: "标题",
+        timeSpent: "耗时"
+      };
+      const sortName = sortMap[searchParams.sortBy] || searchParams.sortBy;
+      const orderName = searchParams.sortOrder === "asc" ? "升序" : "降序";
+      conditions.push(`排序: ${sortName}${orderName}`);
+    }
+
+    return conditions.length > 0 ? conditions.join(" | ") : "无特定条件";
+  }, []);
+
+
 
 
 
@@ -473,17 +614,7 @@ const SearchPage: NextPage = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-              <button
-                onClick={() => setShowSavedSearches(!showSavedSearches)}
-                className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium ${
-                  showSavedSearches
-                    ? "border-blue-300 bg-blue-50 text-blue-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <BookmarkIcon className="mr-2 h-4 w-4" />
-                保存的搜索
-              </button>
+
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium ${
@@ -537,7 +668,7 @@ const SearchPage: NextPage = () => {
                   </span>
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-blue-600 hover:text-blue-800 sm:ml-auto"
+                    className="self-start text-sm text-blue-600 hover:text-blue-800 sm:self-auto"
                   >
                     清除所有筛选
                   </button>
@@ -854,100 +985,7 @@ const SearchPage: NextPage = () => {
             </div>
           </div>
 
-          {/* 保存的搜索 */}
-          {showSavedSearches && (
-            <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
-              <h3 className="mb-4 text-lg font-medium text-gray-900">
-                保存的搜索
-              </h3>
-              {savedSearches && savedSearches.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {savedSearches.map((search) => (
-                    <div
-                      key={search.id}
-                      className="relative rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
-                    >
-                      <div
-                        className="cursor-pointer"
-                        onClick={() => {
-                          // 加载保存的搜索参数
-                          const params = search.searchParams;
-                          setQuery(params.query ?? "");
-                          setSearchIn(params.searchIn ?? ["tasks", "notes", "projects", "journals"]);
-                          setTaskStatus(params.taskStatus ?? []);
-                          setTaskType(params.taskType ?? []);
-                          setPriority(params.priority ?? []);
-                          setTagIds(params.tagIds ?? []);
-                          setProjectIds(params.projectIds ?? []);
-                          setCreatedAfter(params.createdAfter ? new Date(params.createdAfter) : null);
-                          setCreatedBefore(params.createdBefore ? new Date(params.createdBefore) : null);
-                          setDueAfter(params.dueAfter ? new Date(params.dueAfter) : null);
-                          setDueBefore(params.dueBefore ? new Date(params.dueBefore) : null);
-                          setIsCompleted(params.isCompleted ?? null);
-                          setIsOverdue(params.isOverdue ?? null);
-                          setHasDescription(params.hasDescription ?? null);
-                          setSortBy(params.sortBy ?? "relevance");
-                          setSortOrder(params.sortOrder ?? "desc");
-                          void refetch();
-                        }}
-                      >
-                        <h4 className="text-base font-medium text-gray-900 pr-8">
-                          {search.name}
-                        </h4>
-                        {search.description && (
-                          <p className="mt-1 text-sm text-gray-600">
-                            {search.description}
-                          </p>
-                        )}
-                        <p className="mt-2 text-xs text-gray-500">
-                          {new Date(search.updatedAt).toLocaleDateString("zh-CN")}
-                        </p>
-                      </div>
 
-                      {/* 删除按钮 */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSavedSearch(search.id);
-                        }}
-                        className="absolute top-3 right-3 rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
-                        title="删除保存的搜索"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">暂无保存的搜索</p>
-              )}
-
-              {/* 保存当前搜索 */}
-              <div className="mt-6 border-t border-gray-200 pt-6">
-                <h4 className="mb-2 text-sm font-medium text-gray-900">
-                  保存当前搜索
-                </h4>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    type="text"
-                    placeholder="搜索名称"
-                    value={saveSearchName}
-                    onChange={(e) => setSaveSearchName(e.target.value)}
-                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  />
-                  <button
-                    onClick={handleSaveSearch}
-                    disabled={
-                      !saveSearchName.trim() || saveSearchMutation.isPending
-                    }
-                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
-                  >
-                    保存
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* 高级筛选面板 */}
           {showAdvanced && (
@@ -987,13 +1025,45 @@ const SearchPage: NextPage = () => {
           )}
 
           {/* 搜索结果 */}
-          <SearchResults
-            results={searchResults}
-            isLoading={isLoading}
-            query={query}
-            searchIn={searchIn}
-            onTaskClick={handleTaskClick}
-          />
+          <div className="space-y-4">
+            {/* 搜索结果标题和保存按钮 */}
+            {(searchResults || isLoading) && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-medium text-gray-900">搜索结果</h2>
+                  {searchResults && (
+                    <span className="text-sm text-gray-500">
+                      共找到 {
+                        (searchResults.tasks?.length || 0) +
+                        (searchResults.notes?.length || 0) +
+                        (searchResults.projects?.length || 0) +
+                        (searchResults.journals?.length || 0)
+                      } 条结果
+                    </span>
+                  )}
+                </div>
+
+                {/* 保存搜索按钮 */}
+                {searchResults && (
+                  <button
+                    onClick={() => setIsSaveSearchModalOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    <BookmarkIcon className="h-4 w-4" />
+                    保存搜索
+                  </button>
+                )}
+              </div>
+            )}
+
+            <SearchResults
+              results={searchResults}
+              isLoading={isLoading}
+              query={query}
+              searchIn={searchIn}
+              onTaskClick={handleTaskClick}
+            />
+          </div>
 
           {/* 加载更多按钮 */}
           {hasResults && canLoadMore && (
@@ -1028,6 +1098,16 @@ const SearchPage: NextPage = () => {
           taskId={editingTaskId ?? undefined}
           onSuccess={handleTaskModalSuccess}
         />
+
+        {/* 保存搜索模态框 */}
+        <SavedSearchModal
+          isOpen={isSaveSearchModalOpen}
+          onClose={() => setIsSaveSearchModalOpen(false)}
+          onSave={handleSaveCurrentSearch}
+          mode="create"
+          isLoading={saveSearchMutation.isPending}
+        />
+
       </MainLayout>
     </AuthGuard>
   );
