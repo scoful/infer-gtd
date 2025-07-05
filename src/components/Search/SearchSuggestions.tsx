@@ -57,15 +57,11 @@ export default function SearchSuggestions({
     }
   );
 
-  // 智能搜索建议（功能性搜索）
-  const smartSuggestions = [
-    { text: "今天的任务", query: "", filter: "today-tasks", icon: CheckIcon },
-    { text: "本周笔记", query: "", filter: "week-notes", icon: DocumentTextIcon },
-    { text: "高优先级任务", query: "", filter: "high-priority", icon: CheckIcon },
-    { text: "进行中的项目", query: "", filter: "active-projects", icon: FolderIcon },
-    { text: "最近的日记", query: "", filter: "recent-journals", icon: BookmarkIcon },
-    { text: "待办事项", query: "", filter: "todo-tasks", icon: CheckIcon },
-  ];
+  // 获取保存的搜索作为智能搜索建议
+  const { data: savedSearches } = api.search.getSavedSearches.useQuery(undefined, {
+    enabled: !!query && query.length < 2 && !query.startsWith('#'),
+    staleTime: 5 * 60 * 1000, // 5分钟缓存
+  });
 
   // 处理标签建议
   const getTagSuggestions = () => {
@@ -103,12 +99,13 @@ export default function SearchSuggestions({
     // 标签搜索优先（当输入 # 时）
     ...(query.startsWith('#') ? getTagSuggestions() : []),
 
-    // 智能搜索建议（仅在没有查询时显示）
-    ...(query.length < 2 && !query.startsWith('#') ? smartSuggestions.map(suggestion => ({
-      type: 'smart',
-      text: suggestion.text,
-      icon: suggestion.icon,
-      filter: suggestion.filter
+    // 保存的搜索作为智能搜索建议（仅在没有查询时显示）
+    ...(query.length < 2 && !query.startsWith('#') && savedSearches ? savedSearches.map(savedSearch => ({
+      type: 'saved-search',
+      text: savedSearch.name,
+      icon: BookmarkIcon,
+      searchParams: savedSearch.searchParams,
+      id: savedSearch.id
     })) : []),
 
     // 普通搜索建议（非标签搜索时）

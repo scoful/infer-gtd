@@ -82,8 +82,69 @@ export default function QuickSearch({
           const tagName = suggestion.text.startsWith('#') ? suggestion.text.substring(1) : suggestion.text;
           void router.push(`/search?q=${encodeURIComponent(tagName)}&searchBy=tag`);
           break;
+        case 'saved-search':
+          // 保存的搜索：构建URL参数
+          if (suggestion.searchParams) {
+            const params = new URLSearchParams();
+            const searchParams = suggestion.searchParams;
+
+            // 添加所有搜索参数
+            if (searchParams.query) params.set('q', searchParams.query);
+            if (searchParams.searchIn) params.set('searchIn', searchParams.searchIn.join(','));
+            if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
+              params.set('status', searchParams.taskStatus.join(','));
+            }
+            if (searchParams.priority && searchParams.priority.length > 0) {
+              params.set('priority', searchParams.priority.join(','));
+            }
+            if (searchParams.tagIds && searchParams.tagIds.length > 0) {
+              params.set('tagIds', searchParams.tagIds.join(','));
+            }
+            if (searchParams.projectIds && searchParams.projectIds.length > 0) {
+              params.set('projectIds', searchParams.projectIds.join(','));
+            }
+            if (searchParams.createdAfter) {
+              const date = typeof searchParams.createdAfter === 'string'
+                ? searchParams.createdAfter
+                : searchParams.createdAfter.toISOString().split('T')[0];
+              params.set('createdAfter', date);
+            }
+            if (searchParams.createdBefore) {
+              const date = typeof searchParams.createdBefore === 'string'
+                ? searchParams.createdBefore
+                : searchParams.createdBefore.toISOString().split('T')[0];
+              params.set('createdBefore', date);
+            }
+            if (searchParams.dueAfter) {
+              const date = typeof searchParams.dueAfter === 'string'
+                ? searchParams.dueAfter
+                : searchParams.dueAfter.toISOString().split('T')[0];
+              params.set('dueAfter', date);
+            }
+            if (searchParams.dueBefore) {
+              const date = typeof searchParams.dueBefore === 'string'
+                ? searchParams.dueBefore
+                : searchParams.dueBefore.toISOString().split('T')[0];
+              params.set('dueBefore', date);
+            }
+            if (searchParams.sortBy) params.set('sortBy', searchParams.sortBy);
+            if (searchParams.sortOrder) params.set('sortOrder', searchParams.sortOrder);
+            if (searchParams.isCompleted !== null && searchParams.isCompleted !== undefined) {
+              params.set('isCompleted', searchParams.isCompleted.toString());
+            }
+            if (searchParams.isOverdue !== null && searchParams.isOverdue !== undefined) {
+              params.set('isOverdue', searchParams.isOverdue.toString());
+            }
+            if (searchParams.hasDescription !== null && searchParams.hasDescription !== undefined) {
+              params.set('hasDescription', searchParams.hasDescription.toString());
+            }
+
+            const queryString = params.toString();
+            void router.push(`/search${queryString ? '?' + queryString : ''}`);
+          }
+          break;
         case 'smart':
-          // 智能搜索建议：使用预定义的筛选器
+          // 智能搜索建议：使用预定义的筛选器（保留作为后备）
           const today = new Date().toISOString().split('T')[0];
           const weekStart = getWeekStart().toISOString().split('T')[0];
 

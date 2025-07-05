@@ -11,6 +11,7 @@ import {
   DocumentTextIcon,
   FolderIcon,
   MagnifyingGlassIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Priority, TaskStatus, type TaskType } from "@prisma/client";
 
@@ -22,6 +23,7 @@ import { usePageRefresh } from "@/hooks/usePageRefresh";
 import SearchResultItem from "@/components/Search/SearchResultItem";
 import SearchFilters from "@/components/Search/SearchFilters";
 import TaskModal from "@/components/Tasks/TaskModal";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 
 // 搜索结果类型
 interface SearchResults {
@@ -36,6 +38,7 @@ interface SearchResults {
 const SearchPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const router = useRouter();
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 基础搜索状态
   const [query, setQuery] = useState("");
@@ -192,9 +195,28 @@ const SearchPage: NextPage = () => {
 
   // 保存搜索
   const saveSearchMutation = api.search.saveSearch.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       setSaveSearchName("");
-      // 刷新保存的搜索列表
+      void refetchSavedSearches();
+      showSuccess(`搜索 "${data.name}" 保存成功`);
+    },
+    onError: (error) => {
+      if (error.data?.code === "CONFLICT") {
+        showError("搜索名称已存在，请使用其他名称");
+      } else {
+        showError(error.message || "保存搜索失败");
+      }
+    },
+  });
+
+  // 删除保存的搜索
+  const deleteSavedSearchMutation = api.search.deleteSavedSearch.useMutation({
+    onSuccess: () => {
+      void refetchSavedSearches();
+      showSuccess("保存的搜索已删除");
+    },
+    onError: (error) => {
+      showError(error.message || "删除保存的搜索失败");
     },
   });
 
@@ -407,18 +429,22 @@ const SearchPage: NextPage = () => {
   }, []);
 
   // 保存当前搜索
-  const handleSaveSearch = useCallback(async () => {
-    if (!saveSearchName.trim()) return;
-
-    try {
-      await saveSearchMutation.mutateAsync({
-        name: saveSearchName.trim(),
-        searchParams,
-      });
-    } catch (error) {
-      console.error("保存搜索失败:", error);
+  const handleSaveSearch = useCallback(() => {
+    if (!saveSearchName.trim()) {
+      showError("请输入搜索名称");
+      return;
     }
-  }, [saveSearchName, searchParams, saveSearchMutation]);
+
+    saveSearchMutation.mutate({
+      name: saveSearchName.trim(),
+      searchParams,
+    });
+  }, [saveSearchName, searchParams, saveSearchMutation, showError]);
+
+  // 删除保存的搜索
+  const handleDeleteSavedSearch = useCallback((searchId: string) => {
+    deleteSavedSearchMutation.mutate({ id: searchId });
+  }, [deleteSavedSearchMutation]);
 
   return (
     <AuthGuard>
@@ -442,10 +468,10 @@ const SearchPage: NextPage = () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
               <button
                 onClick={() => setShowSavedSearches(!showSavedSearches)}
-                className={`inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium ${
+                className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium ${
                   showSavedSearches
                     ? "border-blue-300 bg-blue-50 text-blue-700"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -456,7 +482,7 @@ const SearchPage: NextPage = () => {
               </button>
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className={`inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium ${
+                className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium ${
                   showAdvanced || activeFiltersCount > 0
                     ? "border-blue-300 bg-blue-50 text-blue-700"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -474,8 +500,8 @@ const SearchPage: NextPage = () => {
           </div>
 
           {/* 搜索框 */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <div className="flex gap-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
@@ -492,7 +518,7 @@ const SearchPage: NextPage = () => {
               <button
                 onClick={handleSearch}
                 disabled={isLoading}
-                className="rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                className="w-full rounded-md bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
               >
                 {isLoading ? "搜索中..." : "搜索"}
               </button>
@@ -500,14 +526,14 @@ const SearchPage: NextPage = () => {
 
             {/* 活跃筛选条件摘要 */}
             {activeFiltersCount > 0 && (
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-3">
+              <div className="mt-3 space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                   <span className="text-sm font-medium text-gray-700">
                     已启用 {activeFiltersCount} 个筛选条件
                   </span>
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-blue-600 hover:text-blue-800"
+                    className="text-sm text-blue-600 hover:text-blue-800 sm:ml-auto"
                   >
                     清除所有筛选
                   </button>
@@ -769,7 +795,7 @@ const SearchPage: NextPage = () => {
 
             {/* 搜索范围 */}
             <div className="mt-4">
-              <div className="mb-2 flex items-center gap-3">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <label className="text-sm font-medium text-gray-700">
                   搜索范围
                 </label>
@@ -789,7 +815,7 @@ const SearchPage: NextPage = () => {
                   </button>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-2">
                 {[
                   { value: "tasks", label: "任务", icon: CheckIcon },
                   { value: "notes", label: "笔记", icon: DocumentTextIcon },
@@ -826,36 +852,65 @@ const SearchPage: NextPage = () => {
 
           {/* 保存的搜索 */}
           {showSavedSearches && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
               <h3 className="mb-4 text-lg font-medium text-gray-900">
                 保存的搜索
               </h3>
               {savedSearches && savedSearches.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {savedSearches.map((search) => (
                     <div
                       key={search.id}
-                      className="cursor-pointer rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
-                      onClick={() => {
-                        // 加载保存的搜索参数
-                        const params = search.searchParams;
-                        setQuery(params.query ?? "");
-                        setSearchIn(params.searchIn ?? ["tasks"]);
-                        // 设置其他参数...
-                        void refetch();
-                      }}
+                      className="relative rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
                     >
-                      <h4 className="text-base font-medium text-gray-900">
-                        {search.name}
-                      </h4>
-                      {search.description && (
-                        <p className="mt-1 text-sm text-gray-600">
-                          {search.description}
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          // 加载保存的搜索参数
+                          const params = search.searchParams;
+                          setQuery(params.query ?? "");
+                          setSearchIn(params.searchIn ?? ["tasks", "notes", "projects", "journals"]);
+                          setTaskStatus(params.taskStatus ?? []);
+                          setTaskType(params.taskType ?? []);
+                          setPriority(params.priority ?? []);
+                          setTagIds(params.tagIds ?? []);
+                          setProjectIds(params.projectIds ?? []);
+                          setCreatedAfter(params.createdAfter ? new Date(params.createdAfter) : null);
+                          setCreatedBefore(params.createdBefore ? new Date(params.createdBefore) : null);
+                          setDueAfter(params.dueAfter ? new Date(params.dueAfter) : null);
+                          setDueBefore(params.dueBefore ? new Date(params.dueBefore) : null);
+                          setIsCompleted(params.isCompleted ?? null);
+                          setIsOverdue(params.isOverdue ?? null);
+                          setHasDescription(params.hasDescription ?? null);
+                          setSortBy(params.sortBy ?? "relevance");
+                          setSortOrder(params.sortOrder ?? "desc");
+                          void refetch();
+                        }}
+                      >
+                        <h4 className="text-base font-medium text-gray-900 pr-8">
+                          {search.name}
+                        </h4>
+                        {search.description && (
+                          <p className="mt-1 text-sm text-gray-600">
+                            {search.description}
+                          </p>
+                        )}
+                        <p className="mt-2 text-xs text-gray-500">
+                          {new Date(search.updatedAt).toLocaleDateString("zh-CN")}
                         </p>
-                      )}
-                      <p className="mt-2 text-xs text-gray-500">
-                        {new Date(search.updatedAt).toLocaleDateString("zh-CN")}
-                      </p>
+                      </div>
+
+                      {/* 删除按钮 */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSavedSearch(search.id);
+                        }}
+                        className="absolute top-3 right-3 rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                        title="删除保存的搜索"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -868,7 +923,7 @@ const SearchPage: NextPage = () => {
                 <h4 className="mb-2 text-sm font-medium text-gray-900">
                   保存当前搜索
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     type="text"
                     placeholder="搜索名称"
@@ -881,7 +936,7 @@ const SearchPage: NextPage = () => {
                     disabled={
                       !saveSearchName.trim() || saveSearchMutation.isPending
                     }
-                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
                   >
                     保存
                   </button>
@@ -943,7 +998,7 @@ const SearchPage: NextPage = () => {
                 <button
                   onClick={handleLoadMore}
                   disabled={isFetching}
-                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
                 >
                   {isFetching ? (
                     <>
@@ -951,7 +1006,10 @@ const SearchPage: NextPage = () => {
                       加载中...
                     </>
                   ) : (
-                    `加载更多 (当前显示 ${displayLimit} 条)`
+                    <>
+                      <span className="sm:hidden">加载更多</span>
+                      <span className="hidden sm:inline">{`加载更多 (当前显示 ${displayLimit} 条)`}</span>
+                    </>
                   )}
                 </button>
               </div>
@@ -1040,18 +1098,18 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   onClear,
 }) => {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-lg font-medium text-gray-900">高级筛选</h3>
         <button
           onClick={onClear}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="self-start text-sm text-gray-500 hover:text-gray-700 sm:self-auto"
         >
           清空筛选
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* 任务状态 */}
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
