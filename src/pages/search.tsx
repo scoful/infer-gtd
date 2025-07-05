@@ -220,6 +220,8 @@ const SearchPage: NextPage = () => {
     },
   });
 
+
+
   // 处理搜索
   const handleSearch = useCallback(() => {
     void refetch();
@@ -445,6 +447,8 @@ const SearchPage: NextPage = () => {
   const handleDeleteSavedSearch = useCallback((searchId: string) => {
     deleteSavedSearchMutation.mutate({ id: searchId });
   }, [deleteSavedSearchMutation]);
+
+
 
   return (
     <AuthGuard>

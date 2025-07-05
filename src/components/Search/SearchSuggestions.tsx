@@ -216,6 +216,8 @@ export default function SearchSuggestions({
         return '项目';
       case 'smart':
         return '快速搜索';
+      case 'saved-search':
+        return '快速搜索';
       default:
         return '';
     }
@@ -234,6 +236,8 @@ export default function SearchSuggestions({
       case 'project':
         return 'text-purple-600';
       case 'smart':
+        return 'text-indigo-600';
+      case 'saved-search':
         return 'text-indigo-600';
       default:
         return 'text-gray-600';
@@ -273,9 +277,16 @@ export default function SearchSuggestions({
                   )}
                 </div>
                 <span className="flex-1 truncate">{suggestion.text}</span>
-                <span className={`text-xs ${getTypeColor(suggestion.type)}`}>
-                  {getTypeLabel(suggestion.type)}
-                </span>
+                {suggestion.type === 'saved-search' ? (
+                  <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+                    <BookmarkIcon className="mr-1 h-3 w-3" />
+                    快速搜索
+                  </span>
+                ) : (
+                  <span className={`text-xs ${getTypeColor(suggestion.type)}`}>
+                    {getTypeLabel(suggestion.type)}
+                  </span>
+                )}
               </button>
             );
           })}

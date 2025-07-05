@@ -4,6 +4,7 @@ import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import { db } from "@/server/db";
 import GitHubProvider from "next-auth/providers/github";
 import { createSystemTagsForUser } from "../../../prisma/seed-system-tags";
+import { createDefaultSearchesForUser } from "../../../prisma/seed-default-searches";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -64,6 +65,14 @@ export const authConfig = {
         console.log(`✅ 为新用户 ${user.email} 创建系统标签成功`);
       } catch (error) {
         console.error(`❌ 为新用户 ${user.email} 创建系统标签失败:`, error);
+      }
+
+      // 为新用户创建默认快速搜索
+      try {
+        await createDefaultSearchesForUser(user.id!);
+        console.log(`✅ 为新用户 ${user.email} 创建默认快速搜索成功`);
+      } catch (error) {
+        console.error(`❌ 为新用户 ${user.email} 创建默认快速搜索失败:`, error);
       }
     },
   },
