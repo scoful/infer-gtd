@@ -35,17 +35,24 @@ export default function SearchSuggestions({
     }
   );
 
-  // 获取最近搜索历史
-  const recentSearches = [
-    "高优先级任务",
-    "本周笔记",
-    "进行中的项目",
-    "待办事项",
+  // 智能搜索建议（功能性搜索）
+  const smartSuggestions = [
+    { text: "今天的任务", query: "", filter: "today-tasks", icon: CheckIcon },
+    { text: "本周笔记", query: "", filter: "week-notes", icon: DocumentTextIcon },
+    { text: "高优先级任务", query: "", filter: "high-priority", icon: CheckIcon },
+    { text: "进行中的项目", query: "", filter: "active-projects", icon: FolderIcon },
+    { text: "最近的日记", query: "", filter: "recent-journals", icon: BookmarkIcon },
+    { text: "待办事项", query: "", filter: "todo-tasks", icon: CheckIcon },
   ];
 
   const allSuggestions = [
-    // 最近搜索（仅在没有查询时显示）
-    ...(query.length < 2 ? recentSearches.map(text => ({ type: 'recent', text, icon: ClockIcon })) : []),
+    // 智能搜索建议（仅在没有查询时显示）
+    ...(query.length < 2 ? smartSuggestions.map(suggestion => ({
+      type: 'smart',
+      text: suggestion.text,
+      icon: suggestion.icon,
+      filter: suggestion.filter
+    })) : []),
     // API 建议
     ...(suggestions?.tasks?.map((task: any) => ({
       type: 'task',
@@ -153,8 +160,8 @@ export default function SearchSuggestions({
         return '标签';
       case 'project':
         return '项目';
-      case 'recent':
-        return '最近搜索';
+      case 'smart':
+        return '快速搜索';
       default:
         return '';
     }
@@ -172,8 +179,8 @@ export default function SearchSuggestions({
         return 'text-yellow-600';
       case 'project':
         return 'text-purple-600';
-      case 'recent':
-        return 'text-gray-600';
+      case 'smart':
+        return 'text-indigo-600';
       default:
         return 'text-gray-600';
     }
@@ -226,7 +233,7 @@ export default function SearchSuggestions({
       <div className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500">
         <div className="flex items-center justify-between">
           <span>↑↓ 选择 • Enter 确认 • Esc 关闭</span>
-          <span>支持搜索任务、笔记、项目</span>
+          <span>{query.length < 2 ? "快速搜索功能" : "支持搜索任务、笔记、项目、日记"}</span>
         </div>
       </div>
     </div>

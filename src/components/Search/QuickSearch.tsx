@@ -50,9 +50,36 @@ export default function QuickSearch({
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
-    setQuery(suggestion);
+    // 检查是否是智能搜索建议
+    const today = new Date().toISOString().split('T')[0];
+    const weekStart = getWeekStart().toISOString().split('T')[0];
+
+    const smartFilters = {
+      "今天的任务": `?searchIn=tasks&createdAfter=${today}`,
+      "本周笔记": `?searchIn=notes&createdAfter=${weekStart}`,
+      "高优先级任务": "?searchIn=tasks&priority=HIGH,URGENT",
+      "进行中的项目": "?searchIn=projects",
+      "最近的日记": "?searchIn=journals&sortBy=createdAt&sortOrder=desc",
+      "待办事项": "?searchIn=tasks&status=TODO",
+    };
+
+    if (smartFilters[suggestion as keyof typeof smartFilters]) {
+      // 智能搜索：跳转到带参数的搜索页面
+      void router.push(`/search${smartFilters[suggestion as keyof typeof smartFilters]}`);
+    } else {
+      // 普通搜索：设置查询词并搜索
+      setQuery(suggestion);
+      handleSearch(suggestion);
+    }
     setShowSuggestions(false);
-    handleSearch(suggestion);
+  };
+
+  // 获取本周开始日期
+  const getWeekStart = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 周一开始
+    return new Date(now.setDate(diff));
   };
 
   const handleSearch = (searchQuery?: string) => {

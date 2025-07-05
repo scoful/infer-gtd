@@ -164,7 +164,38 @@ const SearchPage: NextPage = () => {
     if (urlQuery && urlQuery !== query) {
       setQuery(urlQuery);
     }
-  }, [router.query.q, query]);
+
+    // 解析智能搜索参数
+    const { searchIn: urlSearchIn, priority: urlPriority, status: urlStatus,
+            createdAfter: urlCreatedAfter, sortBy: urlSortBy, sortOrder: urlSortOrder } = router.query;
+
+    if (urlSearchIn && typeof urlSearchIn === 'string') {
+      const searchInArray = urlSearchIn.split(',');
+      setSearchIn(searchInArray);
+    }
+
+    if (urlPriority && typeof urlPriority === 'string') {
+      const priorityArray = urlPriority.split(',') as Priority[];
+      setPriority(priorityArray);
+    }
+
+    if (urlStatus && typeof urlStatus === 'string') {
+      const statusArray = urlStatus.split(',') as TaskStatus[];
+      setTaskStatus(statusArray);
+    }
+
+    if (urlCreatedAfter && typeof urlCreatedAfter === 'string') {
+      setCreatedAfter(new Date(urlCreatedAfter));
+    }
+
+    if (urlSortBy && typeof urlSortBy === 'string') {
+      setSortBy(urlSortBy);
+    }
+
+    if (urlSortOrder && typeof urlSortOrder === 'string') {
+      setSortOrder(urlSortOrder as "asc" | "desc");
+    }
+  }, [router.query, query]);
 
   // 清空筛选
   const clearFilters = useCallback(() => {
