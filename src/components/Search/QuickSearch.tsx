@@ -9,7 +9,7 @@ interface QuickSearchProps {
 }
 
 export default function QuickSearch({
-  placeholder = "搜索任务、笔记、项目... (输入 # 选择标签)",
+  placeholder = "搜索任务、笔记、项目、日记... (输入 # 选择标签)",
   className = ""
 }: QuickSearchProps) {
   const [query, setQuery] = useState("");
