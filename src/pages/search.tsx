@@ -38,7 +38,7 @@ const SearchPage: NextPage = () => {
 
   // 基础搜索状态
   const [query, setQuery] = useState("");
-  const [searchIn, setSearchIn] = useState<string[]>(["tasks"]);
+  const [searchIn, setSearchIn] = useState<string[]>(["tasks", "notes", "projects", "journals"]);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // 高级搜索状态

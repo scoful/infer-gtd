@@ -78,7 +78,7 @@ const searchIdSchema = z.object({
 // 搜索建议 Schema
 const searchSuggestionsSchema = z.object({
   query: z.string().min(1, "查询不能为空"),
-  type: z.enum(["all", "tasks", "tags", "projects"]).default("all"),
+  type: z.enum(["all", "tasks", "notes", "journals", "tags", "projects"]).default("all"),
   limit: z.number().min(1).max(20).default(10),
 });
 
@@ -241,6 +241,7 @@ export const searchRouter = createTRPCRouter({
         if (searchIn.includes("notes")) {
           const noteWhere: any = {
             createdById: ctx.session.user.id,
+            isArchived: false, // 默认不搜索归档的笔记
             ...(query && {
               OR: [
                 { title: { contains: query, mode: "insensitive" as const } },
@@ -365,6 +366,8 @@ export const searchRouter = createTRPCRouter({
       try {
         const suggestions: any = {
           tasks: [],
+          notes: [],
+          journals: [],
           tags: [],
           projects: [],
         };
@@ -384,6 +387,44 @@ export const searchRouter = createTRPCRouter({
             orderBy: { updatedAt: "desc" },
           });
           suggestions.tasks = tasks;
+        }
+
+        if (type === "all" || type === "notes") {
+          const notes = await ctx.db.note.findMany({
+            where: {
+              createdById: ctx.session.user.id,
+              isArchived: false, // 排除归档笔记
+              OR: [
+                { title: { contains: query, mode: "insensitive" as const } },
+                { content: { contains: query, mode: "insensitive" as const } },
+              ],
+            },
+            select: {
+              id: true,
+              title: true,
+              content: true,
+            },
+            take: limit,
+            orderBy: { updatedAt: "desc" },
+          });
+          suggestions.notes = notes;
+        }
+
+        if (type === "all" || type === "journals") {
+          const journals = await ctx.db.journal.findMany({
+            where: {
+              createdById: ctx.session.user.id,
+              content: { contains: query, mode: "insensitive" as const },
+            },
+            select: {
+              id: true,
+              date: true,
+              content: true,
+            },
+            take: limit,
+            orderBy: { date: "desc" },
+          });
+          suggestions.journals = journals;
         }
 
         if (type === "all" || type === "tags") {

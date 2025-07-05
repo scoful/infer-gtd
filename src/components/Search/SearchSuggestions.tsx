@@ -6,6 +6,7 @@ import {
   FolderIcon,
   TagIcon,
   ClockIcon,
+  BookmarkIcon,
 } from "@heroicons/react/24/outline";
 import { api } from "@/utils/api";
 
@@ -46,23 +47,39 @@ export default function SearchSuggestions({
     // 最近搜索（仅在没有查询时显示）
     ...(query.length < 2 ? recentSearches.map(text => ({ type: 'recent', text, icon: ClockIcon })) : []),
     // API 建议
-    ...(suggestions?.tasks?.map((task: any) => ({ 
-      type: 'task', 
-      text: task.title, 
+    ...(suggestions?.tasks?.map((task: any) => ({
+      type: 'task',
+      text: task.title,
       icon: CheckIcon,
-      id: task.id 
+      id: task.id
     })) || []),
-    ...(suggestions?.tags?.map((tag: any) => ({ 
-      type: 'tag', 
-      text: `#${tag.name}`, 
+    ...(suggestions?.notes?.map((note: any) => ({
+      type: 'note',
+      text: note.title,
+      icon: DocumentTextIcon,
+      id: note.id
+    })) || []),
+    ...(suggestions?.journals?.map((journal: any) => ({
+      type: 'journal',
+      text: new Date(journal.date).toLocaleDateString("zh-CN", {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      icon: BookmarkIcon,
+      id: journal.id
+    })) || []),
+    ...(suggestions?.tags?.map((tag: any) => ({
+      type: 'tag',
+      text: `#${tag.name}`,
       icon: TagIcon,
-      id: tag.id 
+      id: tag.id
     })) || []),
-    ...(suggestions?.projects?.map((project: any) => ({ 
-      type: 'project', 
-      text: project.name, 
+    ...(suggestions?.projects?.map((project: any) => ({
+      type: 'project',
+      text: project.name,
       icon: FolderIcon,
-      id: project.id 
+      id: project.id
     })) || []),
   ];
 
@@ -128,6 +145,10 @@ export default function SearchSuggestions({
     switch (type) {
       case 'task':
         return '任务';
+      case 'note':
+        return '笔记';
+      case 'journal':
+        return '日记';
       case 'tag':
         return '标签';
       case 'project':
@@ -143,8 +164,12 @@ export default function SearchSuggestions({
     switch (type) {
       case 'task':
         return 'text-blue-600';
-      case 'tag':
+      case 'note':
         return 'text-green-600';
+      case 'journal':
+        return 'text-orange-600';
+      case 'tag':
+        return 'text-yellow-600';
       case 'project':
         return 'text-purple-600';
       case 'recent':
