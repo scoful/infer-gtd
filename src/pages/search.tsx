@@ -72,6 +72,41 @@ const SearchPage: NextPage = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
+  // 分页状态
+  const [displayLimit, setDisplayLimit] = useState(20);
+  const pageSize = 20;
+
+  // 检查是否有活跃的筛选条件
+  const hasActiveFilters = useCallback(() => {
+    return (
+      taskStatus.length > 0 ||
+      taskType.length > 0 ||
+      priority.length > 0 ||
+      tagIds.length > 0 ||
+      projectIds.length > 0 ||
+      createdAfter !== null ||
+      createdBefore !== null ||
+      dueAfter !== null ||
+      dueBefore !== null ||
+      isCompleted !== null ||
+      isOverdue !== null ||
+      hasDescription !== null
+    );
+  }, [
+    taskStatus,
+    taskType,
+    priority,
+    tagIds,
+    projectIds,
+    createdAfter,
+    createdBefore,
+    dueAfter,
+    dueBefore,
+    isCompleted,
+    isOverdue,
+    hasDescription,
+  ]);
+
   // 构建搜索参数
   const searchParams = useMemo(() => {
     const params: any = {
@@ -79,7 +114,7 @@ const SearchPage: NextPage = () => {
       searchIn,
       sortBy,
       sortOrder,
-      limit: 20,
+      limit: displayLimit,
     };
 
     if (taskStatus.length > 0) params.taskStatus = taskStatus;
@@ -113,6 +148,7 @@ const SearchPage: NextPage = () => {
     hasDescription,
     sortBy,
     sortOrder,
+    displayLimit,
   ]);
 
   // 执行搜索
@@ -123,7 +159,7 @@ const SearchPage: NextPage = () => {
     refetch,
   } = api.search.advanced.useQuery(searchParams, {
     enabled:
-      !!sessionData && (!!query.trim() || Object.keys(searchParams).length > 4),
+      !!sessionData && (!!query.trim() || hasActiveFilters()),
     staleTime: 30 * 1000,
   });
 
@@ -180,6 +216,46 @@ const SearchPage: NextPage = () => {
     void refetch();
     handleTaskModalClose();
   }, [refetch, handleTaskModalClose]);
+
+  // 计算结果信息
+  const totalResults = searchResults?.totalCount || 0;
+  const hasResults = totalResults > 0;
+
+  // 检查是否可以加载更多（当前显示的结果数量达到限制且可能还有更多）
+  const canLoadMore = searchResults && (
+    (searchResults.tasks?.length || 0) +
+    (searchResults.notes?.length || 0) +
+    (searchResults.projects?.length || 0) +
+    (searchResults.journals?.length || 0)
+  ) >= displayLimit && displayLimit < 100; // 最多显示100条
+
+  // 加载更多处理
+  const handleLoadMore = useCallback(() => {
+    setDisplayLimit(prev => Math.min(prev + pageSize, 100));
+  }, [pageSize]);
+
+  // 当搜索条件改变时重置显示限制
+  useEffect(() => {
+    setDisplayLimit(pageSize);
+  }, [
+    query,
+    searchIn,
+    taskStatus,
+    taskType,
+    priority,
+    tagIds,
+    projectIds,
+    createdAfter,
+    createdBefore,
+    dueAfter,
+    dueBefore,
+    isCompleted,
+    isOverdue,
+    hasDescription,
+    sortBy,
+    sortOrder,
+    pageSize,
+  ]);
 
   // 处理URL参数
   useEffect(() => {
@@ -321,7 +397,7 @@ const SearchPage: NextPage = () => {
                   <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                   <input
                     type="text"
-                    placeholder="搜索任务、笔记、项目... (使用 #标签名 搜索标签)"
+                    placeholder="搜索任务、笔记、项目、日记... "
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -517,6 +593,28 @@ const SearchPage: NextPage = () => {
             searchIn={searchIn}
             onTaskClick={handleTaskClick}
           />
+
+          {/* 加载更多按钮 */}
+          {hasResults && canLoadMore && (
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="text-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isFetching}
+                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isFetching ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-600 border-t-transparent"></div>
+                      加载中...
+                    </>
+                  ) : (
+                    `加载更多 (当前显示 ${displayLimit} 条)`
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 任务编辑模态框 */}

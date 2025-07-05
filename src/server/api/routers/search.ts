@@ -205,8 +205,7 @@ export const searchRouter = createTRPCRouter({
 
           const tasks = await ctx.db.task.findMany({
             where: taskWhere,
-            take: limit + 1,
-            cursor: cursor ? { id: cursor } : undefined,
+            take: limit,
             orderBy: getTaskOrderBy(sortBy, sortOrder),
             include: {
               project: true,
@@ -227,11 +226,6 @@ export const searchRouter = createTRPCRouter({
               },
             },
           });
-
-          if (tasks.length > limit) {
-            const nextItem = tasks.pop();
-            results.nextCursor = nextItem!.id;
-          }
 
           results.tasks = tasks;
           results.totalCount += tasks.length;
