@@ -21,6 +21,7 @@ import { SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import SearchResultItem from "@/components/Search/SearchResultItem";
 import SearchFilters from "@/components/Search/SearchFilters";
+import TaskModal from "@/components/Tasks/TaskModal";
 
 // 搜索结果类型
 interface SearchResults {
@@ -66,6 +67,10 @@ const SearchPage: NextPage = () => {
   // 保存的搜索
   const [showSavedSearches, setShowSavedSearches] = useState(false);
   const [saveSearchName, setSaveSearchName] = useState("");
+
+  // 任务编辑模态框状态
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   // 构建搜索参数
   const searchParams = useMemo(() => {
@@ -157,6 +162,24 @@ const SearchPage: NextPage = () => {
   const handleSearch = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  // 处理任务点击
+  const handleTaskClick = useCallback((task: any) => {
+    setEditingTaskId(task.id);
+    setIsTaskModalOpen(true);
+  }, []);
+
+  // 处理任务模态框关闭
+  const handleTaskModalClose = useCallback(() => {
+    setIsTaskModalOpen(false);
+    setEditingTaskId(null);
+  }, []);
+
+  // 处理任务模态框成功
+  const handleTaskModalSuccess = useCallback(() => {
+    void refetch();
+    handleTaskModalClose();
+  }, [refetch, handleTaskModalClose]);
 
   // 处理URL参数
   useEffect(() => {
@@ -492,8 +515,17 @@ const SearchPage: NextPage = () => {
             isLoading={isLoading}
             query={query}
             searchIn={searchIn}
+            onTaskClick={handleTaskClick}
           />
         </div>
+
+        {/* 任务编辑模态框 */}
+        <TaskModal
+          isOpen={isTaskModalOpen}
+          onClose={handleTaskModalClose}
+          taskId={editingTaskId ?? undefined}
+          onSuccess={handleTaskModalSuccess}
+        />
       </MainLayout>
     </AuthGuard>
   );
@@ -814,6 +846,7 @@ interface SearchResultsProps {
   isLoading: boolean;
   query: string;
   searchIn: string[];
+  onTaskClick?: (task: any) => void;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
@@ -821,6 +854,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   isLoading,
   query,
   searchIn,
+  onTaskClick,
 }) => {
   if (isLoading) {
     return (
@@ -890,6 +924,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 type="task"
                 item={task}
                 query={query}
+                onTaskClick={onTaskClick}
               />
             ))}
           </div>

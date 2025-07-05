@@ -14,9 +14,10 @@ interface SearchResultItemProps {
   type: "task" | "note" | "project" | "journal";
   item: any;
   query?: string;
+  onTaskClick?: (task: any) => void; // 任务点击回调
 }
 
-export default function SearchResultItem({ type, item, query }: SearchResultItemProps) {
+export default function SearchResultItem({ type, item, query, onTaskClick }: SearchResultItemProps) {
   const highlightText = (text: string, query?: string) => {
     if (!query || !text) return text;
     
@@ -134,15 +135,20 @@ export default function SearchResultItem({ type, item, query }: SearchResultItem
     }
   };
 
-  return (
-    <Link href={getItemLink()}>
-      <div className="group rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            {getItemIcon()}
-          </div>
-          
-          <div className="flex-1 min-w-0">
+  const handleClick = () => {
+    if (type === "task" && onTaskClick) {
+      onTaskClick(item);
+    }
+  };
+
+  const content = (
+    <div className="group rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 mt-0.5">
+          {getItemIcon()}
+        </div>
+
+        <div className="flex-1 min-w-0">
             {/* 标题 */}
             <h4 className="text-base font-medium text-gray-900 group-hover:text-blue-900 truncate">
               {highlightText(item.title || item.name, query)}
@@ -215,6 +221,20 @@ export default function SearchResultItem({ type, item, query }: SearchResultItem
           </div>
         </div>
       </div>
+  );
+
+  // 任务类型使用点击事件，其他类型使用 Link
+  if (type === "task") {
+    return (
+      <div onClick={handleClick}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={getItemLink()}>
+      {content}
     </Link>
   );
 }
