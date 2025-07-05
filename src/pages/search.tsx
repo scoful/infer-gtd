@@ -19,6 +19,8 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import SearchResultItem from "@/components/Search/SearchResultItem";
+import SearchFilters from "@/components/Search/SearchFilters";
 
 // 搜索结果类型
 interface SearchResults {
@@ -809,49 +811,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </h3>
           <div className="space-y-3">
             {tasks.map((task) => (
-              <div
+              <SearchResultItem
                 key={task.id}
-                className="rounded-lg border border-gray-200 p-4"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-base font-medium text-gray-900">
-                      {task.title}
-                    </h4>
-                    {task.description && (
-                      <p className="mt-1 line-clamp-2 text-sm text-gray-600">
-                        {task.description}
-                      </p>
-                    )}
-                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                      <span
-                        className={`rounded-full px-2 py-1 ${getStatusColor(task.status)}`}
-                      >
-                        {getStatusLabel(task.status)}
-                      </span>
-                      {task.priority && (
-                        <span
-                          className={`rounded-full px-2 py-1 ${getPriorityColor(task.priority)}`}
-                        >
-                          {getPriorityLabel(task.priority)}
-                        </span>
-                      )}
-                      {task.project && (
-                        <span className="flex items-center">
-                          <FolderIcon className="mr-1 h-3 w-3" />
-                          {task.project.name}
-                        </span>
-                      )}
-                      {task.dueDate && (
-                        <span className="flex items-center">
-                          <CalendarIcon className="mr-1 h-3 w-3" />
-                          {new Date(task.dueDate).toLocaleDateString("zh-CN")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                type="task"
+                item={task}
+                query={query}
+              />
             ))}
           </div>
         </div>
@@ -866,28 +831,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </h3>
           <div className="space-y-3">
             {notes.map((note) => (
-              <div
+              <SearchResultItem
                 key={note.id}
-                className="rounded-lg border border-gray-200 p-4"
-              >
-                <h4 className="text-base font-medium text-gray-900">
-                  {note.title}
-                </h4>
-                <p className="mt-1 line-clamp-3 text-sm text-gray-600">
-                  {note.content}
-                </p>
-                <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                  {note.project && (
-                    <span className="flex items-center">
-                      <FolderIcon className="mr-1 h-3 w-3" />
-                      {note.project.name}
-                    </span>
-                  )}
-                  <span>
-                    {new Date(note.updatedAt).toLocaleDateString("zh-CN")}
-                  </span>
-                </div>
-              </div>
+                type="note"
+                item={note}
+                query={query}
+              />
             ))}
           </div>
         </div>
@@ -902,26 +851,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </h3>
           <div className="space-y-3">
             {projects.map((project) => (
-              <div
+              <SearchResultItem
                 key={project.id}
-                className="rounded-lg border border-gray-200 p-4"
-              >
-                <h4 className="text-base font-medium text-gray-900">
-                  {project.name}
-                </h4>
-                {project.description && (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {project.description}
-                  </p>
-                )}
-                <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                  <span>{project._count.tasks} 个任务</span>
-                  <span>{project._count.notes} 个笔记</span>
-                  <span>
-                    {new Date(project.updatedAt).toLocaleDateString("zh-CN")}
-                  </span>
-                </div>
-              </div>
+                type="project"
+                item={project}
+                query={query}
+              />
             ))}
           </div>
         </div>
@@ -936,17 +871,19 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </h3>
           <div className="space-y-3">
             {journals.map((journal) => (
-              <div
+              <SearchResultItem
                 key={journal.id}
-                className="rounded-lg border border-gray-200 p-4"
-              >
-                <h4 className="text-base font-medium text-gray-900">
-                  {new Date(journal.date).toLocaleDateString("zh-CN")}
-                </h4>
-                <p className="mt-1 line-clamp-3 text-sm text-gray-600">
-                  {journal.content}
-                </p>
-              </div>
+                type="journal"
+                item={{
+                  ...journal,
+                  title: new Date(journal.date).toLocaleDateString("zh-CN", {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                }}
+                query={query}
+              />
             ))}
           </div>
         </div>

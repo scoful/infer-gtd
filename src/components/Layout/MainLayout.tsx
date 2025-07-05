@@ -31,6 +31,7 @@ import {
 import { useSidebarState } from "@/hooks";
 import { useRefresh } from "@/contexts/RefreshContext";
 import VersionDisplay from "./VersionDisplay";
+import QuickSearch from "@/components/Search/QuickSearch";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -688,8 +689,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <div className="h-6 w-px bg-gray-200 lg:hidden" />
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="relative flex flex-1">
-              {/* Global search will be implemented later */}
+            <div className="relative flex flex-1 items-center">
+              {/* 全局快速搜索 */}
+              <div className="w-full max-w-lg">
+                <QuickSearch className="w-full" />
+              </div>
             </div>
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               {/* User menu */}
