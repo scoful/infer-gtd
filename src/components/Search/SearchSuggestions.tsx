@@ -10,9 +10,18 @@ import {
 } from "@heroicons/react/24/outline";
 import { api } from "@/utils/api";
 
+interface SearchSuggestion {
+  type: string;
+  text: string;
+  icon: any;
+  id?: string;
+  color?: string;
+  filter?: string;
+}
+
 interface SearchSuggestionsProps {
   query: string;
-  onSelect: (suggestion: string) => void;
+  onSelect: (suggestion: SearchSuggestion) => void;
   onClose: () => void;
   isVisible: boolean;
 }
@@ -118,11 +127,13 @@ export default function SearchSuggestions({
       })) || []),
       ...(suggestions?.journals?.map((journal: any) => ({
         type: 'journal',
-        text: new Date(journal.date).toLocaleDateString("zh-CN", {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
+        text: (() => {
+          const d = new Date(journal.date);
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        })(),
         icon: BookmarkIcon,
         id: journal.id
       })) || []),
@@ -252,7 +263,7 @@ export default function SearchSuggestions({
                 className={`flex w-full items-center gap-3 px-4 py-2 text-left text-sm hover:bg-gray-50 ${
                   index === selectedIndex ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                 }`}
-                onClick={() => onSelect(suggestion.text)}
+                onClick={() => onSelect(suggestion)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
                 <div className="flex items-center gap-2">

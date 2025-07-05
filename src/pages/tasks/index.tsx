@@ -1,7 +1,8 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import {
   ChartBarIcon,
   ClockIcon,
@@ -88,6 +89,7 @@ type TaskWithRelations = {
 };
 
 const TaskListPage: NextPage = () => {
+  const router = useRouter();
   const { data: sessionData } = useSession();
 
   // 状态管理
@@ -329,13 +331,25 @@ const TaskListPage: NextPage = () => {
   const handleTaskModalClose = useCallback(() => {
     setIsTaskModalOpen(false);
     setEditingTaskId(null);
-  }, []);
+    // 清除URL参数
+    if (router.query.edit) {
+      void router.replace('/tasks', undefined, { shallow: true });
+    }
+  }, [router]);
 
   // 处理任务模态框成功
   const handleTaskModalSuccess = useCallback(() => {
     void refetch();
     handleTaskModalClose();
   }, [refetch, handleTaskModalClose]);
+
+  // 处理URL参数，支持通过URL打开编辑模态框
+  useEffect(() => {
+    if (router.isReady && router.query.edit && typeof router.query.edit === 'string') {
+      const taskId = router.query.edit;
+      handleEditTask(taskId);
+    }
+  }, [router.isReady, router.query.edit, handleEditTask]);
 
   // 处理筛选更新
   const handleFilterUpdate = useCallback((newFilters: Partial<FilterState>) => {

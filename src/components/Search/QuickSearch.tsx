@@ -49,31 +49,92 @@ export default function QuickSearch({
     setTimeout(() => setShowSuggestions(false), 200);
   };
 
-  const handleSuggestionSelect = (suggestion: string) => {
-    // 检查是否是智能搜索建议
-    const today = new Date().toISOString().split('T')[0];
-    const weekStart = getWeekStart().toISOString().split('T')[0];
+  const handleSuggestionSelect = (suggestion: any) => {
+    // 如果是对象类型的建议（新格式）
+    if (typeof suggestion === 'object' && suggestion.type) {
+      switch (suggestion.type) {
+        case 'journal':
+          // 日记建议：直接跳转到日记详情页面
+          if (suggestion.id) {
+            void router.push(`/journal/${suggestion.id}`);
+          }
+          break;
+        case 'task':
+          // 任务建议：跳转到任务列表页面并尝试打开编辑模态框
+          if (suggestion.id) {
+            void router.push(`/tasks?edit=${suggestion.id}`);
+          }
+          break;
+        case 'note':
+          // 笔记建议：跳转到笔记详情页面
+          if (suggestion.id) {
+            void router.push(`/notes/${suggestion.id}`);
+          }
+          break;
+        case 'project':
+          // 项目建议：跳转到项目详情页面
+          if (suggestion.id) {
+            void router.push(`/projects/${suggestion.id}`);
+          }
+          break;
+        case 'tag':
+          // 标签建议：跳转到标签搜索
+          const tagName = suggestion.text.startsWith('#') ? suggestion.text.substring(1) : suggestion.text;
+          void router.push(`/search?q=${encodeURIComponent(tagName)}&searchBy=tag`);
+          break;
+        case 'smart':
+          // 智能搜索建议：使用预定义的筛选器
+          const today = new Date().toISOString().split('T')[0];
+          const weekStart = getWeekStart().toISOString().split('T')[0];
 
-    const smartFilters = {
-      "今天的任务": `?searchIn=tasks&createdAfter=${today}`,
-      "本周笔记": `?searchIn=notes&createdAfter=${weekStart}`,
-      "高优先级任务": "?searchIn=tasks&priority=HIGH,URGENT",
-      "进行中的项目": "?searchIn=projects",
-      "最近的日记": "?searchIn=journals&sortBy=createdAt&sortOrder=desc",
-      "待办事项": "?searchIn=tasks&status=TODO",
-    };
+          const smartFilters = {
+            "今天的任务": `?searchIn=tasks&createdAfter=${today}`,
+            "本周笔记": `?searchIn=notes&createdAfter=${weekStart}`,
+            "高优先级任务": "?searchIn=tasks&priority=HIGH,URGENT",
+            "进行中的项目": "?searchIn=projects",
+            "最近的日记": "?searchIn=journals&sortBy=createdAt&sortOrder=desc",
+            "待办事项": "?searchIn=tasks&status=TODO",
+          };
 
-    if (smartFilters[suggestion as keyof typeof smartFilters]) {
-      // 智能搜索：跳转到带参数的搜索页面
-      void router.push(`/search${smartFilters[suggestion as keyof typeof smartFilters]}`);
-    } else if (suggestion.startsWith('#')) {
-      // 标签搜索：跳转到搜索页面并设置标签查询
-      const tagName = suggestion.substring(1); // 移除 # 前缀
-      void router.push(`/search?q=${encodeURIComponent(tagName)}&searchBy=tag`);
+          const filter = smartFilters[suggestion.text as keyof typeof smartFilters];
+          if (filter) {
+            void router.push(`/search${filter}`);
+          }
+          break;
+        default:
+          // 默认：普通搜索
+          setQuery(suggestion.text);
+          handleSearch(suggestion.text);
+      }
     } else {
-      // 普通搜索：设置查询词并搜索
-      setQuery(suggestion);
-      handleSearch(suggestion);
+      // 兼容旧格式（字符串类型的建议）
+      const suggestionText = typeof suggestion === 'string' ? suggestion : suggestion.text;
+
+      // 检查是否是智能搜索建议
+      const today = new Date().toISOString().split('T')[0];
+      const weekStart = getWeekStart().toISOString().split('T')[0];
+
+      const smartFilters = {
+        "今天的任务": `?searchIn=tasks&createdAfter=${today}`,
+        "本周笔记": `?searchIn=notes&createdAfter=${weekStart}`,
+        "高优先级任务": "?searchIn=tasks&priority=HIGH,URGENT",
+        "进行中的项目": "?searchIn=projects",
+        "最近的日记": "?searchIn=journals&sortBy=createdAt&sortOrder=desc",
+        "待办事项": "?searchIn=tasks&status=TODO",
+      };
+
+      if (smartFilters[suggestionText as keyof typeof smartFilters]) {
+        // 智能搜索：跳转到带参数的搜索页面
+        void router.push(`/search${smartFilters[suggestionText as keyof typeof smartFilters]}`);
+      } else if (suggestionText.startsWith('#')) {
+        // 标签搜索：跳转到搜索页面并设置标签查询
+        const tagName = suggestionText.substring(1); // 移除 # 前缀
+        void router.push(`/search?q=${encodeURIComponent(tagName)}&searchBy=tag`);
+      } else {
+        // 普通搜索：设置查询词并搜索
+        setQuery(suggestionText);
+        handleSearch(suggestionText);
+      }
     }
     setShowSuggestions(false);
   };
