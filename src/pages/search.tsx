@@ -266,6 +266,7 @@ const SearchPage: NextPage = () => {
   // 计算活跃筛选条件数量
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    // 基础筛选条件
     if (taskStatus.length > 0) count++;
     if (taskType.length > 0) count++;
     if (priority.length > 0) count++;
@@ -278,6 +279,17 @@ const SearchPage: NextPage = () => {
     if (isCompleted !== null) count++;
     if (isOverdue !== null) count++;
     if (hasDescription !== null) count++;
+
+    // 搜索范围筛选（当不是默认的全部四种类型时）
+    if (searchIn.length !== 4 || !searchIn.includes("tasks") || !searchIn.includes("notes") || !searchIn.includes("projects") || !searchIn.includes("journals")) {
+      count++;
+    }
+
+    // 排序方式筛选（当不是默认排序时）
+    if (sortBy !== "relevance" || sortOrder !== "desc") {
+      count++;
+    }
+
     return count;
   }, [
     taskStatus,
@@ -292,6 +304,9 @@ const SearchPage: NextPage = () => {
     isCompleted,
     isOverdue,
     hasDescription,
+    searchIn,
+    sortBy,
+    sortOrder,
   ]);
 
   // 处理URL参数（只在路由准备好且参数变化时执行）
@@ -385,6 +400,10 @@ const SearchPage: NextPage = () => {
     setIsCompleted(null);
     setIsOverdue(null);
     setHasDescription(null);
+    // 重置搜索范围和排序方式
+    setSearchIn(["tasks", "notes", "projects", "journals"]);
+    setSortBy("relevance");
+    setSortOrder("desc");
   }, []);
 
   // 保存当前搜索
@@ -686,6 +705,59 @@ const SearchPage: NextPage = () => {
                       <button
                         onClick={() => setHasDescription(null)}
                         className="ml-1 text-teal-600 hover:text-teal-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 搜索范围筛选 */}
+                  {(searchIn.length !== 4 || !searchIn.includes("tasks") || !searchIn.includes("notes") || !searchIn.includes("projects") || !searchIn.includes("journals")) && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-800">
+                      搜索范围: {(() => {
+                        const typeLabels = {
+                          'tasks': '任务',
+                          'notes': '笔记',
+                          'projects': '项目',
+                          'journals': '日记'
+                        };
+                        return searchIn.map(type => typeLabels[type as keyof typeof typeLabels] || type).join(', ');
+                      })()}
+                      <button
+                        onClick={() => setSearchIn(["tasks", "notes", "projects", "journals"])}
+                        className="ml-1 text-slate-600 hover:text-slate-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+
+                  {/* 排序方式筛选 */}
+                  {(sortBy !== "relevance" || sortOrder !== "desc") && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-800">
+                      排序: {(() => {
+                        const sortLabels = {
+                          'relevance': '相关性',
+                          'createdAt': '创建时间',
+                          'updatedAt': '更新时间',
+                          'title': '标题',
+                          'priority': '优先级',
+                          'dueDate': '截止日期'
+                        };
+                        const orderLabels = {
+                          'asc': '升序',
+                          'desc': '降序'
+                        };
+                        const sortLabel = sortLabels[sortBy as keyof typeof sortLabels] || sortBy;
+                        const orderLabel = orderLabels[sortOrder as keyof typeof orderLabels] || sortOrder;
+                        return `${sortLabel} ${orderLabel}`;
+                      })()}
+                      <button
+                        onClick={() => {
+                          setSortBy("relevance");
+                          setSortOrder("desc");
+                        }}
+                        className="ml-1 text-emerald-600 hover:text-emerald-800"
                       >
                         ×
                       </button>
