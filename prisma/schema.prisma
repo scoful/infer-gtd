@@ -260,6 +260,8 @@ model Tag {
     @@index([type])
     @@index([category])
     @@index([isSystem])
+    @@index([createdById, name]) // 复合索引优化搜索查询
+    @@index([createdById, isSystem, type, name]) // 复合索引优化排序查询
 }
 
 // Many-to-many relationship tables

@@ -38,6 +38,7 @@ const getTagsSchema = z.object({
   category: z.string().optional(),
   search: z.string().optional(),
   includeSystem: z.boolean().default(true),
+  includeCount: z.boolean().default(true), // 是否包含使用统计
   limit: z.number().min(1).max(100).default(50),
   cursor: z.string().cuid().optional(),
 });
@@ -153,7 +154,7 @@ export const tagRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getTagsSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, type, category, includeSystem } = input;
+      const { limit, cursor, search, type, category, includeSystem, includeCount } = input;
 
       try {
         const where = {
@@ -180,14 +181,16 @@ export const tagRouter = createTRPCRouter({
             { type: "asc" },
             { name: "asc" },
           ],
-          include: {
-            _count: {
-              select: {
-                taskTags: true,
-                noteTags: true,
+          ...(includeCount && {
+            include: {
+              _count: {
+                select: {
+                  taskTags: true,
+                  noteTags: true,
+                },
               },
             },
-          },
+          }),
         });
 
         let nextCursor: typeof cursor | undefined = undefined;
