@@ -63,16 +63,22 @@ const navigation: NavigationItem[] = [
     description: "任务管理和筛选",
     children: [
       {
-        name: "思绪流",
-        href: "/stream",
-        icon: LightBulbIcon,
-        description: "想法捕捉和快速记录",
+        name: "任务看板",
+        href: "/tasks/kanban",
+        icon: Squares2X2Icon,
+        description: "可视化任务管理",
       },
       {
         name: "任务列表",
         href: "/tasks",
         icon: ListBulletIcon,
         description: "任务管理和筛选",
+      },
+      {
+        name: "思绪流",
+        href: "/stream",
+        icon: LightBulbIcon,
+        description: "想法捕捉和快速记录",
       },
       {
         name: "下一步行动",
@@ -85,12 +91,6 @@ const navigation: NavigationItem[] = [
         href: "/tasks/waiting",
         icon: ClockIcon,
         description: "等待他人回复的任务",
-      },
-      {
-        name: "任务看板",
-        href: "/tasks/kanban",
-        icon: Squares2X2Icon,
-        description: "可视化任务管理",
       },
     ],
   },

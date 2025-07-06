@@ -17,7 +17,64 @@ interface SearchResultItemProps {
   onTaskClick?: (task: any) => void; // 任务点击回调
 }
 
+// 计算搜索相关性得分
+const calculateRelevanceScore = (item: any, query: string): number => {
+  if (!query?.trim()) return 0;
+
+  const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+  let score = 0;
+
+  const title = (item.title || item.name || '').toLowerCase();
+  const content = (item.description || item.content || '').toLowerCase();
+
+  searchTerms.forEach(term => {
+    // 标题匹配权重更高
+    if (title.includes(term)) {
+      score += title.indexOf(term) === 0 ? 10 : 5; // 开头匹配得分更高
+    }
+    // 内容匹配
+    if (content.includes(term)) {
+      score += 2;
+    }
+    // 标签匹配
+    if (item.tags?.some((tagRel: any) => tagRel.tag.name.toLowerCase().includes(term))) {
+      score += 3;
+    }
+  });
+
+  return Math.min(score, 10); // 最高10分
+};
+
 export default function SearchResultItem({ type, item, query, onTaskClick }: SearchResultItemProps) {
+  const relevanceScore = calculateRelevanceScore(item, query || "");
+
+  // 获取相关性指示器
+  const getRelevanceIndicator = () => {
+    if (!query || relevanceScore === 0) return null;
+
+    const level = relevanceScore >= 8 ? 'high' : relevanceScore >= 5 ? 'medium' : 'low';
+    const colors = {
+      high: 'bg-green-500',
+      medium: 'bg-yellow-500',
+      low: 'bg-gray-400'
+    };
+
+    return (
+      <div className="flex items-center gap-1" title={`相关性: ${relevanceScore}/10`}>
+        <div className="flex gap-0.5">
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className={`h-1 w-1 rounded-full ${
+                i <= (relevanceScore / 3.33) ? colors[level] : 'bg-gray-200'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const highlightText = (text: string, query?: string) => {
     if (!query || !text) return text;
     
@@ -135,6 +192,21 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
     }
   };
 
+  const getTypeColor = () => {
+    switch (type) {
+      case "task":
+        return "bg-blue-500";
+      case "note":
+        return "bg-green-500";
+      case "project":
+        return "bg-purple-500";
+      case "journal":
+        return "bg-orange-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
   const handleClick = () => {
     if (type === "task" && onTaskClick) {
       onTaskClick(item);
@@ -142,85 +214,112 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
   };
 
   const content = (
-    <div className="group rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors cursor-pointer">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">
-          {getItemIcon()}
+    <div className="group relative rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md transition-all duration-200 cursor-pointer">
+      <div className="flex items-start gap-4">
+        {/* 图标和类型指示器 */}
+        <div className="flex-shrink-0 mt-1">
+          <div className="relative">
+            {getItemIcon()}
+            {/* 类型标识 */}
+            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+              <div className={`h-1.5 w-1.5 rounded-full ${getTypeColor()}`}></div>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 min-w-0">
-            {/* 标题 */}
-            <h4 className="text-base font-medium text-gray-900 group-hover:text-blue-900 truncate">
-              {highlightText(item.title || item.name, query)}
-            </h4>
-            
-            {/* 内容预览 */}
-            {(item.description || item.content) && (
-              <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                {highlightText(item.description || item.content, query)}
-              </p>
-            )}
-            
-            {/* 元数据 */}
-            <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+          {/* 标题行 */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <h4 className="text-base font-semibold text-gray-900 group-hover:text-blue-900 line-clamp-1">
+                {highlightText(item.title || item.name, query)}
+              </h4>
+              {/* 相关性指示器 */}
+              {getRelevanceIndicator()}
+            </div>
+
+            {/* 右侧快速信息 */}
+            <div className="flex-shrink-0 flex items-center gap-2">
+              {/* 任务状态 */}
+              {type === "task" && (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                  {getStatusLabel(item.status)}
+                </span>
+              )}
+
+              {/* 优先级 */}
+              {type === "task" && item.priority && (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
+                  {getPriorityLabel(item.priority)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 内容预览 */}
+          {(item.description || item.content) && (
+            <p className="mt-2 text-sm text-gray-600 line-clamp-2 leading-relaxed">
+              {highlightText(item.description || item.content, query)}
+            </p>
+          )}
+
+          {/* 元数据行 */}
+          <div className="mt-3 flex items-center justify-between">
+            {/* 左侧：主要信息 */}
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              {/* 项目信息 */}
+              {item.project && (
+                <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
+                  <FolderIcon className="h-3 w-3" />
+                  {item.project.name}
+                </span>
+              )}
+
+              {/* 标签信息 */}
+              {item.tags && item.tags.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <TagIcon className="h-3 w-3" />
+                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
+                    {item.tags.slice(0, 1).map((tagRel: any) => tagRel.tag.name)[0]}
+                    {item.tags.length > 1 && ` +${item.tags.length - 1}`}
+                  </span>
+                </div>
+              )}
+
               {/* 任务特有信息 */}
               {type === "task" && (
                 <>
-                  <span className={`rounded-full px-2 py-1 ${getStatusColor(item.status)}`}>
-                    {getStatusLabel(item.status)}
-                  </span>
-                  {item.priority && (
-                    <span className={`rounded-full px-2 py-1 ${getPriorityColor(item.priority)}`}>
-                      {getPriorityLabel(item.priority)}
-                    </span>
-                  )}
                   {item.dueDate && (
-                    <span className="flex items-center">
-                      <CalendarIcon className="mr-1 h-3 w-3" />
+                    <span className="flex items-center gap-1">
+                      <CalendarIcon className="h-3 w-3" />
                       {formatDate(item.dueDate)}
                     </span>
                   )}
                   {item.totalTimeSpent > 0 && (
-                    <span className="flex items-center">
-                      <ClockIcon className="mr-1 h-3 w-3" />
+                    <span className="flex items-center gap-1">
+                      <ClockIcon className="h-3 w-3" />
                       {Math.round(item.totalTimeSpent / 60)}分钟
                     </span>
                   )}
                 </>
               )}
-              
-              {/* 项目信息 */}
-              {item.project && (
-                <span className="flex items-center">
-                  <FolderIcon className="mr-1 h-3 w-3" />
-                  {item.project.name}
-                </span>
-              )}
-              
-              {/* 标签信息 */}
-              {item.tags && item.tags.length > 0 && (
-                <span className="flex items-center">
-                  <TagIcon className="mr-1 h-3 w-3" />
-                  {item.tags.slice(0, 2).map((tagRel: any) => tagRel.tag.name).join(", ")}
-                  {item.tags.length > 2 && ` +${item.tags.length - 2}`}
-                </span>
-              )}
-              
-              {/* 日期信息 */}
-              <span>
-                {type === "journal" ? formatDate(item.date) : formatDate(item.updatedAt)}
-              </span>
-              
+
               {/* 项目统计 */}
               {type === "project" && item._count && (
-                <span>
-                  {item._count.tasks} 个任务, {item._count.notes} 个笔记
+                <span className="bg-gray-100 px-2 py-1 rounded-md">
+                  {item._count.tasks} 任务 · {item._count.notes} 笔记
                 </span>
               )}
             </div>
+
+            {/* 右侧：时间信息 */}
+            <span className="text-xs text-gray-400">
+              {type === "journal" ? formatDate(item.date) : formatDate(item.updatedAt)}
+            </span>
           </div>
         </div>
       </div>
+    </div>
   );
 
   // 任务类型使用点击事件，其他类型使用 Link

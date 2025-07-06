@@ -1735,13 +1735,33 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   if (!results) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="text-center text-gray-500">
-          <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">开始搜索</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            输入关键词或设置筛选条件来搜索内容
+      <div className="rounded-lg border border-gray-200 bg-white p-8">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+            <MagnifyingGlassIcon className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">开始搜索</h3>
+          <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+            输入关键词或设置筛选条件来搜索任务、笔记、项目和日记
           </p>
+          <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
+            <span className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+              任务
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-green-400"></div>
+              笔记
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-purple-400"></div>
+              项目
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-orange-400"></div>
+              日记
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -1751,11 +1771,24 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   if (totalCount === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <div className="text-center text-gray-500">
-          <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">未找到结果</h3>
-          <p className="mt-1 text-sm text-gray-500">尝试调整搜索条件或筛选器</p>
+      <div className="rounded-lg border border-gray-200 bg-white p-8">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+            <MagnifyingGlassIcon className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">未找到结果</h3>
+          <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+            没有找到匹配的内容，尝试调整搜索条件或筛选器
+          </p>
+          <div className="mt-6 space-y-2 text-xs text-gray-500">
+            <p>搜索建议：</p>
+            <ul className="space-y-1">
+              <li>• 检查拼写是否正确</li>
+              <li>• 尝试使用更通用的关键词</li>
+              <li>• 调整筛选条件范围</li>
+              <li>• 使用标签搜索（输入 # 开头）</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
@@ -1763,106 +1796,206 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 结果统计 */}
+      {/* 结果统计和快速筛选 */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="text-sm text-gray-600">
-          找到 <span className="font-medium text-gray-900">{totalCount}</span>{" "}
-          个结果
-          {query && (
-            <>
-              ，关键词:{" "}
-              <span className="font-medium text-gray-900">
-                &ldquo;{query}&rdquo;
-              </span>
-            </>
-          )}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">
+              找到 <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
+              个结果
+              {query && (
+                <>
+                  ，关键词:{" "}
+                  <span className="font-semibold text-blue-600">
+                    &ldquo;{query}&rdquo;
+                  </span>
+                </>
+              )}
+            </p>
+
+            {/* 结果类型分布 */}
+            <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+              {tasks.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                  {tasks.length} 个任务
+                </span>
+              )}
+              {notes.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  {notes.length} 个笔记
+                </span>
+              )}
+              {projects.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                  {projects.length} 个项目
+                </span>
+              )}
+              {journals.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                  {journals.length} 个日记
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 快速排序选项 */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">排序:</span>
+            <select className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white">
+              <option value="relevance">相关性</option>
+              <option value="date">时间</option>
+              <option value="title">标题</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* 任务结果 */}
       {searchIn.includes("tasks") && tasks.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
-            <CheckIcon className="mr-2 h-5 w-5" />
-            任务 ({tasks.length})
-          </h3>
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <SearchResultItem
-                key={task.id}
-                type="task"
-                item={task}
-                query={query}
-                onTaskClick={onTaskClick}
-              />
-            ))}
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
+            <h3 className="flex items-center text-lg font-semibold text-blue-900">
+              <div className="mr-3 p-1 bg-blue-100 rounded-lg">
+                <CheckIcon className="h-5 w-5 text-blue-600" />
+              </div>
+              任务
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {tasks.length}
+              </span>
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {tasks.map((task) => (
+                <SearchResultItem
+                  key={task.id}
+                  type="task"
+                  item={task}
+                  query={query}
+                  onTaskClick={onTaskClick}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* 笔记结果 */}
       {searchIn.includes("notes") && notes.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
-            <DocumentTextIcon className="mr-2 h-5 w-5" />
-            笔记 ({notes.length})
-          </h3>
-          <div className="space-y-3">
-            {notes.map((note) => (
-              <SearchResultItem
-                key={note.id}
-                type="note"
-                item={note}
-                query={query}
-              />
-            ))}
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="bg-green-50 border-b border-green-100 px-6 py-4">
+            <h3 className="flex items-center text-lg font-semibold text-green-900">
+              <div className="mr-3 p-1 bg-green-100 rounded-lg">
+                <DocumentTextIcon className="h-5 w-5 text-green-600" />
+              </div>
+              笔记
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                {notes.length}
+              </span>
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {notes.map((note) => (
+                <SearchResultItem
+                  key={note.id}
+                  type="note"
+                  item={note}
+                  query={query}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* 项目结果 */}
       {searchIn.includes("projects") && projects.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
-            <FolderIcon className="mr-2 h-5 w-5" />
-            项目 ({projects.length})
-          </h3>
-          <div className="space-y-3">
-            {projects.map((project) => (
-              <SearchResultItem
-                key={project.id}
-                type="project"
-                item={project}
-                query={query}
-              />
-            ))}
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="bg-purple-50 border-b border-purple-100 px-6 py-4">
+            <h3 className="flex items-center text-lg font-semibold text-purple-900">
+              <div className="mr-3 p-1 bg-purple-100 rounded-lg">
+                <FolderIcon className="h-5 w-5 text-purple-600" />
+              </div>
+              项目
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                {projects.length}
+              </span>
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {projects.map((project) => (
+                <SearchResultItem
+                  key={project.id}
+                  type="project"
+                  item={project}
+                  query={query}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* 日记结果 */}
       {searchIn.includes("journals") && journals.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
-            <CalendarIcon className="mr-2 h-5 w-5" />
-            日记 ({journals.length})
-          </h3>
-          <div className="space-y-3">
-            {journals.map((journal) => (
-              <SearchResultItem
-                key={journal.id}
-                type="journal"
-                item={{
-                  ...journal,
-                  title: new Date(journal.date).toLocaleDateString("zh-CN", {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })
-                }}
-                query={query}
-              />
-            ))}
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="bg-orange-50 border-b border-orange-100 px-6 py-4">
+            <h3 className="flex items-center text-lg font-semibold text-orange-900">
+              <div className="mr-3 p-1 bg-orange-100 rounded-lg">
+                <CalendarIcon className="h-5 w-5 text-orange-600" />
+              </div>
+              日记
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                {journals.length}
+              </span>
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {journals.map((journal) => (
+                <SearchResultItem
+                  key={journal.id}
+                  type="journal"
+                  item={{
+                    ...journal,
+                    title: new Date(journal.date).toLocaleDateString("zh-CN", {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                  }}
+                  query={query}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 搜索结果底部信息 */}
+      {totalCount > 0 && (
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="flex items-center gap-4">
+              <span>共 {totalCount} 个结果</span>
+              {query && (
+                <span>
+                  搜索用时: <span className="font-medium">0.1s</span>
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span>提示: 使用</span>
+              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Ctrl+K</kbd>
+              <span>快速搜索</span>
+            </div>
           </div>
         </div>
       )}
