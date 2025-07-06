@@ -88,6 +88,11 @@ const SearchPage: NextPage = () => {
   // 保存搜索
   const [isSaveSearchModalOpen, setIsSaveSearchModalOpen] = useState(false);
 
+  // 编辑搜索模式
+  const [isEditingSearch, setIsEditingSearch] = useState(false);
+  const [editingSearchId, setEditingSearchId] = useState<string | null>(null);
+  const [editingSearchName, setEditingSearchName] = useState<string>("");
+
   // 分页状态
   const [displayLimit, setDisplayLimit] = useState(20);
   const pageSize = 20;
@@ -240,6 +245,22 @@ const SearchPage: NextPage = () => {
         showError("搜索名称已存在，请使用其他名称");
       } else {
         showError(error.message || "保存搜索失败");
+      }
+    },
+  });
+
+  // 更新保存的搜索
+  const updateSavedSearchMutation = api.search.updateSavedSearch.useMutation({
+    onSuccess: (data) => {
+      showSuccess(`搜索条件已更新`);
+      // 跳转回保存搜索页面
+      void router.push('/search/saved');
+    },
+    onError: (error) => {
+      if (error.data?.code === "CONFLICT") {
+        showError("搜索名称已存在，请使用其他名称");
+      } else {
+        showError(error.message || "更新搜索条件失败");
       }
     },
   });
@@ -418,7 +439,9 @@ const SearchPage: NextPage = () => {
       maxTimeSpent: urlMaxTimeSpent,
       sortBy: urlSortBy,
       sortOrder: urlSortOrder,
-      searchBy: urlSearchBy
+      searchBy: urlSearchBy,
+      editingSearchId: urlEditingSearchId,
+      editingSearchName: urlEditingSearchName
     } = router.query;
 
     // 重置搜索范围为默认值，然后应用URL参数
@@ -538,6 +561,18 @@ const SearchPage: NextPage = () => {
         setQuery(''); // 清空查询词，使用标签筛选
       }
     }
+
+    // 处理编辑搜索模式
+    if (urlEditingSearchId && typeof urlEditingSearchId === 'string') {
+      setIsEditingSearch(true);
+      setEditingSearchId(urlEditingSearchId);
+      setEditingSearchName(typeof urlEditingSearchName === 'string' ? urlEditingSearchName : '');
+      setShowAdvanced(true); // 自动展开高级搜索
+    } else {
+      setIsEditingSearch(false);
+      setEditingSearchId(null);
+      setEditingSearchName('');
+    }
   }, [router.isReady, router.query, tags?.tags]);
 
   // 清空筛选
@@ -576,6 +611,29 @@ const SearchPage: NextPage = () => {
       searchParams,
     });
   }, [saveSearchMutation, searchParams]);
+
+  // 获取保存搜索详情（用于更新时保留原有信息）
+  const { data: editingSearchData } = api.search.getSavedSearchById.useQuery(
+    { id: editingSearchId! },
+    { enabled: !!editingSearchId }
+  );
+
+  // 更新搜索条件
+  const handleUpdateSearchConditions = useCallback(() => {
+    if (!editingSearchId || !editingSearchData) return;
+
+    updateSavedSearchMutation.mutate({
+      id: editingSearchId,
+      name: editingSearchData.name,
+      description: editingSearchData.description || "",
+      searchParams,
+    });
+  }, [updateSavedSearchMutation, editingSearchId, editingSearchData, searchParams]);
+
+  // 取消编辑搜索条件
+  const handleCancelEditSearch = useCallback(() => {
+    void router.push('/search/saved');
+  }, [router]);
 
   // 生成搜索条件摘要
   const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
@@ -758,7 +816,9 @@ const SearchPage: NextPage = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">高级搜索</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {isEditingSearch ? "编辑搜索条件" : "高级搜索"}
+                </h1>
                 {isFetching && !isLoading && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
@@ -766,6 +826,21 @@ const SearchPage: NextPage = () => {
                   </div>
                 )}
               </div>
+              {isEditingSearch && (
+                <div className="mt-2 rounded-md bg-blue-50 border border-blue-200 p-3">
+                  <div className="flex items-center gap-2">
+                    <AdjustmentsHorizontalIcon className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">
+                        正在编辑搜索：{editingSearchName}
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        修改搜索条件后，点击"保存更改"来更新保存的搜索
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
 
@@ -811,6 +886,25 @@ const SearchPage: NextPage = () => {
               >
                 {isLoading ? "搜索中..." : "搜索"}
               </button>
+
+              {/* 编辑模式操作按钮 */}
+              {isEditingSearch && (
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={handleUpdateSearchConditions}
+                    disabled={updateSavedSearchMutation.isPending}
+                    className="flex-1 rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 sm:flex-none"
+                  >
+                    {updateSavedSearchMutation.isPending ? "保存中..." : "保存更改"}
+                  </button>
+                  <button
+                    onClick={handleCancelEditSearch}
+                    className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:flex-none"
+                  >
+                    取消
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 活跃筛选条件摘要 */}

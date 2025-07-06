@@ -533,6 +533,38 @@ export const searchRouter = createTRPCRouter({
     }
   }),
 
+  // 获取单个保存搜索详情
+  getSavedSearchById: protectedProcedure
+    .input(searchIdSchema)
+    .query(async ({ ctx, input }) => {
+      try {
+        const savedSearch = await ctx.db.savedSearch.findUnique({
+          where: { id: input.id },
+        });
+
+        if (!savedSearch || savedSearch.createdById !== ctx.session.user.id) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "保存的搜索不存在或无权限访问",
+          });
+        }
+
+        return {
+          ...savedSearch,
+          searchParams: JSON.parse(savedSearch.searchParams),
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "获取保存搜索详情失败",
+          cause: error,
+        });
+      }
+    }),
+
   // 更新保存的搜索
   updateSavedSearch: protectedProcedure
     .input(z.object({

@@ -10,7 +10,8 @@ import {
   FolderIcon,
   ClockIcon,
   ChartBarIcon,
-  ArrowsUpDownIcon
+  ArrowsUpDownIcon,
+  AdjustmentsHorizontalIcon
 } from "@heroicons/react/24/outline";
 
 interface SavedSearch {
@@ -33,6 +34,7 @@ interface SavedSearchCardProps {
   search: SavedSearch;
   onLoad: (search: SavedSearch) => void;
   onEdit: (search: SavedSearch) => void;
+  onEditConditions: (search: SavedSearch) => void;
   onDelete: (searchId: string, searchName: string) => void;
   generateSearchSummary: (searchParams: any, tags?: any[], projects?: any[]) => string;
   generateSearchConditions: (searchParams: any, tags?: any[], projects?: any[]) => SearchCondition[];
@@ -44,6 +46,7 @@ export default function SavedSearchCard({
   search,
   onLoad,
   onEdit,
+  onEditConditions,
   onDelete,
   generateSearchSummary,
   generateSearchConditions,
@@ -99,10 +102,21 @@ export default function SavedSearchCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            onEditConditions(search);
+          }}
+          className="rounded-md p-1.5 text-gray-400 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+          title="编辑搜索条件"
+        >
+          <AdjustmentsHorizontalIcon className="h-4 w-4" />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
             onEdit(search);
           }}
           className="rounded-md p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-          title="编辑"
+          title="编辑名称和描述"
         >
           <PencilIcon className="h-4 w-4" />
         </button>
@@ -121,7 +135,7 @@ export default function SavedSearchCard({
 
       {/* 主要内容 */}
       <div
-        className="cursor-pointer pr-16"
+        className="cursor-pointer pr-24"
         onClick={() => onLoad(search)}
       >
         <h4 className="text-base font-medium text-gray-900 truncate">

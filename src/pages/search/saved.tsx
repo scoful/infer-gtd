@@ -552,6 +552,116 @@ const SavedSearchesPage: NextPage = () => {
     setIsSavedSearchModalOpen(true);
   }, []);
 
+  // 编辑搜索条件
+  const handleEditSearchConditions = useCallback((search: any) => {
+    // 构建查询参数，将搜索条件编码到URL中
+    const searchParams = search.searchParams;
+    const queryParams = new URLSearchParams();
+
+    // 基础搜索词
+    if (searchParams.query) {
+      queryParams.set('q', searchParams.query);
+    }
+
+    // 搜索范围
+    if (searchParams.searchIn && searchParams.searchIn.length > 0) {
+      queryParams.set('searchIn', searchParams.searchIn.join(','));
+    }
+
+    // 任务状态
+    if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
+      queryParams.set('taskStatus', searchParams.taskStatus.join(','));
+    }
+
+    // 任务类型
+    if (searchParams.taskType && searchParams.taskType.length > 0) {
+      queryParams.set('taskType', searchParams.taskType.join(','));
+    }
+
+    // 优先级
+    if (searchParams.priority && searchParams.priority.length > 0) {
+      queryParams.set('priority', searchParams.priority.join(','));
+    }
+
+    // 标签ID
+    if (searchParams.tagIds && searchParams.tagIds.length > 0) {
+      queryParams.set('tagIds', searchParams.tagIds.join(','));
+    }
+
+    // 标签类型
+    if (searchParams.tagTypes && searchParams.tagTypes.length > 0) {
+      queryParams.set('tagTypes', searchParams.tagTypes.join(','));
+    }
+
+    // 项目ID
+    if (searchParams.projectIds && searchParams.projectIds.length > 0) {
+      queryParams.set('projectIds', searchParams.projectIds.join(','));
+    }
+
+    // 日期筛选
+    if (searchParams.createdAfter) {
+      queryParams.set('createdAfter', searchParams.createdAfter);
+    }
+    if (searchParams.createdBefore) {
+      queryParams.set('createdBefore', searchParams.createdBefore);
+    }
+    if (searchParams.updatedAfter) {
+      queryParams.set('updatedAfter', searchParams.updatedAfter);
+    }
+    if (searchParams.updatedBefore) {
+      queryParams.set('updatedBefore', searchParams.updatedBefore);
+    }
+    if (searchParams.dueAfter) {
+      queryParams.set('dueAfter', searchParams.dueAfter);
+    }
+    if (searchParams.dueBefore) {
+      queryParams.set('dueBefore', searchParams.dueBefore);
+    }
+
+    // 状态筛选
+    if (searchParams.isCompleted !== undefined && searchParams.isCompleted !== null) {
+      queryParams.set('isCompleted', searchParams.isCompleted.toString());
+    }
+    if (searchParams.isOverdue !== undefined && searchParams.isOverdue !== null) {
+      queryParams.set('isOverdue', searchParams.isOverdue.toString());
+    }
+    if (searchParams.isRecurring !== undefined && searchParams.isRecurring !== null) {
+      queryParams.set('isRecurring', searchParams.isRecurring.toString());
+    }
+    if (searchParams.hasDescription !== undefined && searchParams.hasDescription !== null) {
+      queryParams.set('hasDescription', searchParams.hasDescription.toString());
+    }
+
+    // 时间追踪
+    if (searchParams.hasTimeTracking !== undefined && searchParams.hasTimeTracking !== null) {
+      queryParams.set('hasTimeTracking', searchParams.hasTimeTracking.toString());
+    }
+    if (searchParams.minTimeSpent !== undefined && searchParams.minTimeSpent !== null) {
+      queryParams.set('minTimeSpent', searchParams.minTimeSpent.toString());
+    }
+    if (searchParams.maxTimeSpent !== undefined && searchParams.maxTimeSpent !== null) {
+      queryParams.set('maxTimeSpent', searchParams.maxTimeSpent.toString());
+    }
+
+    // 排序
+    if (searchParams.sortBy) {
+      queryParams.set('sortBy', searchParams.sortBy);
+    }
+    if (searchParams.sortOrder) {
+      queryParams.set('sortOrder', searchParams.sortOrder);
+    }
+
+    // 添加编辑标识和搜索信息
+    queryParams.set('editingSearchId', search.id);
+    queryParams.set('editingSearchName', search.name);
+    if (search.description) {
+      queryParams.set('editingSearchDescription', search.description);
+    }
+
+    // 跳转到高级搜索页面
+    void router.push(`/search?${queryParams.toString()}`);
+  }, [router]);
+
   // 保存搜索（编辑模式）
   const handleSaveSearchNew = useCallback((formData: SavedSearchFormData) => {
     if (isEditMode && editingSearchId) {
@@ -626,6 +736,7 @@ const SavedSearchesPage: NextPage = () => {
                       search={search}
                       onLoad={handleLoadSavedSearch}
                       onEdit={handleOpenSaveModal}
+                      onEditConditions={handleEditSearchConditions}
                       onDelete={handleDeleteSavedSearch}
                       generateSearchSummary={generateSearchSummary}
                       generateSearchConditions={generateSearchConditions}
