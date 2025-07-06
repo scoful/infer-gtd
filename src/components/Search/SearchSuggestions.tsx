@@ -59,7 +59,7 @@ export default function SearchSuggestions({
 
   // 获取保存的搜索作为智能搜索建议
   const { data: savedSearches } = api.search.getSavedSearches.useQuery(undefined, {
-    enabled: !!query && query.length < 2 && !query.startsWith('#'),
+    enabled: query.length < 2 && !query.startsWith('#') && isVisible,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
   });
 
@@ -295,6 +295,14 @@ export default function SearchSuggestions({
         <div className="p-4 text-center text-sm text-gray-500">
           <MagnifyingGlassIcon className="mx-auto h-5 w-5" />
           <span className="mt-1 block">没有找到相关建议</span>
+        </div>
+      ) : query.length === 0 && savedSearches && savedSearches.length > 0 ? (
+        <div className="p-4 text-center text-sm text-gray-500">
+          <span>选择下方的快速搜索，或开始输入进行搜索</span>
+        </div>
+      ) : query.length === 0 ? (
+        <div className="p-4 text-center text-sm text-gray-500">
+          <span>开始输入进行搜索</span>
         </div>
       ) : (
         <div className="p-4 text-center text-sm text-gray-500">
