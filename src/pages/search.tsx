@@ -147,7 +147,7 @@ const SearchPage: NextPage = () => {
       searchIn,
       sortBy,
       sortOrder,
-      limit: displayLimit,
+      limit: pageSize, // 使用固定的页面大小
     };
 
     if (taskStatus.length > 0) params.taskStatus = taskStatus;
@@ -193,24 +193,26 @@ const SearchPage: NextPage = () => {
     maxTimeSpent,
     sortBy,
     sortOrder,
-    displayLimit,
   ]);
 
-  // 执行搜索
+  // 执行搜索 - 使用固定的大limit获取足够多的数据
   const {
     data: searchResults,
     isLoading,
     isFetching,
     refetch,
-  } = api.search.advanced.useQuery(searchParams, {
-    enabled:
-      !!sessionData && (
-        !!query.trim() ||
-        hasActiveFilters() ||
-        searchIn.length !== 4 // 当搜索范围不是默认的全部四种类型时，也启用搜索
-      ),
-    staleTime: 30 * 1000,
-  });
+  } = api.search.advanced.useQuery(
+    { ...searchParams, limit: 50 }, // 固定使用50，获取足够多的数据
+    {
+      enabled:
+        !!sessionData && (
+          !!query.trim() ||
+          hasActiveFilters() ||
+          searchIn.length !== 4 // 当搜索范围不是默认的全部四种类型时，也启用搜索
+        ),
+      staleTime: 30 * 1000,
+    }
+  );
 
   // 获取标签和项目用于筛选
   const { data: tags, refetch: refetchTags } = api.tag.getAll.useQuery(
@@ -298,21 +300,47 @@ const SearchPage: NextPage = () => {
   const totalResults = searchResults?.totalCount || 0;
   const hasResults = totalResults > 0;
 
-  // 检查是否可以加载更多（当前显示的结果数量达到限制且可能还有更多）
-  const canLoadMore = searchResults && (
+  // 调试信息
+  useEffect(() => {
+    if (searchResults) {
+      console.log('搜索结果:', {
+        totalCount: searchResults.totalCount,
+        tasks: searchResults.tasks?.length || 0,
+        notes: searchResults.notes?.length || 0,
+        projects: searchResults.projects?.length || 0,
+        journals: searchResults.journals?.length || 0,
+        displayLimit,
+      });
+    }
+  }, [searchResults, displayLimit]);
+
+  // 计算实际可显示的总数据量
+  const totalAvailableResults = searchResults ? (
     (searchResults.tasks?.length || 0) +
     (searchResults.notes?.length || 0) +
     (searchResults.projects?.length || 0) +
     (searchResults.journals?.length || 0)
-  ) >= displayLimit && displayLimit < 100; // 最多显示100条
+  ) : 0;
+
+  // 计算当前实际显示的数量
+  const currentDisplayedCount = Math.min(displayLimit, totalAvailableResults);
+
+  // 检查是否可以加载更多（当前显示限制小于实际数据量）
+  const canLoadMore = searchResults && displayLimit < totalAvailableResults && displayLimit < 200; // 最多显示200条
 
   // 加载更多处理
   const handleLoadMore = useCallback(() => {
-    setDisplayLimit(prev => Math.min(prev + pageSize, 100));
-  }, [pageSize]);
+    console.log('加载更多前 displayLimit:', displayLimit);
+    setDisplayLimit(prev => {
+      const newLimit = Math.min(prev + pageSize, 100);
+      console.log('加载更多后 displayLimit:', newLimit);
+      return newLimit;
+    });
+  }, [pageSize, displayLimit]);
 
   // 当搜索条件改变时重置显示限制
   useEffect(() => {
+    console.log('搜索条件改变，重置 displayLimit 为:', pageSize);
     setDisplayLimit(pageSize);
   }, [
     query,
@@ -1320,12 +1348,12 @@ const SearchPage: NextPage = () => {
                   <h2 className="text-lg font-medium text-gray-900">搜索结果</h2>
                   {searchResults && (
                     <span className="text-sm text-gray-500">
-                      共找到 {
-                        (searchResults.tasks?.length || 0) +
-                        (searchResults.notes?.length || 0) +
-                        (searchResults.projects?.length || 0) +
-                        (searchResults.journals?.length || 0)
-                      } 条结果
+                      共找到 {totalAvailableResults} 条结果
+                      {currentDisplayedCount < totalAvailableResults && (
+                        <span className="text-blue-600">
+                          ，当前显示 {currentDisplayedCount} 条
+                        </span>
+                      )}
                     </span>
                   )}
                 </div>
@@ -1349,6 +1377,7 @@ const SearchPage: NextPage = () => {
               query={query}
               searchIn={searchIn}
               onTaskClick={handleTaskClick}
+              displayLimit={displayLimit}
             />
           </div>
 
@@ -1369,7 +1398,7 @@ const SearchPage: NextPage = () => {
                   ) : (
                     <>
                       <span className="sm:hidden">加载更多</span>
-                      <span className="hidden sm:inline">{`加载更多 (当前显示 ${displayLimit} 条)`}</span>
+                      <span className="hidden sm:inline">{`加载更多 (当前显示 ${currentDisplayedCount}/${totalAvailableResults} 条)`}</span>
                     </>
                   )}
                 </button>
@@ -1716,6 +1745,7 @@ interface SearchResultsProps {
   query: string;
   searchIn: string[];
   onTaskClick?: (task: any) => void;
+  displayLimit: number;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
@@ -1724,6 +1754,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   query,
   searchIn,
   onTaskClick,
+  displayLimit,
 }) => {
   if (isLoading) {
     return (
@@ -1768,6 +1799,23 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   }
 
   const { tasks, notes, projects, journals, totalCount } = results;
+
+  // 创建所有结果的混合数组，用于统一分页
+  const allResults = [
+    ...(tasks || []).map(item => ({ ...item, type: 'task' })),
+    ...(notes || []).map(item => ({ ...item, type: 'note' })),
+    ...(projects || []).map(item => ({ ...item, type: 'project' })),
+    ...(journals || []).map(item => ({ ...item, type: 'journal' }))
+  ];
+
+  // 按displayLimit截取数据
+  const limitedResults = allResults.slice(0, displayLimit);
+
+  // 重新按类型分组
+  const limitedTasks = limitedResults.filter(item => item.type === 'task');
+  const limitedNotes = limitedResults.filter(item => item.type === 'note');
+  const limitedProjects = limitedResults.filter(item => item.type === 'project');
+  const limitedJournals = limitedResults.filter(item => item.type === 'journal');
 
   if (totalCount === 0) {
     return (
@@ -1815,28 +1863,28 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
             {/* 结果类型分布 */}
             <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-              {tasks.length > 0 && (
+              {limitedTasks.length > 0 && (
                 <span className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                  {tasks.length} 个任务
+                  {limitedTasks.length} 个任务
                 </span>
               )}
-              {notes.length > 0 && (
+              {limitedNotes.length > 0 && (
                 <span className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  {notes.length} 个笔记
+                  {limitedNotes.length} 个笔记
                 </span>
               )}
-              {projects.length > 0 && (
+              {limitedProjects.length > 0 && (
                 <span className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-purple-500"></div>
-                  {projects.length} 个项目
+                  {limitedProjects.length} 个项目
                 </span>
               )}
-              {journals.length > 0 && (
+              {limitedJournals.length > 0 && (
                 <span className="flex items-center gap-1">
                   <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                  {journals.length} 个日记
+                  {limitedJournals.length} 个日记
                 </span>
               )}
             </div>
@@ -1855,7 +1903,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       </div>
 
       {/* 任务结果 */}
-      {searchIn.includes("tasks") && tasks.length > 0 && (
+      {searchIn.includes("tasks") && limitedTasks.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
           <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-blue-900">
@@ -1864,13 +1912,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </div>
               任务
               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {tasks.length}
+                {limitedTasks.length}
               </span>
             </h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {tasks.map((task) => (
+              {limitedTasks.map((task) => (
                 <SearchResultItem
                   key={task.id}
                   type="task"
@@ -1885,7 +1933,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       )}
 
       {/* 笔记结果 */}
-      {searchIn.includes("notes") && notes.length > 0 && (
+      {searchIn.includes("notes") && limitedNotes.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
           <div className="bg-green-50 border-b border-green-100 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-green-900">
@@ -1894,13 +1942,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </div>
               笔记
               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {notes.length}
+                {limitedNotes.length}
               </span>
             </h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {notes.map((note) => (
+              {limitedNotes.map((note) => (
                 <SearchResultItem
                   key={note.id}
                   type="note"
@@ -1914,7 +1962,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       )}
 
       {/* 项目结果 */}
-      {searchIn.includes("projects") && projects.length > 0 && (
+      {searchIn.includes("projects") && limitedProjects.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
           <div className="bg-purple-50 border-b border-purple-100 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-purple-900">
@@ -1923,13 +1971,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </div>
               项目
               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                {projects.length}
+                {limitedProjects.length}
               </span>
             </h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {projects.map((project) => (
+              {limitedProjects.map((project) => (
                 <SearchResultItem
                   key={project.id}
                   type="project"
@@ -1943,7 +1991,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       )}
 
       {/* 日记结果 */}
-      {searchIn.includes("journals") && journals.length > 0 && (
+      {searchIn.includes("journals") && limitedJournals.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
           <div className="bg-orange-50 border-b border-orange-100 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-orange-900">
@@ -1952,13 +2000,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </div>
               日记
               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                {journals.length}
+                {limitedJournals.length}
               </span>
             </h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {journals.map((journal) => (
+              {limitedJournals.map((journal) => (
                 <SearchResultItem
                   key={journal.id}
                   type="journal"
