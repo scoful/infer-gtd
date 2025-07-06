@@ -466,7 +466,9 @@ const SearchPage: NextPage = () => {
         TODO: "待办",
         IN_PROGRESS: "进行中",
         WAITING: "等待中",
+        DONE: "已完成",
         COMPLETED: "已完成",
+        ARCHIVED: "已归档",
         CANCELLED: "已取消"
       };
       const statuses = searchParams.taskStatus.map((status: string) => statusMap[status] || status);
@@ -718,7 +720,9 @@ const SearchPage: NextPage = () => {
                           'IDEA': '想法',
                           'TODO': '待办',
                           'IN_PROGRESS': '进行中',
+                          'WAITING': '等待中',
                           'DONE': '已完成',
+                          'ARCHIVED': '已归档',
                           'CANCELLED': '已取消'
                         };
                         return statusLabels[status as keyof typeof statusLabels] || status;
