@@ -15,8 +15,6 @@ export interface SavedSearchFormData {
   description: string;
 }
 
-
-
 export default function SavedSearchModal({
   isOpen,
   onClose,
@@ -57,10 +55,13 @@ export default function SavedSearchModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black bg-opacity-25" onClick={onClose} />
-        
+        <div
+          className="bg-opacity-25 fixed inset-0 bg-black"
+          onClick={onClose}
+        />
+
         <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
               {mode === "create" ? "保存搜索" : "编辑搜索"}
             </h3>
@@ -75,13 +76,15 @@ export default function SavedSearchModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* 名称 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 搜索名称 *
               </label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 placeholder="输入搜索名称"
                 required
@@ -90,19 +93,22 @@ export default function SavedSearchModal({
 
             {/* 描述 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 描述
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 rows={3}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none resize-none"
+                className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 placeholder="输入搜索描述（可选）"
               />
             </div>
-
-
 
             {/* 按钮 */}
             <div className="flex gap-3 pt-4">

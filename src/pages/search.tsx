@@ -25,8 +25,9 @@ import SearchFilters from "@/components/Search/SearchFilters";
 import TaskModal from "@/components/Tasks/TaskModal";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { useConfirm } from "@/hooks";
-import SavedSearchModal, { type SavedSearchFormData } from "@/components/Search/SavedSearchModal";
-
+import SavedSearchModal, {
+  type SavedSearchFormData,
+} from "@/components/Search/SavedSearchModal";
 
 // 搜索结果类型
 interface SearchResults {
@@ -46,7 +47,12 @@ const SearchPage: NextPage = () => {
 
   // 基础搜索状态
   const [query, setQuery] = useState("");
-  const [searchIn, setSearchIn] = useState<string[]>(["tasks", "notes", "projects", "journals"]);
+  const [searchIn, setSearchIn] = useState<string[]>([
+    "tasks",
+    "notes",
+    "projects",
+    "journals",
+  ]);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // 高级搜索状态
@@ -78,8 +84,6 @@ const SearchPage: NextPage = () => {
   // 排序
   const [sortBy, setSortBy] = useState<string>("relevance");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-
 
   // 任务编辑模态框状态
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -205,13 +209,10 @@ const SearchPage: NextPage = () => {
     { ...searchParams, limit: 50 }, // 固定使用50，获取足够多的数据
     {
       enabled:
-        !!sessionData && (
-          !!query.trim() ||
-          hasActiveFilters() ||
-          searchIn.length !== 4 // 当搜索范围不是默认的全部四种类型时，也启用搜索
-        ),
+        !!sessionData &&
+        (!!query.trim() || hasActiveFilters() || searchIn.length !== 4), // 当搜索范围不是默认的全部四种类型时，也启用搜索
       staleTime: 30 * 1000,
-    }
+    },
   );
 
   // 获取标签和项目用于筛选
@@ -223,17 +224,9 @@ const SearchPage: NextPage = () => {
   const { data: projects, refetch: refetchProjects } =
     api.project.getAll.useQuery({ limit: 100 }, { enabled: !!sessionData });
 
-
-
-
-
   // 注册页面刷新函数
   usePageRefresh(() => {
-    void Promise.all([
-      refetch(),
-      refetchTags(),
-      refetchProjects(),
-    ]);
+    void Promise.all([refetch(), refetchTags(), refetchProjects()]);
   }, [refetch, refetchTags, refetchProjects]);
 
   // 保存搜索
@@ -256,7 +249,7 @@ const SearchPage: NextPage = () => {
     onSuccess: (data) => {
       showSuccess(`搜索条件已更新`);
       // 跳转回保存搜索页面
-      void router.push('/search/saved');
+      void router.push("/search/saved");
     },
     onError: (error) => {
       if (error.data?.code === "CONFLICT") {
@@ -266,12 +259,6 @@ const SearchPage: NextPage = () => {
       }
     },
   });
-
-
-
-
-
-
 
   // 处理搜索
   const handleSearch = useCallback(() => {
@@ -303,7 +290,7 @@ const SearchPage: NextPage = () => {
   // 调试信息
   useEffect(() => {
     if (searchResults) {
-      console.log('搜索结果:', {
+      console.log("搜索结果:", {
         totalCount: searchResults.totalCount,
         tasks: searchResults.tasks?.length || 0,
         notes: searchResults.notes?.length || 0,
@@ -315,32 +302,33 @@ const SearchPage: NextPage = () => {
   }, [searchResults, displayLimit]);
 
   // 计算实际可显示的总数据量
-  const totalAvailableResults = searchResults ? (
-    (searchResults.tasks?.length || 0) +
-    (searchResults.notes?.length || 0) +
-    (searchResults.projects?.length || 0) +
-    (searchResults.journals?.length || 0)
-  ) : 0;
+  const totalAvailableResults = searchResults
+    ? (searchResults.tasks?.length || 0) +
+      (searchResults.notes?.length || 0) +
+      (searchResults.projects?.length || 0) +
+      (searchResults.journals?.length || 0)
+    : 0;
 
   // 计算当前实际显示的数量
   const currentDisplayedCount = Math.min(displayLimit, totalAvailableResults);
 
   // 检查是否可以加载更多（当前显示限制小于实际数据量）
-  const canLoadMore = searchResults && displayLimit < totalAvailableResults && displayLimit < 200; // 最多显示200条
+  const canLoadMore =
+    searchResults && displayLimit < totalAvailableResults && displayLimit < 200; // 最多显示200条
 
   // 加载更多处理
   const handleLoadMore = useCallback(() => {
-    console.log('加载更多前 displayLimit:', displayLimit);
-    setDisplayLimit(prev => {
+    console.log("加载更多前 displayLimit:", displayLimit);
+    setDisplayLimit((prev) => {
       const newLimit = Math.min(prev + pageSize, 100);
-      console.log('加载更多后 displayLimit:', newLimit);
+      console.log("加载更多后 displayLimit:", newLimit);
       return newLimit;
     });
   }, [pageSize, displayLimit]);
 
   // 当搜索条件改变时重置显示限制
   useEffect(() => {
-    console.log('搜索条件改变，重置 displayLimit 为:', pageSize);
+    console.log("搜索条件改变，重置 displayLimit 为:", pageSize);
     setDisplayLimit(pageSize);
   }, [
     query,
@@ -362,8 +350,6 @@ const SearchPage: NextPage = () => {
     pageSize,
   ]);
 
-
-
   // 计算活跃筛选条件数量
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -382,7 +368,13 @@ const SearchPage: NextPage = () => {
     if (hasDescription !== null) count++;
 
     // 搜索范围筛选（当不是默认的全部四种类型时）
-    if (searchIn.length !== 4 || !searchIn.includes("tasks") || !searchIn.includes("notes") || !searchIn.includes("projects") || !searchIn.includes("journals")) {
+    if (
+      searchIn.length !== 4 ||
+      !searchIn.includes("tasks") ||
+      !searchIn.includes("notes") ||
+      !searchIn.includes("projects") ||
+      !searchIn.includes("journals")
+    ) {
       count++;
     }
 
@@ -439,7 +431,7 @@ const SearchPage: NextPage = () => {
     if (urlQuery) {
       setQuery(urlQuery);
     } else {
-      setQuery('');
+      setQuery("");
     }
 
     // 解析所有搜索参数
@@ -469,137 +461,139 @@ const SearchPage: NextPage = () => {
       sortOrder: urlSortOrder,
       searchBy: urlSearchBy,
       editingSearchId: urlEditingSearchId,
-      editingSearchName: urlEditingSearchName
+      editingSearchName: urlEditingSearchName,
     } = router.query;
 
     // 重置搜索范围为默认值，然后应用URL参数
-    if (urlSearchIn && typeof urlSearchIn === 'string') {
-      const searchInArray = urlSearchIn.split(',');
+    if (urlSearchIn && typeof urlSearchIn === "string") {
+      const searchInArray = urlSearchIn.split(",");
       setSearchIn(searchInArray);
     } else {
       setSearchIn(["tasks", "notes", "projects", "journals"]);
     }
 
     // 任务相关筛选
-    if (urlTaskStatus && typeof urlTaskStatus === 'string') {
-      const statusArray = urlTaskStatus.split(',') as TaskStatus[];
+    if (urlTaskStatus && typeof urlTaskStatus === "string") {
+      const statusArray = urlTaskStatus.split(",") as TaskStatus[];
       setTaskStatus(statusArray);
-    } else if (urlStatus && typeof urlStatus === 'string') {
+    } else if (urlStatus && typeof urlStatus === "string") {
       // 兼容旧的 status 参数
-      const statusArray = urlStatus.split(',') as TaskStatus[];
+      const statusArray = urlStatus.split(",") as TaskStatus[];
       setTaskStatus(statusArray);
     }
 
-    if (urlTaskType && typeof urlTaskType === 'string') {
-      const typeArray = urlTaskType.split(',') as TaskType[];
+    if (urlTaskType && typeof urlTaskType === "string") {
+      const typeArray = urlTaskType.split(",") as TaskType[];
       setTaskType(typeArray);
     }
 
-    if (urlPriority && typeof urlPriority === 'string') {
-      const priorityArray = urlPriority.split(',') as Priority[];
+    if (urlPriority && typeof urlPriority === "string") {
+      const priorityArray = urlPriority.split(",") as Priority[];
       setPriority(priorityArray);
     }
 
     // 标签和项目筛选
-    if (urlTagIds && typeof urlTagIds === 'string') {
-      const tagIdArray = urlTagIds.split(',');
+    if (urlTagIds && typeof urlTagIds === "string") {
+      const tagIdArray = urlTagIds.split(",");
       setTagIds(tagIdArray);
     }
 
-    if (urlProjectIds && typeof urlProjectIds === 'string') {
-      const projectIdArray = urlProjectIds.split(',');
+    if (urlProjectIds && typeof urlProjectIds === "string") {
+      const projectIdArray = urlProjectIds.split(",");
       setProjectIds(projectIdArray);
     }
 
     // 时间筛选
-    if (urlCreatedAfter && typeof urlCreatedAfter === 'string') {
+    if (urlCreatedAfter && typeof urlCreatedAfter === "string") {
       setCreatedAfter(new Date(urlCreatedAfter));
     }
 
-    if (urlCreatedBefore && typeof urlCreatedBefore === 'string') {
+    if (urlCreatedBefore && typeof urlCreatedBefore === "string") {
       setCreatedBefore(new Date(urlCreatedBefore));
     }
 
-    if (urlUpdatedAfter && typeof urlUpdatedAfter === 'string') {
+    if (urlUpdatedAfter && typeof urlUpdatedAfter === "string") {
       setUpdatedAfter(new Date(urlUpdatedAfter));
     }
 
-    if (urlUpdatedBefore && typeof urlUpdatedBefore === 'string') {
+    if (urlUpdatedBefore && typeof urlUpdatedBefore === "string") {
       setUpdatedBefore(new Date(urlUpdatedBefore));
     }
 
-    if (urlDueAfter && typeof urlDueAfter === 'string') {
+    if (urlDueAfter && typeof urlDueAfter === "string") {
       setDueAfter(new Date(urlDueAfter));
     }
 
-    if (urlDueBefore && typeof urlDueBefore === 'string') {
+    if (urlDueBefore && typeof urlDueBefore === "string") {
       setDueBefore(new Date(urlDueBefore));
     }
 
     // 状态筛选
-    if (urlIsCompleted && typeof urlIsCompleted === 'string') {
-      setIsCompleted(urlIsCompleted === 'true');
+    if (urlIsCompleted && typeof urlIsCompleted === "string") {
+      setIsCompleted(urlIsCompleted === "true");
     }
 
-    if (urlIsOverdue && typeof urlIsOverdue === 'string') {
-      setIsOverdue(urlIsOverdue === 'true');
+    if (urlIsOverdue && typeof urlIsOverdue === "string") {
+      setIsOverdue(urlIsOverdue === "true");
     }
 
-    if (urlIsRecurring && typeof urlIsRecurring === 'string') {
-      setIsRecurring(urlIsRecurring === 'true');
+    if (urlIsRecurring && typeof urlIsRecurring === "string") {
+      setIsRecurring(urlIsRecurring === "true");
     }
 
-    if (urlHasDescription && typeof urlHasDescription === 'string') {
-      setHasDescription(urlHasDescription === 'true');
+    if (urlHasDescription && typeof urlHasDescription === "string") {
+      setHasDescription(urlHasDescription === "true");
     }
 
     // 时间跟踪筛选
-    if (urlHasTimeTracking && typeof urlHasTimeTracking === 'string') {
-      setHasTimeTracking(urlHasTimeTracking === 'true');
+    if (urlHasTimeTracking && typeof urlHasTimeTracking === "string") {
+      setHasTimeTracking(urlHasTimeTracking === "true");
     }
 
-    if (urlMinTimeSpent && typeof urlMinTimeSpent === 'string') {
+    if (urlMinTimeSpent && typeof urlMinTimeSpent === "string") {
       setMinTimeSpent(Number(urlMinTimeSpent));
     }
 
-    if (urlMaxTimeSpent && typeof urlMaxTimeSpent === 'string') {
+    if (urlMaxTimeSpent && typeof urlMaxTimeSpent === "string") {
       setMaxTimeSpent(Number(urlMaxTimeSpent));
     }
 
     // 排序参数
-    if (urlSortBy && typeof urlSortBy === 'string') {
+    if (urlSortBy && typeof urlSortBy === "string") {
       setSortBy(urlSortBy);
     } else {
       setSortBy("relevance");
     }
 
-    if (urlSortOrder && typeof urlSortOrder === 'string') {
+    if (urlSortOrder && typeof urlSortOrder === "string") {
       setSortOrder(urlSortOrder as "asc" | "desc");
     } else {
       setSortOrder("desc");
     }
 
     // 处理标签搜索（需要等待标签数据加载）
-    if (urlSearchBy === 'tag' && urlQuery && tags?.tags) {
-      const matchingTag = tags.tags.find(tag =>
-        tag.name.toLowerCase() === urlQuery.toLowerCase()
+    if (urlSearchBy === "tag" && urlQuery && tags?.tags) {
+      const matchingTag = tags.tags.find(
+        (tag) => tag.name.toLowerCase() === urlQuery.toLowerCase(),
       );
       if (matchingTag) {
         setTagIds([matchingTag.id]);
-        setQuery(''); // 清空查询词，使用标签筛选
+        setQuery(""); // 清空查询词，使用标签筛选
       }
     }
 
     // 处理编辑搜索模式
-    if (urlEditingSearchId && typeof urlEditingSearchId === 'string') {
+    if (urlEditingSearchId && typeof urlEditingSearchId === "string") {
       setIsEditingSearch(true);
       setEditingSearchId(urlEditingSearchId);
-      setEditingSearchName(typeof urlEditingSearchName === 'string' ? urlEditingSearchName : '');
+      setEditingSearchName(
+        typeof urlEditingSearchName === "string" ? urlEditingSearchName : "",
+      );
       setShowAdvanced(true); // 自动展开高级搜索
     } else {
       setIsEditingSearch(false);
       setEditingSearchId(null);
-      setEditingSearchName('');
+      setEditingSearchName("");
     }
   }, [router.isReady, router.query, tags?.tags]);
 
@@ -629,21 +623,22 @@ const SearchPage: NextPage = () => {
     setSortOrder("desc");
   }, []);
 
-
-
   // 保存当前搜索
-  const handleSaveCurrentSearch = useCallback((formData: SavedSearchFormData) => {
-    console.log("保存搜索参数:", searchParams);
-    saveSearchMutation.mutate({
-      ...formData,
-      searchParams,
-    });
-  }, [saveSearchMutation, searchParams]);
+  const handleSaveCurrentSearch = useCallback(
+    (formData: SavedSearchFormData) => {
+      console.log("保存搜索参数:", searchParams);
+      saveSearchMutation.mutate({
+        ...formData,
+        searchParams,
+      });
+    },
+    [saveSearchMutation, searchParams],
+  );
 
   // 获取保存搜索详情（用于更新时保留原有信息）
   const { data: editingSearchData } = api.search.getSavedSearchById.useQuery(
     { id: editingSearchId! },
-    { enabled: !!editingSearchId }
+    { enabled: !!editingSearchId },
   );
 
   // 更新搜索条件
@@ -656,17 +651,25 @@ const SearchPage: NextPage = () => {
       description: editingSearchData.description || "",
       searchParams,
     });
-  }, [updateSavedSearchMutation, editingSearchId, editingSearchData, searchParams]);
+  }, [
+    updateSavedSearchMutation,
+    editingSearchId,
+    editingSearchData,
+    searchParams,
+  ]);
 
   // 取消编辑搜索条件
   const handleCancelEditSearch = useCallback(() => {
-    void router.push('/search/saved');
+    void router.push("/search/saved");
   }, [router]);
 
   // 搜索范围辅助函数
   const allSearchTypes = ["tasks", "notes", "projects", "journals"];
   const isAllSearchTypesSelected = useMemo(() => {
-    return allSearchTypes.every(type => searchIn.includes(type)) && searchIn.length === allSearchTypes.length;
+    return (
+      allSearchTypes.every((type) => searchIn.includes(type)) &&
+      searchIn.length === allSearchTypes.length
+    );
   }, [searchIn]);
 
   const isNoSearchTypesSelected = useMemo(() => {
@@ -686,172 +689,202 @@ const SearchPage: NextPage = () => {
   }, [isNoSearchTypesSelected]);
 
   // 生成搜索条件摘要
-  const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
-    const conditions = [];
+  const generateSearchSummary = useCallback(
+    (searchParams: any, tags?: any[], projects?: any[]) => {
+      const conditions = [];
 
-    if (searchParams.query) {
-      conditions.push(`关键词: "${searchParams.query}"`);
-    }
-
-    if (searchParams.searchIn && searchParams.searchIn.length > 0) {
-      const typeMap: Record<string, string> = {
-        tasks: "任务",
-        notes: "笔记",
-        projects: "项目",
-        journals: "日记"
-      };
-      const types = searchParams.searchIn.map((type: string) => typeMap[type] || type);
-
-      // 如果是全部4种类型，显示"全部"
-      const displayValue = searchParams.searchIn.length === 4 ? "全部" : types.join("、");
-
-      conditions.push(`范围: ${displayValue}`);
-    }
-
-    if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
-      const statusMap: Record<string, string> = {
-        IDEA: "想法",
-        TODO: "待办",
-        IN_PROGRESS: "进行中",
-        WAITING: "等待中",
-        DONE: "已完成",
-        COMPLETED: "已完成",
-        ARCHIVED: "已归档",
-        CANCELLED: "已取消"
-      };
-      const statuses = searchParams.taskStatus.map((status: string) => statusMap[status] || status);
-      conditions.push(`状态: ${statuses.join("、")}`);
-    }
-
-    if (searchParams.taskType && searchParams.taskType.length > 0) {
-      const typeMap: Record<string, string> = {
-        SINGLE: "单次任务",
-        RECURRING: "重复任务"
-      };
-      const types = searchParams.taskType.map((type: string) => typeMap[type] || type);
-      conditions.push(`任务类型: ${types.join("、")}`);
-    }
-
-    if (searchParams.priority && searchParams.priority.length > 0) {
-      const priorityMap: Record<string, string> = {
-        LOW: "低",
-        MEDIUM: "中",
-        HIGH: "高",
-        URGENT: "紧急"
-      };
-      const priorities = searchParams.priority.map((p: string) => priorityMap[p] || p);
-      conditions.push(`优先级: ${priorities.join("、")}`);
-    }
-
-    // 标签筛选
-    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags && 'tags' in tags) {
-      // 确保类型匹配 - 将所有ID转换为字符串进行比较
-      const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
-      const selectedTags = (tags.tags as any[]).filter((tag: any) => searchTagIds.includes(String(tag.id)));
-      if (selectedTags.length > 0) {
-        const tagNames = selectedTags.map((tag: any) => tag.name);
-        conditions.push(`标签: ${tagNames.join("、")}`);
+      if (searchParams.query) {
+        conditions.push(`关键词: "${searchParams.query}"`);
       }
-    }
 
-    // 项目筛选
-    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects && 'projects' in projects) {
-      // 确保类型匹配 - 将所有ID转换为字符串进行比较
-      const searchProjectIds = searchParams.projectIds.map((id: any) => String(id));
-      const selectedProjects = (projects.projects as any[]).filter((project: any) => searchProjectIds.includes(String(project.id)));
-      if (selectedProjects.length > 0) {
-        const projectNames = selectedProjects.map((project: any) => project.name);
-        conditions.push(`项目: ${projectNames.join("、")}`);
+      if (searchParams.searchIn && searchParams.searchIn.length > 0) {
+        const typeMap: Record<string, string> = {
+          tasks: "任务",
+          notes: "笔记",
+          projects: "项目",
+          journals: "日记",
+        };
+        const types = searchParams.searchIn.map(
+          (type: string) => typeMap[type] || type,
+        );
+
+        // 如果是全部4种类型，显示"全部"
+        const displayValue =
+          searchParams.searchIn.length === 4 ? "全部" : types.join("、");
+
+        conditions.push(`范围: ${displayValue}`);
       }
-    }
 
-    // 统一的日期格式化函数
-    const formatDate = (dateValue: any) => {
-      try {
-        if (!dateValue) return null;
-        const date = new Date(dateValue);
-        if (isNaN(date.getTime())) return String(dateValue);
-        return date.toLocaleDateString("zh-CN");
-      } catch {
-        return String(dateValue);
+      if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
+        const statusMap: Record<string, string> = {
+          IDEA: "想法",
+          TODO: "待办",
+          IN_PROGRESS: "进行中",
+          WAITING: "等待中",
+          DONE: "已完成",
+          COMPLETED: "已完成",
+          ARCHIVED: "已归档",
+          CANCELLED: "已取消",
+        };
+        const statuses = searchParams.taskStatus.map(
+          (status: string) => statusMap[status] || status,
+        );
+        conditions.push(`状态: ${statuses.join("、")}`);
       }
-    };
 
-    // 收集所有时间条件，合并显示
-    const timeConditions = [];
-
-    // 创建时间筛选
-    if (searchParams.createdAfter || searchParams.createdBefore) {
-      const formattedAfter = formatDate(searchParams.createdAfter);
-      const formattedBefore = formatDate(searchParams.createdBefore);
-
-      if (formattedAfter && formattedBefore) {
-        timeConditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
-      } else if (formattedAfter) {
-        timeConditions.push(`创建时间: ${formattedAfter} 之后`);
-      } else if (formattedBefore) {
-        timeConditions.push(`创建时间: ${formattedBefore} 之前`);
+      if (searchParams.taskType && searchParams.taskType.length > 0) {
+        const typeMap: Record<string, string> = {
+          SINGLE: "单次任务",
+          RECURRING: "重复任务",
+        };
+        const types = searchParams.taskType.map(
+          (type: string) => typeMap[type] || type,
+        );
+        conditions.push(`任务类型: ${types.join("、")}`);
       }
-    }
 
-    // 截止时间筛选
-    if (searchParams.dueAfter || searchParams.dueBefore) {
-      const formattedAfter = formatDate(searchParams.dueAfter);
-      const formattedBefore = formatDate(searchParams.dueBefore);
-
-      if (formattedAfter && formattedBefore) {
-        timeConditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
-      } else if (formattedAfter) {
-        timeConditions.push(`截止时间: ${formattedAfter} 之后`);
-      } else if (formattedBefore) {
-        timeConditions.push(`截止时间: ${formattedBefore} 之前`);
+      if (searchParams.priority && searchParams.priority.length > 0) {
+        const priorityMap: Record<string, string> = {
+          LOW: "低",
+          MEDIUM: "中",
+          HIGH: "高",
+          URGENT: "紧急",
+        };
+        const priorities = searchParams.priority.map(
+          (p: string) => priorityMap[p] || p,
+        );
+        conditions.push(`优先级: ${priorities.join("、")}`);
       }
-    }
 
-    // 如果有时间条件，合并为一个条件显示（换行格式）
-    if (timeConditions.length > 0) {
-      const timeValue = '时间筛选:\n' + timeConditions.join('\n');
-      conditions.push(timeValue);
-    }
+      // 标签筛选
+      if (
+        searchParams.tagIds &&
+        searchParams.tagIds.length > 0 &&
+        tags &&
+        "tags" in tags
+      ) {
+        // 确保类型匹配 - 将所有ID转换为字符串进行比较
+        const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
+        const selectedTags = (tags.tags as any[]).filter((tag: any) =>
+          searchTagIds.includes(String(tag.id)),
+        );
+        if (selectedTags.length > 0) {
+          const tagNames = selectedTags.map((tag: any) => tag.name);
+          conditions.push(`标签: ${tagNames.join("、")}`);
+        }
+      }
 
+      // 项目筛选
+      if (
+        searchParams.projectIds &&
+        searchParams.projectIds.length > 0 &&
+        projects &&
+        "projects" in projects
+      ) {
+        // 确保类型匹配 - 将所有ID转换为字符串进行比较
+        const searchProjectIds = searchParams.projectIds.map((id: any) =>
+          String(id),
+        );
+        const selectedProjects = (projects.projects as any[]).filter(
+          (project: any) => searchProjectIds.includes(String(project.id)),
+        );
+        if (selectedProjects.length > 0) {
+          const projectNames = selectedProjects.map(
+            (project: any) => project.name,
+          );
+          conditions.push(`项目: ${projectNames.join("、")}`);
+        }
+      }
 
-
-    // 状态筛选
-    if (searchParams.isCompleted !== undefined) {
-      conditions.push(`完成状态: ${searchParams.isCompleted ? "已完成" : "未完成"}`);
-    }
-
-    if (searchParams.isOverdue !== undefined) {
-      conditions.push(`逾期状态: ${searchParams.isOverdue ? "已逾期" : "未逾期"}`);
-    }
-
-
-
-    if (searchParams.hasDescription !== undefined) {
-      conditions.push(`描述: ${searchParams.hasDescription ? "有" : "无"}`);
-    }
-
-    // 排序
-    if (searchParams.sortBy && searchParams.sortBy !== "relevance") {
-      const sortMap: Record<string, string> = {
-        createdAt: "创建时间",
-        updatedAt: "更新时间",
-        dueDate: "截止时间",
-        priority: "优先级",
-        title: "标题",
-        timeSpent: "耗时"
+      // 统一的日期格式化函数
+      const formatDate = (dateValue: any) => {
+        try {
+          if (!dateValue) return null;
+          const date = new Date(dateValue);
+          if (isNaN(date.getTime())) return String(dateValue);
+          return date.toLocaleDateString("zh-CN");
+        } catch {
+          return String(dateValue);
+        }
       };
-      const sortName = sortMap[searchParams.sortBy] || searchParams.sortBy;
-      const orderName = searchParams.sortOrder === "asc" ? "升序" : "降序";
-      conditions.push(`排序: ${sortName}${orderName}`);
-    }
 
-    return conditions.length > 0 ? conditions.join(" | ") : "无特定条件";
-  }, []);
+      // 收集所有时间条件，合并显示
+      const timeConditions = [];
 
+      // 创建时间筛选
+      if (searchParams.createdAfter || searchParams.createdBefore) {
+        const formattedAfter = formatDate(searchParams.createdAfter);
+        const formattedBefore = formatDate(searchParams.createdBefore);
 
+        if (formattedAfter && formattedBefore) {
+          timeConditions.push(
+            `创建时间: ${formattedAfter} 至 ${formattedBefore}`,
+          );
+        } else if (formattedAfter) {
+          timeConditions.push(`创建时间: ${formattedAfter} 之后`);
+        } else if (formattedBefore) {
+          timeConditions.push(`创建时间: ${formattedBefore} 之前`);
+        }
+      }
 
+      // 截止时间筛选
+      if (searchParams.dueAfter || searchParams.dueBefore) {
+        const formattedAfter = formatDate(searchParams.dueAfter);
+        const formattedBefore = formatDate(searchParams.dueBefore);
 
+        if (formattedAfter && formattedBefore) {
+          timeConditions.push(
+            `截止时间: ${formattedAfter} 至 ${formattedBefore}`,
+          );
+        } else if (formattedAfter) {
+          timeConditions.push(`截止时间: ${formattedAfter} 之后`);
+        } else if (formattedBefore) {
+          timeConditions.push(`截止时间: ${formattedBefore} 之前`);
+        }
+      }
+
+      // 如果有时间条件，合并为一个条件显示（换行格式）
+      if (timeConditions.length > 0) {
+        const timeValue = "时间筛选:\n" + timeConditions.join("\n");
+        conditions.push(timeValue);
+      }
+
+      // 状态筛选
+      if (searchParams.isCompleted !== undefined) {
+        conditions.push(
+          `完成状态: ${searchParams.isCompleted ? "已完成" : "未完成"}`,
+        );
+      }
+
+      if (searchParams.isOverdue !== undefined) {
+        conditions.push(
+          `逾期状态: ${searchParams.isOverdue ? "已逾期" : "未逾期"}`,
+        );
+      }
+
+      if (searchParams.hasDescription !== undefined) {
+        conditions.push(`描述: ${searchParams.hasDescription ? "有" : "无"}`);
+      }
+
+      // 排序
+      if (searchParams.sortBy && searchParams.sortBy !== "relevance") {
+        const sortMap: Record<string, string> = {
+          createdAt: "创建时间",
+          updatedAt: "更新时间",
+          dueDate: "截止时间",
+          priority: "优先级",
+          title: "标题",
+          timeSpent: "耗时",
+        };
+        const sortName = sortMap[searchParams.sortBy] || searchParams.sortBy;
+        const orderName = searchParams.sortOrder === "asc" ? "升序" : "降序";
+        conditions.push(`排序: ${sortName}${orderName}`);
+      }
+
+      return conditions.length > 0 ? conditions.join(" | ") : "无特定条件";
+    },
+    [],
+  );
 
   return (
     <AuthGuard>
@@ -877,7 +910,7 @@ const SearchPage: NextPage = () => {
                 )}
               </div>
               {isEditingSearch && (
-                <div className="mt-2 rounded-md bg-blue-50 border border-blue-200 p-3">
+                <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 p-3">
                   <div className="flex items-center gap-2">
                     <AdjustmentsHorizontalIcon className="h-5 w-5 text-blue-600" />
                     <div>
@@ -893,7 +926,6 @@ const SearchPage: NextPage = () => {
               )}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium ${
@@ -939,13 +971,15 @@ const SearchPage: NextPage = () => {
 
               {/* 编辑模式操作按钮 */}
               {isEditingSearch && (
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex w-full gap-2 sm:w-auto">
                   <button
                     onClick={handleUpdateSearchConditions}
                     disabled={updateSavedSearchMutation.isPending}
                     className="flex-1 rounded-md bg-green-600 px-4 py-3 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 sm:flex-none"
                   >
-                    {updateSavedSearchMutation.isPending ? "保存中..." : "保存更改"}
+                    {updateSavedSearchMutation.isPending
+                      ? "保存中..."
+                      : "保存更改"}
                   </button>
                   <button
                     onClick={handleCancelEditSearch}
@@ -974,43 +1008,52 @@ const SearchPage: NextPage = () => {
 
                 <div className="flex flex-wrap gap-2">
                   {/* 标签筛选 */}
-                  {tagIds.length > 0 && tagIds.map((tagId) => {
-                    const tag = tags?.tags?.find(t => t.id === tagId);
-                    return tag ? (
-                      <span
-                        key={tagId}
-                        className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
-                      >
+                  {tagIds.length > 0 &&
+                    tagIds.map((tagId) => {
+                      const tag = tags?.tags?.find((t) => t.id === tagId);
+                      return tag ? (
                         <span
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: tag.color || '#3B82F6' }}
-                        />
-                        #{tag.name}
-                        <button
-                          onClick={() => setTagIds(tagIds.filter(id => id !== tagId))}
-                          className="ml-1 text-blue-600 hover:text-blue-800"
+                          key={tagId}
+                          className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
                         >
-                          ×
-                        </button>
-                      </span>
-                    ) : null;
-                  })}
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: tag.color || "#3B82F6" }}
+                          />
+                          #{tag.name}
+                          <button
+                            onClick={() =>
+                              setTagIds(tagIds.filter((id) => id !== tagId))
+                            }
+                            className="ml-1 text-blue-600 hover:text-blue-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
 
                   {/* 任务状态筛选 */}
                   {taskStatus.length > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm text-green-800">
-                      状态: {taskStatus.map(status => {
-                        const statusLabels = {
-                          'IDEA': '想法',
-                          'TODO': '待办',
-                          'IN_PROGRESS': '进行中',
-                          'WAITING': '等待中',
-                          'DONE': '已完成',
-                          'ARCHIVED': '已归档',
-                          'CANCELLED': '已取消'
-                        };
-                        return statusLabels[status as keyof typeof statusLabels] || status;
-                      }).join(', ')}
+                      状态:{" "}
+                      {taskStatus
+                        .map((status) => {
+                          const statusLabels = {
+                            IDEA: "想法",
+                            TODO: "待办",
+                            IN_PROGRESS: "进行中",
+                            WAITING: "等待中",
+                            DONE: "已完成",
+                            ARCHIVED: "已归档",
+                            CANCELLED: "已取消",
+                          };
+                          return (
+                            statusLabels[status as keyof typeof statusLabels] ||
+                            status
+                          );
+                        })
+                        .join(", ")}
                       <button
                         onClick={() => setTaskStatus([])}
                         className="ml-1 text-green-600 hover:text-green-800"
@@ -1023,15 +1066,21 @@ const SearchPage: NextPage = () => {
                   {/* 优先级筛选 */}
                   {priority.length > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-sm text-orange-800">
-                      优先级: {priority.map(p => {
-                        const priorityLabels = {
-                          'LOW': '低',
-                          'MEDIUM': '中',
-                          'HIGH': '高',
-                          'URGENT': '紧急'
-                        };
-                        return priorityLabels[p as keyof typeof priorityLabels] || p;
-                      }).join(', ')}
+                      优先级:{" "}
+                      {priority
+                        .map((p) => {
+                          const priorityLabels = {
+                            LOW: "低",
+                            MEDIUM: "中",
+                            HIGH: "高",
+                            URGENT: "紧急",
+                          };
+                          return (
+                            priorityLabels[p as keyof typeof priorityLabels] ||
+                            p
+                          );
+                        })
+                        .join(", ")}
                       <button
                         onClick={() => setPriority([])}
                         className="ml-1 text-orange-600 hover:text-orange-800"
@@ -1044,11 +1093,15 @@ const SearchPage: NextPage = () => {
                   {/* 项目筛选 */}
                   {projectIds.length > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800">
-                      项目: {(() => {
-                        if (!projects?.projects) return `${projectIds.length} 个`;
-                        const selectedProjects = projects.projects.filter(p => projectIds.includes(p.id));
+                      项目:{" "}
+                      {(() => {
+                        if (!projects?.projects)
+                          return `${projectIds.length} 个`;
+                        const selectedProjects = projects.projects.filter((p) =>
+                          projectIds.includes(p.id),
+                        );
                         if (selectedProjects.length <= 2) {
-                          return selectedProjects.map(p => p.name).join(', ');
+                          return selectedProjects.map((p) => p.name).join(", ");
                         } else {
                           return `${selectedProjects[0]?.name} 等 ${selectedProjects.length} 个`;
                         }
@@ -1065,7 +1118,8 @@ const SearchPage: NextPage = () => {
                   {/* 创建日期筛选 */}
                   {(createdAfter || createdBefore) && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-800">
-                      创建日期: {(() => {
+                      创建日期:{" "}
+                      {(() => {
                         if (createdAfter && createdBefore) {
                           return `${createdAfter.toLocaleDateString()} - ${createdBefore.toLocaleDateString()}`;
                         } else if (createdAfter) {
@@ -1073,7 +1127,7 @@ const SearchPage: NextPage = () => {
                         } else if (createdBefore) {
                           return `≤ ${createdBefore.toLocaleDateString()}`;
                         }
-                        return '日期筛选';
+                        return "日期筛选";
                       })()}
                       <button
                         onClick={() => {
@@ -1090,7 +1144,8 @@ const SearchPage: NextPage = () => {
                   {/* 截止日期筛选 */}
                   {(dueAfter || dueBefore) && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-800">
-                      截止日期: {(() => {
+                      截止日期:{" "}
+                      {(() => {
                         if (dueAfter && dueBefore) {
                           return `${dueAfter.toLocaleDateString()} - ${dueBefore.toLocaleDateString()}`;
                         } else if (dueAfter) {
@@ -1098,7 +1153,7 @@ const SearchPage: NextPage = () => {
                         } else if (dueBefore) {
                           return `≤ ${dueBefore.toLocaleDateString()}`;
                         }
-                        return '截止日期筛选';
+                        return "截止日期筛选";
                       })()}
                       <button
                         onClick={() => {
@@ -1115,15 +1170,20 @@ const SearchPage: NextPage = () => {
                   {/* 任务类型筛选 */}
                   {taskType.length > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-cyan-100 px-3 py-1 text-sm text-cyan-800">
-                      类型: {taskType.map(type => {
-                        const typeLabels = {
-                          'TASK': '任务',
-                          'MILESTONE': '里程碑',
-                          'BUG': '缺陷',
-                          'FEATURE': '功能'
-                        };
-                        return typeLabels[type as keyof typeof typeLabels] || type;
-                      }).join(', ')}
+                      类型:{" "}
+                      {taskType
+                        .map((type) => {
+                          const typeLabels = {
+                            TASK: "任务",
+                            MILESTONE: "里程碑",
+                            BUG: "缺陷",
+                            FEATURE: "功能",
+                          };
+                          return (
+                            typeLabels[type as keyof typeof typeLabels] || type
+                          );
+                        })
+                        .join(", ")}
                       <button
                         onClick={() => setTaskType([])}
                         className="ml-1 text-cyan-600 hover:text-cyan-800"
@@ -1136,7 +1196,7 @@ const SearchPage: NextPage = () => {
                   {/* 完成状态筛选 */}
                   {isCompleted !== null && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-800">
-                      {isCompleted ? '已完成' : '未完成'}
+                      {isCompleted ? "已完成" : "未完成"}
                       <button
                         onClick={() => setIsCompleted(null)}
                         className="ml-1 text-indigo-600 hover:text-indigo-800"
@@ -1149,7 +1209,7 @@ const SearchPage: NextPage = () => {
                   {/* 逾期状态筛选 */}
                   {isOverdue !== null && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-sm text-red-800">
-                      {isOverdue ? '已逾期' : '未逾期'}
+                      {isOverdue ? "已逾期" : "未逾期"}
                       <button
                         onClick={() => setIsOverdue(null)}
                         className="ml-1 text-red-600 hover:text-red-800"
@@ -1162,7 +1222,7 @@ const SearchPage: NextPage = () => {
                   {/* 描述筛选 */}
                   {hasDescription !== null && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-3 py-1 text-sm text-teal-800">
-                      {hasDescription ? '有描述' : '无描述'}
+                      {hasDescription ? "有描述" : "无描述"}
                       <button
                         onClick={() => setHasDescription(null)}
                         className="ml-1 text-teal-600 hover:text-teal-800"
@@ -1173,19 +1233,37 @@ const SearchPage: NextPage = () => {
                   )}
 
                   {/* 搜索范围筛选 */}
-                  {(searchIn.length !== 4 || !searchIn.includes("tasks") || !searchIn.includes("notes") || !searchIn.includes("projects") || !searchIn.includes("journals")) && (
+                  {(searchIn.length !== 4 ||
+                    !searchIn.includes("tasks") ||
+                    !searchIn.includes("notes") ||
+                    !searchIn.includes("projects") ||
+                    !searchIn.includes("journals")) && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-800">
-                      搜索范围: {(() => {
+                      搜索范围:{" "}
+                      {(() => {
                         const typeLabels = {
-                          'tasks': '任务',
-                          'notes': '笔记',
-                          'projects': '项目',
-                          'journals': '日记'
+                          tasks: "任务",
+                          notes: "笔记",
+                          projects: "项目",
+                          journals: "日记",
                         };
-                        return searchIn.map(type => typeLabels[type as keyof typeof typeLabels] || type).join(', ');
+                        return searchIn
+                          .map(
+                            (type) =>
+                              typeLabels[type as keyof typeof typeLabels] ||
+                              type,
+                          )
+                          .join(", ");
                       })()}
                       <button
-                        onClick={() => setSearchIn(["tasks", "notes", "projects", "journals"])}
+                        onClick={() =>
+                          setSearchIn([
+                            "tasks",
+                            "notes",
+                            "projects",
+                            "journals",
+                          ])
+                        }
                         className="ml-1 text-slate-600 hover:text-slate-800"
                       >
                         ×
@@ -1196,21 +1274,26 @@ const SearchPage: NextPage = () => {
                   {/* 排序方式筛选 */}
                   {(sortBy !== "relevance" || sortOrder !== "desc") && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-800">
-                      排序: {(() => {
+                      排序:{" "}
+                      {(() => {
                         const sortLabels = {
-                          'relevance': '相关性',
-                          'createdAt': '创建时间',
-                          'updatedAt': '更新时间',
-                          'title': '标题',
-                          'priority': '优先级',
-                          'dueDate': '截止日期'
+                          relevance: "相关性",
+                          createdAt: "创建时间",
+                          updatedAt: "更新时间",
+                          title: "标题",
+                          priority: "优先级",
+                          dueDate: "截止日期",
                         };
                         const orderLabels = {
-                          'asc': '升序',
-                          'desc': '降序'
+                          asc: "升序",
+                          desc: "降序",
                         };
-                        const sortLabel = sortLabels[sortBy as keyof typeof sortLabels] || sortBy;
-                        const orderLabel = orderLabels[sortOrder as keyof typeof orderLabels] || sortOrder;
+                        const sortLabel =
+                          sortLabels[sortBy as keyof typeof sortLabels] ||
+                          sortBy;
+                        const orderLabel =
+                          orderLabels[sortOrder as keyof typeof orderLabels] ||
+                          sortOrder;
                         return `${sortLabel} ${orderLabel}`;
                       })()}
                       <button
@@ -1240,10 +1323,12 @@ const SearchPage: NextPage = () => {
                     disabled={isAllSearchTypesSelected}
                     className={`text-xs font-medium transition-all duration-200 ${
                       isAllSearchTypesSelected
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded cursor-pointer"
+                        ? "cursor-not-allowed text-gray-400"
+                        : "cursor-pointer rounded px-2 py-1 text-blue-600 hover:bg-blue-50 hover:text-blue-800"
                     }`}
-                    title={isAllSearchTypesSelected ? "已全选" : "选择所有搜索范围"}
+                    title={
+                      isAllSearchTypesSelected ? "已全选" : "选择所有搜索范围"
+                    }
                   >
                     {isAllSearchTypesSelected ? "✓ 已全选" : "全选"}
                   </button>
@@ -1253,10 +1338,14 @@ const SearchPage: NextPage = () => {
                     disabled={isNoSearchTypesSelected}
                     className={`text-xs font-medium transition-all duration-200 ${
                       isNoSearchTypesSelected
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded cursor-pointer"
+                        ? "cursor-not-allowed text-gray-400"
+                        : "cursor-pointer rounded px-2 py-1 text-blue-600 hover:bg-blue-50 hover:text-blue-800"
                     }`}
-                    title={isNoSearchTypesSelected ? "已全部取消" : "取消所有搜索范围"}
+                    title={
+                      isNoSearchTypesSelected
+                        ? "已全部取消"
+                        : "取消所有搜索范围"
+                    }
                   >
                     {isNoSearchTypesSelected ? "✓ 已全部取消" : "全部取消"}
                   </button>
@@ -1299,8 +1388,6 @@ const SearchPage: NextPage = () => {
               </div>
             </div>
           </div>
-
-
 
           {/* 高级筛选面板 */}
           {showAdvanced && (
@@ -1345,7 +1432,9 @@ const SearchPage: NextPage = () => {
             {(searchResults || isLoading) && (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-medium text-gray-900">搜索结果</h2>
+                  <h2 className="text-lg font-medium text-gray-900">
+                    搜索结果
+                  </h2>
                   {searchResults && (
                     <span className="text-sm text-gray-500">
                       共找到 {totalAvailableResults} 条结果
@@ -1388,7 +1477,7 @@ const SearchPage: NextPage = () => {
                 <button
                   onClick={handleLoadMore}
                   disabled={isFetching}
-                  className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
+                  className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
                 >
                   {isFetching ? (
                     <>
@@ -1423,7 +1512,6 @@ const SearchPage: NextPage = () => {
           mode="create"
           isLoading={saveSearchMutation.isPending}
         />
-
       </MainLayout>
     </AuthGuard>
   );
@@ -1768,11 +1856,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-8">
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
             <MagnifyingGlassIcon className="h-8 w-8 text-gray-400" />
           </div>
           <h3 className="mt-4 text-lg font-medium text-gray-900">开始搜索</h3>
-          <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+          <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
             输入关键词或设置筛选条件来搜索任务、笔记、项目和日记
           </p>
           <div className="mt-6 flex justify-center gap-4 text-xs text-gray-400">
@@ -1802,30 +1890,34 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   // 创建所有结果的混合数组，用于统一分页
   const allResults = [
-    ...(tasks || []).map(item => ({ ...item, type: 'task' })),
-    ...(notes || []).map(item => ({ ...item, type: 'note' })),
-    ...(projects || []).map(item => ({ ...item, type: 'project' })),
-    ...(journals || []).map(item => ({ ...item, type: 'journal' }))
+    ...(tasks || []).map((item) => ({ ...item, type: "task" })),
+    ...(notes || []).map((item) => ({ ...item, type: "note" })),
+    ...(projects || []).map((item) => ({ ...item, type: "project" })),
+    ...(journals || []).map((item) => ({ ...item, type: "journal" })),
   ];
 
   // 按displayLimit截取数据
   const limitedResults = allResults.slice(0, displayLimit);
 
   // 重新按类型分组
-  const limitedTasks = limitedResults.filter(item => item.type === 'task');
-  const limitedNotes = limitedResults.filter(item => item.type === 'note');
-  const limitedProjects = limitedResults.filter(item => item.type === 'project');
-  const limitedJournals = limitedResults.filter(item => item.type === 'journal');
+  const limitedTasks = limitedResults.filter((item) => item.type === "task");
+  const limitedNotes = limitedResults.filter((item) => item.type === "note");
+  const limitedProjects = limitedResults.filter(
+    (item) => item.type === "project",
+  );
+  const limitedJournals = limitedResults.filter(
+    (item) => item.type === "journal",
+  );
 
   if (totalCount === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-8">
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
             <MagnifyingGlassIcon className="h-8 w-8 text-gray-400" />
           </div>
           <h3 className="mt-4 text-lg font-medium text-gray-900">未找到结果</h3>
-          <p className="mt-2 text-sm text-gray-500 max-w-sm mx-auto">
+          <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
             没有找到匹配的内容，尝试调整搜索条件或筛选器
           </p>
           <div className="mt-6 space-y-2 text-xs text-gray-500">
@@ -1849,7 +1941,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-600">
-              找到 <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
+              找到{" "}
+              <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
               个结果
               {query && (
                 <>
@@ -1893,7 +1986,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           {/* 快速排序选项 */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">排序:</span>
-            <select className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white">
+            <select className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs">
               <option value="relevance">相关性</option>
               <option value="date">时间</option>
               <option value="title">标题</option>
@@ -1904,14 +1997,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 任务结果 */}
       {searchIn.includes("tasks") && limitedTasks.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <div className="bg-blue-50 border-b border-blue-100 px-6 py-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-blue-100 bg-blue-50 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-blue-900">
-              <div className="mr-3 p-1 bg-blue-100 rounded-lg">
+              <div className="mr-3 rounded-lg bg-blue-100 p-1">
                 <CheckIcon className="h-5 w-5 text-blue-600" />
               </div>
               任务
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                 {limitedTasks.length}
               </span>
             </h3>
@@ -1934,14 +2027,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 笔记结果 */}
       {searchIn.includes("notes") && limitedNotes.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <div className="bg-green-50 border-b border-green-100 px-6 py-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-green-100 bg-green-50 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-green-900">
-              <div className="mr-3 p-1 bg-green-100 rounded-lg">
+              <div className="mr-3 rounded-lg bg-green-100 p-1">
                 <DocumentTextIcon className="h-5 w-5 text-green-600" />
               </div>
               笔记
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
                 {limitedNotes.length}
               </span>
             </h3>
@@ -1963,14 +2056,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 项目结果 */}
       {searchIn.includes("projects") && limitedProjects.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <div className="bg-purple-50 border-b border-purple-100 px-6 py-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-purple-100 bg-purple-50 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-purple-900">
-              <div className="mr-3 p-1 bg-purple-100 rounded-lg">
+              <div className="mr-3 rounded-lg bg-purple-100 p-1">
                 <FolderIcon className="h-5 w-5 text-purple-600" />
               </div>
               项目
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <span className="ml-2 inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
                 {limitedProjects.length}
               </span>
             </h3>
@@ -1992,14 +2085,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* 日记结果 */}
       {searchIn.includes("journals") && limitedJournals.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <div className="bg-orange-50 border-b border-orange-100 px-6 py-4">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-orange-100 bg-orange-50 px-6 py-4">
             <h3 className="flex items-center text-lg font-semibold text-orange-900">
-              <div className="mr-3 p-1 bg-orange-100 rounded-lg">
+              <div className="mr-3 rounded-lg bg-orange-100 p-1">
                 <CalendarIcon className="h-5 w-5 text-orange-600" />
               </div>
               日记
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+              <span className="ml-2 inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
                 {limitedJournals.length}
               </span>
             </h3>
@@ -2013,10 +2106,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   item={{
                     ...journal,
                     title: new Date(journal.date).toLocaleDateString("zh-CN", {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }),
                   }}
                   query={query}
                 />
@@ -2041,7 +2134,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
             <div className="flex items-center gap-2 text-xs">
               <span>提示: 使用</span>
-              <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">Ctrl+K</kbd>
+              <kbd className="rounded border border-gray-300 bg-white px-1.5 py-0.5 font-mono text-xs">
+                Ctrl+K
+              </kbd>
               <span>快速搜索</span>
             </div>
           </div>

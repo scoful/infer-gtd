@@ -21,13 +21,16 @@ interface SearchResultItemProps {
 const calculateRelevanceScore = (item: any, query: string): number => {
   if (!query?.trim()) return 0;
 
-  const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+  const searchTerms = query
+    .toLowerCase()
+    .split(" ")
+    .filter((term) => term.length > 0);
   let score = 0;
 
-  const title = (item.title || item.name || '').toLowerCase();
-  const content = (item.description || item.content || '').toLowerCase();
+  const title = (item.title || item.name || "").toLowerCase();
+  const content = (item.description || item.content || "").toLowerCase();
 
-  searchTerms.forEach(term => {
+  searchTerms.forEach((term) => {
     // 标题匹配权重更高
     if (title.includes(term)) {
       score += title.indexOf(term) === 0 ? 10 : 5; // 开头匹配得分更高
@@ -37,7 +40,11 @@ const calculateRelevanceScore = (item: any, query: string): number => {
       score += 2;
     }
     // 标签匹配
-    if (item.tags?.some((tagRel: any) => tagRel.tag.name.toLowerCase().includes(term))) {
+    if (
+      item.tags?.some((tagRel: any) =>
+        tagRel.tag.name.toLowerCase().includes(term),
+      )
+    ) {
       score += 3;
     }
   });
@@ -45,28 +52,37 @@ const calculateRelevanceScore = (item: any, query: string): number => {
   return Math.min(score, 10); // 最高10分
 };
 
-export default function SearchResultItem({ type, item, query, onTaskClick }: SearchResultItemProps) {
+export default function SearchResultItem({
+  type,
+  item,
+  query,
+  onTaskClick,
+}: SearchResultItemProps) {
   const relevanceScore = calculateRelevanceScore(item, query || "");
 
   // 获取相关性指示器
   const getRelevanceIndicator = () => {
     if (!query || relevanceScore === 0) return null;
 
-    const level = relevanceScore >= 8 ? 'high' : relevanceScore >= 5 ? 'medium' : 'low';
+    const level =
+      relevanceScore >= 8 ? "high" : relevanceScore >= 5 ? "medium" : "low";
     const colors = {
-      high: 'bg-green-500',
-      medium: 'bg-yellow-500',
-      low: 'bg-gray-400'
+      high: "bg-green-500",
+      medium: "bg-yellow-500",
+      low: "bg-gray-400",
     };
 
     return (
-      <div className="flex items-center gap-1" title={`相关性: ${relevanceScore}/10`}>
+      <div
+        className="flex items-center gap-1"
+        title={`相关性: ${relevanceScore}/10`}
+      >
         <div className="flex gap-0.5">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div
               key={i}
               className={`h-1 w-1 rounded-full ${
-                i <= (relevanceScore / 3.33) ? colors[level] : 'bg-gray-200'
+                i <= relevanceScore / 3.33 ? colors[level] : "bg-gray-200"
               }`}
             />
           ))}
@@ -77,16 +93,21 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
   const highlightText = (text: string, query?: string) => {
     if (!query || !text) return text;
-    
-    const regex = new RegExp(`(${query})`, 'gi');
+
+    const regex = new RegExp(`(${query})`, "gi");
     const parts = text.split(regex);
-    
-    return parts.map((part, index) => 
+
+    return parts.map((part, index) =>
       regex.test(part) ? (
-        <mark key={index} className="bg-yellow-200 text-yellow-900 rounded px-1">
+        <mark
+          key={index}
+          className="rounded bg-yellow-200 px-1 text-yellow-900"
+        >
           {part}
         </mark>
-      ) : part
+      ) : (
+        part
+      ),
     );
   };
 
@@ -160,9 +181,9 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("zh-CN", {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -235,24 +256,26 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
   };
 
   const content = (
-    <div className="group relative rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md transition-all duration-200 cursor-pointer">
+    <div className="group relative cursor-pointer rounded-lg border border-gray-200 p-4 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md">
       <div className="flex items-start gap-4">
         {/* 图标和类型指示器 */}
-        <div className="flex-shrink-0 mt-1">
+        <div className="mt-1 flex-shrink-0">
           <div className="relative">
             {getItemIcon()}
             {/* 类型标识 */}
-            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-white border border-gray-200 flex items-center justify-center">
-              <div className={`h-1.5 w-1.5 rounded-full ${getTypeColor()}`}></div>
+            <div className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full border border-gray-200 bg-white">
+              <div
+                className={`h-1.5 w-1.5 rounded-full ${getTypeColor()}`}
+              ></div>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {/* 标题行 */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <h4 className="text-base font-semibold text-gray-900 group-hover:text-blue-900 line-clamp-1">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <h4 className="line-clamp-1 text-base font-semibold text-gray-900 group-hover:text-blue-900">
                 {highlightText(item.title || item.name, query)}
               </h4>
               {/* 相关性指示器 */}
@@ -260,7 +283,7 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
             </div>
 
             {/* 右侧快速信息 */}
-            <div className="flex-shrink-0 flex items-center gap-2">
+            <div className="flex flex-shrink-0 items-center gap-2">
               {/* 相关性指示器 */}
               {getRelevanceIndicator()}
             </div>
@@ -268,7 +291,7 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
           {/* 内容预览 */}
           {(item.description || item.content) && (
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2 leading-relaxed">
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-gray-600">
               {highlightText(item.description || item.content, query)}
             </p>
           )}
@@ -281,13 +304,17 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
               {type === "task" && (
                 <>
                   {/* 任务状态 */}
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(item.status)}`}
+                  >
                     {getStatusLabel(item.status)}
                   </span>
 
                   {/* 优先级 */}
                   {item.priority && (
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getPriorityColor(item.priority)}`}
+                    >
                       {getPriorityLabel(item.priority)}
                     </span>
                   )}
@@ -295,13 +322,17 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
                   {/* 标签信息 */}
                   {item.tags && item.tags.length > 0 && (
                     <span
-                      className="px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                      className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
                       style={getTagStyle(item.tags[0].tag)}
                     >
                       {item.tags[0].tag.icon && (
                         <span className="text-xs">{item.tags[0].tag.icon}</span>
                       )}
-                      {item.tags.slice(0, 1).map((tagRel: any) => tagRel.tag.name)[0]}
+                      {
+                        item.tags
+                          .slice(0, 1)
+                          .map((tagRel: any) => tagRel.tag.name)[0]
+                      }
                       {item.tags.length > 1 && ` +${item.tags.length - 1}`}
                     </span>
                   )}
@@ -311,7 +342,7 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
               {/* 项目信息 */}
               {item.project && (
                 <span
-                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                  className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
                   style={getProjectStyle(item.project)}
                 >
                   <FolderIcon className="h-3 w-3" />
@@ -324,13 +355,17 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
                 <div className="flex items-center gap-1">
                   <TagIcon className="h-3 w-3" />
                   <span
-                    className="px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                    className="flex items-center gap-1 rounded-md px-2 py-1 text-xs"
                     style={getTagStyle(item.tags[0].tag)}
                   >
                     {item.tags[0].tag.icon && (
                       <span className="text-xs">{item.tags[0].tag.icon}</span>
                     )}
-                    {item.tags.slice(0, 1).map((tagRel: any) => tagRel.tag.name)[0]}
+                    {
+                      item.tags
+                        .slice(0, 1)
+                        .map((tagRel: any) => tagRel.tag.name)[0]
+                    }
                     {item.tags.length > 1 && ` +${item.tags.length - 1}`}
                   </span>
                 </div>
@@ -356,7 +391,7 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
               {/* 项目统计 */}
               {type === "project" && item._count && (
-                <span className="bg-gray-100 px-2 py-1 rounded-md">
+                <span className="rounded-md bg-gray-100 px-2 py-1">
                   {item._count.tasks} 任务 · {item._count.notes} 笔记
                 </span>
               )}
@@ -364,7 +399,9 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
             {/* 右侧：时间信息 */}
             <span className="text-xs text-gray-400">
-              {type === "journal" ? formatDate(item.date) : formatDate(item.updatedAt)}
+              {type === "journal"
+                ? formatDate(item.date)
+                : formatDate(item.updatedAt)}
             </span>
           </div>
         </div>
@@ -374,16 +411,8 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
   // 任务类型使用点击事件，其他类型使用 Link
   if (type === "task") {
-    return (
-      <div onClick={handleClick}>
-        {content}
-      </div>
-    );
+    return <div onClick={handleClick}>{content}</div>;
   }
 
-  return (
-    <Link href={getItemLink()}>
-      {content}
-    </Link>
-  );
+  return <Link href={getItemLink()}>{content}</Link>;
 }

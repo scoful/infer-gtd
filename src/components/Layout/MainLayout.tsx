@@ -24,7 +24,6 @@ import {
   LightBulbIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
-
   Squares2X2Icon,
   TagIcon,
   UserCircleIcon,
@@ -182,7 +181,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
     // 初始化时，如果当前路径是相关页面，自动展开对应菜单
     const initialExpanded = new Set<string>();
     if (typeof window !== "undefined") {
-      if (window.location.pathname.startsWith("/tasks") || window.location.pathname === "/stream") {
+      if (
+        window.location.pathname.startsWith("/tasks") ||
+        window.location.pathname === "/stream"
+      ) {
         initialExpanded.add("任务管理");
       }
       if (window.location.pathname.startsWith("/journal")) {
@@ -276,10 +278,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
 
     if (href === "/projects") {
-      return router.pathname === "/projects"; // 只匹配精确路径
+      return (
+        router.pathname === "/projects" ||
+        router.pathname.startsWith("/projects/")
+      );
     }
     if (href === "/notes") {
-      return router.pathname === "/notes"; // 只匹配精确路径
+      return (
+        router.pathname === "/notes" || router.pathname.startsWith("/notes/")
+      );
     }
     if (href === "/search") {
       return router.pathname === "/search"; // 只匹配精确路径
@@ -299,7 +306,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 检查父菜单是否应该激活（当任何子页面激活时）
   const isParentActive = (item: NavigationItem) => {
     if (item.name === "任务管理") {
-      return router.pathname.startsWith("/tasks") || router.pathname === "/stream";
+      return (
+        router.pathname.startsWith("/tasks") || router.pathname === "/stream"
+      );
     }
     if (item.name === "日记管理") {
       return router.pathname.startsWith("/journal");
@@ -347,7 +356,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
 
   // 处理导航点击
-  const handleNavigationClick = (href: string, event: React.MouseEvent, isChildItem = false) => {
+  const handleNavigationClick = (
+    href: string,
+    event: React.MouseEvent,
+    isChildItem = false,
+  ) => {
     const isCurrentPage = isActivePath(href);
 
     if (isCurrentPage) {
@@ -602,7 +615,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                   }`}
                                   title={child.description}
                                   onClick={(event) =>
-                                    handleNavigationClick(child.href, event, true)
+                                    handleNavigationClick(
+                                      child.href,
+                                      event,
+                                      true,
+                                    )
                                   }
                                 >
                                   <ChildIcon
@@ -636,7 +653,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                   }`}
                                   title={child.description}
                                   onClick={(event) => {
-                                    handleNavigationClick(child.href, event, true);
+                                    handleNavigationClick(
+                                      child.href,
+                                      event,
+                                      true,
+                                    );
                                     // 点击后关闭展开状态
                                     setCollapsedExpandedItems((prev) => {
                                       const newSet = new Set(prev);

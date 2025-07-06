@@ -12,7 +12,7 @@ interface SearchFiltersProps {
   // 搜索范围
   searchIn: string[];
   onSearchInChange: (searchIn: string[]) => void;
-  
+
   // 任务筛选
   taskStatus: TaskStatus[];
   onTaskStatusChange: (status: TaskStatus[]) => void;
@@ -20,13 +20,13 @@ interface SearchFiltersProps {
   onTaskTypeChange: (type: TaskType[]) => void;
   priority: Priority[];
   onPriorityChange: (priority: Priority[]) => void;
-  
+
   // 标签和项目
   tagIds: string[];
   onTagIdsChange: (tagIds: string[]) => void;
   projectIds: string[];
   onProjectIdsChange: (projectIds: string[]) => void;
-  
+
   // 日期筛选
   createdAfter: Date | null;
   onCreatedAfterChange: (date: Date | null) => void;
@@ -36,7 +36,7 @@ interface SearchFiltersProps {
   onDueAfterChange: (date: Date | null) => void;
   dueBefore: Date | null;
   onDueBeforeChange: (date: Date | null) => void;
-  
+
   // 状态筛选
   isCompleted: boolean | null;
   onIsCompletedChange: (completed: boolean | null) => void;
@@ -44,17 +44,17 @@ interface SearchFiltersProps {
   onIsOverdueChange: (overdue: boolean | null) => void;
   hasDescription: boolean | null;
   onHasDescriptionChange: (hasDesc: boolean | null) => void;
-  
+
   // 排序
   sortBy: string;
   onSortByChange: (sortBy: string) => void;
   sortOrder: "asc" | "desc";
   onSortOrderChange: (order: "asc" | "desc") => void;
-  
+
   // 数据
   tags?: any[];
   projects?: any[];
-  
+
   // 操作
   onClearFilters: () => void;
 }
@@ -107,7 +107,7 @@ export default function SearchFilters({
 
   const toggleSearchIn = (type: string) => {
     if (searchIn.includes(type)) {
-      onSearchInChange(searchIn.filter(t => t !== type));
+      onSearchInChange(searchIn.filter((t) => t !== type));
     } else {
       onSearchInChange([...searchIn, type]);
     }
@@ -115,7 +115,7 @@ export default function SearchFilters({
 
   const toggleTaskStatus = (status: TaskStatus) => {
     if (taskStatus.includes(status)) {
-      onTaskStatusChange(taskStatus.filter(s => s !== status));
+      onTaskStatusChange(taskStatus.filter((s) => s !== status));
     } else {
       onTaskStatusChange([...taskStatus, status]);
     }
@@ -123,7 +123,7 @@ export default function SearchFilters({
 
   const togglePriority = (p: Priority) => {
     if (priority.includes(p)) {
-      onPriorityChange(priority.filter(pr => pr !== p));
+      onPriorityChange(priority.filter((pr) => pr !== p));
     } else {
       onPriorityChange([...priority, p]);
     }
@@ -131,7 +131,7 @@ export default function SearchFilters({
 
   const toggleTag = (tagId: string) => {
     if (tagIds.includes(tagId)) {
-      onTagIdsChange(tagIds.filter(id => id !== tagId));
+      onTagIdsChange(tagIds.filter((id) => id !== tagId));
     } else {
       onTagIdsChange([...tagIds, tagId]);
     }
@@ -139,13 +139,13 @@ export default function SearchFilters({
 
   const toggleProject = (projectId: string) => {
     if (projectIds.includes(projectId)) {
-      onProjectIdsChange(projectIds.filter(id => id !== projectId));
+      onProjectIdsChange(projectIds.filter((id) => id !== projectId));
     } else {
       onProjectIdsChange([...projectIds, projectId]);
     }
   };
 
-  const hasActiveFilters = 
+  const hasActiveFilters =
     taskStatus.length > 0 ||
     taskType.length > 0 ||
     priority.length > 0 ||
@@ -285,7 +285,9 @@ export default function SearchFilters({
               </label>
               <select
                 value={sortOrder}
-                onChange={(e) => onSortOrderChange(e.target.value as "asc" | "desc")}
+                onChange={(e) =>
+                  onSortOrderChange(e.target.value as "asc" | "desc")
+                }
                 className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="desc">降序</option>

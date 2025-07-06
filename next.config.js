@@ -26,8 +26,8 @@ const config = {
   async rewrites() {
     return [
       {
-        source: '/version.json',
-        destination: '/api/version',
+        source: "/version.json",
+        destination: "/api/version",
       },
     ];
   },

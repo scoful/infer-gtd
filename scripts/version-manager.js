@@ -5,21 +5,21 @@
  * 支持语义化版本控制的自动化管理
  */
 
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
 
-const VERSION_FILE = 'version.json';
+const VERSION_FILE = "version.json";
 
 /**
  * 读取版本文件
  */
 function readVersionFile() {
   try {
-    const content = fs.readFileSync(VERSION_FILE, 'utf8');
+    const content = fs.readFileSync(VERSION_FILE, "utf8");
     return JSON.parse(content);
   } catch (error) {
-    console.error('❌ 无法读取版本文件:', error.message);
+    console.error("❌ 无法读取版本文件:", error.message);
     process.exit(1);
   }
 }
@@ -30,10 +30,10 @@ function readVersionFile() {
 function writeVersionFile(versionData) {
   try {
     const content = JSON.stringify(versionData, null, 2);
-    fs.writeFileSync(VERSION_FILE, content, 'utf8');
+    fs.writeFileSync(VERSION_FILE, content, "utf8");
     console.log(`✅ 版本已更新: ${versionData.version}`);
   } catch (error) {
-    console.error('❌ 无法写入版本文件:', error.message);
+    console.error("❌ 无法写入版本文件:", error.message);
     process.exit(1);
   }
 }
@@ -43,12 +43,16 @@ function writeVersionFile(versionData) {
  */
 function getGitInfo() {
   try {
-    const gitCommit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
-    const gitBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+    const gitCommit = execSync("git rev-parse HEAD", {
+      encoding: "utf8",
+    }).trim();
+    const gitBranch = execSync("git rev-parse --abbrev-ref HEAD", {
+      encoding: "utf8",
+    }).trim();
     return { gitCommit, gitBranch };
   } catch (error) {
-    console.warn('⚠️ 无法获取 Git 信息:', error.message);
-    return { gitCommit: '', gitBranch: '' };
+    console.warn("⚠️ 无法获取 Git 信息:", error.message);
+    return { gitCommit: "", gitBranch: "" };
   }
 }
 
@@ -61,20 +65,20 @@ function updateVersion(type) {
 
   // 更新版本号
   switch (type) {
-    case 'patch':
+    case "patch":
       versionData.patch += 1;
       break;
-    case 'minor':
+    case "minor":
       versionData.minor += 1;
       versionData.patch = 0;
       break;
-    case 'major':
+    case "major":
       versionData.major += 1;
       versionData.minor = 0;
       versionData.patch = 0;
       break;
     default:
-      console.error('❌ 无效的版本类型:', type);
+      console.error("❌ 无效的版本类型:", type);
       process.exit(1);
   }
 
@@ -95,11 +99,11 @@ function setEnvironment(env) {
   const versionData = readVersionFile();
   versionData.environment = env;
   versionData.buildTime = new Date().toISOString();
-  
+
   const { gitCommit, gitBranch } = getGitInfo();
   versionData.gitCommit = gitCommit;
   versionData.gitBranch = gitBranch;
-  
+
   writeVersionFile(versionData);
   return versionData;
 }
@@ -109,7 +113,7 @@ function setEnvironment(env) {
  */
 function showVersion() {
   const versionData = readVersionFile();
-  console.log('📋 当前版本信息:');
+  console.log("📋 当前版本信息:");
   console.log(`   版本号: ${versionData.version}`);
   console.log(`   构建时间: ${versionData.buildTime}`);
   console.log(`   Git 提交: ${versionData.gitCommit}`);
@@ -122,27 +126,27 @@ const command = process.argv[2];
 const argument = process.argv[3];
 
 switch (command) {
-  case 'patch':
-  case 'minor':
-  case 'major':
+  case "patch":
+  case "minor":
+  case "major":
     updateVersion(command);
     break;
-  case 'set-env':
+  case "set-env":
     if (!argument) {
-      console.error('❌ 请指定环境名称');
+      console.error("❌ 请指定环境名称");
       process.exit(1);
     }
     setEnvironment(argument);
     break;
-  case 'show':
+  case "show":
     showVersion();
     break;
   default:
-    console.log('📖 版本管理脚本使用说明:');
-    console.log('   node scripts/version-manager.js patch    # 增加补丁版本');
-    console.log('   node scripts/version-manager.js minor    # 增加次版本');
-    console.log('   node scripts/version-manager.js major    # 增加主版本');
-    console.log('   node scripts/version-manager.js set-env <env>  # 设置环境');
-    console.log('   node scripts/version-manager.js show     # 显示当前版本');
+    console.log("📖 版本管理脚本使用说明:");
+    console.log("   node scripts/version-manager.js patch    # 增加补丁版本");
+    console.log("   node scripts/version-manager.js minor    # 增加次版本");
+    console.log("   node scripts/version-manager.js major    # 增加主版本");
+    console.log("   node scripts/version-manager.js set-env <env>  # 设置环境");
+    console.log("   node scripts/version-manager.js show     # 显示当前版本");
     break;
 }

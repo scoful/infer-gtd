@@ -15,7 +15,7 @@ const defaultSearches = [
       priority: [],
       tagIds: [],
       projectIds: [],
-      createdAfter: () => new Date().toISOString().split('T')[0], // 今天
+      createdAfter: () => new Date().toISOString().split("T")[0], // 今天
       createdBefore: null,
       dueAfter: null,
       dueBefore: null,
@@ -25,7 +25,7 @@ const defaultSearches = [
       isOverdue: null,
       hasDescription: null,
       limit: 20,
-    }
+    },
   },
   {
     name: "本周笔记",
@@ -42,7 +42,7 @@ const defaultSearches = [
         const now = new Date();
         const dayOfWeek = now.getDay();
         const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 周一开始
-        return new Date(now.setDate(diff)).toISOString().split('T')[0];
+        return new Date(now.setDate(diff)).toISOString().split("T")[0];
       },
       createdBefore: null,
       dueAfter: null,
@@ -53,7 +53,7 @@ const defaultSearches = [
       isOverdue: null,
       hasDescription: null,
       limit: 20,
-    }
+    },
   },
   {
     name: "高优先级任务",
@@ -76,7 +76,7 @@ const defaultSearches = [
       isOverdue: null,
       hasDescription: null,
       limit: 20,
-    }
+    },
   },
   {
     name: "进行中的项目",
@@ -99,7 +99,7 @@ const defaultSearches = [
       isOverdue: null,
       hasDescription: null,
       limit: 20,
-    }
+    },
   },
   {
     name: "最近的日记",
@@ -122,7 +122,7 @@ const defaultSearches = [
       isOverdue: null,
       hasDescription: null,
       limit: 20,
-    }
+    },
   },
   {
     name: "待办事项",
@@ -145,8 +145,8 @@ const defaultSearches = [
       isOverdue: null,
       hasDescription: null,
       limit: 20,
-    }
-  }
+    },
+  },
 ];
 
 async function createDefaultSearchesForUser(userId: string) {
@@ -165,7 +165,7 @@ async function createDefaultSearchesForUser(userId: string) {
       if (!existingSearch) {
         // 处理动态日期函数
         const processedParams: any = { ...searchData.searchParams };
-        if (typeof processedParams.createdAfter === 'function') {
+        if (typeof processedParams.createdAfter === "function") {
           processedParams.createdAfter = processedParams.createdAfter();
         }
 

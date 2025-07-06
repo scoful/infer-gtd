@@ -9,7 +9,7 @@ interface VersionDisplayProps {
 
 export default function VersionDisplay({
   collapsed = false,
-  position = "sidebar"
+  position = "sidebar",
 }: VersionDisplayProps) {
   const { versionInfo, isLoading } = useVersion();
   const [showDetails, setShowDetails] = useState(false);
@@ -18,15 +18,15 @@ export default function VersionDisplay({
     return null;
   }
 
-  const isDevelopment = versionInfo.environment === 'development';
+  const isDevelopment = versionInfo.environment === "development";
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
+      return new Date(dateString).toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
       return dateString;
@@ -44,20 +44,24 @@ export default function VersionDisplay({
         >
           <InformationCircleIcon className="h-4 w-4" />
         </button>
-        
+
         {/* 悬浮详情 */}
         {showDetails && (
           <div className="absolute bottom-full left-0 mb-2 w-64 rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200">
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-500">版本:</span>
-                <span className="font-medium text-gray-900">{versionInfo.version}</span>
+                <span className="font-medium text-gray-900">
+                  {versionInfo.version}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">环境:</span>
-                <span className={`font-medium ${
-                  isDevelopment ? 'text-orange-600' : 'text-green-600'
-                }`}>
+                <span
+                  className={`font-medium ${
+                    isDevelopment ? "text-orange-600" : "text-green-600"
+                  }`}
+                >
                   {versionInfo.environment}
                 </span>
               </div>
@@ -65,12 +69,16 @@ export default function VersionDisplay({
                 <>
                   <div className="flex justify-between">
                     <span className="text-gray-500">构建:</span>
-                    <span className="text-gray-700">{formatDate(versionInfo.buildTime)}</span>
+                    <span className="text-gray-700">
+                      {formatDate(versionInfo.buildTime)}
+                    </span>
                   </div>
                   {versionInfo.gitBranch && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">分支:</span>
-                      <span className="text-gray-700">{versionInfo.gitBranch}</span>
+                      <span className="text-gray-700">
+                        {versionInfo.gitBranch}
+                      </span>
                     </div>
                   )}
                   {versionInfo.gitCommit && (
@@ -101,14 +109,16 @@ export default function VersionDisplay({
           <span>v{versionInfo.version}</span>
           <InformationCircleIcon className="h-4 w-4" />
         </button>
-        
+
         {showDetails && (
           <div className="mt-2 space-y-1 rounded-md bg-gray-50 p-2 text-xs">
             <div className="flex justify-between">
               <span className="text-gray-500">环境:</span>
-              <span className={`font-medium ${
-                isDevelopment ? 'text-orange-600' : 'text-green-600'
-              }`}>
+              <span
+                className={`font-medium ${
+                  isDevelopment ? "text-orange-600" : "text-green-600"
+                }`}
+              >
                 {versionInfo.environment}
               </span>
             </div>
@@ -116,12 +126,16 @@ export default function VersionDisplay({
               <>
                 <div className="flex justify-between">
                   <span className="text-gray-500">构建:</span>
-                  <span className="text-gray-700">{formatDate(versionInfo.buildTime)}</span>
+                  <span className="text-gray-700">
+                    {formatDate(versionInfo.buildTime)}
+                  </span>
                 </div>
                 {versionInfo.gitBranch && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">分支:</span>
-                    <span className="text-gray-700">{versionInfo.gitBranch}</span>
+                    <span className="text-gray-700">
+                      {versionInfo.gitBranch}
+                    </span>
                   </div>
                 )}
                 {versionInfo.gitCommit && (
@@ -146,7 +160,9 @@ export default function VersionDisplay({
       <div className="text-xs text-gray-500">
         Infer GTD v{versionInfo.version}
         {isDevelopment && (
-          <span className="ml-2 text-orange-600">({versionInfo.environment})</span>
+          <span className="ml-2 text-orange-600">
+            ({versionInfo.environment})
+          </span>
         )}
       </div>
     </div>

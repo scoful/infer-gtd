@@ -333,7 +333,7 @@ const TaskListPage: NextPage = () => {
     setEditingTaskId(null);
     // 清除URL参数
     if (router.query.edit) {
-      void router.replace('/tasks', undefined, { shallow: true });
+      void router.replace("/tasks", undefined, { shallow: true });
     }
   }, [router]);
 
@@ -345,7 +345,11 @@ const TaskListPage: NextPage = () => {
 
   // 处理URL参数，支持通过URL打开编辑模态框
   useEffect(() => {
-    if (router.isReady && router.query.edit && typeof router.query.edit === 'string') {
+    if (
+      router.isReady &&
+      router.query.edit &&
+      typeof router.query.edit === "string"
+    ) {
       const taskId = router.query.edit;
       handleEditTask(taskId);
     }

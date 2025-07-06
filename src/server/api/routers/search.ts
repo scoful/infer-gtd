@@ -78,7 +78,9 @@ const searchIdSchema = z.object({
 // 搜索建议 Schema
 const searchSuggestionsSchema = z.object({
   query: z.string().min(1, "查询不能为空"),
-  type: z.enum(["all", "tasks", "notes", "journals", "tags", "projects"]).default("all"),
+  type: z
+    .enum(["all", "tasks", "notes", "journals", "tags", "projects"])
+    .default("all"),
   limit: z.number().min(1).max(20).default(10),
 });
 
@@ -567,12 +569,14 @@ export const searchRouter = createTRPCRouter({
 
   // 更新保存的搜索
   updateSavedSearch: protectedProcedure
-    .input(z.object({
-      id: z.string().cuid("无效的搜索ID"),
-      name: z.string().min(1, "搜索名称不能为空").max(100, "搜索名称过长"),
-      description: z.string().max(500, "描述过长").optional(),
-      searchParams: advancedSearchSchema,
-    }))
+    .input(
+      z.object({
+        id: z.string().cuid("无效的搜索ID"),
+        name: z.string().min(1, "搜索名称不能为空").max(100, "搜索名称过长"),
+        description: z.string().max(500, "描述过长").optional(),
+        searchParams: advancedSearchSchema,
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // 验证搜索所有权
@@ -581,7 +585,10 @@ export const searchRouter = createTRPCRouter({
           select: { createdById: true, name: true },
         });
 
-        if (!existingSearch || existingSearch.createdById !== ctx.session.user.id) {
+        if (
+          !existingSearch ||
+          existingSearch.createdById !== ctx.session.user.id
+        ) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "保存的搜索不存在或无权限操作",
@@ -662,9 +669,6 @@ export const searchRouter = createTRPCRouter({
         });
       }
     }),
-
-
-
 });
 
 // 辅助函数：获取任务排序

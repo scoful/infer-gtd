@@ -11,7 +11,7 @@ import {
   ClockIcon,
   ChartBarIcon,
   ArrowsUpDownIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
 
 interface SavedSearch {
@@ -24,7 +24,17 @@ interface SavedSearch {
 }
 
 interface SearchCondition {
-  type: 'keyword' | 'scope' | 'status' | 'type' | 'priority' | 'tag' | 'project' | 'time' | 'tracking' | 'sort';
+  type:
+    | "keyword"
+    | "scope"
+    | "status"
+    | "type"
+    | "priority"
+    | "tag"
+    | "project"
+    | "time"
+    | "tracking"
+    | "sort";
   label: string;
   value: string;
   color: string;
@@ -36,8 +46,16 @@ interface SavedSearchCardProps {
   onEdit: (search: SavedSearch) => void;
   onEditConditions: (search: SavedSearch) => void;
   onDelete: (searchId: string, searchName: string) => void;
-  generateSearchSummary: (searchParams: any, tags?: any[], projects?: any[]) => string;
-  generateSearchConditions: (searchParams: any, tags?: any[], projects?: any[]) => SearchCondition[];
+  generateSearchSummary: (
+    searchParams: any,
+    tags?: any[],
+    projects?: any[],
+  ) => string;
+  generateSearchConditions: (
+    searchParams: any,
+    tags?: any[],
+    projects?: any[],
+  ) => SearchCondition[];
   tags?: any[];
   projects?: any[];
 }
@@ -53,31 +71,30 @@ export default function SavedSearchCard({
   tags = [],
   projects = [],
 }: SavedSearchCardProps) {
-
   // 获取条件类型对应的图标
-  const getConditionIcon = (type: SearchCondition['type']) => {
+  const getConditionIcon = (type: SearchCondition["type"]) => {
     const iconProps = { className: "h-3 w-3 flex-shrink-0" };
 
     switch (type) {
-      case 'keyword':
+      case "keyword":
         return <MagnifyingGlassIcon {...iconProps} />;
-      case 'scope':
+      case "scope":
         return <FunnelIcon {...iconProps} />;
-      case 'status':
+      case "status":
         return <CheckCircleIcon {...iconProps} />;
-      case 'type':
+      case "type":
         return <DocumentTextIcon {...iconProps} />;
-      case 'priority':
+      case "priority":
         return <ChartBarIcon {...iconProps} />;
-      case 'tag':
+      case "tag":
         return <TagIcon {...iconProps} />;
-      case 'project':
+      case "project":
         return <FolderIcon {...iconProps} />;
-      case 'time':
+      case "time":
         return <ClockIcon {...iconProps} />;
-      case 'tracking':
+      case "tracking":
         return <ChartBarIcon {...iconProps} />;
-      case 'sort':
+      case "sort":
         return <ArrowsUpDownIcon {...iconProps} />;
       default:
         return <FunnelIcon {...iconProps} />;
@@ -95,16 +112,16 @@ export default function SavedSearchCard({
   return (
     <div
       onClick={() => onLoad(search)}
-      className="group relative cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-lg hover:-translate-y-0.5"
+      className="group relative cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
     >
       {/* 操作按钮 */}
-      <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute top-3 right-3 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onEditConditions(search);
           }}
-          className="rounded-md p-1.5 text-gray-400 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+          className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-purple-50 hover:text-purple-600"
           title="编辑搜索条件"
         >
           <AdjustmentsHorizontalIcon className="h-4 w-4" />
@@ -115,7 +132,7 @@ export default function SavedSearchCard({
             e.stopPropagation();
             onEdit(search);
           }}
-          className="rounded-md p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+          className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
           title="编辑名称和描述"
         >
           <PencilIcon className="h-4 w-4" />
@@ -126,7 +143,7 @@ export default function SavedSearchCard({
             e.stopPropagation();
             onDelete(search.id, search.name);
           }}
-          className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
           title="删除"
         >
           <TrashIcon className="h-4 w-4" />
@@ -134,17 +151,14 @@ export default function SavedSearchCard({
       </div>
 
       {/* 主要内容 */}
-      <div
-        className="cursor-pointer pr-24"
-        onClick={() => onLoad(search)}
-      >
-        <h4 className="text-base font-medium text-gray-900 truncate">
+      <div className="cursor-pointer pr-24" onClick={() => onLoad(search)}>
+        <h4 className="truncate text-base font-medium text-gray-900">
           {search.name}
         </h4>
 
         {/* 描述 */}
         {search.description && (
-          <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+          <p className="mt-1 line-clamp-2 text-sm text-gray-600">
             {search.description}
           </p>
         )}
@@ -162,10 +176,14 @@ export default function SavedSearchCard({
                 searchName: search.name,
                 searchParams: search.searchParams,
                 tagsLength: tags?.length,
-                projectsLength: projects?.length
+                projectsLength: projects?.length,
               });
 
-              const conditions = generateSearchConditions(search.searchParams, tags, projects);
+              const conditions = generateSearchConditions(
+                search.searchParams,
+                tags,
+                projects,
+              );
               console.log("生成的条件:", conditions);
 
               if (conditions.length === 0) {
@@ -178,20 +196,26 @@ export default function SavedSearchCard({
                 <div className="flex flex-wrap gap-1.5">
                   {conditions.map((condition, index) => {
                     // 检查是否是时间筛选条件（包含换行）
-                    if (condition.type === 'time' && condition.value.includes('\n')) {
-                      const lines = condition.value.split('\n');
+                    if (
+                      condition.type === "time" &&
+                      condition.value.includes("\n")
+                    ) {
+                      const lines = condition.value.split("\n");
                       return (
                         <div
                           key={index}
                           className={`inline-block rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${condition.color} hover:opacity-80`}
-                          title={condition.value.replace(/\n/g, ' ')}
+                          title={condition.value.replace(/\n/g, " ")}
                         >
-                          <div className="flex items-center gap-1 mb-1">
+                          <div className="mb-1 flex items-center gap-1">
                             {getConditionIcon(condition.type)}
                             <span className="font-medium">{lines[0]}</span>
                           </div>
                           {lines.slice(1).map((line, lineIndex) => (
-                            <div key={lineIndex} className="text-xs font-normal ml-4">
+                            <div
+                              key={lineIndex}
+                              className="ml-4 text-xs font-normal"
+                            >
                               {line}
                             </div>
                           ))}

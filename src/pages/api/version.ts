@@ -15,7 +15,7 @@ interface VersionInfo {
 
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<VersionInfo | { error: string }>
+  res: NextApiResponse<VersionInfo | { error: string }>,
 ) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -24,9 +24,9 @@ export default function handler(
   try {
     // 尝试从项目根目录读取版本文件
     const versionPath = path.join(process.cwd(), "version.json");
-    
+
     let versionData: VersionInfo;
-    
+
     if (fs.existsSync(versionPath)) {
       const versionContent = fs.readFileSync(versionPath, "utf8");
       versionData = JSON.parse(versionContent);

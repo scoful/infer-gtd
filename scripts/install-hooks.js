@@ -5,10 +5,10 @@
  * 自动安装 pre-commit 和 pre-push 钩子
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-const HOOKS_DIR = '.git/hooks';
+const HOOKS_DIR = ".git/hooks";
 
 // pre-commit 钩子内容
 const preCommitHook = `#!/bin/sh
@@ -44,11 +44,11 @@ echo "✅ 版本号已更新并提交"
  */
 function installHook(hookName, content) {
   const hookPath = path.join(HOOKS_DIR, hookName);
-  
+
   try {
     // 检查 .git/hooks 目录是否存在
     if (!fs.existsSync(HOOKS_DIR)) {
-      console.error('❌ .git/hooks 目录不存在，请确保在 Git 仓库中运行此脚本');
+      console.error("❌ .git/hooks 目录不存在，请确保在 Git 仓库中运行此脚本");
       process.exit(1);
     }
 
@@ -66,7 +66,7 @@ function installHook(hookName, content) {
  */
 function uninstallHook(hookName) {
   const hookPath = path.join(HOOKS_DIR, hookName);
-  
+
   try {
     if (fs.existsSync(hookPath)) {
       fs.unlinkSync(hookPath);
@@ -83,28 +83,30 @@ function uninstallHook(hookName) {
 const command = process.argv[2];
 
 switch (command) {
-  case 'install':
-    console.log('🔧 安装 Git Hooks...');
-    installHook('pre-commit', preCommitHook);
-    installHook('pre-push', prePushHook);
-    console.log('🎉 所有钩子安装完成！');
-    console.log('');
-    console.log('📋 自动版本管理规则:');
-    console.log('   • git commit: 自动增加 patch 版本 (x.x.+1)');
-    console.log('   • git push: 自动增加 minor 版本 (x.+1.0)');
-    console.log('   • 手动增加 major 版本: node scripts/version-manager.js major');
+  case "install":
+    console.log("🔧 安装 Git Hooks...");
+    installHook("pre-commit", preCommitHook);
+    installHook("pre-push", prePushHook);
+    console.log("🎉 所有钩子安装完成！");
+    console.log("");
+    console.log("📋 自动版本管理规则:");
+    console.log("   • git commit: 自动增加 patch 版本 (x.x.+1)");
+    console.log("   • git push: 自动增加 minor 版本 (x.+1.0)");
+    console.log(
+      "   • 手动增加 major 版本: node scripts/version-manager.js major",
+    );
     break;
-    
-  case 'uninstall':
-    console.log('🗑️ 卸载 Git Hooks...');
-    uninstallHook('pre-commit');
-    uninstallHook('pre-push');
-    console.log('✅ 所有钩子已卸载');
+
+  case "uninstall":
+    console.log("🗑️ 卸载 Git Hooks...");
+    uninstallHook("pre-commit");
+    uninstallHook("pre-push");
+    console.log("✅ 所有钩子已卸载");
     break;
-    
+
   default:
-    console.log('📖 Git Hooks 管理脚本使用说明:');
-    console.log('   node scripts/install-hooks.js install    # 安装钩子');
-    console.log('   node scripts/install-hooks.js uninstall  # 卸载钩子');
+    console.log("📖 Git Hooks 管理脚本使用说明:");
+    console.log("   node scripts/install-hooks.js install    # 安装钩子");
+    console.log("   node scripts/install-hooks.js uninstall  # 卸载钩子");
     break;
 }

@@ -154,7 +154,15 @@ export const tagRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getTagsSchema)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor, search, type, category, includeSystem, includeCount } = input;
+      const {
+        limit,
+        cursor,
+        search,
+        type,
+        category,
+        includeSystem,
+        includeCount,
+      } = input;
 
       try {
         const where = {
