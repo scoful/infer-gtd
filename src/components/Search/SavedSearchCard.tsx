@@ -101,8 +101,8 @@ export default function SavedSearchCard({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("zh-CN", {
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString("zh-CN", {
       year: "numeric",
       month: "short",
       day: "numeric",

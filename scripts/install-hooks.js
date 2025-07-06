@@ -41,6 +41,8 @@ echo "✅ 版本号已更新并提交"
 
 /**
  * 安装钩子文件
+ * @param {string} hookName - 钩子名称
+ * @param {string} content - 钩子内容
  */
 function installHook(hookName, content) {
   const hookPath = path.join(HOOKS_DIR, hookName);
@@ -56,13 +58,14 @@ function installHook(hookName, content) {
     fs.writeFileSync(hookPath, content, { mode: 0o755 });
     console.log(`✅ ${hookName} 钩子已安装`);
   } catch (error) {
-    console.error(`❌ 安装 ${hookName} 钩子失败:`, error.message);
+    console.error(`❌ 安装 ${hookName} 钩子失败:`, error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
 
 /**
  * 卸载钩子文件
+ * @param {string} hookName - 钩子名称
  */
 function uninstallHook(hookName) {
   const hookPath = path.join(HOOKS_DIR, hookName);
@@ -75,7 +78,7 @@ function uninstallHook(hookName) {
       console.log(`ℹ️ ${hookName} 钩子不存在`);
     }
   } catch (error) {
-    console.error(`❌ 卸载 ${hookName} 钩子失败:`, error.message);
+    console.error(`❌ 卸载 ${hookName} 钩子失败:`, error instanceof Error ? error.message : String(error));
   }
 }
 

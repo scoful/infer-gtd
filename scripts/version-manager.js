@@ -19,13 +19,14 @@ function readVersionFile() {
     const content = fs.readFileSync(VERSION_FILE, "utf8");
     return JSON.parse(content);
   } catch (error) {
-    console.error("❌ 无法读取版本文件:", error.message);
+    console.error("❌ 无法读取版本文件:", error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
 
 /**
  * 写入版本文件
+ * @param {any} versionData - 版本数据对象
  */
 function writeVersionFile(versionData) {
   try {
@@ -33,7 +34,7 @@ function writeVersionFile(versionData) {
     fs.writeFileSync(VERSION_FILE, content, "utf8");
     console.log(`✅ 版本已更新: ${versionData.version}`);
   } catch (error) {
-    console.error("❌ 无法写入版本文件:", error.message);
+    console.error("❌ 无法写入版本文件:", error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
@@ -51,13 +52,14 @@ function getGitInfo() {
     }).trim();
     return { gitCommit, gitBranch };
   } catch (error) {
-    console.warn("⚠️ 无法获取 Git 信息:", error.message);
+    console.warn("⚠️ 无法获取 Git 信息:", error instanceof Error ? error.message : String(error));
     return { gitCommit: "", gitBranch: "" };
   }
 }
 
 /**
  * 更新版本号
+ * @param {string} type - 版本类型 (patch|minor|major)
  */
 function updateVersion(type) {
   const versionData = readVersionFile();
@@ -94,6 +96,7 @@ function updateVersion(type) {
 
 /**
  * 设置环境
+ * @param {string} env - 环境名称
  */
 function setEnvironment(env) {
   const versionData = readVersionFile();
