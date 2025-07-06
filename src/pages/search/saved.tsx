@@ -76,16 +76,25 @@ const SavedSearchesPage: NextPage = () => {
     },
   });
 
-  // 生成搜索条件摘要
-  const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
-    console.log("搜索参数调试:", searchParams);
-    const conditions = [];
+  // 生成搜索条件摘要（结构化）
+  const generateSearchConditions = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
+    const conditions: Array<{
+      type: 'keyword' | 'scope' | 'status' | 'type' | 'priority' | 'tag' | 'project' | 'time' | 'tracking' | 'sort';
+      label: string;
+      value: string;
+      color: string;
+    }> = [];
 
     if (searchParams.query) {
-      conditions.push(`关键词: "${searchParams.query}"`);
+      conditions.push({
+        type: 'keyword',
+        label: '关键词',
+        value: `"${searchParams.query}"`,
+        color: 'bg-blue-100 text-blue-800 border border-blue-200'
+      });
     }
 
-    if (searchParams.searchIn && searchParams.searchIn.length > 0 && searchParams.searchIn.length < 4) {
+    if (searchParams.searchIn && searchParams.searchIn.length > 0) {
       const typeMap: Record<string, string> = {
         tasks: "任务",
         notes: "笔记",
@@ -93,7 +102,16 @@ const SavedSearchesPage: NextPage = () => {
         journals: "日记"
       };
       const types = searchParams.searchIn.map((type: string) => typeMap[type] || type);
-      conditions.push(`范围: ${types.join("、")}`);
+
+      // 如果是全部4种类型，显示"全部"
+      const displayValue = searchParams.searchIn.length === 4 ? "全部" : types.join("、");
+
+      conditions.push({
+        type: 'scope',
+        label: '范围',
+        value: displayValue,
+        color: 'bg-purple-100 text-purple-800 border border-purple-200'
+      });
     }
 
     if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
@@ -106,7 +124,12 @@ const SavedSearchesPage: NextPage = () => {
         CANCELLED: "已取消"
       };
       const statuses = searchParams.taskStatus.map((status: string) => statusMap[status] || status);
-      conditions.push(`状态: ${statuses.join("、")}`);
+      conditions.push({
+        type: 'status',
+        label: '状态',
+        value: statuses.join("、"),
+        color: 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+      });
     }
 
     if (searchParams.taskType && searchParams.taskType.length > 0) {
@@ -115,7 +138,12 @@ const SavedSearchesPage: NextPage = () => {
         RECURRING: "重复任务"
       };
       const types = searchParams.taskType.map((type: string) => typeMap[type] || type);
-      conditions.push(`任务类型: ${types.join("、")}`);
+      conditions.push({
+        type: 'type',
+        label: '任务类型',
+        value: types.join("、"),
+        color: 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+      });
     }
 
     if (searchParams.priority && searchParams.priority.length > 0) {
@@ -126,89 +154,206 @@ const SavedSearchesPage: NextPage = () => {
         URGENT: "紧急"
       };
       const priorities = searchParams.priority.map((p: string) => priorityMap[p] || p);
-      conditions.push(`优先级: ${priorities.join("、")}`);
+      conditions.push({
+        type: 'priority',
+        label: '优先级',
+        value: priorities.join("、"),
+        color: 'bg-rose-100 text-rose-800 border border-rose-200'
+      });
     }
 
     // 标签筛选
-    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags) {
-      const selectedTags = tags.filter(tag => searchParams.tagIds.includes(tag.id));
+    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags?.tags) {
+      const selectedTags = tags.tags.filter(tag => searchParams.tagIds.includes(tag.id));
       if (selectedTags.length > 0) {
         const tagNames = selectedTags.map(tag => tag.name);
-        conditions.push(`标签: ${tagNames.join("、")}`);
+        conditions.push({
+          type: 'tag',
+          label: '标签',
+          value: tagNames.join("、"),
+          color: 'bg-amber-100 text-amber-800 border border-amber-200'
+        });
       }
+    }
+
+    // 标签类型筛选
+    if (searchParams.tagTypes && searchParams.tagTypes.length > 0) {
+      const tagTypeMap: Record<string, string> = {
+        CONTEXT: "情境",
+        ENERGY: "精力",
+        TIME: "时间",
+        PERSON: "人员",
+        LOCATION: "地点",
+        TOOL: "工具",
+        PROJECT: "项目",
+        AREA: "领域",
+        CUSTOM: "自定义"
+      };
+      const types = searchParams.tagTypes.map((type: string) => tagTypeMap[type] || type);
+      conditions.push({
+        type: 'tag',
+        label: '标签类型',
+        value: types.join("、"),
+        color: 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+      });
     }
 
     // 项目筛选
-    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects) {
-      const selectedProjects = projects.filter(project => searchParams.projectIds.includes(project.id));
+    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects?.projects) {
+      const selectedProjects = projects.projects.filter(project => searchParams.projectIds.includes(project.id));
       if (selectedProjects.length > 0) {
         const projectNames = selectedProjects.map(project => project.name);
-        conditions.push(`项目: ${projectNames.join("、")}`);
+        conditions.push({
+          type: 'project',
+          label: '项目',
+          value: projectNames.join("、"),
+          color: 'bg-sky-100 text-sky-800 border border-sky-200'
+        });
       }
     }
 
+    // 统一的日期格式化函数
+    const formatDate = (dateValue: any) => {
+      try {
+        if (!dateValue) return null;
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return String(dateValue);
+        return date.toLocaleDateString("zh-CN");
+      } catch {
+        return String(dateValue);
+      }
+    };
+
+    // 收集所有时间条件，合并显示
+    const timeConditions = [];
+
     // 创建时间筛选
     if (searchParams.createdAfter || searchParams.createdBefore) {
-      const formatDate = (dateValue: any) => {
-        try {
-          if (!dateValue) return null;
-          // 处理Date对象、ISO字符串、或其他格式
-          const date = new Date(dateValue);
-          if (isNaN(date.getTime())) return String(dateValue);
-          return date.toLocaleDateString("zh-CN");
-        } catch {
-          return String(dateValue);
-        }
-      };
-
       const formattedAfter = formatDate(searchParams.createdAfter);
       const formattedBefore = formatDate(searchParams.createdBefore);
 
       if (formattedAfter && formattedBefore) {
-        conditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
+        timeConditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
       } else if (formattedAfter) {
-        conditions.push(`创建时间: ${formattedAfter} 之后`);
+        timeConditions.push(`创建时间: ${formattedAfter} 之后`);
       } else if (formattedBefore) {
-        conditions.push(`创建时间: ${formattedBefore} 之前`);
+        timeConditions.push(`创建时间: ${formattedBefore} 之前`);
+      }
+    }
+
+    // 更新时间筛选
+    if (searchParams.updatedAfter || searchParams.updatedBefore) {
+      const formattedAfter = formatDate(searchParams.updatedAfter);
+      const formattedBefore = formatDate(searchParams.updatedBefore);
+
+      if (formattedAfter && formattedBefore) {
+        timeConditions.push(`更新时间: ${formattedAfter} 至 ${formattedBefore}`);
+      } else if (formattedAfter) {
+        timeConditions.push(`更新时间: ${formattedAfter} 之后`);
+      } else if (formattedBefore) {
+        timeConditions.push(`更新时间: ${formattedBefore} 之前`);
       }
     }
 
     // 截止时间筛选
     if (searchParams.dueAfter || searchParams.dueBefore) {
-      const formatDate = (dateValue: any) => {
-        try {
-          if (!dateValue) return null;
-          const date = new Date(dateValue);
-          if (isNaN(date.getTime())) return String(dateValue);
-          return date.toLocaleDateString("zh-CN");
-        } catch {
-          return String(dateValue);
-        }
-      };
-
       const formattedAfter = formatDate(searchParams.dueAfter);
       const formattedBefore = formatDate(searchParams.dueBefore);
 
       if (formattedAfter && formattedBefore) {
-        conditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
+        timeConditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
       } else if (formattedAfter) {
-        conditions.push(`截止时间: ${formattedAfter} 之后`);
+        timeConditions.push(`截止时间: ${formattedAfter} 之后`);
       } else if (formattedBefore) {
-        conditions.push(`截止时间: ${formattedBefore} 之前`);
+        timeConditions.push(`截止时间: ${formattedBefore} 之前`);
+      }
+    }
+
+    // 如果有时间条件，合并为一个标签显示（换行格式）
+    if (timeConditions.length > 0) {
+      const timeValue = '时间筛选:\n' + timeConditions.join('\n');
+      conditions.push({
+        type: 'time',
+        label: '时间筛选',
+        value: timeValue,
+        color: 'bg-orange-100 text-orange-800 border border-orange-200'
+      });
+    }
+
+    // 时间跟踪筛选
+    if (searchParams.hasTimeTracking !== undefined && searchParams.hasTimeTracking !== null) {
+      conditions.push({
+        type: 'tracking',
+        label: '时间跟踪',
+        value: searchParams.hasTimeTracking ? "有" : "无",
+        color: 'bg-teal-100 text-teal-800 border border-teal-200'
+      });
+    }
+
+    if (searchParams.minTimeSpent !== undefined || searchParams.maxTimeSpent !== undefined) {
+      const formatTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        if (hours > 0) {
+          return `${hours}小时${minutes > 0 ? minutes + '分钟' : ''}`;
+        }
+        return `${minutes}分钟`;
+      };
+
+      let timeValue = '';
+      if (searchParams.minTimeSpent !== undefined && searchParams.maxTimeSpent !== undefined) {
+        timeValue = `${formatTime(searchParams.minTimeSpent)} 至 ${formatTime(searchParams.maxTimeSpent)}`;
+      } else if (searchParams.minTimeSpent !== undefined) {
+        timeValue = `≥ ${formatTime(searchParams.minTimeSpent)}`;
+      } else if (searchParams.maxTimeSpent !== undefined) {
+        timeValue = `≤ ${formatTime(searchParams.maxTimeSpent)}`;
+      }
+
+      if (timeValue) {
+        conditions.push({
+          type: 'tracking',
+          label: '耗时',
+          value: timeValue,
+          color: 'bg-teal-100 text-teal-800 border border-teal-200'
+        });
       }
     }
 
     // 其他状态筛选
     if (searchParams.isCompleted !== undefined && searchParams.isCompleted !== null) {
-      conditions.push(`完成状态: ${searchParams.isCompleted ? "已完成" : "未完成"}`);
+      conditions.push({
+        type: 'status',
+        label: '完成状态',
+        value: searchParams.isCompleted ? "已完成" : "未完成",
+        color: 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+      });
     }
 
     if (searchParams.isOverdue !== undefined && searchParams.isOverdue !== null) {
-      conditions.push(`逾期状态: ${searchParams.isOverdue ? "已逾期" : "未逾期"}`);
+      conditions.push({
+        type: 'status',
+        label: '逾期状态',
+        value: searchParams.isOverdue ? "已逾期" : "未逾期",
+        color: 'bg-red-100 text-red-800 border border-red-200'
+      });
+    }
+
+    if (searchParams.isRecurring !== undefined && searchParams.isRecurring !== null) {
+      conditions.push({
+        type: 'type',
+        label: '重复任务',
+        value: searchParams.isRecurring ? "是" : "否",
+        color: 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+      });
     }
 
     if (searchParams.hasDescription !== undefined && searchParams.hasDescription !== null) {
-      conditions.push(`描述: ${searchParams.hasDescription ? "有描述" : "无描述"}`);
+      conditions.push({
+        type: 'status',
+        label: '描述',
+        value: searchParams.hasDescription ? "有描述" : "无描述",
+        color: 'bg-gray-100 text-gray-800 border border-gray-200'
+      });
     }
 
     if (searchParams.sortBy && searchParams.sortBy !== "relevance") {
@@ -222,11 +367,24 @@ const SavedSearchesPage: NextPage = () => {
       };
       const sortName = sortMap[searchParams.sortBy] || searchParams.sortBy;
       const orderName = searchParams.sortOrder === "asc" ? "升序" : "降序";
-      conditions.push(`排序: ${sortName}${orderName}`);
+      conditions.push({
+        type: 'sort',
+        label: '排序',
+        value: `${sortName}${orderName}`,
+        color: 'bg-slate-100 text-slate-800 border border-slate-200'
+      });
     }
 
-    return conditions.length > 0 ? conditions.join(" | ") : "无特定条件";
+    return conditions;
   }, []);
+
+  // 生成搜索条件摘要（文本版本，用于兼容）
+  const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
+    const conditions = generateSearchConditions(searchParams, tags, projects);
+    return conditions.length > 0
+      ? conditions.map(c => `${c.label}: ${c.value}`).join(" | ")
+      : "无特定条件";
+  }, [generateSearchConditions]);
 
   // 加载保存的搜索
   const handleLoadSavedSearch = useCallback((search: any) => {
@@ -349,8 +507,9 @@ const SavedSearchesPage: NextPage = () => {
                       onEdit={handleOpenSaveModal}
                       onDelete={handleDeleteSavedSearch}
                       generateSearchSummary={generateSearchSummary}
-                      tags={tags}
-                      projects={projects}
+                      generateSearchConditions={generateSearchConditions}
+                      tags={tags?.tags || []}
+                      projects={projects?.projects || []}
                     />
                   ))}
                 </div>

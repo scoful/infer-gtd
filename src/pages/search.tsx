@@ -445,7 +445,7 @@ const SearchPage: NextPage = () => {
       conditions.push(`关键词: "${searchParams.query}"`);
     }
 
-    if (searchParams.searchIn && searchParams.searchIn.length > 0 && searchParams.searchIn.length < 4) {
+    if (searchParams.searchIn && searchParams.searchIn.length > 0) {
       const typeMap: Record<string, string> = {
         tasks: "任务",
         notes: "笔记",
@@ -453,7 +453,11 @@ const SearchPage: NextPage = () => {
         journals: "日记"
       };
       const types = searchParams.searchIn.map((type: string) => typeMap[type] || type);
-      conditions.push(`范围: ${types.join("、")}`);
+
+      // 如果是全部4种类型，显示"全部"
+      const displayValue = searchParams.searchIn.length === 4 ? "全部" : types.join("、");
+
+      conditions.push(`范围: ${displayValue}`);
     }
 
     if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
@@ -490,8 +494,8 @@ const SearchPage: NextPage = () => {
     }
 
     // 标签筛选
-    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags) {
-      const selectedTags = tags.filter(tag => searchParams.tagIds.includes(tag.id));
+    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags?.tags) {
+      const selectedTags = tags.tags.filter(tag => searchParams.tagIds.includes(tag.id));
       if (selectedTags.length > 0) {
         const tagNames = selectedTags.map(tag => tag.name);
         conditions.push(`标签: ${tagNames.join("、")}`);
@@ -499,71 +503,61 @@ const SearchPage: NextPage = () => {
     }
 
     // 项目筛选
-    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects) {
-      const selectedProjects = projects.filter(project => searchParams.projectIds.includes(project.id));
+    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects?.projects) {
+      const selectedProjects = projects.projects.filter(project => searchParams.projectIds.includes(project.id));
       if (selectedProjects.length > 0) {
         const projectNames = selectedProjects.map(project => project.name);
         conditions.push(`项目: ${projectNames.join("、")}`);
       }
     }
 
-    // 时间筛选
+    // 统一的日期格式化函数
+    const formatDate = (dateValue: any) => {
+      try {
+        if (!dateValue) return null;
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return String(dateValue);
+        return date.toLocaleDateString("zh-CN");
+      } catch {
+        return String(dateValue);
+      }
+    };
+
+    // 收集所有时间条件，合并显示
+    const timeConditions = [];
+
+    // 创建时间筛选
     if (searchParams.createdAfter || searchParams.createdBefore) {
-      console.log("时间参数调试:", {
-        createdAfter: searchParams.createdAfter,
-        createdBefore: searchParams.createdBefore,
-        createdAfterType: typeof searchParams.createdAfter,
-        createdBeforeType: typeof searchParams.createdBefore
-      });
-
-      const formatDate = (dateValue: any) => {
-        try {
-          if (!dateValue) return null;
-          // 处理Date对象、ISO字符串、或其他格式
-          const date = new Date(dateValue);
-          if (isNaN(date.getTime())) return String(dateValue);
-          return date.toLocaleDateString("zh-CN");
-        } catch {
-          return String(dateValue);
-        }
-      };
-
       const formattedAfter = formatDate(searchParams.createdAfter);
       const formattedBefore = formatDate(searchParams.createdBefore);
 
       if (formattedAfter && formattedBefore) {
-        conditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
+        timeConditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
       } else if (formattedAfter) {
-        conditions.push(`创建时间: ${formattedAfter} 之后`);
+        timeConditions.push(`创建时间: ${formattedAfter} 之后`);
       } else if (formattedBefore) {
-        conditions.push(`创建时间: ${formattedBefore} 之前`);
+        timeConditions.push(`创建时间: ${formattedBefore} 之前`);
       }
     }
 
-
-
+    // 截止时间筛选
     if (searchParams.dueAfter || searchParams.dueBefore) {
-      const formatDate = (dateValue: any) => {
-        try {
-          if (!dateValue) return null;
-          const date = new Date(dateValue);
-          if (isNaN(date.getTime())) return String(dateValue);
-          return date.toLocaleDateString("zh-CN");
-        } catch {
-          return String(dateValue);
-        }
-      };
-
       const formattedAfter = formatDate(searchParams.dueAfter);
       const formattedBefore = formatDate(searchParams.dueBefore);
 
       if (formattedAfter && formattedBefore) {
-        conditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
+        timeConditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
       } else if (formattedAfter) {
-        conditions.push(`截止时间: ${formattedAfter} 之后`);
+        timeConditions.push(`截止时间: ${formattedAfter} 之后`);
       } else if (formattedBefore) {
-        conditions.push(`截止时间: ${formattedBefore} 之前`);
+        timeConditions.push(`截止时间: ${formattedBefore} 之前`);
       }
+    }
+
+    // 如果有时间条件，合并为一个条件显示（换行格式）
+    if (timeConditions.length > 0) {
+      const timeValue = '时间筛选:\n' + timeConditions.join('\n');
+      conditions.push(timeValue);
     }
 
 
