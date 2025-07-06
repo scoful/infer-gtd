@@ -802,8 +802,7 @@ const SavedSearchesPage: NextPage = () => {
     savedSearches?.filter(
       (search) =>
         search.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (search.description &&
-          search.description.toLowerCase().includes(searchQuery.toLowerCase())),
+        search.description?.toLowerCase().includes(searchQuery.toLowerCase()),
     ) || [];
 
   if (!sessionData) {

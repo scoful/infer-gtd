@@ -1292,7 +1292,7 @@ const SearchPage: NextPage = () => {
                           sortLabels[sortBy as keyof typeof sortLabels] ||
                           sortBy;
                         const orderLabel =
-                          orderLabels[sortOrder as keyof typeof orderLabels] ||
+                          orderLabels[sortOrder] ||
                           sortOrder;
                         return `${sortLabel} ${orderLabel}`;
                       })()}

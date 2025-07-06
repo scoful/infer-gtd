@@ -6,7 +6,7 @@ import {
   TagIcon,
   FolderIcon,
 } from "@heroicons/react/24/outline";
-import { Priority, TaskStatus, TaskType } from "@prisma/client";
+import { Priority, TaskStatus, type TaskType } from "@prisma/client";
 
 interface SearchFiltersProps {
   // 搜索范围
