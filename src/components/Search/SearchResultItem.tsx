@@ -92,16 +92,18 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
-      case TaskStatus.TODO:
+      case TaskStatus.IDEA:
         return "bg-gray-100 text-gray-800";
-      case TaskStatus.IN_PROGRESS:
+      case TaskStatus.TODO:
         return "bg-blue-100 text-blue-800";
-      case TaskStatus.WAITING:
+      case TaskStatus.IN_PROGRESS:
         return "bg-yellow-100 text-yellow-800";
+      case TaskStatus.WAITING:
+        return "bg-purple-100 text-purple-800";
       case TaskStatus.DONE:
         return "bg-green-100 text-green-800";
-      case TaskStatus.CANCELLED:
-        return "bg-red-100 text-red-800";
+      case TaskStatus.ARCHIVED:
+        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -109,6 +111,8 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
   const getStatusLabel = (status: TaskStatus) => {
     switch (status) {
+      case TaskStatus.IDEA:
+        return "想法";
       case TaskStatus.TODO:
         return "待办";
       case TaskStatus.IN_PROGRESS:
@@ -117,8 +121,8 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
         return "等待中";
       case TaskStatus.DONE:
         return "已完成";
-      case TaskStatus.CANCELLED:
-        return "已取消";
+      case TaskStatus.ARCHIVED:
+        return "已归档";
       default:
         return status;
     }
@@ -240,19 +244,8 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
             {/* 右侧快速信息 */}
             <div className="flex-shrink-0 flex items-center gap-2">
-              {/* 任务状态 */}
-              {type === "task" && (
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                  {getStatusLabel(item.status)}
-                </span>
-              )}
-
-              {/* 优先级 */}
-              {type === "task" && item.priority && (
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
-                  {getPriorityLabel(item.priority)}
-                </span>
-              )}
+              {/* 相关性指示器 */}
+              {getRelevanceIndicator()}
             </div>
           </div>
 
@@ -266,17 +259,42 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
           {/* 元数据行 */}
           <div className="mt-3 flex items-center justify-between">
             {/* 左侧：主要信息 */}
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs">
+              {/* 任务状态、优先级和标签（统一放在左侧） */}
+              {type === "task" && (
+                <>
+                  {/* 任务状态 */}
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                    {getStatusLabel(item.status)}
+                  </span>
+
+                  {/* 优先级 */}
+                  {item.priority && (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
+                      {getPriorityLabel(item.priority)}
+                    </span>
+                  )}
+
+                  {/* 标签信息 */}
+                  {item.tags && item.tags.length > 0 && (
+                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
+                      {item.tags.slice(0, 1).map((tagRel: any) => tagRel.tag.name)[0]}
+                      {item.tags.length > 1 && ` +${item.tags.length - 1}`}
+                    </span>
+                  )}
+                </>
+              )}
+
               {/* 项目信息 */}
               {item.project && (
-                <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
+                <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md text-gray-500">
                   <FolderIcon className="h-3 w-3" />
                   {item.project.name}
                 </span>
               )}
 
-              {/* 标签信息 */}
-              {item.tags && item.tags.length > 0 && (
+              {/* 非任务类型的标签信息 */}
+              {type !== "task" && item.tags && item.tags.length > 0 && (
                 <div className="flex items-center gap-1">
                   <TagIcon className="h-3 w-3" />
                   <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
@@ -290,13 +308,13 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
               {type === "task" && (
                 <>
                   {item.dueDate && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-gray-500">
                       <CalendarIcon className="h-3 w-3" />
                       {formatDate(item.dueDate)}
                     </span>
                   )}
                   {item.totalTimeSpent > 0 && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-gray-500">
                       <ClockIcon className="h-3 w-3" />
                       {Math.round(item.totalTimeSpent / 60)}分钟
                     </span>
