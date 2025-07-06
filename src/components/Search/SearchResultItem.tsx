@@ -166,6 +166,23 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
     });
   };
 
+  // 根据标签颜色生成样式（与TagList组件的default变体保持一致）
+  const getTagStyle = (tag: any) => {
+    const baseColor = tag.color ?? "#6B7280"; // 默认灰色
+    return {
+      backgroundColor: baseColor, // 使用标签的原始颜色作为背景
+      color: "white", // 白色文字
+    };
+  };
+
+  // 根据项目颜色生成样式（与任务看板保持一致）
+  const getProjectStyle = (project: any) => {
+    return {
+      backgroundColor: project.color ? `${project.color}20` : "#f3f4f6", // 20%透明度背景或默认灰色
+      color: project.color ?? "#374151", // 原始颜色或默认深灰色
+    };
+  };
+
   const getItemLink = () => {
     switch (type) {
       case "task":
@@ -277,7 +294,13 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
                   {/* 标签信息 */}
                   {item.tags && item.tags.length > 0 && (
-                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
+                    <span
+                      className="px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                      style={getTagStyle(item.tags[0].tag)}
+                    >
+                      {item.tags[0].tag.icon && (
+                        <span className="text-xs">{item.tags[0].tag.icon}</span>
+                      )}
                       {item.tags.slice(0, 1).map((tagRel: any) => tagRel.tag.name)[0]}
                       {item.tags.length > 1 && ` +${item.tags.length - 1}`}
                     </span>
@@ -287,7 +310,10 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
 
               {/* 项目信息 */}
               {item.project && (
-                <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md text-gray-500">
+                <span
+                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                  style={getProjectStyle(item.project)}
+                >
                   <FolderIcon className="h-3 w-3" />
                   {item.project.name}
                 </span>
@@ -297,7 +323,13 @@ export default function SearchResultItem({ type, item, query, onTaskClick }: Sea
               {type !== "task" && item.tags && item.tags.length > 0 && (
                 <div className="flex items-center gap-1">
                   <TagIcon className="h-3 w-3" />
-                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
+                  <span
+                    className="px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                    style={getTagStyle(item.tags[0].tag)}
+                  >
+                    {item.tags[0].tag.icon && (
+                      <span className="text-xs">{item.tags[0].tag.icon}</span>
+                    )}
                     {item.tags.slice(0, 1).map((tagRel: any) => tagRel.tag.name)[0]}
                     {item.tags.length > 1 && ` +${item.tags.length - 1}`}
                   </span>
