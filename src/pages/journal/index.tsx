@@ -143,7 +143,7 @@ const JournalPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>日记 | Infer GTD</title>
+          <title>日记流 | Infer GTD</title>
           <meta name="description" content="每日反思和记录" />
         </Head>
 
@@ -152,7 +152,7 @@ const JournalPage: NextPage = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">日记</h1>
+                <h1 className="text-2xl font-bold text-gray-900">日记流</h1>
                 {isDataRefreshing && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>

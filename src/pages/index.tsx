@@ -24,7 +24,7 @@ const Home: NextPage = () => {
   const { data: sessionData } = useSession();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  // 获取仪表盘数据 - 使用 useMemo 避免重复计算日期
+  // 获取首页数据 - 使用 useMemo 避免重复计算日期
   const thirtyDaysAgo = useMemo(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -138,7 +138,7 @@ const Home: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>仪表盘 | Infer GTD</title>
+          <title>首页 | Infer GTD</title>
           <meta name="description" content="智能化的个人效率和知识管理平台" />
           <link rel="icon" href="/favicon.ico" />
         </Head>

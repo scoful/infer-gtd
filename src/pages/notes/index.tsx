@@ -327,7 +327,7 @@ const NotesPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>笔记 | Infer GTD</title>
+          <title>笔记管理 | Infer GTD</title>
           <meta name="description" content="知识管理和文档整理" />
         </Head>
 
@@ -336,7 +336,7 @@ const NotesPage: NextPage = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">笔记</h1>
+                <h1 className="text-2xl font-bold text-gray-900">笔记管理</h1>
                 {isFetching && !isLoading && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>

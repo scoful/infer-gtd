@@ -829,7 +829,7 @@ const SearchPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>高级搜索 | Infer GTD</title>
+          <title>复合搜索 | Infer GTD</title>
           <meta name="description" content="高级搜索和筛选功能" />
         </Head>
 
@@ -839,7 +839,7 @@ const SearchPage: NextPage = () => {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {isEditingSearch ? "编辑搜索条件" : "高级搜索"}
+                  {isEditingSearch ? "编辑搜索条件" : "复合搜索"}
                 </h1>
                 {isFetching && !isLoading && (
                   <div className="flex items-center text-sm text-blue-600">

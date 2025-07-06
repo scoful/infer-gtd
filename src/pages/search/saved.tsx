@@ -658,7 +658,7 @@ const SavedSearchesPage: NextPage = () => {
       queryParams.set('editingSearchDescription', search.description);
     }
 
-    // 跳转到高级搜索页面
+    // 跳转到复合搜索页面
     void router.push(`/search?${queryParams.toString()}`);
   }, [router]);
 
@@ -688,7 +688,7 @@ const SavedSearchesPage: NextPage = () => {
     <AuthGuard>
       <MainLayout>
         <Head>
-          <title>保存的搜索 | Infer GTD</title>
+          <title>搜索列表 | Infer GTD</title>
           <meta name="description" content="管理保存的搜索" />
         </Head>
 
@@ -696,7 +696,7 @@ const SavedSearchesPage: NextPage = () => {
           {/* 页面标题 */}
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">保存的搜索</h1>
+              <h1 className="text-2xl font-bold text-gray-900">搜索列表</h1>
             </div>
             <p className="mt-1 text-sm text-gray-600">
               管理您保存的搜索条件，快速重复使用常用搜索 • {filteredSearches.length} 个搜索

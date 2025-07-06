@@ -3,7 +3,9 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
-  ArrowRightOnRectangleIcon,
+  AdjustmentsHorizontalIcon,
+  ArchiveBoxIcon,
+  ArrowRightEndOnRectangleIcon,
   Bars3Icon,
   BoltIcon,
   BookmarkIcon,
@@ -15,13 +17,14 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
   ClockIcon,
+  DocumentDuplicateIcon,
   DocumentTextIcon,
   FolderIcon,
   HomeIcon,
   LightBulbIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
-  PlusIcon,
+
   Squares2X2Icon,
   TagIcon,
   UserCircleIcon,
@@ -48,16 +51,10 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
   {
-    name: "仪表盘",
+    name: "首页",
     href: "/",
     icon: HomeIcon,
     description: "总览和快速操作",
-  },
-  {
-    name: "思绪流",
-    href: "/stream",
-    icon: LightBulbIcon,
-    description: "想法捕捉和快速记录",
   },
   {
     name: "任务管理",
@@ -65,6 +62,12 @@ const navigation: NavigationItem[] = [
     icon: ViewColumnsIcon,
     description: "任务管理和筛选",
     children: [
+      {
+        name: "思绪流",
+        href: "/stream",
+        icon: LightBulbIcon,
+        description: "想法捕捉和快速记录",
+      },
       {
         name: "任务列表",
         href: "/tasks",
@@ -104,45 +107,45 @@ const navigation: NavigationItem[] = [
     description: "管理和组织标签",
   },
   {
-    name: "笔记",
+    name: "笔记管理",
     href: "/notes",
     icon: DocumentTextIcon,
     description: "知识管理和文档",
   },
   {
-    name: "日记",
+    name: "日记管理",
     href: "/journal",
     icon: BookOpenIcon,
     description: "每日反思和记录",
     children: [
       {
-        name: "日记首页",
+        name: "日记流",
         href: "/journal",
-        icon: BookOpenIcon,
+        icon: CalendarIcon,
         description: "日期导航和浏览",
       },
       {
         name: "日记列表",
         href: "/journal/list",
-        icon: ListBulletIcon,
+        icon: DocumentDuplicateIcon,
         description: "管理所有日记",
       },
     ],
   },
   {
-    name: "搜索",
+    name: "搜索管理",
     href: "/search",
     icon: MagnifyingGlassIcon,
     description: "全局内容搜索",
     children: [
       {
-        name: "高级搜索",
+        name: "复合搜索",
         href: "/search",
-        icon: MagnifyingGlassIcon,
+        icon: AdjustmentsHorizontalIcon,
         description: "高级搜索和筛选",
       },
       {
-        name: "保存的搜索",
+        name: "搜索列表",
         href: "/search/saved",
         icon: BookmarkIcon,
         description: "管理保存的搜索",
@@ -179,14 +182,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
     // 初始化时，如果当前路径是相关页面，自动展开对应菜单
     const initialExpanded = new Set<string>();
     if (typeof window !== "undefined") {
-      if (window.location.pathname.startsWith("/tasks")) {
+      if (window.location.pathname.startsWith("/tasks") || window.location.pathname === "/stream") {
         initialExpanded.add("任务管理");
       }
       if (window.location.pathname.startsWith("/journal")) {
-        initialExpanded.add("日记");
+        initialExpanded.add("日记管理");
       }
       if (window.location.pathname.startsWith("/search")) {
-        initialExpanded.add("搜索");
+        initialExpanded.add("搜索管理");
       }
       if (
         window.location.pathname.startsWith("/analytics") ||
@@ -206,14 +209,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // 监听路由变化，自动展开相关菜单
   useEffect(() => {
-    if (router.pathname.startsWith("/tasks")) {
+    if (router.pathname.startsWith("/tasks") || router.pathname === "/stream") {
       setExpandedItems((prev) => new Set(prev).add("任务管理"));
     }
     if (router.pathname.startsWith("/journal")) {
-      setExpandedItems((prev) => new Set(prev).add("日记"));
+      setExpandedItems((prev) => new Set(prev).add("日记管理"));
     }
     if (router.pathname.startsWith("/search")) {
-      setExpandedItems((prev) => new Set(prev).add("搜索"));
+      setExpandedItems((prev) => new Set(prev).add("搜索管理"));
     }
     if (
       router.pathname.startsWith("/analytics") ||
@@ -296,12 +299,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 检查父菜单是否应该激活（当任何子页面激活时）
   const isParentActive = (item: NavigationItem) => {
     if (item.name === "任务管理") {
-      return router.pathname.startsWith("/tasks");
+      return router.pathname.startsWith("/tasks") || router.pathname === "/stream";
     }
-    if (item.name === "日记") {
+    if (item.name === "日记管理") {
       return router.pathname.startsWith("/journal");
     }
-    if (item.name === "搜索") {
+    if (item.name === "搜索管理") {
       return router.pathname.startsWith("/search");
     }
     if (item.name === "统计分析") {
@@ -344,7 +347,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
 
   // 处理导航点击
-  const handleNavigationClick = (href: string, event: React.MouseEvent) => {
+  const handleNavigationClick = (href: string, event: React.MouseEvent, isChildItem = false) => {
     const isCurrentPage = isActivePath(href);
 
     if (isCurrentPage) {
@@ -358,8 +361,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
       void router.push(href);
     }
 
-    // 关闭移动端侧边栏
-    setSidebarOpen(false);
+    // 移动端侧边栏关闭逻辑：
+    // - 如果是子导航项，不关闭侧边栏（保持展开状态以显示高亮）
+    // - 只有主导航项才关闭侧边栏
+    if (!isChildItem) {
+      setSidebarOpen(false);
+    }
   };
 
   // 直接使用 isCollapsed 状态，Hook 已处理初始化逻辑
@@ -458,7 +465,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                             }`}
                             onClick={(event) =>
-                              handleNavigationClick(child.href, event)
+                              handleNavigationClick(child.href, event, true)
                             }
                           >
                             <ChildIcon
@@ -595,7 +602,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                   }`}
                                   title={child.description}
                                   onClick={(event) =>
-                                    handleNavigationClick(child.href, event)
+                                    handleNavigationClick(child.href, event, true)
                                   }
                                 >
                                   <ChildIcon
@@ -629,7 +636,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                                   }`}
                                   title={child.description}
                                   onClick={(event) => {
-                                    handleNavigationClick(child.href, event);
+                                    handleNavigationClick(child.href, event, true);
                                     // 点击后关闭展开状态
                                     setCollapsedExpandedItems((prev) => {
                                       const newSet = new Set(prev);
@@ -749,7 +756,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         onClick={handleSignOut}
                         title="退出登录"
                       >
-                        <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                        <ArrowRightEndOnRectangleIcon className="h-4 w-4" />
                         <span className="hidden sm:block">退出</span>
                       </button>
                     </div>
