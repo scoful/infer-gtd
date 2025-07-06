@@ -1,51 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-
-interface VersionInfo {
-  version: string;
-  major: number;
-  minor: number;
-  patch: number;
-  buildTime: string;
-  gitCommit: string;
-  gitBranch: string;
-  environment: string;
-}
+import { useVersion } from "@/contexts/VersionContext";
 
 interface VersionDisplayProps {
   collapsed?: boolean;
   position?: "sidebar" | "footer";
 }
 
-export default function VersionDisplay({ 
-  collapsed = false, 
-  position = "sidebar" 
+export default function VersionDisplay({
+  collapsed = false,
+  position = "sidebar"
 }: VersionDisplayProps) {
-  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+  const { versionInfo, isLoading } = useVersion();
   const [showDetails, setShowDetails] = useState(false);
 
-  useEffect(() => {
-    // 在客户端获取版本信息
-    fetch('/api/version')
-      .then(response => response.json())
-      .then((data: VersionInfo) => setVersionInfo(data))
-      .catch(error => {
-        console.warn('无法获取版本信息:', error);
-        // 设置默认版本信息
-        setVersionInfo({
-          version: '1.0.0',
-          major: 1,
-          minor: 0,
-          patch: 0,
-          buildTime: new Date().toISOString(),
-          gitCommit: '',
-          gitBranch: '',
-          environment: 'development'
-        });
-      });
-  }, []);
-
-  if (!versionInfo) {
+  if (isLoading || !versionInfo) {
     return null;
   }
 

@@ -6,6 +6,7 @@ import { Geist } from "next/font/google";
 import { api } from "@/utils/api";
 import { RefreshProvider } from "@/contexts/RefreshContext";
 import { NotificationProvider } from "@/components/Layout/NotificationProvider";
+import { VersionProvider } from "@/contexts/VersionContext";
 
 import "@/styles/globals.css";
 
@@ -19,13 +20,15 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <RefreshProvider>
-        <NotificationProvider position="top-center">
-          <div className={geist.className}>
-            <Component {...pageProps} />
-          </div>
-        </NotificationProvider>
-      </RefreshProvider>
+      <VersionProvider>
+        <RefreshProvider>
+          <NotificationProvider position="top-center">
+            <div className={geist.className}>
+              <Component {...pageProps} />
+            </div>
+          </NotificationProvider>
+        </RefreshProvider>
+      </VersionProvider>
     </SessionProvider>
   );
 };
