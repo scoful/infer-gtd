@@ -78,6 +78,7 @@ const SavedSearchesPage: NextPage = () => {
 
   // 生成搜索条件摘要
   const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
+    console.log("搜索参数调试:", searchParams);
     const conditions = [];
 
     if (searchParams.query) {
@@ -108,6 +109,15 @@ const SavedSearchesPage: NextPage = () => {
       conditions.push(`状态: ${statuses.join("、")}`);
     }
 
+    if (searchParams.taskType && searchParams.taskType.length > 0) {
+      const typeMap: Record<string, string> = {
+        SINGLE: "单次任务",
+        RECURRING: "重复任务"
+      };
+      const types = searchParams.taskType.map((type: string) => typeMap[type] || type);
+      conditions.push(`任务类型: ${types.join("、")}`);
+    }
+
     if (searchParams.priority && searchParams.priority.length > 0) {
       const priorityMap: Record<string, string> = {
         LOW: "低",
@@ -135,6 +145,70 @@ const SavedSearchesPage: NextPage = () => {
         const projectNames = selectedProjects.map(project => project.name);
         conditions.push(`项目: ${projectNames.join("、")}`);
       }
+    }
+
+    // 创建时间筛选
+    if (searchParams.createdAfter || searchParams.createdBefore) {
+      const formatDate = (dateValue: any) => {
+        try {
+          if (!dateValue) return null;
+          // 处理Date对象、ISO字符串、或其他格式
+          const date = new Date(dateValue);
+          if (isNaN(date.getTime())) return String(dateValue);
+          return date.toLocaleDateString("zh-CN");
+        } catch {
+          return String(dateValue);
+        }
+      };
+
+      const formattedAfter = formatDate(searchParams.createdAfter);
+      const formattedBefore = formatDate(searchParams.createdBefore);
+
+      if (formattedAfter && formattedBefore) {
+        conditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
+      } else if (formattedAfter) {
+        conditions.push(`创建时间: ${formattedAfter} 之后`);
+      } else if (formattedBefore) {
+        conditions.push(`创建时间: ${formattedBefore} 之前`);
+      }
+    }
+
+    // 截止时间筛选
+    if (searchParams.dueAfter || searchParams.dueBefore) {
+      const formatDate = (dateValue: any) => {
+        try {
+          if (!dateValue) return null;
+          const date = new Date(dateValue);
+          if (isNaN(date.getTime())) return String(dateValue);
+          return date.toLocaleDateString("zh-CN");
+        } catch {
+          return String(dateValue);
+        }
+      };
+
+      const formattedAfter = formatDate(searchParams.dueAfter);
+      const formattedBefore = formatDate(searchParams.dueBefore);
+
+      if (formattedAfter && formattedBefore) {
+        conditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
+      } else if (formattedAfter) {
+        conditions.push(`截止时间: ${formattedAfter} 之后`);
+      } else if (formattedBefore) {
+        conditions.push(`截止时间: ${formattedBefore} 之前`);
+      }
+    }
+
+    // 其他状态筛选
+    if (searchParams.isCompleted !== undefined && searchParams.isCompleted !== null) {
+      conditions.push(`完成状态: ${searchParams.isCompleted ? "已完成" : "未完成"}`);
+    }
+
+    if (searchParams.isOverdue !== undefined && searchParams.isOverdue !== null) {
+      conditions.push(`逾期状态: ${searchParams.isOverdue ? "已逾期" : "未逾期"}`);
+    }
+
+    if (searchParams.hasDescription !== undefined && searchParams.hasDescription !== null) {
+      conditions.push(`描述: ${searchParams.hasDescription ? "有描述" : "无描述"}`);
     }
 
     if (searchParams.sortBy && searchParams.sortBy !== "relevance") {
@@ -229,38 +303,28 @@ const SavedSearchesPage: NextPage = () => {
           <meta name="description" content="管理保存的搜索" />
         </Head>
 
-        <div className="container mx-auto px-4 py-8">
-          {/* 页面标题和操作 */}
-          <div className="mb-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">保存的搜索</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  管理您保存的搜索条件，快速重复使用常用搜索
-                </p>
-              </div>
-              
-              <button
-                onClick={() => router.push('/search')}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                <MagnifyingGlassIcon className="h-4 w-4" />
-                高级搜索
-              </button>
+        <div className="space-y-6">
+          {/* 页面标题 */}
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">保存的搜索</h1>
             </div>
+            <p className="mt-1 text-sm text-gray-600">
+              管理您保存的搜索条件，快速重复使用常用搜索 • {filteredSearches.length} 个搜索
+            </p>
+          </div>
 
-            {/* 搜索框 */}
-            <div className="mt-6">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="搜索保存的搜索..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
+          {/* 搜索和筛选 */}
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索保存的搜索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-md border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              />
             </div>
           </div>
 
@@ -268,41 +332,53 @@ const SavedSearchesPage: NextPage = () => {
           {isLoading ? (
             <SectionLoading />
           ) : filteredSearches.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredSearches.map((search) => (
-                <SavedSearchCard
-                  key={search.id}
-                  search={search}
-                  onLoad={handleLoadSavedSearch}
-                  onEdit={handleOpenSaveModal}
-                  onDelete={handleDeleteSavedSearch}
-                  generateSearchSummary={generateSearchSummary}
-                  tags={tags}
-                  projects={projects}
-                />
-              ))}
+            <div className="rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <h2 className="text-lg font-medium text-gray-900">搜索列表</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {searchQuery ? `找到 ${filteredSearches.length} 个匹配的搜索` : `共 ${filteredSearches.length} 个保存的搜索`}
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredSearches.map((search) => (
+                    <SavedSearchCard
+                      key={search.id}
+                      search={search}
+                      onLoad={handleLoadSavedSearch}
+                      onEdit={handleOpenSaveModal}
+                      onDelete={handleDeleteSavedSearch}
+                      generateSearchSummary={generateSearchSummary}
+                      tags={tags}
+                      projects={projects}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
-                {searchQuery ? "未找到匹配的搜索" : "暂无保存的搜索"}
-              </h3>
-              <p className="mt-2 text-sm text-gray-600">
-                {searchQuery
-                  ? "尝试使用不同的关键词搜索"
-                  : "在高级搜索页面进行搜索后，可以保存搜索条件以便快速重复使用"
-                }
-              </p>
-              {!searchQuery && (
-                <button
-                  onClick={() => router.push('/search')}
-                  className="mt-4 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  <MagnifyingGlassIcon className="h-4 w-4" />
-                  开始搜索
-                </button>
-              )}
+            <div className="rounded-lg border border-gray-200 bg-white">
+              <div className="text-center py-12">
+                <MagnifyingGlassIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-4 text-lg font-medium text-gray-900">
+                  {searchQuery ? "未找到匹配的搜索" : "暂无保存的搜索"}
+                </h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  {searchQuery
+                    ? "尝试使用不同的关键词搜索"
+                    : "在高级搜索页面进行搜索后，可以保存搜索条件以便快速重复使用"
+                  }
+                </p>
+                {!searchQuery && (
+                  <button
+                    onClick={() => router.push('/search')}
+                    className="mt-4 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    <MagnifyingGlassIcon className="h-4 w-4" />
+                    开始搜索
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

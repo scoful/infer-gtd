@@ -430,6 +430,7 @@ const SearchPage: NextPage = () => {
 
   // 保存当前搜索
   const handleSaveCurrentSearch = useCallback((formData: SavedSearchFormData) => {
+    console.log("保存搜索参数:", searchParams);
     saveSearchMutation.mutate({
       ...formData,
       searchParams,
@@ -508,49 +509,64 @@ const SearchPage: NextPage = () => {
 
     // 时间筛选
     if (searchParams.createdAfter || searchParams.createdBefore) {
-      if (searchParams.createdAfter && searchParams.createdBefore) {
-        conditions.push(`创建时间: ${searchParams.createdAfter} 至 ${searchParams.createdBefore}`);
-      } else if (searchParams.createdAfter) {
-        conditions.push(`创建时间: ${searchParams.createdAfter} 之后`);
-      } else {
-        conditions.push(`创建时间: ${searchParams.createdBefore} 之前`);
+      console.log("时间参数调试:", {
+        createdAfter: searchParams.createdAfter,
+        createdBefore: searchParams.createdBefore,
+        createdAfterType: typeof searchParams.createdAfter,
+        createdBeforeType: typeof searchParams.createdBefore
+      });
+
+      const formatDate = (dateValue: any) => {
+        try {
+          if (!dateValue) return null;
+          // 处理Date对象、ISO字符串、或其他格式
+          const date = new Date(dateValue);
+          if (isNaN(date.getTime())) return String(dateValue);
+          return date.toLocaleDateString("zh-CN");
+        } catch {
+          return String(dateValue);
+        }
+      };
+
+      const formattedAfter = formatDate(searchParams.createdAfter);
+      const formattedBefore = formatDate(searchParams.createdBefore);
+
+      if (formattedAfter && formattedBefore) {
+        conditions.push(`创建时间: ${formattedAfter} 至 ${formattedBefore}`);
+      } else if (formattedAfter) {
+        conditions.push(`创建时间: ${formattedAfter} 之后`);
+      } else if (formattedBefore) {
+        conditions.push(`创建时间: ${formattedBefore} 之前`);
       }
     }
 
-    if (searchParams.updatedAfter || searchParams.updatedBefore) {
-      if (searchParams.updatedAfter && searchParams.updatedBefore) {
-        conditions.push(`更新时间: ${searchParams.updatedAfter} 至 ${searchParams.updatedBefore}`);
-      } else if (searchParams.updatedAfter) {
-        conditions.push(`更新时间: ${searchParams.updatedAfter} 之后`);
-      } else {
-        conditions.push(`更新时间: ${searchParams.updatedBefore} 之前`);
-      }
-    }
+
 
     if (searchParams.dueAfter || searchParams.dueBefore) {
-      if (searchParams.dueAfter && searchParams.dueBefore) {
-        conditions.push(`截止时间: ${searchParams.dueAfter} 至 ${searchParams.dueBefore}`);
-      } else if (searchParams.dueAfter) {
-        conditions.push(`截止时间: ${searchParams.dueAfter} 之后`);
-      } else {
-        conditions.push(`截止时间: ${searchParams.dueBefore} 之前`);
+      const formatDate = (dateValue: any) => {
+        try {
+          if (!dateValue) return null;
+          const date = new Date(dateValue);
+          if (isNaN(date.getTime())) return String(dateValue);
+          return date.toLocaleDateString("zh-CN");
+        } catch {
+          return String(dateValue);
+        }
+      };
+
+      const formattedAfter = formatDate(searchParams.dueAfter);
+      const formattedBefore = formatDate(searchParams.dueBefore);
+
+      if (formattedAfter && formattedBefore) {
+        conditions.push(`截止时间: ${formattedAfter} 至 ${formattedBefore}`);
+      } else if (formattedAfter) {
+        conditions.push(`截止时间: ${formattedAfter} 之后`);
+      } else if (formattedBefore) {
+        conditions.push(`截止时间: ${formattedBefore} 之前`);
       }
     }
 
-    // 时间跟踪筛选
-    if (searchParams.hasTimeTracking !== undefined) {
-      conditions.push(`时间跟踪: ${searchParams.hasTimeTracking ? "已启用" : "未启用"}`);
-    }
 
-    if (searchParams.minTimeSpent || searchParams.maxTimeSpent) {
-      if (searchParams.minTimeSpent && searchParams.maxTimeSpent) {
-        conditions.push(`耗时: ${searchParams.minTimeSpent}-${searchParams.maxTimeSpent}分钟`);
-      } else if (searchParams.minTimeSpent) {
-        conditions.push(`耗时: ≥${searchParams.minTimeSpent}分钟`);
-      } else {
-        conditions.push(`耗时: ≤${searchParams.maxTimeSpent}分钟`);
-      }
-    }
 
     // 状态筛选
     if (searchParams.isCompleted !== undefined) {
@@ -561,9 +577,7 @@ const SearchPage: NextPage = () => {
       conditions.push(`逾期状态: ${searchParams.isOverdue ? "已逾期" : "未逾期"}`);
     }
 
-    if (searchParams.isRecurring !== undefined) {
-      conditions.push(`重复任务: ${searchParams.isRecurring ? "是" : "否"}`);
-    }
+
 
     if (searchParams.hasDescription !== undefined) {
       conditions.push(`描述: ${searchParams.hasDescription ? "有" : "无"}`);
