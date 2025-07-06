@@ -287,19 +287,7 @@ const SearchPage: NextPage = () => {
   const totalResults = searchResults?.totalCount || 0;
   const hasResults = totalResults > 0;
 
-  // 调试信息
-  useEffect(() => {
-    if (searchResults) {
-      console.log("搜索结果:", {
-        totalCount: searchResults.totalCount,
-        tasks: searchResults.tasks?.length || 0,
-        notes: searchResults.notes?.length || 0,
-        projects: searchResults.projects?.length || 0,
-        journals: searchResults.journals?.length || 0,
-        displayLimit,
-      });
-    }
-  }, [searchResults, displayLimit]);
+
 
   // 计算实际可显示的总数据量
   const totalAvailableResults = searchResults
@@ -318,17 +306,14 @@ const SearchPage: NextPage = () => {
 
   // 加载更多处理
   const handleLoadMore = useCallback(() => {
-    console.log("加载更多前 displayLimit:", displayLimit);
     setDisplayLimit((prev) => {
       const newLimit = Math.min(prev + pageSize, 100);
-      console.log("加载更多后 displayLimit:", newLimit);
       return newLimit;
     });
   }, [pageSize, displayLimit]);
 
   // 当搜索条件改变时重置显示限制
   useEffect(() => {
-    console.log("搜索条件改变，重置 displayLimit 为:", pageSize);
     setDisplayLimit(pageSize);
   }, [
     query,
@@ -626,7 +611,6 @@ const SearchPage: NextPage = () => {
   // 保存当前搜索
   const handleSaveCurrentSearch = useCallback(
     (formData: SavedSearchFormData) => {
-      console.log("保存搜索参数:", searchParams);
       saveSearchMutation.mutate({
         ...formData,
         searchParams,

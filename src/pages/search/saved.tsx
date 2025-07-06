@@ -49,14 +49,6 @@ const SavedSearchesPage: NextPage = () => {
   const { data: projects, isLoading: isLoadingProjects } =
     api.project.getAll.useQuery({ limit: 100 }, { enabled: !!sessionData });
 
-  console.log("数据加载状态:", {
-    isLoadingTags,
-    isLoadingProjects,
-    tagsCount: tags?.tags?.length,
-    projectsCount: projects?.projects?.length,
-    sessionData: !!sessionData,
-  });
-
   // 注册页面刷新函数
   usePageRefresh(() => {
     void refetchSavedSearches();
@@ -92,11 +84,6 @@ const SavedSearchesPage: NextPage = () => {
   // 生成搜索条件摘要（结构化）
   const generateSearchConditions = useCallback(
     (searchParams: any, tags?: any[], projects?: any[]) => {
-      console.log("generateSearchConditions 被调用:", {
-        searchParams,
-        tagsData: tags,
-        projectsData: projects,
-      });
       const conditions: Array<{
         type:
           | "keyword"
@@ -215,12 +202,7 @@ const SavedSearchesPage: NextPage = () => {
         tags &&
         tags.length > 0
       ) {
-        console.log("标签筛选调试:", {
-          tagIds: searchParams.tagIds,
-          availableTags: tags.map((t) => ({ id: t.id, name: t.name })),
-          tagIdsType: typeof searchParams.tagIds[0],
-          availableTagIdsType: typeof tags[0]?.id,
-        });
+
 
         // 确保类型匹配 - 将所有ID转换为字符串进行比较
         const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
@@ -238,16 +220,7 @@ const SavedSearchesPage: NextPage = () => {
               color: "bg-amber-100 text-amber-800 border border-amber-200",
             });
           });
-        } else {
-          console.log("没有找到匹配的标签，尝试类型转换后仍无匹配");
         }
-      } else {
-        console.log("标签筛选条件不满足:", {
-          hasTagIds: !!searchParams.tagIds,
-          tagIdsLength: searchParams.tagIds?.length,
-          hasTags: !!tags,
-          tagsLength: tags?.length,
-        });
       }
 
       // 标签类型筛选 - 分成独立标签
