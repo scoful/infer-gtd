@@ -635,6 +635,28 @@ const SearchPage: NextPage = () => {
     void router.push('/search/saved');
   }, [router]);
 
+  // 搜索范围辅助函数
+  const allSearchTypes = ["tasks", "notes", "projects", "journals"];
+  const isAllSearchTypesSelected = useMemo(() => {
+    return allSearchTypes.every(type => searchIn.includes(type)) && searchIn.length === allSearchTypes.length;
+  }, [searchIn]);
+
+  const isNoSearchTypesSelected = useMemo(() => {
+    return searchIn.length === 0;
+  }, [searchIn]);
+
+  const handleSelectAllSearchTypes = useCallback(() => {
+    if (!isAllSearchTypesSelected) {
+      setSearchIn([...allSearchTypes]);
+    }
+  }, [isAllSearchTypesSelected]);
+
+  const handleDeselectAllSearchTypes = useCallback(() => {
+    if (!isNoSearchTypesSelected) {
+      setSearchIn([]);
+    }
+  }, [isNoSearchTypesSelected]);
+
   // 生成搜索条件摘要
   const generateSearchSummary = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
     const conditions = [];
@@ -1184,20 +1206,35 @@ const SearchPage: NextPage = () => {
                 <label className="text-sm font-medium text-gray-700">
                   搜索范围
                 </label>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setSearchIn(["tasks", "notes", "projects", "journals"])}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    onClick={handleSelectAllSearchTypes}
+                    disabled={isAllSearchTypesSelected}
+                    className={`text-xs font-medium transition-all duration-200 ${
+                      isAllSearchTypesSelected
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded cursor-pointer"
+                    }`}
+                    title={isAllSearchTypesSelected ? "已全选" : "选择所有搜索范围"}
                   >
-                    全选
+                    {isAllSearchTypesSelected ? "✓ 已全选" : "全选"}
                   </button>
-                  <span className="text-xs text-gray-400">|</span>
+                  <span className="text-xs text-gray-300">•</span>
                   <button
-                    onClick={() => setSearchIn([])}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    onClick={handleDeselectAllSearchTypes}
+                    disabled={isNoSearchTypesSelected}
+                    className={`text-xs font-medium transition-all duration-200 ${
+                      isNoSearchTypesSelected
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded cursor-pointer"
+                    }`}
+                    title={isNoSearchTypesSelected ? "已全部取消" : "取消所有搜索范围"}
                   >
-                    不选
+                    {isNoSearchTypesSelected ? "✓ 已全部取消" : "全部取消"}
                   </button>
+                  <span className="ml-2 text-xs text-gray-500">
+                    ({searchIn.length}/{allSearchTypes.length} 已选择)
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-2">
