@@ -427,13 +427,79 @@ const SavedSearchesPage: NextPage = () => {
     // 跳转到高级搜索页面并应用搜索条件
     const params = new URLSearchParams();
     const searchParams = search.searchParams;
-    
+
+    // 基础搜索参数
     if (searchParams.query) params.set('q', searchParams.query);
     if (searchParams.searchIn) params.set('searchIn', searchParams.searchIn.join(','));
-    if (searchParams.taskStatus) params.set('taskStatus', searchParams.taskStatus.join(','));
-    if (searchParams.priority) params.set('priority', searchParams.priority.join(','));
-    if (searchParams.tagIds) params.set('tagIds', searchParams.tagIds.join(','));
-    if (searchParams.projectIds) params.set('projectIds', searchParams.projectIds.join(','));
+
+    // 任务相关筛选
+    if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
+      params.set('taskStatus', searchParams.taskStatus.join(','));
+    }
+    if (searchParams.taskType && searchParams.taskType.length > 0) {
+      params.set('taskType', searchParams.taskType.join(','));
+    }
+    if (searchParams.priority && searchParams.priority.length > 0) {
+      params.set('priority', searchParams.priority.join(','));
+    }
+
+    // 标签和项目筛选
+    if (searchParams.tagIds && searchParams.tagIds.length > 0) {
+      params.set('tagIds', searchParams.tagIds.join(','));
+    }
+    if (searchParams.tagTypes && searchParams.tagTypes.length > 0) {
+      params.set('tagTypes', searchParams.tagTypes.join(','));
+    }
+    if (searchParams.projectIds && searchParams.projectIds.length > 0) {
+      params.set('projectIds', searchParams.projectIds.join(','));
+    }
+
+    // 时间筛选
+    if (searchParams.createdAfter) {
+      params.set('createdAfter', searchParams.createdAfter);
+    }
+    if (searchParams.createdBefore) {
+      params.set('createdBefore', searchParams.createdBefore);
+    }
+    if (searchParams.updatedAfter) {
+      params.set('updatedAfter', searchParams.updatedAfter);
+    }
+    if (searchParams.updatedBefore) {
+      params.set('updatedBefore', searchParams.updatedBefore);
+    }
+    if (searchParams.dueAfter) {
+      params.set('dueAfter', searchParams.dueAfter);
+    }
+    if (searchParams.dueBefore) {
+      params.set('dueBefore', searchParams.dueBefore);
+    }
+
+    // 状态筛选
+    if (searchParams.isCompleted !== undefined && searchParams.isCompleted !== null) {
+      params.set('isCompleted', String(searchParams.isCompleted));
+    }
+    if (searchParams.isOverdue !== undefined && searchParams.isOverdue !== null) {
+      params.set('isOverdue', String(searchParams.isOverdue));
+    }
+    if (searchParams.isRecurring !== undefined && searchParams.isRecurring !== null) {
+      params.set('isRecurring', String(searchParams.isRecurring));
+    }
+    if (searchParams.hasDescription !== undefined && searchParams.hasDescription !== null) {
+      params.set('hasDescription', String(searchParams.hasDescription));
+    }
+
+    // 时间跟踪筛选
+    if (searchParams.hasTimeTracking !== undefined && searchParams.hasTimeTracking !== null) {
+      params.set('hasTimeTracking', String(searchParams.hasTimeTracking));
+    }
+    if (searchParams.minTimeSpent !== undefined) {
+      params.set('minTimeSpent', String(searchParams.minTimeSpent));
+    }
+    if (searchParams.maxTimeSpent !== undefined) {
+      params.set('maxTimeSpent', String(searchParams.maxTimeSpent));
+    }
+
+    // 排序参数
     if (searchParams.sortBy) params.set('sortBy', searchParams.sortBy);
     if (searchParams.sortOrder) params.set('sortOrder', searchParams.sortOrder);
 

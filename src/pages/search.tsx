@@ -59,13 +59,21 @@ const SearchPage: NextPage = () => {
   // 日期筛选
   const [createdAfter, setCreatedAfter] = useState<Date | null>(null);
   const [createdBefore, setCreatedBefore] = useState<Date | null>(null);
+  const [updatedAfter, setUpdatedAfter] = useState<Date | null>(null);
+  const [updatedBefore, setUpdatedBefore] = useState<Date | null>(null);
   const [dueAfter, setDueAfter] = useState<Date | null>(null);
   const [dueBefore, setDueBefore] = useState<Date | null>(null);
 
   // 状态筛选
   const [isCompleted, setIsCompleted] = useState<boolean | null>(null);
   const [isOverdue, setIsOverdue] = useState<boolean | null>(null);
+  const [isRecurring, setIsRecurring] = useState<boolean | null>(null);
   const [hasDescription, setHasDescription] = useState<boolean | null>(null);
+  const [hasTimeTracking, setHasTimeTracking] = useState<boolean | null>(null);
+
+  // 时间跟踪筛选
+  const [minTimeSpent, setMinTimeSpent] = useState<number | null>(null);
+  const [maxTimeSpent, setMaxTimeSpent] = useState<number | null>(null);
 
   // 排序
   const [sortBy, setSortBy] = useState<string>("relevance");
@@ -94,11 +102,17 @@ const SearchPage: NextPage = () => {
       projectIds.length > 0 ||
       createdAfter !== null ||
       createdBefore !== null ||
+      updatedAfter !== null ||
+      updatedBefore !== null ||
       dueAfter !== null ||
       dueBefore !== null ||
       isCompleted !== null ||
       isOverdue !== null ||
-      hasDescription !== null
+      isRecurring !== null ||
+      hasDescription !== null ||
+      hasTimeTracking !== null ||
+      minTimeSpent !== null ||
+      maxTimeSpent !== null
     );
   }, [
     taskStatus,
@@ -108,11 +122,17 @@ const SearchPage: NextPage = () => {
     projectIds,
     createdAfter,
     createdBefore,
+    updatedAfter,
+    updatedBefore,
     dueAfter,
     dueBefore,
     isCompleted,
     isOverdue,
+    isRecurring,
     hasDescription,
+    hasTimeTracking,
+    minTimeSpent,
+    maxTimeSpent,
   ]);
 
   // 构建搜索参数
@@ -132,11 +152,17 @@ const SearchPage: NextPage = () => {
     if (projectIds.length > 0) params.projectIds = projectIds;
     if (createdAfter) params.createdAfter = createdAfter;
     if (createdBefore) params.createdBefore = createdBefore;
+    if (updatedAfter) params.updatedAfter = updatedAfter;
+    if (updatedBefore) params.updatedBefore = updatedBefore;
     if (dueAfter) params.dueAfter = dueAfter;
     if (dueBefore) params.dueBefore = dueBefore;
     if (isCompleted !== null) params.isCompleted = isCompleted;
     if (isOverdue !== null) params.isOverdue = isOverdue;
+    if (isRecurring !== null) params.isRecurring = isRecurring;
     if (hasDescription !== null) params.hasDescription = hasDescription;
+    if (hasTimeTracking !== null) params.hasTimeTracking = hasTimeTracking;
+    if (minTimeSpent !== null) params.minTimeSpent = minTimeSpent;
+    if (maxTimeSpent !== null) params.maxTimeSpent = maxTimeSpent;
 
     return params;
   }, [
@@ -149,11 +175,17 @@ const SearchPage: NextPage = () => {
     projectIds,
     createdAfter,
     createdBefore,
+    updatedAfter,
+    updatedBefore,
     dueAfter,
     dueBefore,
     isCompleted,
     isOverdue,
+    isRecurring,
     hasDescription,
+    hasTimeTracking,
+    minTimeSpent,
+    maxTimeSpent,
     sortBy,
     sortOrder,
     displayLimit,
@@ -341,11 +373,17 @@ const SearchPage: NextPage = () => {
     setProjectIds([]);
     setCreatedAfter(null);
     setCreatedBefore(null);
+    setUpdatedAfter(null);
+    setUpdatedBefore(null);
     setDueAfter(null);
     setDueBefore(null);
     setIsCompleted(null);
     setIsOverdue(null);
+    setIsRecurring(null);
     setHasDescription(null);
+    setHasTimeTracking(null);
+    setMinTimeSpent(null);
+    setMaxTimeSpent(null);
 
     // 处理查询词
     const urlQuery = router.query.q as string;
@@ -355,10 +393,33 @@ const SearchPage: NextPage = () => {
       setQuery('');
     }
 
-    // 解析智能搜索参数
-    const { searchIn: urlSearchIn, priority: urlPriority, status: urlStatus,
-            createdAfter: urlCreatedAfter, sortBy: urlSortBy, sortOrder: urlSortOrder,
-            searchBy: urlSearchBy } = router.query;
+    // 解析所有搜索参数
+    const {
+      searchIn: urlSearchIn,
+      priority: urlPriority,
+      taskStatus: urlTaskStatus,
+      taskType: urlTaskType,
+      status: urlStatus,
+      tagIds: urlTagIds,
+      tagTypes: urlTagTypes,
+      projectIds: urlProjectIds,
+      createdAfter: urlCreatedAfter,
+      createdBefore: urlCreatedBefore,
+      updatedAfter: urlUpdatedAfter,
+      updatedBefore: urlUpdatedBefore,
+      dueAfter: urlDueAfter,
+      dueBefore: urlDueBefore,
+      isCompleted: urlIsCompleted,
+      isOverdue: urlIsOverdue,
+      isRecurring: urlIsRecurring,
+      hasDescription: urlHasDescription,
+      hasTimeTracking: urlHasTimeTracking,
+      minTimeSpent: urlMinTimeSpent,
+      maxTimeSpent: urlMaxTimeSpent,
+      sortBy: urlSortBy,
+      sortOrder: urlSortOrder,
+      searchBy: urlSearchBy
+    } = router.query;
 
     // 重置搜索范围为默认值，然后应用URL参数
     if (urlSearchIn && typeof urlSearchIn === 'string') {
@@ -368,20 +429,93 @@ const SearchPage: NextPage = () => {
       setSearchIn(["tasks", "notes", "projects", "journals"]);
     }
 
+    // 任务相关筛选
+    if (urlTaskStatus && typeof urlTaskStatus === 'string') {
+      const statusArray = urlTaskStatus.split(',') as TaskStatus[];
+      setTaskStatus(statusArray);
+    } else if (urlStatus && typeof urlStatus === 'string') {
+      // 兼容旧的 status 参数
+      const statusArray = urlStatus.split(',') as TaskStatus[];
+      setTaskStatus(statusArray);
+    }
+
+    if (urlTaskType && typeof urlTaskType === 'string') {
+      const typeArray = urlTaskType.split(',') as TaskType[];
+      setTaskType(typeArray);
+    }
+
     if (urlPriority && typeof urlPriority === 'string') {
       const priorityArray = urlPriority.split(',') as Priority[];
       setPriority(priorityArray);
     }
 
-    if (urlStatus && typeof urlStatus === 'string') {
-      const statusArray = urlStatus.split(',') as TaskStatus[];
-      setTaskStatus(statusArray);
+    // 标签和项目筛选
+    if (urlTagIds && typeof urlTagIds === 'string') {
+      const tagIdArray = urlTagIds.split(',');
+      setTagIds(tagIdArray);
     }
 
+    if (urlProjectIds && typeof urlProjectIds === 'string') {
+      const projectIdArray = urlProjectIds.split(',');
+      setProjectIds(projectIdArray);
+    }
+
+    // 时间筛选
     if (urlCreatedAfter && typeof urlCreatedAfter === 'string') {
       setCreatedAfter(new Date(urlCreatedAfter));
     }
 
+    if (urlCreatedBefore && typeof urlCreatedBefore === 'string') {
+      setCreatedBefore(new Date(urlCreatedBefore));
+    }
+
+    if (urlUpdatedAfter && typeof urlUpdatedAfter === 'string') {
+      setUpdatedAfter(new Date(urlUpdatedAfter));
+    }
+
+    if (urlUpdatedBefore && typeof urlUpdatedBefore === 'string') {
+      setUpdatedBefore(new Date(urlUpdatedBefore));
+    }
+
+    if (urlDueAfter && typeof urlDueAfter === 'string') {
+      setDueAfter(new Date(urlDueAfter));
+    }
+
+    if (urlDueBefore && typeof urlDueBefore === 'string') {
+      setDueBefore(new Date(urlDueBefore));
+    }
+
+    // 状态筛选
+    if (urlIsCompleted && typeof urlIsCompleted === 'string') {
+      setIsCompleted(urlIsCompleted === 'true');
+    }
+
+    if (urlIsOverdue && typeof urlIsOverdue === 'string') {
+      setIsOverdue(urlIsOverdue === 'true');
+    }
+
+    if (urlIsRecurring && typeof urlIsRecurring === 'string') {
+      setIsRecurring(urlIsRecurring === 'true');
+    }
+
+    if (urlHasDescription && typeof urlHasDescription === 'string') {
+      setHasDescription(urlHasDescription === 'true');
+    }
+
+    // 时间跟踪筛选
+    if (urlHasTimeTracking && typeof urlHasTimeTracking === 'string') {
+      setHasTimeTracking(urlHasTimeTracking === 'true');
+    }
+
+    if (urlMinTimeSpent && typeof urlMinTimeSpent === 'string') {
+      setMinTimeSpent(Number(urlMinTimeSpent));
+    }
+
+    if (urlMaxTimeSpent && typeof urlMaxTimeSpent === 'string') {
+      setMaxTimeSpent(Number(urlMaxTimeSpent));
+    }
+
+    // 排序参数
     if (urlSortBy && typeof urlSortBy === 'string') {
       setSortBy(urlSortBy);
     } else {
@@ -415,11 +549,17 @@ const SearchPage: NextPage = () => {
     setProjectIds([]);
     setCreatedAfter(null);
     setCreatedBefore(null);
+    setUpdatedAfter(null);
+    setUpdatedBefore(null);
     setDueAfter(null);
     setDueBefore(null);
     setIsCompleted(null);
     setIsOverdue(null);
+    setIsRecurring(null);
     setHasDescription(null);
+    setHasTimeTracking(null);
+    setMinTimeSpent(null);
+    setMaxTimeSpent(null);
     // 重置搜索范围和排序方式
     setSearchIn(["tasks", "notes", "projects", "journals"]);
     setSortBy("relevance");
