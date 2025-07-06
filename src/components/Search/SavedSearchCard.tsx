@@ -17,10 +17,10 @@ import {
 interface SavedSearch {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   searchParams: any;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 interface SearchCondition {

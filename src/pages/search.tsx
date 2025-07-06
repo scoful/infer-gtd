@@ -744,23 +744,23 @@ const SearchPage: NextPage = () => {
     }
 
     // 标签筛选
-    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags?.tags) {
+    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags && 'tags' in tags) {
       // 确保类型匹配 - 将所有ID转换为字符串进行比较
       const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
-      const selectedTags = tags.tags.filter(tag => searchTagIds.includes(String(tag.id)));
+      const selectedTags = (tags.tags as any[]).filter((tag: any) => searchTagIds.includes(String(tag.id)));
       if (selectedTags.length > 0) {
-        const tagNames = selectedTags.map(tag => tag.name);
+        const tagNames = selectedTags.map((tag: any) => tag.name);
         conditions.push(`标签: ${tagNames.join("、")}`);
       }
     }
 
     // 项目筛选
-    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects?.projects) {
+    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects && 'projects' in projects) {
       // 确保类型匹配 - 将所有ID转换为字符串进行比较
       const searchProjectIds = searchParams.projectIds.map((id: any) => String(id));
-      const selectedProjects = projects.projects.filter(project => searchProjectIds.includes(String(project.id)));
+      const selectedProjects = (projects.projects as any[]).filter((project: any) => searchProjectIds.includes(String(project.id)));
       if (selectedProjects.length > 0) {
-        const projectNames = selectedProjects.map(project => project.name);
+        const projectNames = selectedProjects.map((project: any) => project.name);
         conditions.push(`项目: ${projectNames.join("、")}`);
       }
     }

@@ -164,7 +164,7 @@ async function createDefaultSearchesForUser(userId: string) {
 
       if (!existingSearch) {
         // 处理动态日期函数
-        const processedParams = { ...searchData.searchParams };
+        const processedParams: any = { ...searchData.searchParams };
         if (typeof processedParams.createdAfter === 'function') {
           processedParams.createdAfter = processedParams.createdAfter();
         }

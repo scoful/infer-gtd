@@ -313,8 +313,8 @@ const TagManagementPage: NextPage = () => {
           bValue = new Date(b.createdAt).getTime();
           break;
         case "usage":
-          aValue = (a._count?.taskTags ?? 0) + (a._count?.noteTags ?? 0);
-          bValue = (b._count?.taskTags ?? 0) + (b._count?.noteTags ?? 0);
+          aValue = ((a as any)._count?.taskTags ?? 0) + ((a as any)._count?.noteTags ?? 0);
+          bValue = ((b as any)._count?.taskTags ?? 0) + ((b as any)._count?.noteTags ?? 0);
           break;
         default:
           return 0;

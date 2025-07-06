@@ -52,8 +52,7 @@ export default function SearchSuggestions({
     },
     {
       enabled: query === '#' && isVisible,
-      staleTime: 5 * 60 * 1000, // 5分钟缓存，标签变化不频繁
-      cacheTime: 10 * 60 * 1000, // 10分钟内存缓存
+      staleTime: 10 * 60 * 1000, // 10分钟内存缓存
     }
   );
 
