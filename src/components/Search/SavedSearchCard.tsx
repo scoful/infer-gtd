@@ -143,7 +143,17 @@ export default function SavedSearchCard({
 
           <div>
             {(() => {
+              console.log("SavedSearchCard 渲染:", {
+                searchId: search.id,
+                searchName: search.name,
+                searchParams: search.searchParams,
+                tagsLength: tags?.length,
+                projectsLength: projects?.length
+              });
+
               const conditions = generateSearchConditions(search.searchParams, tags, projects);
+              console.log("生成的条件:", conditions);
+
               if (conditions.length === 0) {
                 return (
                   <span className="text-xs text-gray-500">无特定条件</span>

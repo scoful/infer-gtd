@@ -495,7 +495,9 @@ const SearchPage: NextPage = () => {
 
     // 标签筛选
     if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags?.tags) {
-      const selectedTags = tags.tags.filter(tag => searchParams.tagIds.includes(tag.id));
+      // 确保类型匹配 - 将所有ID转换为字符串进行比较
+      const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
+      const selectedTags = tags.tags.filter(tag => searchTagIds.includes(String(tag.id)));
       if (selectedTags.length > 0) {
         const tagNames = selectedTags.map(tag => tag.name);
         conditions.push(`标签: ${tagNames.join("、")}`);
@@ -504,7 +506,9 @@ const SearchPage: NextPage = () => {
 
     // 项目筛选
     if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects?.projects) {
-      const selectedProjects = projects.projects.filter(project => searchParams.projectIds.includes(project.id));
+      // 确保类型匹配 - 将所有ID转换为字符串进行比较
+      const searchProjectIds = searchParams.projectIds.map((id: any) => String(id));
+      const selectedProjects = projects.projects.filter(project => searchProjectIds.includes(String(project.id)));
       if (selectedProjects.length > 0) {
         const projectNames = selectedProjects.map(project => project.name);
         conditions.push(`项目: ${projectNames.join("、")}`);

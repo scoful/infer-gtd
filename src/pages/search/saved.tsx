@@ -32,15 +32,23 @@ const SavedSearchesPage: NextPage = () => {
   const { data: savedSearches, refetch: refetchSavedSearches, isLoading } =
     api.search.getSavedSearches.useQuery(undefined, { enabled: !!sessionData });
 
-  const { data: tags } = api.tag.getAll.useQuery(
+  const { data: tags, isLoading: isLoadingTags } = api.tag.getAll.useQuery(
     { limit: 100 },
     { enabled: !!sessionData },
   );
 
-  const { data: projects } = api.project.getAll.useQuery(
-    { limit: 100 }, 
+  const { data: projects, isLoading: isLoadingProjects } = api.project.getAll.useQuery(
+    { limit: 100 },
     { enabled: !!sessionData }
   );
+
+  console.log("数据加载状态:", {
+    isLoadingTags,
+    isLoadingProjects,
+    tagsCount: tags?.tags?.length,
+    projectsCount: projects?.projects?.length,
+    sessionData: !!sessionData
+  });
 
   // 注册页面刷新函数
   usePageRefresh(() => {
@@ -78,6 +86,11 @@ const SavedSearchesPage: NextPage = () => {
 
   // 生成搜索条件摘要（结构化）
   const generateSearchConditions = useCallback((searchParams: any, tags?: any[], projects?: any[]) => {
+    console.log("generateSearchConditions 被调用:", {
+      searchParams,
+      tagsData: tags,
+      projectsData: projects
+    });
     const conditions: Array<{
       type: 'keyword' | 'scope' | 'status' | 'type' | 'priority' | 'tag' | 'project' | 'time' | 'tracking' | 'sort';
       label: string;
@@ -163,8 +176,18 @@ const SavedSearchesPage: NextPage = () => {
     }
 
     // 标签筛选
-    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags?.tags) {
-      const selectedTags = tags.tags.filter(tag => searchParams.tagIds.includes(tag.id));
+    if (searchParams.tagIds && searchParams.tagIds.length > 0 && tags && tags.length > 0) {
+      console.log("标签筛选调试:", {
+        tagIds: searchParams.tagIds,
+        availableTags: tags.map(t => ({ id: t.id, name: t.name })),
+        tagIdsType: typeof searchParams.tagIds[0],
+        availableTagIdsType: typeof tags[0]?.id
+      });
+
+      // 确保类型匹配 - 将所有ID转换为字符串进行比较
+      const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
+      const selectedTags = tags.filter(tag => searchTagIds.includes(String(tag.id)));
+
       if (selectedTags.length > 0) {
         const tagNames = selectedTags.map(tag => tag.name);
         conditions.push({
@@ -173,7 +196,16 @@ const SavedSearchesPage: NextPage = () => {
           value: tagNames.join("、"),
           color: 'bg-amber-100 text-amber-800 border border-amber-200'
         });
+      } else {
+        console.log("没有找到匹配的标签，尝试类型转换后仍无匹配");
       }
+    } else {
+      console.log("标签筛选条件不满足:", {
+        hasTagIds: !!searchParams.tagIds,
+        tagIdsLength: searchParams.tagIds?.length,
+        hasTags: !!tags,
+        tagsLength: tags?.length
+      });
     }
 
     // 标签类型筛选
@@ -199,8 +231,10 @@ const SavedSearchesPage: NextPage = () => {
     }
 
     // 项目筛选
-    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects?.projects) {
-      const selectedProjects = projects.projects.filter(project => searchParams.projectIds.includes(project.id));
+    if (searchParams.projectIds && searchParams.projectIds.length > 0 && projects && projects.length > 0) {
+      // 确保类型匹配 - 将所有ID转换为字符串进行比较
+      const searchProjectIds = searchParams.projectIds.map((id: any) => String(id));
+      const selectedProjects = projects.filter(project => searchProjectIds.includes(String(project.id)));
       if (selectedProjects.length > 0) {
         const projectNames = selectedProjects.map(project => project.name);
         conditions.push({
@@ -487,7 +521,7 @@ const SavedSearchesPage: NextPage = () => {
           </div>
 
           {/* 搜索结果 */}
-          {isLoading ? (
+          {isLoading || isLoadingTags || isLoadingProjects ? (
             <SectionLoading />
           ) : filteredSearches.length > 0 ? (
             <div className="rounded-lg border border-gray-200 bg-white">
