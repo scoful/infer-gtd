@@ -194,7 +194,7 @@ export default function SavedSearchCard({
                       >
                         {getConditionIcon(condition.type)}
                         <span className="font-medium">{condition.label}:</span>
-                        <span className="font-normal max-w-60 truncate">{condition.value}</span>
+                        <span className="font-normal">{condition.value}</span>
                       </span>
                     );
                   })}

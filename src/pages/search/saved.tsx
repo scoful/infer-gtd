@@ -127,6 +127,7 @@ const SavedSearchesPage: NextPage = () => {
       });
     }
 
+    // 状态筛选 - 分成独立标签
     if (searchParams.taskStatus && searchParams.taskStatus.length > 0) {
       const statusMap: Record<string, string> = {
         IDEA: "想法",
@@ -138,29 +139,37 @@ const SavedSearchesPage: NextPage = () => {
         ARCHIVED: "已归档",
         CANCELLED: "已取消"
       };
-      const statuses = searchParams.taskStatus.map((status: string) => statusMap[status] || status);
-      conditions.push({
-        type: 'status',
-        label: '状态',
-        value: statuses.join("、"),
-        color: 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+
+      searchParams.taskStatus.forEach((status: string) => {
+        const statusName = statusMap[status] || status;
+        conditions.push({
+          type: 'status',
+          label: '状态',
+          value: statusName,
+          color: 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+        });
       });
     }
 
+    // 任务类型筛选 - 分成独立标签
     if (searchParams.taskType && searchParams.taskType.length > 0) {
       const typeMap: Record<string, string> = {
         SINGLE: "单次任务",
         RECURRING: "重复任务"
       };
-      const types = searchParams.taskType.map((type: string) => typeMap[type] || type);
-      conditions.push({
-        type: 'type',
-        label: '任务类型',
-        value: types.join("、"),
-        color: 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+
+      searchParams.taskType.forEach((type: string) => {
+        const typeName = typeMap[type] || type;
+        conditions.push({
+          type: 'type',
+          label: '任务类型',
+          value: typeName,
+          color: 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+        });
       });
     }
 
+    // 优先级筛选 - 分成独立标签
     if (searchParams.priority && searchParams.priority.length > 0) {
       const priorityMap: Record<string, string> = {
         LOW: "低",
@@ -168,12 +177,15 @@ const SavedSearchesPage: NextPage = () => {
         HIGH: "高",
         URGENT: "紧急"
       };
-      const priorities = searchParams.priority.map((p: string) => priorityMap[p] || p);
-      conditions.push({
-        type: 'priority',
-        label: '优先级',
-        value: priorities.join("、"),
-        color: 'bg-rose-100 text-rose-800 border border-rose-200'
+
+      searchParams.priority.forEach((priority: string) => {
+        const priorityName = priorityMap[priority] || priority;
+        conditions.push({
+          type: 'priority',
+          label: '优先级',
+          value: priorityName,
+          color: 'bg-rose-100 text-rose-800 border border-rose-200'
+        });
       });
     }
 
@@ -191,12 +203,14 @@ const SavedSearchesPage: NextPage = () => {
       const selectedTags = tags.filter(tag => searchTagIds.includes(String(tag.id)));
 
       if (selectedTags.length > 0) {
-        const tagNames = selectedTags.map(tag => tag.name);
-        conditions.push({
-          type: 'tag',
-          label: '标签',
-          value: tagNames.join("、"),
-          color: 'bg-amber-100 text-amber-800 border border-amber-200'
+        // 标签筛选 - 分成独立标签
+        selectedTags.forEach(tag => {
+          conditions.push({
+            type: 'tag',
+            label: '标签',
+            value: tag.name,
+            color: 'bg-amber-100 text-amber-800 border border-amber-200'
+          });
         });
       } else {
         console.log("没有找到匹配的标签，尝试类型转换后仍无匹配");
@@ -210,7 +224,7 @@ const SavedSearchesPage: NextPage = () => {
       });
     }
 
-    // 标签类型筛选
+    // 标签类型筛选 - 分成独立标签
     if (searchParams.tagTypes && searchParams.tagTypes.length > 0) {
       const tagTypeMap: Record<string, string> = {
         CONTEXT: "情境",
@@ -223,12 +237,15 @@ const SavedSearchesPage: NextPage = () => {
         AREA: "领域",
         CUSTOM: "自定义"
       };
-      const types = searchParams.tagTypes.map((type: string) => tagTypeMap[type] || type);
-      conditions.push({
-        type: 'tag',
-        label: '标签类型',
-        value: types.join("、"),
-        color: 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+
+      searchParams.tagTypes.forEach((tagType: string) => {
+        const typeName = tagTypeMap[tagType] || tagType;
+        conditions.push({
+          type: 'tag',
+          label: '标签类型',
+          value: typeName,
+          color: 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+        });
       });
     }
 
@@ -238,12 +255,14 @@ const SavedSearchesPage: NextPage = () => {
       const searchProjectIds = searchParams.projectIds.map((id: any) => String(id));
       const selectedProjects = projects.filter(project => searchProjectIds.includes(String(project.id)));
       if (selectedProjects.length > 0) {
-        const projectNames = selectedProjects.map(project => project.name);
-        conditions.push({
-          type: 'project',
-          label: '项目',
-          value: projectNames.join("、"),
-          color: 'bg-sky-100 text-sky-800 border border-sky-200'
+        // 项目筛选 - 分成独立标签
+        selectedProjects.forEach(project => {
+          conditions.push({
+            type: 'project',
+            label: '项目',
+            value: project.name,
+            color: 'bg-sky-100 text-sky-800 border border-sky-200'
+          });
         });
       }
     }
