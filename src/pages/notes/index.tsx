@@ -173,6 +173,8 @@ const NotesPage: NextPage = () => {
     void refetch();
   }, [refetch]);
 
+  // 注意：全局快捷键已在 MainLayout 中统一处理，这里不需要重复监听
+
   // 笔记数据处理 - 合并所有页面的数据
   const notes = notesData?.pages.flatMap((page) => page.notes) ?? [];
   const hasMorePages = hasNextPage;

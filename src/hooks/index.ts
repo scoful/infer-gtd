@@ -17,3 +17,11 @@ export { usePageRefresh } from "./usePageRefresh";
 
 // 确认对话框管理
 export { useConfirm } from "./useConfirm";
+
+// 全局快捷键管理
+export {
+  useGlobalShortcuts,
+  GLOBAL_SHORTCUTS,
+  getShortcutText,
+  type ShortcutConfig
+} from "./useGlobalShortcuts";

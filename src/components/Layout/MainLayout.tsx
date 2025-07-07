@@ -33,8 +33,10 @@ import {
 
 import { useSidebarState } from "@/hooks";
 import { useRefresh } from "@/contexts/RefreshContext";
+import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import VersionDisplay from "./VersionDisplay";
 import QuickSearch from "@/components/Search/QuickSearch";
+import ShortcutHelpModal from "@/components/UI/ShortcutHelpModal";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -177,6 +179,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { data: sessionData } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
     // 初始化时，如果当前路径是相关页面，自动展开对应菜单
     const initialExpanded = new Set<string>();
@@ -208,6 +211,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   >(new Set());
   const { isCollapsed, toggleSidebar } = useSidebarState();
   const { refreshPage } = useRefresh();
+
+  // 初始化全局快捷键
+  useGlobalShortcuts();
 
   // 监听路由变化，自动展开相关菜单
   useEffect(() => {
@@ -244,6 +250,57 @@ export default function MainLayout({ children }: MainLayoutProps) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [collapsedExpandedItems]);
+
+  // 监听全局快捷键事件
+  useEffect(() => {
+    const handleGlobalShortcuts = (event: CustomEvent) => {
+      switch (event.type) {
+        case "global-shortcut-help":
+          setShowShortcutHelp(true);
+          break;
+        case "global-shortcut-search":
+          // 触发搜索框聚焦
+          const searchInput = document.querySelector('input[placeholder*="搜索"]') as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+          }
+          break;
+        case "global-shortcut-new-task":
+          // 全局新建任务：如果已在看板页面，触发页面内事件；否则跳转到看板页面
+          if (router.pathname === "/tasks/kanban") {
+            // 在看板页面，让页面内的监听器处理
+            return;
+          } else {
+            // 不在看板页面，跳转到看板页面并打开新建模态框
+            void router.push("/tasks/kanban?new=task");
+          }
+          break;
+        case "global-shortcut-new-note":
+          // 全局新建笔记：跳转到新建笔记页面
+          void router.push("/notes/new");
+          break;
+        case "global-shortcut-new-journal":
+          // 全局新建日记：跳转到新建日记页面
+          void router.push("/journal/new");
+          break;
+      }
+    };
+
+    // 添加事件监听器
+    window.addEventListener("global-shortcut-help", handleGlobalShortcuts as EventListener);
+    window.addEventListener("global-shortcut-search", handleGlobalShortcuts as EventListener);
+    window.addEventListener("global-shortcut-new-task", handleGlobalShortcuts as EventListener);
+    window.addEventListener("global-shortcut-new-note", handleGlobalShortcuts as EventListener);
+    window.addEventListener("global-shortcut-new-journal", handleGlobalShortcuts as EventListener);
+
+    return () => {
+      window.removeEventListener("global-shortcut-help", handleGlobalShortcuts as EventListener);
+      window.removeEventListener("global-shortcut-search", handleGlobalShortcuts as EventListener);
+      window.removeEventListener("global-shortcut-new-task", handleGlobalShortcuts as EventListener);
+      window.removeEventListener("global-shortcut-new-note", handleGlobalShortcuts as EventListener);
+      window.removeEventListener("global-shortcut-new-journal", handleGlobalShortcuts as EventListener);
+    };
+  }, [router]);
 
   const isActivePath = (href: string) => {
     // 精确匹配路径，避免水合错误
@@ -802,6 +859,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <VersionDisplay position="footer" />
         </div>
       </div>
+
+      {/* 快捷键帮助模态框 */}
+      <ShortcutHelpModal
+        isOpen={showShortcutHelp}
+        onClose={() => setShowShortcutHelp(false)}
+      />
     </div>
   );
 }

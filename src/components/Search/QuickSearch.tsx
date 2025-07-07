@@ -21,18 +21,18 @@ export default function QuickSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // 全局快捷键支持 (Cmd/Ctrl + K)
+  // 监听全局搜索快捷键事件
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        inputRef.current?.focus();
-        setShowSuggestions(true);
-      }
+    const handleGlobalShortcut = () => {
+      inputRef.current?.focus();
+      setShowSuggestions(true);
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("global-shortcut-search", handleGlobalShortcut);
+
+    return () => {
+      window.removeEventListener("global-shortcut-search", handleGlobalShortcut);
+    };
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -33,3 +33,12 @@ export {
 
 // MarkdownRenderer组件导出
 export { default as MarkdownRenderer } from "./MarkdownRenderer";
+
+// 快捷键组件导出
+export {
+  default as ShortcutIndicator,
+  ShortcutTooltip,
+  ShortcutBadge,
+} from "./ShortcutIndicator";
+
+export { default as ShortcutHelpModal } from "./ShortcutHelpModal";

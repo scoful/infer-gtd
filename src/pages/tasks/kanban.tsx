@@ -1,5 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { type Task, TaskStatus, TaskType } from "@prisma/client";
@@ -117,6 +118,7 @@ type TaskWithRelations = Task & {
 
 const KanbanPage: NextPage = () => {
   const { data: sessionData } = useSession();
+  const router = useRouter();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -379,6 +381,31 @@ const KanbanPage: NextPage = () => {
     waitingTasks.refetch,
     doneTasks.refetch,
   ]);
+
+  // 监听全局快捷键事件 - 处理页面特定的新建任务行为
+  useEffect(() => {
+    const handleGlobalShortcuts = () => {
+      // 如果当前在看板页面，直接打开模态框
+      setIsTaskModalOpen(true);
+      setEditingTaskId(null);
+    };
+
+    window.addEventListener("global-shortcut-new-task", handleGlobalShortcuts);
+
+    return () => {
+      window.removeEventListener("global-shortcut-new-task", handleGlobalShortcuts);
+    };
+  }, []);
+
+  // 检查 URL 参数，自动打开新建模态框
+  useEffect(() => {
+    if (router.query.new === "task") {
+      setIsTaskModalOpen(true);
+      setEditingTaskId(null);
+      // 清除 URL 参数
+      void router.replace("/tasks/kanban", undefined, { shallow: true });
+    }
+  }, [router]);
 
   // 按状态分组任务（包含乐观更新）
   const tasksByStatus = useMemo(() => {

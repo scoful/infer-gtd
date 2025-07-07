@@ -1,13 +1,8 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import {
-  BookOpenIcon,
-  PlusIcon,
-  CalendarIcon,
-  ClockIcon,
-} from "@heroicons/react/24/outline";
+import { BookOpenIcon, ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
@@ -85,6 +80,8 @@ const JournalPage: NextPage = () => {
   usePageRefresh(() => {
     void refetchAll();
   }, [refetchCurrentJournal, refetchRecentJournals]);
+
+  // 注意：全局快捷键已在 MainLayout 中统一处理，这里不需要重复监听
 
   // 监听路由变化，当返回到日记首页时刷新数据
   useEffect(() => {
