@@ -21,6 +21,8 @@ import {
   TimeDistributionHeatmap,
   ProjectCompletionPieChart,
   PriorityDistributionChart,
+  SimpleCompletionTrend,
+  SimpleDailyCompletion,
 } from "@/components/Charts";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { TaskStatus, Priority } from "@prisma/client";
@@ -371,7 +373,46 @@ const TaskReviewPage: NextPage = () => {
     };
   }, [tasks, completedTasks, timeEntries, timeRange]);
 
+  // 生成趋势数据
+  const trendData = useMemo(() => {
+    if (!tasks?.tasks || !completedTasks?.tasks) {
+      return [];
+    }
 
+    const dates: Array<{ date: string; completed: number; total: number; completionRate: number }> = [];
+    const startTime = dateRange.start.getTime();
+    const endTime = dateRange.end.getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    for (let time = startTime; time <= endTime; time += oneDay) {
+      const current = new Date(time);
+      const dateKey = current.toISOString().split("T")[0]!;
+
+      const dayTasks = tasks.tasks.filter(task => {
+        const taskDate = new Date(task.createdAt).toISOString().split("T")[0];
+        return taskDate === dateKey;
+      });
+
+      const dayCompleted = completedTasks.tasks.filter(task => {
+        if (!task.completedAt) return false;
+        const completedDate = new Date(task.completedAt).toISOString().split("T")[0];
+        return completedDate === dateKey;
+      });
+
+      const total = dayTasks.length;
+      const completed = dayCompleted.length;
+      const completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+      dates.push({
+        date: dateKey,
+        completed,
+        total,
+        completionRate,
+      });
+    }
+
+    return dates;
+  }, [tasks?.tasks, completedTasks?.tasks, dateRange.start.getTime(), dateRange.end.getTime()]);
 
   // 导航到上一个/下一个时间段
   const navigate = useCallback((direction: "prev" | "next") => {
@@ -797,6 +838,22 @@ const TaskReviewPage: NextPage = () => {
                       </h3>
 
                       <div className="space-y-8">
+                        {/* 任务完成趋势图 */}
+                        {trendData.length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-base font-medium text-gray-800">
+                              任务完成趋势
+                            </h4>
+                            <p className="mb-4 text-sm text-gray-600">
+                              显示每日创建任务数量和完成率变化趋势，帮助了解工作节奏
+                            </p>
+                            <SimpleCompletionTrend
+                              data={trendData}
+                              timeRange={timeRange}
+                            />
+                          </div>
+                        )}
+
                         {/* 时间分布热力图 */}
                         <div>
                           <h4 className="mb-2 text-base font-medium text-gray-800">
@@ -837,6 +894,23 @@ const TaskReviewPage: NextPage = () => {
                             <PriorityDistributionChart
                               data={detailedStats.priorityStats}
                               totalTasks={detailedStats.totalTasks}
+                            />
+                          </div>
+                        )}
+
+                        {/* 每日完成趋势图 */}
+                        {timeRange !== "year" && Object.keys(detailedStats.dailyCompletion).length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-base font-medium text-gray-800">
+                              每日完成趋势
+                            </h4>
+                            <p className="mb-4 text-sm text-gray-600">
+                              显示每天实际完成的任务数量和工作模式分析
+                            </p>
+                            <SimpleDailyCompletion
+                              data={detailedStats.dailyCompletion}
+                              timeRange={timeRange}
+                              dateRange={dateRange}
                             />
                           </div>
                         )}
