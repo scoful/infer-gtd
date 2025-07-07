@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { TaskStatus, TaskType, Priority } from "@prisma/client";
@@ -214,6 +214,32 @@ export default function TaskModal({
   const handleClose = () => {
     onClose();
   };
+
+  // 添加 Ctrl+Enter 快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        // 检查表单是否有效且不在提交中
+        const isSubmitting = createTask.isPending || updateTask.isPending;
+        if (formData.title.trim() && !isSubmitting) {
+          // 创建一个模拟的表单事件
+          const mockEvent = {
+            preventDefault: () => {},
+          } as React.FormEvent;
+          void handleSubmit(mockEvent);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, formData.title, createTask.isPending, updateTask.isPending, handleSubmit]);
 
   // 处理任务类型变更
   const handleTypeChange = (newType: TaskType) => {

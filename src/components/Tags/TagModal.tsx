@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useCallback } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { TagType } from "@prisma/client";
@@ -144,7 +144,8 @@ export default function TagModal({
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 处理提交
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) return;
@@ -166,7 +167,33 @@ export default function TagModal({
     } else {
       createTag.mutate(submitData);
     }
-  };
+  }, [formData, isEditing, tag, updateTag, createTag]);
+
+  // 添加 Ctrl+Enter 快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        // 检查表单是否有效且不在提交中
+        const isSubmitting = createTag.isPending || updateTag.isPending;
+        if (formData.name.trim() && !isSubmitting) {
+          // 创建一个模拟的表单事件
+          const mockEvent = {
+            preventDefault: () => {},
+          } as React.FormEvent;
+          handleSubmit(mockEvent);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, formData.name, createTag.isPending, updateTag.isPending, handleSubmit]);
 
   const handleClose = () => {
     onClose();

@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useCallback } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -103,7 +103,7 @@ export default function TaskFeedbackModal({
   };
 
   // 处理提交
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
     updateTask.mutate({
@@ -111,7 +111,32 @@ export default function TaskFeedbackModal({
       feedback: formData.feedback,
       tagIds: formData.tagIds,
     });
-  };
+  }, [taskId, formData.feedback, formData.tagIds, updateTask]);
+
+  // 添加 Ctrl+Enter 快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        // 检查是否不在提交中
+        if (!updateTask.isPending) {
+          // 创建一个模拟的表单事件
+          const mockEvent = {
+            preventDefault: () => {},
+          } as React.FormEvent;
+          handleSubmit(mockEvent);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, updateTask.isPending, handleSubmit]);
 
   // 处理标签变化
   const handleTagsChange = (newTagIds: string[]) => {

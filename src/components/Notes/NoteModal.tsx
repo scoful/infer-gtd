@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useCallback } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -145,7 +145,8 @@ export default function NoteModal({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 处理提交
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.content.trim()) {
@@ -167,7 +168,32 @@ export default function NoteModal({
     } catch (error) {
       console.error("更新笔记失败:", error);
     }
-  };
+  }, [formData, noteId, updateNote, showError]);
+
+  // 添加 Ctrl+Enter 快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        // 检查表单是否有效且不在提交中
+        if (formData.title.trim() && formData.content.trim() && !updateNote.isPending) {
+          // 创建一个模拟的表单事件
+          const mockEvent = {
+            preventDefault: () => {},
+          } as React.FormEvent;
+          void handleSubmit(mockEvent);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, formData.title, formData.content, updateNote.isPending, handleSubmit]);
 
   const isSubmitting = updateNote.isPending;
 
