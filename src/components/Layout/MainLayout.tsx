@@ -166,10 +166,10 @@ const navigation: NavigationItem[] = [
         description: "任务和时间统计",
       },
       {
-        name: "每周回顾",
-        href: "/review/weekly",
+        name: "任务回顾",
+        href: "/review",
         icon: CalendarIcon,
-        description: "GTD每周回顾和分析",
+        description: "任务回顾和总结分析",
       },
     ],
   },
@@ -354,8 +354,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (href === "/analytics") {
       return router.pathname === "/analytics";
     }
-    if (href === "/review/weekly") {
-      return router.pathname === "/review/weekly";
+    if (href === "/review") {
+      return router.pathname === "/review" || router.pathname.startsWith("/review/");
     }
     return router.pathname.startsWith(href);
   };
