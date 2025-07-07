@@ -246,8 +246,15 @@ export const TagDisplay: React.FC<TagDisplayProps> = ({
         <button
           type="button"
           onClick={handleRemove}
-          className={`hover:bg-opacity-20 rounded-full p-0.5 transition-colors hover:bg-black ${sizeClasses.removeButton} `}
+          className={`hover:bg-opacity-20 rounded-full p-0.5 transition-colors hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${sizeClasses.removeButton} `}
           title="移除标签"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleRemove(e as any);
+            }
+          }}
         >
           <XMarkIcon className="h-full w-full" />
         </button>
@@ -380,12 +387,19 @@ export const TagList: React.FC<TagListProps> = ({
         <button
           type="button"
           onClick={handleExpandClick}
-          className={`inline-flex cursor-pointer items-center rounded-full bg-gray-200 font-medium text-gray-600 transition-colors hover:bg-gray-300 ${getSizeClasses(size).container} `}
+          className={`inline-flex cursor-pointer items-center rounded-full bg-gray-200 font-medium text-gray-600 transition-colors hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${getSizeClasses(size).container} `}
           title={
             expandable
               ? `点击查看全部 ${tags.length} 个标签`
               : `还有 ${remainingCount} 个标签`
           }
+          tabIndex={expandable ? 0 : -1}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && expandable) {
+              e.preventDefault();
+              handleExpandClick(e as any);
+            }
+          }}
         >
           +{remainingCount}
         </button>
@@ -396,8 +410,15 @@ export const TagList: React.FC<TagListProps> = ({
         <button
           type="button"
           onClick={handleExpandClick}
-          className={`inline-flex cursor-pointer items-center rounded-full bg-blue-100 font-medium text-blue-600 transition-colors hover:bg-blue-200 ${getSizeClasses(size).container} `}
+          className={`inline-flex cursor-pointer items-center rounded-full bg-blue-100 font-medium text-blue-600 transition-colors hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${getSizeClasses(size).container} `}
           title="收起标签"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleExpandClick(e as any);
+            }
+          }}
         >
           收起
         </button>
