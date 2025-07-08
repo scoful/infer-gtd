@@ -325,50 +325,53 @@ export default function MarkdownEditor({
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
 
       {/* 快捷键提示 */}
-      <div className="mt-2 text-xs text-gray-500">
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          <div>
-            <span className="font-medium">Markdown：</span>
-            <span className="ml-1">Ctrl+B 粗体</span>
-            <span className="ml-2">Ctrl+I 斜体</span>
-            <span className="ml-2">Ctrl+K 链接</span>
-          </div>
-          {enableJetBrainsShortcuts && (
-            <div>
-              <span className="font-medium">JetBrains：</span>
-              <span className="ml-1">Ctrl+D 复制行</span>
-              <span className="ml-2">Ctrl+Y 删除行</span>
-              <span className="ml-2">Ctrl+/ 注释</span>
-              <span className="ml-2">Ctrl+Shift+↑/↓ 移动行</span>
-            </div>
-          )}
-          {autoSave && (
-            <div>
-              <span className="font-medium">自动保存：</span>
-              <span
-                className={`ml-1 ${
-                  (autoSaveStatus || saveStatus) === "saved"
-                    ? "text-green-600"
-                    : (autoSaveStatus || saveStatus) === "saving"
-                      ? "text-yellow-600"
-                      : "text-gray-600"
-                }`}
-              >
-                {autoSaveType === "local"
-                  ? (autoSaveStatus || saveStatus) === "saved"
-                    ? "已保存草稿到本地"
-                    : (autoSaveStatus || saveStatus) === "saving"
-                      ? "保存草稿到本地中..."
-                      : "未保存 (5秒后自动保存草稿)"
-                  : (autoSaveStatus || saveStatus) === "saved"
-                    ? "已保存到服务器"
-                    : (autoSaveStatus || saveStatus) === "saving"
-                      ? "保存到服务器中..."
-                      : "未保存 (5秒后自动保存)"}
-              </span>
-            </div>
-          )}
+      <div className="mt-2 text-xs text-gray-500 space-y-1">
+        {/* Markdown 快捷键 */}
+        <div>
+          <span className="font-medium">Markdown：</span>
+          <span className="ml-1">Ctrl+B 粗体</span>
+          <span className="ml-2">Ctrl+I 斜体</span>
+          <span className="ml-2">Ctrl+K 链接</span>
         </div>
+
+        {/* JetBrains 快捷键 */}
+        {enableJetBrainsShortcuts && (
+          <div>
+            <span className="font-medium">JetBrains：</span>
+            <span className="ml-1">Ctrl+D 复制行</span>
+            <span className="ml-2">Ctrl+Y 删除行</span>
+            <span className="ml-2">Ctrl+/ 注释</span>
+            <span className="ml-2">Ctrl+Shift+↑/↓ 移动行</span>
+          </div>
+        )}
+
+        {/* 自动保存状态 */}
+        {autoSave && (
+          <div>
+            <span className="font-medium">自动保存：</span>
+            <span
+              className={`ml-1 ${
+                (autoSaveStatus || saveStatus) === "saved"
+                  ? "text-green-600"
+                  : (autoSaveStatus || saveStatus) === "saving"
+                    ? "text-yellow-600"
+                    : "text-gray-600"
+              }`}
+            >
+              {autoSaveType === "local"
+                ? (autoSaveStatus || saveStatus) === "saved"
+                  ? "已保存草稿到本地"
+                  : (autoSaveStatus || saveStatus) === "saving"
+                    ? "保存草稿到本地中..."
+                    : "未保存 (5秒后自动保存草稿)"
+                : (autoSaveStatus || saveStatus) === "saved"
+                  ? "已保存到服务器"
+                  : (autoSaveStatus || saveStatus) === "saving"
+                    ? "保存到服务器中..."
+                    : "未保存 (5秒后自动保存)"}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
