@@ -132,6 +132,7 @@ const TaskReviewPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showAllCompleted, setShowAllCompleted] = useState(false);
 
 
   // 计算当前时间范围的日期范围
@@ -1009,7 +1010,7 @@ const TaskReviewPage: NextPage = () => {
                       {timeRange === "week" ? "本周" : timeRange === "month" ? "本月" : "本年"}完成的任务
                     </h3>
                     <div className="space-y-4">
-                      {completedTasks.tasks.slice(0, 10).map((task) => (
+                      {completedTasks.tasks.slice(0, showAllCompleted ? undefined : 10).map((task) => (
                         <div
                           key={task.id}
                           className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
@@ -1061,11 +1062,24 @@ const TaskReviewPage: NextPage = () => {
                           )}
                         </div>
                       ))}
-                      {completedTasks.tasks.length > 10 && (
+                      {completedTasks.tasks.length > 10 && !showAllCompleted && (
                         <div className="pt-4 text-center">
-                          <p className="text-sm text-gray-500">
-                            还有 {completedTasks.tasks.length - 10} 个已完成的任务...
-                          </p>
+                          <button
+                            onClick={() => setShowAllCompleted(true)}
+                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          >
+                            加载更多 ({completedTasks.tasks.length - 10} 个)
+                          </button>
+                        </div>
+                      )}
+                      {showAllCompleted && completedTasks.tasks.length > 10 && (
+                        <div className="pt-4 text-center">
+                          <button
+                            onClick={() => setShowAllCompleted(false)}
+                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          >
+                            收起
+                          </button>
                         </div>
                       )}
                     </div>
