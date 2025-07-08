@@ -360,7 +360,7 @@ const AnalyticsPage: NextPage = () => {
                           },
                           {
                             name: "标签",
-                            count: tagStats?.totalTags || 0,
+                            count: tagStats?.total || 0,
                             color: "#8b5cf6",
                           },
                         ]}
@@ -473,8 +473,8 @@ const AnalyticsPage: NextPage = () => {
                           cy="50%"
                           labelLine={false}
                           label={({ name, value, percent }) =>
-                            value > 0
-                              ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                            value && value > 0
+                              ? `${name}: ${value} (${((percent || 0) * 100).toFixed(1)}%)`
                               : ""
                           }
                           outerRadius={100}
@@ -531,8 +531,8 @@ const AnalyticsPage: NextPage = () => {
                                 cy="50%"
                                 labelLine={false}
                                 label={({ name, value, percent }) =>
-                                  value > 0
-                                    ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                                  value && value > 0
+                                    ? `${name}: ${value} (${((percent || 0) * 100).toFixed(1)}%)`
                                     : ""
                                 }
                                 outerRadius={80}

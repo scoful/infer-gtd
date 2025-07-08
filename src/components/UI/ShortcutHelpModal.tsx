@@ -25,22 +25,22 @@ export default function ShortcutHelpModal({
   const shortcutGroups = [
     {
       title: "导航",
-      shortcuts: [{ key: "SEARCH", ...GLOBAL_SHORTCUTS.SEARCH }],
+      shortcuts: [{ ...GLOBAL_SHORTCUTS.SEARCH }],
     },
     {
       title: "新建",
       shortcuts: [
-        { key: "NEW_TASK", ...GLOBAL_SHORTCUTS.NEW_TASK },
-        { key: "NEW_NOTE", ...GLOBAL_SHORTCUTS.NEW_NOTE },
-        { key: "NEW_JOURNAL", ...GLOBAL_SHORTCUTS.NEW_JOURNAL },
+        { ...GLOBAL_SHORTCUTS.NEW_TASK },
+        { ...GLOBAL_SHORTCUTS.NEW_NOTE },
+        { ...GLOBAL_SHORTCUTS.NEW_JOURNAL },
       ],
     },
     {
       title: "快速操作",
       shortcuts: [
-        { key: "QUICK_CAPTURE", ...GLOBAL_SHORTCUTS.QUICK_CAPTURE },
-        { key: "TODAY_JOURNAL", ...GLOBAL_SHORTCUTS.TODAY_JOURNAL },
-        { key: "HELP", ...GLOBAL_SHORTCUTS.HELP },
+        { ...GLOBAL_SHORTCUTS.QUICK_CAPTURE },
+        { ...GLOBAL_SHORTCUTS.TODAY_JOURNAL },
+        { ...GLOBAL_SHORTCUTS.HELP },
       ],
     },
   ];
@@ -113,12 +113,12 @@ export default function ShortcutHelpModal({
                                   {isMac ? "⌘" : "Ctrl"}
                                 </kbd>
                               ) : null}
-                              {shortcut.altKey ? (
+                              {"altKey" in shortcut && shortcut.altKey ? (
                                 <kbd className="inline-flex items-center rounded border border-gray-200 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
                                   Alt
                                 </kbd>
                               ) : null}
-                              {shortcut.shiftKey ? (
+                              {"shiftKey" in shortcut && shortcut.shiftKey ? (
                                 <kbd className="inline-flex items-center rounded border border-gray-200 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
                                   Shift
                                 </kbd>

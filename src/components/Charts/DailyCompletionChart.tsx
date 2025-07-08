@@ -143,7 +143,7 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
               strokeDasharray="5 5"
               label={{
                 value: `平均: ${averagePerDay.toFixed(1)}`,
-                position: "topRight",
+                position: "top" as const,
               }}
             />
             <Bar dataKey="count" radius={[2, 2, 0, 0]} fill="#3b82f6">

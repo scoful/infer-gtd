@@ -904,7 +904,7 @@ ${completedTasksList}
           let updatedContent;
           if (match) {
             // 如果找到"今日完成"部分，进行去重合并
-            const existingTasksText = match[1].trim();
+            const existingTasksText = match[1]?.trim() || "";
 
             // 提取现有任务的标题（用于去重）
             const existingTaskTitles = new Set<string>();
@@ -913,8 +913,11 @@ ${completedTasksList}
               .filter((line) => line.trim());
             existingTaskLines.forEach((line) => {
               // 匹配任务行：- [x] **任务标题** 或 - [x] 任务标题 或 - 任务标题
-              const taskMatch = /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(line);
-              if (taskMatch) {
+              const taskMatch =
+                /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(
+                  line,
+                );
+              if (taskMatch?.[1]) {
                 existingTaskTitles.add(taskMatch[1].trim());
               }
             });
@@ -1022,15 +1025,18 @@ ${completedTasksList}
             });
 
             // 计算实际添加的新任务数量（使用相同的去重逻辑）
-            const existingTasksText = match ? match[1].trim() : "";
+            const existingTasksText = match ? match[1]?.trim() || "" : "";
             const existingTaskTitles = new Set<string>();
             if (existingTasksText) {
               const existingTaskLines = existingTasksText
                 .split("\n")
                 .filter((line) => line.trim());
               existingTaskLines.forEach((line) => {
-                const taskMatch = /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(line);
-                if (taskMatch) {
+                const taskMatch =
+                  /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(
+                    line,
+                  );
+                if (taskMatch?.[1]) {
                   existingTaskTitles.add(taskMatch[1].trim());
                 }
               });

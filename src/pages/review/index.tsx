@@ -326,14 +326,18 @@ const TaskReviewPage: NextPage = () => {
     // 统计新建任务的时间分布
     allTasks.forEach((task) => {
       const hour = new Date(task.createdAt).getHours();
-      timeDistribution[hour].created++;
+      if (timeDistribution[hour]) {
+        timeDistribution[hour].created++;
+      }
     });
 
     // 统计完成任务的时间分布
     completed.forEach((task) => {
       if (task.completedAt) {
         const hour = new Date(task.completedAt).getHours();
-        timeDistribution[hour].completed++;
+        if (timeDistribution[hour]) {
+          timeDistribution[hour].completed++;
+        }
       }
     });
 
@@ -740,7 +744,7 @@ const TaskReviewPage: NextPage = () => {
                             </p>
                             <p className="text-xs text-gray-500">
                               {detailedStats.tasksWithFeedback}/
-                              {completedTasks.totalCount} 个任务有反馈
+                              {completedTasks?.totalCount || 0} 个任务有反馈
                             </p>
                           </div>
                         </div>
