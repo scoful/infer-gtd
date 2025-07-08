@@ -17,6 +17,19 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { api } from "@/utils/api";
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 const AnalyticsPage: NextPage = () => {
   const { data: sessionData } = useSession();
@@ -185,75 +198,137 @@ const AnalyticsPage: NextPage = () => {
                 {/* 任务状态分布 */}
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">任务状态分布</h3>
-                  <div className="space-y-3">
-                    {taskStats?.statusCounts && Object.entries(taskStats.statusCounts).map(([status, count]) => {
-                      const statusLabels: Record<string, string> = {
-                        IDEA: "想法",
-                        TODO: "待办",
-                        IN_PROGRESS: "进行中",
-                        WAITING: "等待中",
-                        DONE: "已完成",
-                        ARCHIVED: "已归档"
-                      };
-                      const statusColors: Record<string, string> = {
-                        IDEA: "bg-gray-200",
-                        TODO: "bg-blue-200",
-                        IN_PROGRESS: "bg-yellow-200",
-                        WAITING: "bg-orange-200",
-                        DONE: "bg-green-200",
-                        ARCHIVED: "bg-gray-300"
-                      };
-                      const percentage = taskStats.totalTasks > 0 ? (count / taskStats.totalTasks * 100).toFixed(1) : 0;
-
-                      return (
-                        <div key={status} className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className={`w-3 h-3 rounded-full ${statusColors[status]} mr-3`}></div>
-                            <span className="text-sm text-gray-700">{statusLabels[status]}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-gray-900">{count}</span>
-                            <span className="text-xs text-gray-500">({percentage}%)</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {taskStats?.statusCounts ? (
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={Object.entries(taskStats.statusCounts).map(([status, count]) => ({
+                              name: {
+                                IDEA: "想法",
+                                TODO: "待办",
+                                IN_PROGRESS: "进行中",
+                                WAITING: "等待中",
+                                DONE: "已完成",
+                                ARCHIVED: "已归档"
+                              }[status] || status,
+                              value: count,
+                              status
+                            }))}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, value, percent }) =>
+                              `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                            }
+                            outerRadius={100}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {Object.entries(taskStats.statusCounts).map(([status], index) => {
+                              const colors = {
+                                IDEA: "#9ca3af",
+                                TODO: "#3b82f6",
+                                IN_PROGRESS: "#f59e0b",
+                                WAITING: "#f97316",
+                                DONE: "#10b981",
+                                ARCHIVED: "#6b7280"
+                              };
+                              return (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={colors[status as keyof typeof colors] || "#8884d8"}
+                                />
+                              );
+                            })}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value, name) => [value, name]}
+                            labelFormatter={() => ""}
+                          />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="flex h-80 items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <div className="text-lg font-medium">暂无状态数据</div>
+                        <div className="text-sm">创建一些任务后这里会显示状态分布</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 优先级分布 */}
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">任务优先级分布</h3>
-                  <div className="space-y-3">
-                    {taskStats?.priorityCounts && Object.entries(taskStats.priorityCounts).map(([priority, count]) => {
-                      const priorityLabels: Record<string, string> = {
-                        LOW: "低优先级",
-                        MEDIUM: "中优先级",
-                        HIGH: "高优先级",
-                        URGENT: "紧急"
-                      };
-                      const priorityColors: Record<string, string> = {
-                        LOW: "bg-green-200",
-                        MEDIUM: "bg-yellow-200",
-                        HIGH: "bg-orange-200",
-                        URGENT: "bg-red-200"
-                      };
-                      const percentage = taskStats.totalTasks > 0 ? (count / taskStats.totalTasks * 100).toFixed(1) : 0;
-
-                      return (
-                        <div key={priority} className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className={`w-3 h-3 rounded-full ${priorityColors[priority]} mr-3`}></div>
-                            <span className="text-sm text-gray-700">{priorityLabels[priority]}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-gray-900">{count}</span>
-                            <span className="text-xs text-gray-500">({percentage}%)</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {taskStats?.priorityCounts ? (
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={Object.entries(taskStats.priorityCounts).map(([priority, count]) => ({
+                            name: {
+                              LOW: "低优先级",
+                              MEDIUM: "中优先级",
+                              HIGH: "高优先级",
+                              URGENT: "紧急"
+                            }[priority] || priority,
+                            value: count,
+                            priority
+                          }))}
+                          margin={{
+                            top: 20,
+                            right: 30,
+                            left: 20,
+                            bottom: 20,
+                          }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis
+                            dataKey="name"
+                            stroke="#6b7280"
+                            fontSize={12}
+                          />
+                          <YAxis
+                            stroke="#6b7280"
+                            fontSize={12}
+                          />
+                          <Tooltip
+                            formatter={(value, name) => [value, "任务数量"]}
+                            labelFormatter={(label) => `优先级: ${label}`}
+                          />
+                          <Bar
+                            dataKey="value"
+                            radius={[4, 4, 0, 0]}
+                            fill="#3b82f6"
+                          >
+                            {Object.entries(taskStats.priorityCounts).map(([priority], index) => {
+                              const colors = {
+                                LOW: "#10b981",
+                                MEDIUM: "#f59e0b",
+                                HIGH: "#f97316",
+                                URGENT: "#ef4444"
+                              };
+                              return (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={colors[priority as keyof typeof colors] || "#3b82f6"}
+                                />
+                              );
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="flex h-80 items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <div className="text-lg font-medium">暂无优先级数据</div>
+                        <div className="text-sm">创建一些任务后这里会显示优先级分布</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 写作习惯分析 */}
@@ -286,34 +361,64 @@ const AnalyticsPage: NextPage = () => {
                 {/* 标签统计 */}
                 <div className="bg-white rounded-lg shadow p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">标签使用统计</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">总标签数</span>
-                      <span className="text-sm font-medium text-gray-900">{tagStats?.total ?? 0}</span>
+                  {tagStats?.byType && Object.keys(tagStats.byType).length > 0 ? (
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={[
+                            { name: "系统标签", value: tagStats.system ?? 0, type: "system" },
+                            { name: "自定义标签", value: tagStats.custom ?? 0, type: "custom" },
+                            ...Object.entries(tagStats.byType).map(([type, count]) => ({
+                              name: {
+                                CONTEXT: "上下文",
+                                CATEGORY: "分类",
+                                STATUS: "状态",
+                                PRIORITY: "优先级"
+                              }[type] || type,
+                              value: count,
+                              type
+                            }))
+                          ]}
+                          margin={{
+                            top: 20,
+                            right: 30,
+                            left: 20,
+                            bottom: 20,
+                          }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis
+                            dataKey="name"
+                            stroke="#6b7280"
+                            fontSize={12}
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                          />
+                          <YAxis
+                            stroke="#6b7280"
+                            fontSize={12}
+                          />
+                          <Tooltip
+                            formatter={(value, name) => [value, "标签数量"]}
+                            labelFormatter={(label) => `类型: ${label}`}
+                          />
+                          <Bar
+                            dataKey="value"
+                            radius={[4, 4, 0, 0]}
+                            fill="#8b5cf6"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">系统标签</span>
-                      <span className="text-sm font-medium text-gray-900">{tagStats?.system ?? 0}</span>
+                  ) : (
+                    <div className="flex h-80 items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <div className="text-lg font-medium">暂无标签数据</div>
+                        <div className="text-sm">创建一些标签后这里会显示使用统计</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">自定义标签</span>
-                      <span className="text-sm font-medium text-gray-900">{tagStats?.custom ?? 0}</span>
-                    </div>
-                    {tagStats?.byType && Object.entries(tagStats.byType).map(([type, count]) => {
-                      const typeLabels: Record<string, string> = {
-                        CONTEXT: "上下文",
-                        CATEGORY: "分类",
-                        STATUS: "状态",
-                        PRIORITY: "优先级"
-                      };
-                      return (
-                        <div key={type} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{typeLabels[type] ?? type}</span>
-                          <span className="text-sm font-medium text-gray-900">{count}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  )}
                 </div>
               </div>
 
