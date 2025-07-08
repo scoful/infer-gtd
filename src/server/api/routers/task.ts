@@ -2298,6 +2298,78 @@ export const taskRouter = createTRPCRouter({
           },
         });
 
+        // 获取任务更新数据（排除创建时的更新）
+        const allTasks = await ctx.db.task.findMany({
+          where: {
+            createdById: ctx.session.user.id,
+            updatedAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          select: {
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+
+        // 过滤出真正的更新操作
+        const taskUpdates = allTasks
+          .filter(task => task.updatedAt.getTime() !== task.createdAt.getTime())
+          .reduce((acc, task) => {
+            const dateKey = task.updatedAt.toISOString().split('T')[0]!;
+            acc[dateKey] = (acc[dateKey] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
+        // 获取笔记更新数据（排除创建时的更新）
+        const allNotes = await ctx.db.note.findMany({
+          where: {
+            createdById: ctx.session.user.id,
+            updatedAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          select: {
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+
+        // 过滤出真正的更新操作
+        const noteUpdates = allNotes
+          .filter(note => note.updatedAt.getTime() !== note.createdAt.getTime())
+          .reduce((acc, note) => {
+            const dateKey = note.updatedAt.toISOString().split('T')[0]!;
+            acc[dateKey] = (acc[dateKey] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
+        // 获取日记更新数据（排除创建时的更新）
+        const allJournals = await ctx.db.journal.findMany({
+          where: {
+            createdById: ctx.session.user.id,
+            updatedAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          select: {
+            createdAt: true,
+            updatedAt: true,
+          },
+        });
+
+        // 过滤出真正的更新操作
+        const journalUpdates = allJournals
+          .filter(journal => journal.updatedAt.getTime() !== journal.createdAt.getTime())
+          .reduce((acc, journal) => {
+            const dateKey = journal.updatedAt.toISOString().split('T')[0]!;
+            acc[dateKey] = (acc[dateKey] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+
         // 合并所有活动数据
         const activityMap = new Map<string, number>();
 
@@ -2325,6 +2397,21 @@ export const taskRouter = createTRPCRouter({
         journalCreations.forEach(item => {
           const dateKey = item.createdAt.toISOString().split('T')[0]!;
           activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + item._count.id);
+        });
+
+        // 处理任务更新
+        Object.entries(taskUpdates).forEach(([dateKey, count]) => {
+          activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + count);
+        });
+
+        // 处理笔记更新
+        Object.entries(noteUpdates).forEach(([dateKey, count]) => {
+          activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + count);
+        });
+
+        // 处理日记更新
+        Object.entries(journalUpdates).forEach(([dateKey, count]) => {
+          activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + count);
         });
 
         // 计算活动级别（0-4）
