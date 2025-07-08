@@ -144,10 +144,10 @@ const Home: NextPage = () => {
         </Head>
 
         <div className="space-y-6">
-          {/* 欢迎区域 */}
+          {/* 快速操作 */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center justify-between">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
                     欢迎回来，{sessionData?.user?.name}！
@@ -169,6 +169,53 @@ const Home: NextPage = () => {
                     alt={sessionData.user.name ?? "User"}
                   />
                 )}
+              </div>
+
+              {/* 快速操作按钮 */}
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+
+                  // 如果有onClick事件，渲染为按钮
+                  if (action.onClick) {
+                    return (
+                      <button
+                        key={action.name}
+                        onClick={action.onClick}
+                        className={`group relative ${action.color} rounded-lg p-4 text-left text-white transition-colors hover:scale-105 transform`}
+                      >
+                        <div className="flex flex-col items-center text-center">
+                          <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3 mb-3">
+                            <Icon className="h-6 w-6 text-gray-700" />
+                          </span>
+                          <h3 className="text-sm font-medium">{action.name}</h3>
+                          <p className="text-opacity-90 mt-1 text-xs text-white">
+                            {action.description}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  }
+
+                  // 否则渲染为链接
+                  return (
+                    <Link
+                      key={action.name}
+                      href={action.href}
+                      className={`group relative ${action.color} rounded-lg p-4 text-white transition-colors hover:scale-105 transform`}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3 mb-3">
+                          <Icon className="h-6 w-6 text-gray-700" />
+                        </span>
+                        <h3 className="text-sm font-medium">{action.name}</h3>
+                        <p className="text-opacity-90 mt-1 text-xs text-white">
+                          {action.description}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -282,59 +329,7 @@ const Home: NextPage = () => {
             </QueryLoading>
           </div>
 
-          {/* 快速操作 */}
-          <div>
-            <h2 className="mb-4 text-lg font-medium text-gray-900">快速操作</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {quickActions.map((action) => {
-                const Icon = action.icon;
 
-                // 如果有onClick事件，渲染为按钮
-                if (action.onClick) {
-                  return (
-                    <button
-                      key={action.name}
-                      onClick={action.onClick}
-                      className={`group relative ${action.color} w-full rounded-lg p-6 text-left text-white transition-colors`}
-                    >
-                      <div>
-                        <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3">
-                          <Icon className="h-6 w-6 text-gray-700" />
-                        </span>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="text-lg font-medium">{action.name}</h3>
-                        <p className="text-opacity-90 mt-2 text-sm text-white">
-                          {action.description}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                }
-
-                // 否则渲染为链接
-                return (
-                  <Link
-                    key={action.name}
-                    href={action.href}
-                    className={`group relative ${action.color} rounded-lg p-6 text-white transition-colors`}
-                  >
-                    <div>
-                      <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3">
-                        <Icon className="h-6 w-6 text-gray-700" />
-                      </span>
-                    </div>
-                    <div className="mt-4">
-                      <h3 className="text-lg font-medium">{action.name}</h3>
-                      <p className="text-opacity-90 mt-2 text-sm text-white">
-                        {action.description}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
 
           {/* 最近活动 */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
