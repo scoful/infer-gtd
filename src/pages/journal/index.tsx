@@ -2,7 +2,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { BookOpenIcon, ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { BookOpenIcon, ClockIcon, PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
@@ -10,11 +10,13 @@ import DateNavigation from "@/components/Journal/DateNavigation";
 import MarkdownRenderer from "@/components/UI/MarkdownRenderer";
 import { api } from "@/utils/api";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
+import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 
 const JournalPage: NextPage = () => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新（导航栏点击）
+  const { showSuccess, showError } = useGlobalNotifications();
 
   // 获取当前日期的日记
   const {
@@ -136,6 +138,39 @@ const JournalPage: NextPage = () => {
     }
   };
 
+  // 自动生成日记的mutation
+  const autoGenerateJournal = api.journal.autoGenerate.useMutation({
+    onSuccess: (result) => {
+      showSuccess(result.message);
+      // 刷新当前日记数据
+      void refetchCurrentJournal();
+      void refetchRecentJournals();
+      // 如果创建了新日记，跳转到编辑页面
+      if (result.journal) {
+        void router.push(`/journal/${result.journal.id}?edit=true&from=index`);
+      }
+    },
+    onError: (error) => {
+      showError(error.message || "自动生成日记失败");
+    },
+  });
+
+  // 处理自动生成日记
+  const handleAutoGenerate = () => {
+    const today = new Date();
+    const isToday = currentDate.toDateString() === today.toDateString();
+
+    if (!isToday) {
+      showError("只能为今天自动生成日记");
+      return;
+    }
+
+    autoGenerateJournal.mutate({
+      date: today,
+      templateName: "默认模板",
+    });
+  };
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -161,6 +196,18 @@ const JournalPage: NextPage = () => {
             </div>
 
             <div className="flex items-center space-x-2">
+              <button
+                onClick={handleAutoGenerate}
+                disabled={autoGenerateJournal.isPending}
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {autoGenerateJournal.isPending ? (
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                ) : (
+                  <SparklesIcon className="mr-2 h-4 w-4" />
+                )}
+                自动生成日记
+              </button>
               <button
                 onClick={goToToday}
                 className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -232,7 +279,19 @@ const JournalPage: NextPage = () => {
               <p className="mt-1 text-sm text-gray-500">
                 开始记录这一天的思考和感悟吧
               </p>
-              <div className="mt-6">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <button
+                  onClick={handleAutoGenerate}
+                  disabled={autoGenerateJournal.isPending}
+                  className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {autoGenerateJournal.isPending ? (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    <SparklesIcon className="mr-2 h-4 w-4" />
+                  )}
+                  自动生成日记
+                </button>
                 <button
                   onClick={handleEdit}
                   className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

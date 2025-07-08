@@ -116,6 +116,12 @@ export const journalReminderSchema = z.object({
   template: z.string().max(100).optional(),
 });
 
+// 自动生成日记 Schema
+export const autoGenerateJournalSchema = z.object({
+  date: z.date().optional(), // 可选，默认为当天
+  templateName: z.string().default("默认模板"), // 使用的模板名称
+});
+
 // 导出类型
 export type CreateJournalInput = z.infer<typeof createJournalSchema>;
 export type UpdateJournalInput = z.infer<typeof updateJournalSchema>;
