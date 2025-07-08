@@ -18,6 +18,7 @@ import AuthGuard from "@/components/Layout/AuthGuard";
 import { QueryLoading, SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import TaskModal from "@/components/Tasks/TaskModal";
+import ActivityHeatmap from "@/components/Charts/ActivityHeatmap";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -88,6 +89,20 @@ const Home: NextPage = () => {
     },
   );
 
+  const {
+    data: dailyActivity,
+    isLoading: isLoadingActivity,
+    error: activityError,
+    refetch: refetchActivity,
+  } = api.task.getDailyActivity.useQuery(
+    {},
+    {
+      enabled: !!sessionData,
+      staleTime: 10 * 60 * 1000, // 10分钟内不重新获取
+      refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
+    },
+  );
+
   // 注册页面刷新函数
   usePageRefresh(() => {
     void Promise.all([
@@ -95,8 +110,9 @@ const Home: NextPage = () => {
       refetchTasks(),
       refetchNotes(),
       refetchJournals(),
+      refetchActivity(),
     ]);
-  }, [refetchStats, refetchTasks, refetchNotes, refetchJournals]);
+  }, [refetchStats, refetchTasks, refetchNotes, refetchJournals, refetchActivity]);
 
   const quickActions = [
     {
@@ -220,113 +236,22 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {/* 统计概览 */}
-          <div>
-            <div className="mb-4 flex items-center gap-3">
-              <h2 className="text-lg font-medium text-gray-900">本月统计</h2>
-              {isFetchingStats && !isLoadingStats && (
-                <div className="flex items-center text-sm text-blue-600">
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                  刷新中...
-                </div>
-              )}
+          {/* 活动热力图 */}
+          <div className="overflow-hidden rounded-lg bg-white shadow">
+            <div className="px-4 py-5 sm:p-6">
+              <QueryLoading
+                isLoading={isLoadingActivity}
+                error={activityError}
+                loadingMessage="加载活动数据中..."
+              >
+                {dailyActivity && (
+                  <ActivityHeatmap
+                    data={dailyActivity}
+                    className="w-full"
+                  />
+                )}
+              </QueryLoading>
             </div>
-            <QueryLoading
-              isLoading={isLoadingStats}
-              error={statsError}
-              loadingMessage="加载统计数据中..."
-            >
-              {taskStats && (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="overflow-hidden rounded-lg bg-white shadow">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <ChartBarIcon className="h-6 w-6 text-gray-400" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="truncate text-sm font-medium text-gray-500">
-                              总任务数
-                            </dt>
-                            <dd className="text-lg font-medium text-gray-900">
-                              {taskStats.totalTasks}
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="overflow-hidden rounded-lg bg-white shadow">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <ChartBarIcon className="h-6 w-6 text-green-400" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="truncate text-sm font-medium text-gray-500">
-                              已完成
-                            </dt>
-                            <dd className="text-lg font-medium text-gray-900">
-                              {taskStats.completedTasks}
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="overflow-hidden rounded-lg bg-white shadow">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <ClockIcon className="h-6 w-6 text-blue-400" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="truncate text-sm font-medium text-gray-500">
-                              总时长
-                            </dt>
-                            <dd className="text-lg font-medium text-gray-900">
-                              {Math.round(taskStats.totalTimeSpent / 3600)}h
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="overflow-hidden rounded-lg bg-white shadow">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <ChartBarIcon className="h-6 w-6 text-purple-400" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="truncate text-sm font-medium text-gray-500">
-                              完成率
-                            </dt>
-                            <dd className="text-lg font-medium text-gray-900">
-                              {taskStats.totalTasks > 0
-                                ? Math.round(
-                                    (taskStats.completedTasks /
-                                      taskStats.totalTasks) *
-                                      100,
-                                  )
-                                : 0}
-                              %
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </QueryLoading>
           </div>
 
 

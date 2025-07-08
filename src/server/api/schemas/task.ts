@@ -112,6 +112,12 @@ export const getTaskStatsSchema = z.object({
   endDate: z.date().optional(),
 });
 
+// 获取每日活动数据 Schema
+export const getDailyActivitySchema = z.object({
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+});
+
 // 批量操作 Schema
 export const batchUpdateTasksSchema = z.object({
   taskIds: z.array(z.string().cuid("无效的任务ID")).min(1, "至少选择一个任务"),
@@ -177,6 +183,7 @@ export type SetRecurringInput = z.infer<typeof setRecurringSchema>;
 export type TimeTrackingInput = z.infer<typeof timeTrackingSchema>;
 export type GetTimeEntriesInput = z.infer<typeof getTimeEntriesSchema>;
 export type GetTaskStatsInput = z.infer<typeof getTaskStatsSchema>;
+export type GetDailyActivityInput = z.infer<typeof getDailyActivitySchema>;
 export type BatchUpdateTasksInput = z.infer<typeof batchUpdateTasksSchema>;
 export type BatchDeleteTasksInput = z.infer<typeof batchDeleteTasksSchema>;
 export type ReorderTasksInput = z.infer<typeof reorderTasksSchema>;

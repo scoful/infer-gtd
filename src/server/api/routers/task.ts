@@ -7,6 +7,7 @@ import {
   batchDeleteTasksSchema,
   batchUpdateTasksSchema,
   createTaskSchema,
+  getDailyActivitySchema,
   getTasksByStatusSchema,
   getTasksSchema,
   getTaskStatsSchema,
@@ -2218,6 +2219,138 @@ export const taskRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "调整任务时间失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 获取每日活动数据
+  getDailyActivity: protectedProcedure
+    .input(getDailyActivitySchema)
+    .query(async ({ ctx, input }) => {
+      try {
+        // 默认获取过去一年的数据
+        const endDate = input.endDate || new Date();
+        const startDate = input.startDate || (() => {
+          const date = new Date(endDate);
+          date.setFullYear(date.getFullYear() - 1);
+          return date;
+        })();
+
+        // 获取任务创建数据
+        const taskCreations = await ctx.db.task.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdById: ctx.session.user.id,
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        // 获取任务完成数据
+        const taskCompletions = await ctx.db.task.groupBy({
+          by: ['completedAt'],
+          where: {
+            createdById: ctx.session.user.id,
+            completedAt: {
+              gte: startDate,
+              lte: endDate,
+              not: null,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        // 获取笔记创建数据
+        const noteCreations = await ctx.db.note.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdById: ctx.session.user.id,
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        // 获取日记创建数据
+        const journalCreations = await ctx.db.journal.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdById: ctx.session.user.id,
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        // 合并所有活动数据
+        const activityMap = new Map<string, number>();
+
+        // 处理任务创建
+        taskCreations.forEach(item => {
+          const dateKey = item.createdAt.toISOString().split('T')[0]!;
+          activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + item._count.id);
+        });
+
+        // 处理任务完成
+        taskCompletions.forEach(item => {
+          if (item.completedAt) {
+            const dateKey = item.completedAt.toISOString().split('T')[0]!;
+            activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + item._count.id);
+          }
+        });
+
+        // 处理笔记创建
+        noteCreations.forEach(item => {
+          const dateKey = item.createdAt.toISOString().split('T')[0]!;
+          activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + item._count.id);
+        });
+
+        // 处理日记创建
+        journalCreations.forEach(item => {
+          const dateKey = item.createdAt.toISOString().split('T')[0]!;
+          activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + item._count.id);
+        });
+
+        // 计算活动级别（0-4）
+        const maxActivity = Math.max(...Array.from(activityMap.values()), 1);
+        const activityData = Array.from(activityMap.entries()).map(([date, count]) => {
+          let level = 0;
+          if (count > 0) {
+            const ratio = count / maxActivity;
+            if (ratio >= 0.8) level = 4;
+            else if (ratio >= 0.6) level = 3;
+            else if (ratio >= 0.4) level = 2;
+            else level = 1;
+          }
+
+          return {
+            date,
+            count,
+            level,
+          };
+        });
+
+        return activityData.sort((a, b) => a.date.localeCompare(b.date));
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "获取每日活动数据失败",
           cause: error,
         });
       }

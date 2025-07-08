@@ -568,7 +568,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             ? "lg:w-16"
             : isCollapsed && collapsedExpandedItems.size > 0
               ? "lg:w-20"
-              : "lg:w-56"
+              : "lg:w-48"
         }`}
       >
         <div className="flex flex-grow flex-col overflow-y-auto border-r border-gray-200 bg-white pt-5">
@@ -782,7 +782,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             ? "lg:pl-16"
             : isCollapsed && collapsedExpandedItems.size > 0
               ? "lg:pl-20"
-              : "lg:pl-56"
+              : "lg:pl-48"
         }`}
       >
         {/* Top navigation */}
