@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { TaskStatus } from "@prisma/client";
+import { type TaskStatus } from "@prisma/client";
 
 interface StatusDistributionData {
   status: string;
@@ -39,8 +39,8 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
   const totalTasks = Object.values(data).reduce((sum, count) => sum + count, 0);
 
   // 转换数据格式 - 显示所有状态，包括数量为0的
-  const chartData: StatusDistributionData[] = Object.entries(statusConfig)
-    .map(([status, config]) => {
+  const chartData: StatusDistributionData[] = Object.entries(statusConfig).map(
+    ([status, config]) => {
       const count = data[status as TaskStatus] || 0;
       const percentage = totalTasks > 0 ? (count / totalTasks) * 100 : 0;
       return {
@@ -49,21 +49,18 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
         percentage,
         color: config.color,
       };
-    }); // 显示所有状态，包括数量为0的
+    },
+  ); // 显示所有状态，包括数量为0的
 
   // 自定义 Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0].payload;
       return (
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
-          <p className="text-sm font-medium text-gray-900">
-            {label}状态
-          </p>
+          <p className="text-sm font-medium text-gray-900">{label}状态</p>
           <div className="mt-1 space-y-1">
-            <p className="text-sm text-blue-600">
-              任务数: {data.count} 个
-            </p>
+            <p className="text-sm text-blue-600">任务数: {data.count} 个</p>
             <p className="text-sm text-gray-600">
               占比: {data.percentage.toFixed(1)}%
             </p>
@@ -118,25 +115,15 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
             maxBarSize={60}
             barCategoryGap="20%"
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-            <XAxis
-              dataKey="status"
-              stroke="#6b7280"
-              fontSize={12}
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#f0f0f0"
+              vertical={false}
             />
-            <YAxis
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={<CustomCursor />}
-            />
-            <Bar
-              dataKey="count"
-              radius={[6, 6, 0, 0]}
-              fill="#3b82f6"
-            >
+            <XAxis dataKey="status" stroke="#6b7280" fontSize={12} />
+            <YAxis stroke="#6b7280" fontSize={12} />
+            <Tooltip content={<CustomTooltip />} cursor={<CustomCursor />} />
+            <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="#3b82f6">
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
@@ -150,7 +137,7 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
         {Object.entries(statusConfig).map(([status, config]) => {
           const count = data[status as TaskStatus] || 0;
           const percentage = totalTasks > 0 ? (count / totalTasks) * 100 : 0;
-          
+
           return (
             <div
               key={status}
@@ -166,9 +153,7 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
                 </span>
               </div>
               <div className="mt-2">
-                <div className="text-lg font-bold text-gray-900">
-                  {count}
-                </div>
+                <div className="text-lg font-bold text-gray-900">{count}</div>
                 <div className="text-xs text-gray-500">
                   {percentage.toFixed(1)}%
                 </div>
@@ -187,31 +172,31 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
             const inProgressCount = data.IN_PROGRESS || 0;
             const todoCount = data.TODO || 0;
             const waitingCount = data.WAITING || 0;
-            
+
             const insights = [];
-            
+
             if (doneCount > totalTasks * 0.6) {
               insights.push("✅ 完成率很高，工作效率出色");
             } else if (doneCount < totalTasks * 0.3) {
               insights.push("⚠️ 完成率较低，建议关注任务执行");
             }
-            
+
             if (inProgressCount > totalTasks * 0.4) {
               insights.push("🔄 进行中任务较多，注意合理安排");
             }
-            
+
             if (waitingCount > totalTasks * 0.2) {
               insights.push("⏳ 等待中任务较多，可能存在依赖阻塞");
             }
-            
+
             if (todoCount > totalTasks * 0.5) {
               insights.push("📋 待处理任务堆积，建议优先处理");
             }
-            
+
             if (insights.length === 0) {
               insights.push("📊 任务状态分布均衡");
             }
-            
+
             return insights.map((insight, index) => (
               <p key={index}>{insight}</p>
             ));

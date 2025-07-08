@@ -146,37 +146,44 @@ export default function NoteModal({
   };
 
   // 处理提交
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!formData.title.trim() || !formData.content.trim()) {
-      showError("标题和内容不能为空");
-      return;
-    }
+      if (!formData.title.trim() || !formData.content.trim()) {
+        showError("标题和内容不能为空");
+        return;
+      }
 
-    try {
-      const submitData = {
-        ...formData,
-        projectId: formData.projectId ?? undefined,
-      };
+      try {
+        const submitData = {
+          ...formData,
+          projectId: formData.projectId ?? undefined,
+        };
 
-      // 现在只支持编辑模式
-      await updateNote.mutateAsync({
-        id: noteId,
-        ...submitData,
-      });
-    } catch (error) {
-      console.error("更新笔记失败:", error);
-    }
-  }, [formData, noteId, updateNote, showError]);
+        // 现在只支持编辑模式
+        await updateNote.mutateAsync({
+          id: noteId,
+          ...submitData,
+        });
+      } catch (error) {
+        console.error("更新笔记失败:", error);
+      }
+    },
+    [formData, noteId, updateNote, showError],
+  );
 
   // 添加 Ctrl+Enter 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         // 检查表单是否有效且不在提交中
-        if (formData.title.trim() && formData.content.trim() && !updateNote.isPending) {
+        if (
+          formData.title.trim() &&
+          formData.content.trim() &&
+          !updateNote.isPending
+        ) {
           // 创建一个模拟的表单事件
           const mockEvent = {
             preventDefault: () => {},
@@ -187,13 +194,19 @@ export default function NoteModal({
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, formData.title, formData.content, updateNote.isPending, handleSubmit]);
+  }, [
+    isOpen,
+    formData.title,
+    formData.content,
+    updateNote.isPending,
+    handleSubmit,
+  ]);
 
   const isSubmitting = updateNote.isPending;
 

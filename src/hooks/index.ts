@@ -23,5 +23,5 @@ export {
   useGlobalShortcuts,
   GLOBAL_SHORTCUTS,
   getShortcutText,
-  type ShortcutConfig
+  type ShortcutConfig,
 } from "./useGlobalShortcuts";

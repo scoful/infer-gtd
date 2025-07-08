@@ -2,7 +2,12 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { BookOpenIcon, ClockIcon, PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import {
+  BookOpenIcon,
+  ClockIcon,
+  PlusIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
@@ -199,7 +204,7 @@ const JournalPage: NextPage = () => {
               <button
                 onClick={handleAutoGenerate}
                 disabled={autoGenerateJournal.isPending}
-                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {autoGenerateJournal.isPending ? (
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -283,7 +288,7 @@ const JournalPage: NextPage = () => {
                 <button
                   onClick={handleAutoGenerate}
                   disabled={autoGenerateJournal.isPending}
-                  className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {autoGenerateJournal.isPending ? (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

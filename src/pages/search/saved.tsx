@@ -202,8 +202,6 @@ const SavedSearchesPage: NextPage = () => {
         tags &&
         tags.length > 0
       ) {
-
-
         // 确保类型匹配 - 将所有ID转换为字符串进行比较
         const searchTagIds = searchParams.tagIds.map((id: any) => String(id));
         const selectedTags = tags.filter((tag) =>

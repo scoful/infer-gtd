@@ -260,7 +260,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           break;
         case "global-shortcut-search":
           // 触发搜索框聚焦
-          const searchInput = document.querySelector('input[placeholder*="搜索"]') as HTMLInputElement;
+          const searchInput = document.querySelector(
+            'input[placeholder*="搜索"]',
+          )!;
           if (searchInput) {
             searchInput.focus();
           }
@@ -287,18 +289,48 @@ export default function MainLayout({ children }: MainLayoutProps) {
     };
 
     // 添加事件监听器
-    window.addEventListener("global-shortcut-help", handleGlobalShortcuts as EventListener);
-    window.addEventListener("global-shortcut-search", handleGlobalShortcuts as EventListener);
-    window.addEventListener("global-shortcut-new-task", handleGlobalShortcuts as EventListener);
-    window.addEventListener("global-shortcut-new-note", handleGlobalShortcuts as EventListener);
-    window.addEventListener("global-shortcut-new-journal", handleGlobalShortcuts as EventListener);
+    window.addEventListener(
+      "global-shortcut-help",
+      handleGlobalShortcuts as EventListener,
+    );
+    window.addEventListener(
+      "global-shortcut-search",
+      handleGlobalShortcuts as EventListener,
+    );
+    window.addEventListener(
+      "global-shortcut-new-task",
+      handleGlobalShortcuts as EventListener,
+    );
+    window.addEventListener(
+      "global-shortcut-new-note",
+      handleGlobalShortcuts as EventListener,
+    );
+    window.addEventListener(
+      "global-shortcut-new-journal",
+      handleGlobalShortcuts as EventListener,
+    );
 
     return () => {
-      window.removeEventListener("global-shortcut-help", handleGlobalShortcuts as EventListener);
-      window.removeEventListener("global-shortcut-search", handleGlobalShortcuts as EventListener);
-      window.removeEventListener("global-shortcut-new-task", handleGlobalShortcuts as EventListener);
-      window.removeEventListener("global-shortcut-new-note", handleGlobalShortcuts as EventListener);
-      window.removeEventListener("global-shortcut-new-journal", handleGlobalShortcuts as EventListener);
+      window.removeEventListener(
+        "global-shortcut-help",
+        handleGlobalShortcuts as EventListener,
+      );
+      window.removeEventListener(
+        "global-shortcut-search",
+        handleGlobalShortcuts as EventListener,
+      );
+      window.removeEventListener(
+        "global-shortcut-new-task",
+        handleGlobalShortcuts as EventListener,
+      );
+      window.removeEventListener(
+        "global-shortcut-new-note",
+        handleGlobalShortcuts as EventListener,
+      );
+      window.removeEventListener(
+        "global-shortcut-new-journal",
+        handleGlobalShortcuts as EventListener,
+      );
     };
   }, [router]);
 
@@ -355,7 +387,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return router.pathname === "/analytics";
     }
     if (href === "/review") {
-      return router.pathname === "/review" || router.pathname.startsWith("/review/");
+      return (
+        router.pathname === "/review" || router.pathname.startsWith("/review/")
+      );
     }
     return router.pathname.startsWith(href);
   };

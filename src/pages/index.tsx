@@ -112,7 +112,13 @@ const Home: NextPage = () => {
       refetchJournals(),
       refetchActivity(),
     ]);
-  }, [refetchStats, refetchTasks, refetchNotes, refetchJournals, refetchActivity]);
+  }, [
+    refetchStats,
+    refetchTasks,
+    refetchNotes,
+    refetchJournals,
+    refetchActivity,
+  ]);
 
   const quickActions = [
     {
@@ -198,10 +204,10 @@ const Home: NextPage = () => {
                       <button
                         key={action.name}
                         onClick={action.onClick}
-                        className={`group relative ${action.color} rounded-lg p-4 text-left text-white transition-colors hover:scale-105 transform`}
+                        className={`group relative ${action.color} transform rounded-lg p-4 text-left text-white transition-colors hover:scale-105`}
                       >
                         <div className="flex flex-col items-center text-center">
-                          <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3 mb-3">
+                          <span className="bg-opacity-20 mb-3 inline-flex rounded-lg bg-white p-3">
                             <Icon className="h-6 w-6 text-gray-700" />
                           </span>
                           <h3 className="text-sm font-medium">{action.name}</h3>
@@ -218,10 +224,10 @@ const Home: NextPage = () => {
                     <Link
                       key={action.name}
                       href={action.href}
-                      className={`group relative ${action.color} rounded-lg p-4 text-white transition-colors hover:scale-105 transform`}
+                      className={`group relative ${action.color} transform rounded-lg p-4 text-white transition-colors hover:scale-105`}
                     >
                       <div className="flex flex-col items-center text-center">
-                        <span className="bg-opacity-20 inline-flex rounded-lg bg-white p-3 mb-3">
+                        <span className="bg-opacity-20 mb-3 inline-flex rounded-lg bg-white p-3">
                           <Icon className="h-6 w-6 text-gray-700" />
                         </span>
                         <h3 className="text-sm font-medium">{action.name}</h3>
@@ -245,16 +251,11 @@ const Home: NextPage = () => {
                 loadingMessage="加载活动数据中..."
               >
                 {dailyActivity && (
-                  <ActivityHeatmap
-                    data={dailyActivity}
-                    className="w-full"
-                  />
+                  <ActivityHeatmap data={dailyActivity} className="w-full" />
                 )}
               </QueryLoading>
             </div>
           </div>
-
-
 
           {/* 最近活动 */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

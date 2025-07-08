@@ -31,22 +31,23 @@ const ProjectCompletionPieChart: React.FC<ProjectCompletionPieChartProps> = ({
       total: stats.total,
       completed: stats.completed,
       pending: stats.total - stats.completed,
-      completionRate: stats.total > 0 ? (stats.completed / stats.total) * 100 : 0,
+      completionRate:
+        stats.total > 0 ? (stats.completed / stats.total) * 100 : 0,
     }));
 
   // 颜色配置 - 已完成和待完成的颜色
   const COMPLETION_COLORS = {
     completed: "#10b981", // green-500 已完成
-    pending: "#f3f4f6",   // gray-100 待完成
+    pending: "#f3f4f6", // gray-100 待完成
   };
 
   // 自定义 Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0].payload;
       const isCompleted = data.name.includes("已完成");
       const projectName = data.projectName;
-      const projectData = projectsData.find(p => p.name === projectName);
+      const projectData = projectsData.find((p) => p.name === projectName);
 
       return (
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
@@ -94,25 +95,29 @@ const ProjectCompletionPieChart: React.FC<ProjectCompletionPieChartProps> = ({
               name: `${project.name} - 已完成`,
               value: project.completed,
               projectName: project.name,
-              type: 'completed'
+              type: "completed",
             },
             {
               name: `${project.name} - 待完成`,
               value: project.pending,
               projectName: project.name,
-              type: 'pending'
-            }
-          ].filter(item => item.value > 0); // 只显示有数值的部分
+              type: "pending",
+            },
+          ].filter((item) => item.value > 0); // 只显示有数值的部分
 
           return (
-            <div key={project.name} className="rounded-lg border border-gray-200 bg-white p-4">
+            <div
+              key={project.name}
+              className="rounded-lg border border-gray-200 bg-white p-4"
+            >
               {/* 项目标题 */}
               <div className="mb-3 text-center">
-                <h4 className="text-sm font-medium text-gray-900 truncate">
+                <h4 className="truncate text-sm font-medium text-gray-900">
                   {project.name}
                 </h4>
                 <p className="text-xs text-gray-500">
-                  {project.completed}/{project.total} 已完成 ({project.completionRate.toFixed(1)}%)
+                  {project.completed}/{project.total} 已完成 (
+                  {project.completionRate.toFixed(1)}%)
                 </p>
               </div>
 
@@ -132,9 +137,13 @@ const ProjectCompletionPieChart: React.FC<ProjectCompletionPieChartProps> = ({
                       {pieData.map((entry, pieIndex) => (
                         <Cell
                           key={`cell-${pieIndex}`}
-                          fill={entry.type === 'completed' ? COMPLETION_COLORS.completed : COMPLETION_COLORS.pending}
-                          stroke={entry.type === 'pending' ? '#d1d5db' : 'none'}
-                          strokeWidth={entry.type === 'pending' ? 1 : 0}
+                          fill={
+                            entry.type === "completed"
+                              ? COMPLETION_COLORS.completed
+                              : COMPLETION_COLORS.pending
+                          }
+                          stroke={entry.type === "pending" ? "#d1d5db" : "none"}
+                          strokeWidth={entry.type === "pending" ? 1 : 0}
                         />
                       ))}
                     </Pie>
@@ -173,16 +182,16 @@ const ProjectCompletionPieChart: React.FC<ProjectCompletionPieChartProps> = ({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                   项目
                 </th>
-                <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-2 text-center text-xs font-medium tracking-wider text-gray-500 uppercase">
                   总任务
                 </th>
-                <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-2 text-center text-xs font-medium tracking-wider text-gray-500 uppercase">
                   已完成
                 </th>
-                <th className="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-2 text-center text-xs font-medium tracking-wider text-gray-500 uppercase">
                   完成率
                 </th>
               </tr>

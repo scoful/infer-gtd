@@ -145,34 +145,37 @@ export default function TagModal({
   };
 
   // 处理提交
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!formData.name.trim()) return;
+      if (!formData.name.trim()) return;
 
-    const submitData = {
-      name: formData.name.trim(),
-      color: formData.color,
-      type: formData.type,
-      category: formData.category.trim() || undefined,
-      description: formData.description.trim() || undefined,
-      icon: formData.icon.trim() || undefined,
-    };
+      const submitData = {
+        name: formData.name.trim(),
+        color: formData.color,
+        type: formData.type,
+        category: formData.category.trim() || undefined,
+        description: formData.description.trim() || undefined,
+        icon: formData.icon.trim() || undefined,
+      };
 
-    if (isEditing && tag) {
-      updateTag.mutate({
-        id: tag.id,
-        ...submitData,
-      });
-    } else {
-      createTag.mutate(submitData);
-    }
-  }, [formData, isEditing, tag, updateTag, createTag]);
+      if (isEditing && tag) {
+        updateTag.mutate({
+          id: tag.id,
+          ...submitData,
+        });
+      } else {
+        createTag.mutate(submitData);
+      }
+    },
+    [formData, isEditing, tag, updateTag, createTag],
+  );
 
   // 添加 Ctrl+Enter 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         // 检查表单是否有效且不在提交中
         const isSubmitting = createTag.isPending || updateTag.isPending;
@@ -187,13 +190,19 @@ export default function TagModal({
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, formData.name, createTag.isPending, updateTag.isPending, handleSubmit]);
+  }, [
+    isOpen,
+    formData.name,
+    createTag.isPending,
+    updateTag.isPending,
+    handleSubmit,
+  ]);
 
   const handleClose = () => {
     onClose();

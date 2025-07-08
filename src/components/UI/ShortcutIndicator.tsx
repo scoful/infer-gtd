@@ -13,15 +13,18 @@ interface ShortcutIndicatorProps {
   size?: "sm" | "md" | "lg";
 }
 
-export default function ShortcutIndicator({ 
-  shortcut, 
-  className = "", 
-  size = "sm" 
+export default function ShortcutIndicator({
+  shortcut,
+  className = "",
+  size = "sm",
 }: ShortcutIndicatorProps) {
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
-    setIsMac(typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0);
+    setIsMac(
+      typeof navigator !== "undefined" &&
+        navigator.platform.toUpperCase().includes("MAC"),
+    );
   }, []);
 
   const sizeClasses = {
@@ -51,19 +54,19 @@ export default function ShortcutIndicator({
 
     return keys.map((key, index) => (
       <span key={key}>
-        <kbd className={`inline-flex items-center rounded border border-gray-200 bg-gray-100 font-medium text-gray-700 ${sizeClasses[size]}`}>
+        <kbd
+          className={`inline-flex items-center rounded border border-gray-200 bg-gray-100 font-medium text-gray-700 ${sizeClasses[size]}`}
+        >
           {key}
         </kbd>
-        {index < keys.length - 1 && <span className="mx-1 text-gray-400">+</span>}
+        {index < keys.length - 1 && (
+          <span className="mx-1 text-gray-400">+</span>
+        )}
       </span>
     ));
   };
 
-  return (
-    <div className={`flex items-center ${className}`}>
-      {renderKeys()}
-    </div>
-  );
+  return <div className={`flex items-center ${className}`}>{renderKeys()}</div>;
 }
 
 // 快捷键提示气泡组件
@@ -80,16 +83,19 @@ interface ShortcutTooltipProps {
   position?: "top" | "bottom" | "left" | "right";
 }
 
-export function ShortcutTooltip({ 
-  shortcut, 
-  children, 
-  position = "top" 
+export function ShortcutTooltip({
+  shortcut,
+  children,
+  position = "top",
 }: ShortcutTooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
-    setIsMac(typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0);
+    setIsMac(
+      typeof navigator !== "undefined" &&
+        navigator.platform.toUpperCase().includes("MAC"),
+    );
   }, []);
 
   const positionClasses = {
@@ -101,9 +107,11 @@ export function ShortcutTooltip({
 
   const arrowClasses = {
     top: "top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-900",
-    bottom: "bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900",
+    bottom:
+      "bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900",
     left: "left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-900",
-    right: "right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900",
+    right:
+      "right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900",
   };
 
   const getShortcutKeys = () => {
@@ -129,20 +137,22 @@ export function ShortcutTooltip({
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
       {children}
-      
+
       {isVisible && (
         <div className={`absolute z-50 ${positionClasses[position]}`}>
-          <div className="bg-gray-900 text-white text-xs rounded py-2 px-3 whitespace-nowrap">
+          <div className="rounded bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white">
             <div className="font-medium">{shortcut.description}</div>
-            <div className="text-gray-300 mt-1">{getShortcutKeys()}</div>
+            <div className="mt-1 text-gray-300">{getShortcutKeys()}</div>
           </div>
-          <div className={`absolute w-0 h-0 border-4 ${arrowClasses[position]}`}></div>
+          <div
+            className={`absolute h-0 w-0 border-4 ${arrowClasses[position]}`}
+          ></div>
         </div>
       )}
     </div>
@@ -161,11 +171,17 @@ interface ShortcutBadgeProps {
   className?: string;
 }
 
-export function ShortcutBadge({ shortcut, className = "" }: ShortcutBadgeProps) {
+export function ShortcutBadge({
+  shortcut,
+  className = "",
+}: ShortcutBadgeProps) {
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
-    setIsMac(typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0);
+    setIsMac(
+      typeof navigator !== "undefined" &&
+        navigator.platform.toUpperCase().includes("MAC"),
+    );
   }, []);
 
   const getShortcutText = () => {
@@ -191,7 +207,9 @@ export function ShortcutBadge({ shortcut, className = "" }: ShortcutBadgeProps) 
   };
 
   return (
-    <span className={`inline-flex items-center rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ${className}`}>
+    <span
+      className={`inline-flex items-center rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 ${className}`}
+    >
       {getShortcutText()}
     </span>
   );

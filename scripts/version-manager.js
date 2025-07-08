@@ -19,7 +19,10 @@ function readVersionFile() {
     const content = fs.readFileSync(VERSION_FILE, "utf8");
     return JSON.parse(content);
   } catch (error) {
-    console.error("❌ 无法读取版本文件:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "❌ 无法读取版本文件:",
+      error instanceof Error ? error.message : String(error),
+    );
     process.exit(1);
   }
 }
@@ -34,7 +37,10 @@ function writeVersionFile(versionData) {
     fs.writeFileSync(VERSION_FILE, content, "utf8");
     console.log(`✅ 版本已更新: ${versionData.version}`);
   } catch (error) {
-    console.error("❌ 无法写入版本文件:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "❌ 无法写入版本文件:",
+      error instanceof Error ? error.message : String(error),
+    );
     process.exit(1);
   }
 }
@@ -52,7 +58,10 @@ function getGitInfo() {
     }).trim();
     return { gitCommit, gitBranch };
   } catch (error) {
-    console.warn("⚠️ 无法获取 Git 信息:", error instanceof Error ? error.message : String(error));
+    console.warn(
+      "⚠️ 无法获取 Git 信息:",
+      error instanceof Error ? error.message : String(error),
+    );
     return { gitCommit: "", gitBranch: "" };
   }
 }

@@ -27,7 +27,10 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
 }) => {
   // 生成24小时的数据
   const hours = Array.from({ length: 24 }, (_, i) => i);
-  const allCounts = Object.values(data).flatMap(d => [d.created, d.completed]);
+  const allCounts = Object.values(data).flatMap((d) => [
+    d.created,
+    d.completed,
+  ]);
   const max = maxCount || Math.max(...allCounts, 1);
 
   // 格式化时间
@@ -36,11 +39,11 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
   };
 
   // 准备图表数据
-  const chartData = hours.map(hour => ({
+  const chartData = hours.map((hour) => ({
     hour: formatHour(hour),
     created: data[hour]?.created || 0,
     completed: data[hour]?.completed || 0,
-    hourNumber: hour
+    hourNumber: hour,
   }));
 
   // 获取颜色强度
@@ -61,7 +64,7 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
 
   // 自定义 Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0].payload;
       return (
         <div className="rounded-lg border bg-white p-3 shadow-lg">
@@ -75,7 +78,10 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
   };
 
   // 如果没有数据
-  if (Object.keys(data).length === 0 || Object.values(data).every(d => d.created === 0 && d.completed === 0)) {
+  if (
+    Object.keys(data).length === 0 ||
+    Object.values(data).every((d) => d.created === 0 && d.completed === 0)
+  ) {
     return (
       <div className="flex h-80 items-center justify-center text-gray-500">
         <div className="text-center">
@@ -100,16 +106,8 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
             }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="hour"
-              stroke="#6b7280"
-              fontSize={12}
-              interval={1}
-            />
-            <YAxis
-              stroke="#6b7280"
-              fontSize={12}
-            />
+            <XAxis dataKey="hour" stroke="#6b7280" fontSize={12} interval={1} />
+            <YAxis stroke="#6b7280" fontSize={12} />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Bar
@@ -144,10 +142,12 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
         </div>
         <div>
           <div className="font-medium text-gray-900">
-            {Object.keys(data).filter((hour) => {
-              const d = data[parseInt(hour)];
-              return d && (d.created > 0 || d.completed > 0);
-            }).length}
+            {
+              Object.keys(data).filter((hour) => {
+                const d = data[parseInt(hour)];
+                return d && (d.created > 0 || d.completed > 0);
+              }).length
+            }
           </div>
           <div className="text-gray-500">活跃时段</div>
         </div>

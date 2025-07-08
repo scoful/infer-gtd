@@ -325,7 +325,7 @@ export default function MarkdownEditor({
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
 
       {/* 快捷键提示 */}
-      <div className="mt-2 text-xs text-gray-500 space-y-1">
+      <div className="mt-2 space-y-1 text-xs text-gray-500">
         {/* Markdown 快捷键 */}
         <div>
           <span className="font-medium">Markdown：</span>

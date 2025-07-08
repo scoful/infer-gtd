@@ -55,6 +55,9 @@ try {
   console.log("   • 开发环境: 显示详细信息（构建时间、Git 信息等）");
   console.log("   • 生产环境: 显示简洁版本号");
 } catch (error) {
-  console.error("❌ 设置过程中出现错误:", error instanceof Error ? error.message : String(error));
+  console.error(
+    "❌ 设置过程中出现错误:",
+    error instanceof Error ? error.message : String(error),
+  );
   process.exit(1);
 }

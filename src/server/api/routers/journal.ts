@@ -762,14 +762,27 @@ export const journalRouter = createTRPCRouter({
             title: true,
             description: true,
             priority: true,
+            type: true,
+            feedback: true,
+            totalTimeSpent: true,
             project: {
               select: {
                 name: true,
               },
             },
+            tags: {
+              select: {
+                tag: {
+                  select: {
+                    name: true,
+                    color: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: {
-            completedAt: 'asc',
+            completedAt: "asc",
           },
         });
 
@@ -787,22 +800,69 @@ export const journalRouter = createTRPCRouter({
         const day = String(normalizedDate.getDate()).padStart(2, "0");
 
         // 构建今日完成任务列表（使用已完成的复选框语法）
-        const completedTasksList = completedTasks.map(task => {
-          let taskLine = `- [x] ${task.title}`;
-          if (task.project?.name) {
-            taskLine += ` (${task.project.name})`;
-          }
-          if (task.priority) {
-            const priorityMap = {
-              LOW: '低',
-              MEDIUM: '中',
-              HIGH: '高',
-              URGENT: '紧急'
-            };
-            taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
-          }
-          return taskLine;
-        }).join('\n');
+        const completedTasksList = completedTasks
+          .map((task) => {
+            let taskLine = `- [x] **${task.title}**`;
+
+            // 添加项目信息
+            if (task.project?.name) {
+              taskLine += ` (${task.project.name})`;
+            }
+
+            // 添加优先级
+            if (task.priority) {
+              const priorityMap = {
+                LOW: "低",
+                MEDIUM: "中",
+                HIGH: "高",
+                URGENT: "紧急",
+              };
+              taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
+            }
+
+            // 添加任务类型
+            if (task.type) {
+              const typeMap = {
+                NORMAL: "普通",
+                DEADLINE: "限时",
+              };
+              taskLine += ` [${typeMap[task.type] || task.type}]`;
+            }
+
+            // 添加耗时信息
+            if (task.totalTimeSpent > 0) {
+              const hours = Math.floor(task.totalTimeSpent / 3600);
+              const minutes = Math.floor((task.totalTimeSpent % 3600) / 60);
+              if (hours > 0) {
+                taskLine += ` [耗时: ${hours}h${minutes}m]`;
+              } else if (minutes > 0) {
+                taskLine += ` [耗时: ${minutes}m]`;
+              }
+            }
+
+            // 添加标签
+            if (task.tags && task.tags.length > 0) {
+              const tagNames = task.tags.map((t) => t.tag.name).join(", ");
+              taskLine += ` #${tagNames}`;
+            }
+
+            // 添加描述（如果有，否则使用占位符）
+            if (task.description) {
+              taskLine += `\n  > ${task.description}`;
+            } else {
+              taskLine += `\n  > _暂无描述_`;
+            }
+
+            // 添加反馈（如果有，否则使用占位符）
+            if (task.feedback) {
+              taskLine += `\n  💭 ${task.feedback}`;
+            } else {
+              taskLine += `\n  💭 _暂无反馈_`;
+            }
+
+            return taskLine;
+          })
+          .join("\n\n");
 
         const templateContent = `# ${year}-${month}-${day} 日记
 
@@ -839,7 +899,7 @@ ${completedTasksList}
 
           // 查找"今日完成"部分
           const completedSectionRegex = /## 今日完成\n([\s\S]*?)(?=\n## |$)/;
-          const match = existingContent.match(completedSectionRegex);
+          const match = completedSectionRegex.exec(existingContent);
 
           let updatedContent;
           if (match) {
@@ -848,36 +908,91 @@ ${completedTasksList}
 
             // 提取现有任务的标题（用于去重）
             const existingTaskTitles = new Set<string>();
-            const existingTaskLines = existingTasksText.split('\n').filter(line => line.trim());
-            existingTaskLines.forEach(line => {
-              // 匹配任务行：- [x] 任务标题 或 - 任务标题
-              const taskMatch = line.match(/^-\s*(?:\[x\]\s*)?(.+?)(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?$/);
+            const existingTaskLines = existingTasksText
+              .split("\n")
+              .filter((line) => line.trim());
+            existingTaskLines.forEach((line) => {
+              // 匹配任务行：- [x] **任务标题** 或 - [x] 任务标题 或 - 任务标题
+              const taskMatch = /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(line);
               if (taskMatch) {
                 existingTaskTitles.add(taskMatch[1].trim());
               }
             });
 
             // 过滤出新的任务（去重）
-            const newTasks = completedTasks.filter(task => !existingTaskTitles.has(task.title));
+            const newTasks = completedTasks.filter(
+              (task) => !existingTaskTitles.has(task.title),
+            );
 
             if (newTasks.length > 0) {
-              // 构建新任务列表
-              const newTasksList = newTasks.map(task => {
-                let taskLine = `- [x] ${task.title}`;
-                if (task.project?.name) {
-                  taskLine += ` (${task.project.name})`;
-                }
-                if (task.priority) {
-                  const priorityMap = {
-                    LOW: '低',
-                    MEDIUM: '中',
-                    HIGH: '高',
-                    URGENT: '紧急'
-                  };
-                  taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
-                }
-                return taskLine;
-              }).join('\n');
+              // 构建新任务列表（使用相同的格式化逻辑）
+              const newTasksList = newTasks
+                .map((task) => {
+                  let taskLine = `- [x] **${task.title}**`;
+
+                  // 添加项目信息
+                  if (task.project?.name) {
+                    taskLine += ` (${task.project.name})`;
+                  }
+
+                  // 添加优先级
+                  if (task.priority) {
+                    const priorityMap = {
+                      LOW: "低",
+                      MEDIUM: "中",
+                      HIGH: "高",
+                      URGENT: "紧急",
+                    };
+                    taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
+                  }
+
+                  // 添加任务类型
+                  if (task.type) {
+                    const typeMap = {
+                      NORMAL: "普通",
+                      DEADLINE: "限时",
+                    };
+                    taskLine += ` [${typeMap[task.type] || task.type}]`;
+                  }
+
+                  // 添加耗时信息
+                  if (task.totalTimeSpent > 0) {
+                    const hours = Math.floor(task.totalTimeSpent / 3600);
+                    const minutes = Math.floor(
+                      (task.totalTimeSpent % 3600) / 60,
+                    );
+                    if (hours > 0) {
+                      taskLine += ` [耗时: ${hours}h${minutes}m]`;
+                    } else if (minutes > 0) {
+                      taskLine += ` [耗时: ${minutes}m]`;
+                    }
+                  }
+
+                  // 添加标签
+                  if (task.tags && task.tags.length > 0) {
+                    const tagNames = task.tags
+                      .map((t) => t.tag.name)
+                      .join(", ");
+                    taskLine += ` #${tagNames}`;
+                  }
+
+                  // 添加描述（如果有，否则使用占位符）
+                  if (task.description) {
+                    taskLine += `\n  > ${task.description}`;
+                  } else {
+                    taskLine += `\n  > _暂无描述_`;
+                  }
+
+                  // 添加反馈（如果有，否则使用占位符）
+                  if (task.feedback) {
+                    taskLine += `\n  💭 ${task.feedback}`;
+                  } else {
+                    taskLine += `\n  💭 _暂无反馈_`;
+                  }
+
+                  return taskLine;
+                })
+                .join("\n\n");
 
               const newTasksSection = existingTasksText
                 ? `${existingTasksText}\n${newTasksList}`
@@ -885,7 +1000,7 @@ ${completedTasksList}
 
               updatedContent = existingContent.replace(
                 completedSectionRegex,
-                `## 今日完成\n${newTasksSection}\n`
+                `## 今日完成\n${newTasksSection}\n`,
               );
             } else {
               // 没有新任务，不更新内容
@@ -906,19 +1021,23 @@ ${completedTasksList}
               },
             });
 
-            // 计算实际添加的新任务数量
-            const existingTasksText = match ? match[1].trim() : '';
+            // 计算实际添加的新任务数量（使用相同的去重逻辑）
+            const existingTasksText = match ? match[1].trim() : "";
             const existingTaskTitles = new Set<string>();
             if (existingTasksText) {
-              const existingTaskLines = existingTasksText.split('\n').filter(line => line.trim());
-              existingTaskLines.forEach(line => {
-                const taskMatch = line.match(/^-\s*(?:\[x\]\s*)?(.+?)(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?$/);
+              const existingTaskLines = existingTasksText
+                .split("\n")
+                .filter((line) => line.trim());
+              existingTaskLines.forEach((line) => {
+                const taskMatch = /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(line);
                 if (taskMatch) {
                   existingTaskTitles.add(taskMatch[1].trim());
                 }
               });
             }
-            const newTasksCount = completedTasks.filter(task => !existingTaskTitles.has(task.title)).length;
+            const newTasksCount = completedTasks.filter(
+              (task) => !existingTaskTitles.has(task.title),
+            ).length;
 
             return {
               success: true,

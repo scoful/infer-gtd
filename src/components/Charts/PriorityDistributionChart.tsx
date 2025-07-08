@@ -35,22 +35,23 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
   };
 
   // 转换数据格式 - 显示所有优先级，数量为0的显示为0.1以便在饼图中显示细线
-  const chartData: PriorityDistributionData[] = Object.entries(priorityConfig)
-    .map(([priority, config]) => {
-      const count = data[priority as Priority] || 0;
-      const percentage = totalTasks > 0 ? (count / totalTasks) * 100 : 0;
-      return {
-        priority: config.label,
-        count: count === 0 ? 0.1 : count, // 0值显示为0.1，在饼图中显示细线
-        percentage,
-        color: config.color,
-        originalCount: count, // 保存原始数量用于显示
-      };
-    }); // 显示所有优先级，数量为0的显示细线
+  const chartData: PriorityDistributionData[] = Object.entries(
+    priorityConfig,
+  ).map(([priority, config]) => {
+    const count = data[priority as Priority] || 0;
+    const percentage = totalTasks > 0 ? (count / totalTasks) * 100 : 0;
+    return {
+      priority: config.label,
+      count: count === 0 ? 0.1 : count, // 0值显示为0.1，在饼图中显示细线
+      percentage,
+      color: config.color,
+      originalCount: count, // 保存原始数量用于显示
+    };
+  }); // 显示所有优先级，数量为0的显示细线
 
   // 自定义 Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0].payload;
       return (
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
@@ -94,7 +95,7 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
               cy="50%"
               labelLine={false}
               label={({ priority, percentage }) =>
-                percentage > 5 ? `${priority} ${percentage.toFixed(0)}%` : ''
+                percentage > 5 ? `${priority} ${percentage.toFixed(0)}%` : ""
               }
               outerRadius={100}
               fill="#8884d8"
@@ -110,7 +111,8 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
               height={36}
               formatter={(value, entry: any) => (
                 <span style={{ color: entry.color }}>
-                  {entry.payload.priority} ({entry.payload.originalCount ?? entry.payload.count})
+                  {entry.payload.priority} (
+                  {entry.payload.originalCount ?? entry.payload.count})
                 </span>
               )}
             />
@@ -139,9 +141,7 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
                 </span>
               </div>
               <div className="mt-2">
-                <div className="text-2xl font-bold text-gray-900">
-                  {count}
-                </div>
+                <div className="text-2xl font-bold text-gray-900">{count}</div>
                 <div className="text-sm text-gray-500">
                   {percentage.toFixed(1)}%
                 </div>
@@ -158,25 +158,27 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
           {(() => {
             const urgentCount = data[Priority.URGENT] || 0;
             const highCount = data[Priority.HIGH] || 0;
-            const urgentPercentage = totalTasks > 0 ? (urgentCount / totalTasks) * 100 : 0;
-            const highPercentage = totalTasks > 0 ? (highCount / totalTasks) * 100 : 0;
-            
+            const urgentPercentage =
+              totalTasks > 0 ? (urgentCount / totalTasks) * 100 : 0;
+            const highPercentage =
+              totalTasks > 0 ? (highCount / totalTasks) * 100 : 0;
+
             const insights = [];
-            
+
             if (urgentPercentage > 30) {
               insights.push("紧急任务占比较高，建议优化时间管理");
             } else if (urgentPercentage < 5) {
               insights.push("紧急任务控制良好，时间规划合理");
             }
-            
+
             if (highPercentage + urgentPercentage > 50) {
               insights.push("高优先级任务较多，注意工作负荷");
             }
-            
+
             if (insights.length === 0) {
               insights.push("优先级分布合理，继续保持");
             }
-            
+
             return insights.map((insight, index) => (
               <p key={index}>• {insight}</p>
             ));

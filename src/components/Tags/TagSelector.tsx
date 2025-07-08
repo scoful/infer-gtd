@@ -505,17 +505,22 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md active:scale-95 active:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
+                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none active:scale-95 active:bg-blue-100 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
                         style={{ alignItems: "center", minHeight: "42px" }}
                         title={
                           maxTags && selectedTagIds.length >= maxTags
                             ? "已达到最大标签数量限制"
                             : `点击选择 ${tag.name}`
                         }
-                        tabIndex={maxTags && selectedTagIds.length >= maxTags ? -1 : 0}
+                        tabIndex={
+                          maxTags && selectedTagIds.length >= maxTags ? -1 : 0
+                        }
                         role="button"
                         onKeyDown={(e) => {
-                          if ((e.key === "Enter" || e.key === " ") && !(maxTags && selectedTagIds.length >= maxTags)) {
+                          if (
+                            (e.key === "Enter" || e.key === " ") &&
+                            !(maxTags && selectedTagIds.length >= maxTags)
+                          ) {
                             e.preventDefault();
                             handleTagSelect(tag);
                           }
@@ -537,12 +542,17 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className="flex cursor-pointer items-center justify-between rounded-md border border-transparent p-3 transition-colors hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                        className="flex cursor-pointer items-center justify-between rounded-md border border-transparent p-3 transition-colors hover:border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none"
                         style={{ alignItems: "center" }}
-                        tabIndex={maxTags && selectedTagIds.length >= maxTags ? -1 : 0}
+                        tabIndex={
+                          maxTags && selectedTagIds.length >= maxTags ? -1 : 0
+                        }
                         role="button"
                         onKeyDown={(e) => {
-                          if ((e.key === "Enter" || e.key === " ") && !(maxTags && selectedTagIds.length >= maxTags)) {
+                          if (
+                            (e.key === "Enter" || e.key === " ") &&
+                            !(maxTags && selectedTagIds.length >= maxTags)
+                          ) {
                             e.preventDefault();
                             handleTagSelect(tag);
                           }

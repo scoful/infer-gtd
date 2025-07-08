@@ -58,7 +58,10 @@ function installHook(hookName, content) {
     fs.writeFileSync(hookPath, content, { mode: 0o755 });
     console.log(`✅ ${hookName} 钩子已安装`);
   } catch (error) {
-    console.error(`❌ 安装 ${hookName} 钩子失败:`, error instanceof Error ? error.message : String(error));
+    console.error(
+      `❌ 安装 ${hookName} 钩子失败:`,
+      error instanceof Error ? error.message : String(error),
+    );
     process.exit(1);
   }
 }
@@ -78,7 +81,10 @@ function uninstallHook(hookName) {
       console.log(`ℹ️ ${hookName} 钩子不存在`);
     }
   } catch (error) {
-    console.error(`❌ 卸载 ${hookName} 钩子失败:`, error instanceof Error ? error.message : String(error));
+    console.error(
+      `❌ 卸载 ${hookName} 钩子失败:`,
+      error instanceof Error ? error.message : String(error),
+    );
   }
 }
 

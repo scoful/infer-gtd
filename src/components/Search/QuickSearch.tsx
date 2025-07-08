@@ -31,7 +31,10 @@ export default function QuickSearch({
     window.addEventListener("global-shortcut-search", handleGlobalShortcut);
 
     return () => {
-      window.removeEventListener("global-shortcut-search", handleGlobalShortcut);
+      window.removeEventListener(
+        "global-shortcut-search",
+        handleGlobalShortcut,
+      );
     };
   }, []);
 

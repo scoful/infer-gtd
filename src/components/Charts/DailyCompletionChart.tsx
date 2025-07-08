@@ -37,9 +37,11 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
 
     while (current <= end) {
       const dateKey = current.toISOString().split("T")[0]!;
-      const dayOfWeek = current.toLocaleDateString("zh-CN", { weekday: "short" });
+      const dayOfWeek = current.toLocaleDateString("zh-CN", {
+        weekday: "short",
+      });
       const isWeekend = current.getDay() === 0 || current.getDay() === 6;
-      
+
       dates.push({
         date: dateKey,
         count: data[dateKey] || 0,
@@ -54,12 +56,16 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
   };
 
   const chartData = generateDateRange();
-  const totalCompleted = Object.values(data).reduce((sum, count) => sum + count, 0);
-  const averagePerDay = chartData.length > 0 ? totalCompleted / chartData.length : 0;
+  const totalCompleted = Object.values(data).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+  const averagePerDay =
+    chartData.length > 0 ? totalCompleted / chartData.length : 0;
 
   // 自定义 Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0].payload;
       const date = new Date(data.date);
       const formattedDate = date.toLocaleDateString("zh-CN", {
@@ -72,12 +78,8 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p className="text-sm font-medium text-gray-900">{formattedDate}</p>
           <div className="mt-1">
-            <p className="text-sm text-blue-600">
-              完成任务: {data.count} 个
-            </p>
-            {data.isWeekend && (
-              <p className="text-xs text-gray-500">周末</p>
-            )}
+            <p className="text-sm text-blue-600">完成任务: {data.count} 个</p>
+            {data.isWeekend && <p className="text-xs text-gray-500">周末</p>}
           </div>
         </div>
       );
@@ -93,11 +95,12 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
     } else if (timeRange === "month") {
       return `${date.getDate()}日`;
     } else {
-      return date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+      return date.toLocaleDateString("zh-CN", {
+        month: "short",
+        day: "numeric",
+      });
     }
   };
-
-
 
   // 如果没有数据
   if (chartData.length === 0) {
@@ -131,31 +134,22 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
               stroke="#6b7280"
               fontSize={12}
             />
-            <YAxis
-              stroke="#6b7280"
-              fontSize={12}
-            />
+            <YAxis stroke="#6b7280" fontSize={12} />
             <Tooltip content={<CustomTooltip />} />
             {/* 平均线 */}
             <ReferenceLine
               y={averagePerDay}
               stroke="#ef4444"
               strokeDasharray="5 5"
-              label={{ value: `平均: ${averagePerDay.toFixed(1)}`, position: "topRight" }}
+              label={{
+                value: `平均: ${averagePerDay.toFixed(1)}`,
+                position: "topRight",
+              }}
             />
-            <Bar
-              dataKey="count"
-              radius={[2, 2, 0, 0]}
-              fill="#3b82f6"
-            >
+            <Bar dataKey="count" radius={[2, 2, 0, 0]} fill="#3b82f6">
               {chartData.map((entry, index) => {
                 const color = entry.isWeekend ? "#94a3b8" : "#3b82f6";
-                return (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={color}
-                  />
-                );
+                return <Cell key={`cell-${index}`} fill={color} />;
               })}
             </Bar>
           </BarChart>
@@ -165,27 +159,29 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
       {/* 统计信息 */}
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center">
-          <div className="text-2xl font-bold text-blue-600">{totalCompleted}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {totalCompleted}
+          </div>
           <div className="text-sm text-gray-500">总完成任务</div>
         </div>
-        
+
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center">
           <div className="text-2xl font-bold text-green-600">
             {averagePerDay.toFixed(1)}
           </div>
           <div className="text-sm text-gray-500">日均完成</div>
         </div>
-        
+
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center">
           <div className="text-2xl font-bold text-purple-600">
-            {Math.max(...chartData.map(d => d.count))}
+            {Math.max(...chartData.map((d) => d.count))}
           </div>
           <div className="text-sm text-gray-500">单日最高</div>
         </div>
-        
+
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center">
           <div className="text-2xl font-bold text-orange-600">
-            {chartData.filter(d => d.count > 0).length}
+            {chartData.filter((d) => d.count > 0).length}
           </div>
           <div className="text-sm text-gray-500">活跃天数</div>
         </div>
@@ -196,17 +192,25 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
         <h4 className="text-sm font-medium text-green-900">工作模式分析</h4>
         <div className="mt-2 space-y-1 text-sm text-green-700">
           {(() => {
-            const weekdayData = chartData.filter(d => !d.isWeekend);
-            const weekendData = chartData.filter(d => d.isWeekend);
-            
-            const weekdayTotal = weekdayData.reduce((sum, d) => sum + d.count, 0);
-            const weekendTotal = weekendData.reduce((sum, d) => sum + d.count, 0);
-            
-            const weekdayAvg = weekdayData.length > 0 ? weekdayTotal / weekdayData.length : 0;
-            const weekendAvg = weekendData.length > 0 ? weekendTotal / weekendData.length : 0;
-            
+            const weekdayData = chartData.filter((d) => !d.isWeekend);
+            const weekendData = chartData.filter((d) => d.isWeekend);
+
+            const weekdayTotal = weekdayData.reduce(
+              (sum, d) => sum + d.count,
+              0,
+            );
+            const weekendTotal = weekendData.reduce(
+              (sum, d) => sum + d.count,
+              0,
+            );
+
+            const weekdayAvg =
+              weekdayData.length > 0 ? weekdayTotal / weekdayData.length : 0;
+            const weekendAvg =
+              weekendData.length > 0 ? weekendTotal / weekendData.length : 0;
+
             const insights = [];
-            
+
             if (weekdayAvg > weekendAvg * 2) {
               insights.push("工作日效率明显高于周末，工作节奏良好");
             } else if (weekendAvg > weekdayAvg) {
@@ -214,19 +218,25 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
             } else {
               insights.push("工作日和周末任务完成较为均衡");
             }
-            
-            const activeDays = chartData.filter(d => d.count > 0).length;
+
+            const activeDays = chartData.filter((d) => d.count > 0).length;
             const totalDays = chartData.length;
             const activeRate = (activeDays / totalDays) * 100;
-            
+
             if (activeRate > 80) {
-              insights.push(`活跃度很高 (${activeRate.toFixed(0)}%)，保持良好习惯`);
+              insights.push(
+                `活跃度很高 (${activeRate.toFixed(0)}%)，保持良好习惯`,
+              );
             } else if (activeRate > 60) {
-              insights.push(`活跃度良好 (${activeRate.toFixed(0)}%)，可以继续提升`);
+              insights.push(
+                `活跃度良好 (${activeRate.toFixed(0)}%)，可以继续提升`,
+              );
             } else {
-              insights.push(`活跃度有待提高 (${activeRate.toFixed(0)}%)，建议制定更规律的计划`);
+              insights.push(
+                `活跃度有待提高 (${activeRate.toFixed(0)}%)，建议制定更规律的计划`,
+              );
             }
-            
+
             return insights.map((insight, index) => (
               <p key={index}>• {insight}</p>
             ));

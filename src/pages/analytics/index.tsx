@@ -35,40 +35,75 @@ import {
 
 const AnalyticsPage: NextPage = () => {
   const { data: sessionData } = useSession();
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">("30d");
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">(
+    "30d",
+  );
 
   // 计算时间范围
   const dateRange = useMemo(() => {
     const now = new Date();
-    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365;
+    const days =
+      timeRange === "7d"
+        ? 7
+        : timeRange === "30d"
+          ? 30
+          : timeRange === "90d"
+            ? 90
+            : 365;
     const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
     return { startDate, endDate: now };
   }, [timeRange]);
 
   // 获取各模块统计数据
-  const { data: taskStats, isLoading: isLoadingTasks, refetch: refetchTasks } = api.task.getStats.useQuery(
+  const {
+    data: taskStats,
+    isLoading: isLoadingTasks,
+    refetch: refetchTasks,
+  } = api.task.getStats.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled: !!sessionData }
+    { enabled: !!sessionData },
   );
 
-  const { data: noteStats, isLoading: isLoadingNotes, refetch: refetchNotes } = api.note.getStats.useQuery(
+  const {
+    data: noteStats,
+    isLoading: isLoadingNotes,
+    refetch: refetchNotes,
+  } = api.note.getStats.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled: !!sessionData }
+    { enabled: !!sessionData },
   );
 
-  const { data: journalStats, isLoading: isLoadingJournals, refetch: refetchJournals } = api.journal.getStats.useQuery(
+  const {
+    data: journalStats,
+    isLoading: isLoadingJournals,
+    refetch: refetchJournals,
+  } = api.journal.getStats.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled: !!sessionData }
+    { enabled: !!sessionData },
   );
 
-  const { data: tagStats, isLoading: isLoadingTags, refetch: refetchTags } = api.tag.getStats.useQuery(
-    undefined,
-    { enabled: !!sessionData }
-  );
+  const {
+    data: tagStats,
+    isLoading: isLoadingTags,
+    refetch: refetchTags,
+  } = api.tag.getStats.useQuery(undefined, { enabled: !!sessionData });
 
-  const { data: writingHabits, isLoading: isLoadingHabits, refetch: refetchHabits } = api.journal.getWritingHabits.useQuery(
-    { days: timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365 },
-    { enabled: !!sessionData }
+  const {
+    data: writingHabits,
+    isLoading: isLoadingHabits,
+    refetch: refetchHabits,
+  } = api.journal.getWritingHabits.useQuery(
+    {
+      days:
+        timeRange === "7d"
+          ? 7
+          : timeRange === "30d"
+            ? 30
+            : timeRange === "90d"
+              ? 90
+              : 365,
+    },
+    { enabled: !!sessionData },
   );
 
   // 注册页面刷新函数
@@ -82,7 +117,12 @@ const AnalyticsPage: NextPage = () => {
     ]);
   }, [refetchTasks, refetchNotes, refetchJournals, refetchTags, refetchHabits]);
 
-  const isLoading = isLoadingTasks || isLoadingNotes || isLoadingJournals || isLoadingTags || isLoadingHabits;
+  const isLoading =
+    isLoadingTasks ||
+    isLoadingNotes ||
+    isLoadingJournals ||
+    isLoadingTags ||
+    isLoadingHabits;
 
   return (
     <AuthGuard>
@@ -97,12 +137,16 @@ const AnalyticsPage: NextPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">数据统计</h1>
-              <p className="mt-2 text-gray-600">全局数据概览、趋势分析和跨模块关联洞察</p>
+              <p className="mt-2 text-gray-600">
+                全局数据概览、趋势分析和跨模块关联洞察
+              </p>
             </div>
             <div className="mt-4 sm:mt-0">
               <select
                 value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value as typeof timeRange)}
+                onChange={(e) =>
+                  setTimeRange(e.target.value as typeof timeRange)
+                }
                 className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="7d">最近 7 天</option>
@@ -115,21 +159,23 @@ const AnalyticsPage: NextPage = () => {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
               <span className="ml-3 text-gray-600">加载统计数据...</span>
             </div>
           ) : (
             <div className="space-y-8">
               {/* 概览卡片 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {/* 任务统计 */}
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="rounded-lg bg-white p-6 shadow">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <ChartBarIcon className="h-8 w-8 text-blue-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">任务总数</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        任务总数
+                      </p>
                       <p className="text-2xl font-semibold text-gray-900">
                         {taskStats?.totalTasks ?? 0}
                       </p>
@@ -141,13 +187,15 @@ const AnalyticsPage: NextPage = () => {
                 </div>
 
                 {/* 笔记统计 */}
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="rounded-lg bg-white p-6 shadow">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <DocumentTextIcon className="h-8 w-8 text-green-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">笔记总数</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        笔记总数
+                      </p>
                       <p className="text-2xl font-semibold text-gray-900">
                         {noteStats?.totalNotes ?? 0}
                       </p>
@@ -159,13 +207,15 @@ const AnalyticsPage: NextPage = () => {
                 </div>
 
                 {/* 日记统计 */}
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="rounded-lg bg-white p-6 shadow">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <BookOpenIcon className="h-8 w-8 text-purple-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">日记条目</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        日记条目
+                      </p>
                       <p className="text-2xl font-semibold text-gray-900">
                         {journalStats?.totalJournals ?? 0}
                       </p>
@@ -177,29 +227,31 @@ const AnalyticsPage: NextPage = () => {
                 </div>
 
                 {/* 时间统计 */}
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="rounded-lg bg-white p-6 shadow">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <ClockIcon className="h-8 w-8 text-orange-600" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">总时间</p>
+                      <p className="text-sm font-medium text-gray-500">
+                        总时间
+                      </p>
                       <p className="text-2xl font-semibold text-gray-900">
                         {Math.round((taskStats?.totalTimeSpent ?? 0) / 60)}h
                       </p>
-                      <p className="text-sm text-gray-600">
-                        任务追踪时间
-                      </p>
+                      <p className="text-sm text-gray-600">任务追踪时间</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* 全局趋势分析 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 {/* 任务创建趋势 */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">任务创建趋势</h3>
+                <div className="rounded-lg bg-white p-6 shadow">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    任务创建趋势
+                  </h3>
                   {taskStats?.totalTasks ? (
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
@@ -208,14 +260,35 @@ const AnalyticsPage: NextPage = () => {
                             const total = taskStats.totalTasks || 0;
                             const baseValue = Math.max(0, total - 20);
                             return [
-                              { name: "7天前", value: baseValue + Math.floor(total * 0.1) },
-                              { name: "6天前", value: baseValue + Math.floor(total * 0.2) },
-                              { name: "5天前", value: baseValue + Math.floor(total * 0.35) },
-                              { name: "4天前", value: baseValue + Math.floor(total * 0.5) },
-                              { name: "3天前", value: baseValue + Math.floor(total * 0.65) },
-                              { name: "2天前", value: baseValue + Math.floor(total * 0.8) },
-                              { name: "1天前", value: baseValue + Math.floor(total * 0.9) },
-                              { name: "今天", value: total }
+                              {
+                                name: "7天前",
+                                value: baseValue + Math.floor(total * 0.1),
+                              },
+                              {
+                                name: "6天前",
+                                value: baseValue + Math.floor(total * 0.2),
+                              },
+                              {
+                                name: "5天前",
+                                value: baseValue + Math.floor(total * 0.35),
+                              },
+                              {
+                                name: "4天前",
+                                value: baseValue + Math.floor(total * 0.5),
+                              },
+                              {
+                                name: "3天前",
+                                value: baseValue + Math.floor(total * 0.65),
+                              },
+                              {
+                                name: "2天前",
+                                value: baseValue + Math.floor(total * 0.8),
+                              },
+                              {
+                                name: "1天前",
+                                value: baseValue + Math.floor(total * 0.9),
+                              },
+                              { name: "今天", value: total },
                             ];
                           })()}
                           margin={{
@@ -225,16 +298,16 @@ const AnalyticsPage: NextPage = () => {
                             bottom: 20,
                           }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#f0f0f0"
+                          />
                           <XAxis
                             dataKey="name"
                             stroke="#6b7280"
                             fontSize={12}
                           />
-                          <YAxis
-                            stroke="#6b7280"
-                            fontSize={12}
-                          />
+                          <YAxis stroke="#6b7280" fontSize={12} />
                           <Tooltip
                             formatter={(value) => [value, "累计任务数"]}
                             labelFormatter={(label) => `${label}`}
@@ -253,15 +326,19 @@ const AnalyticsPage: NextPage = () => {
                     <div className="flex h-80 items-center justify-center text-gray-500">
                       <div className="text-center">
                         <div className="text-lg font-medium">暂无趋势数据</div>
-                        <div className="text-sm">创建一些任务后这里会显示创建趋势</div>
+                        <div className="text-sm">
+                          创建一些任务后这里会显示创建趋势
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* 模块活跃度对比 */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">模块活跃度对比</h3>
+                <div className="rounded-lg bg-white p-6 shadow">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    模块活跃度对比
+                  </h3>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
@@ -269,23 +346,23 @@ const AnalyticsPage: NextPage = () => {
                           {
                             name: "任务",
                             count: taskStats?.totalTasks || 0,
-                            color: "#3b82f6"
+                            color: "#3b82f6",
                           },
                           {
                             name: "笔记",
                             count: noteStats?.totalNotes || 0,
-                            color: "#10b981"
+                            color: "#10b981",
                           },
                           {
                             name: "日记",
                             count: journalStats?.totalJournals || 0,
-                            color: "#f59e0b"
+                            color: "#f59e0b",
                           },
                           {
                             name: "标签",
                             count: tagStats?.totalTags || 0,
-                            color: "#8b5cf6"
-                          }
+                            color: "#8b5cf6",
+                          },
                         ]}
                         margin={{
                           top: 20,
@@ -295,15 +372,8 @@ const AnalyticsPage: NextPage = () => {
                         }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis
-                          dataKey="name"
-                          stroke="#6b7280"
-                          fontSize={12}
-                        />
-                        <YAxis
-                          stroke="#6b7280"
-                          fontSize={12}
-                        />
+                        <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
+                        <YAxis stroke="#6b7280" fontSize={12} />
                         <Tooltip
                           formatter={(value, name, props) => [value, "数量"]}
                           labelFormatter={(label) => `${label}模块`}
@@ -313,7 +383,7 @@ const AnalyticsPage: NextPage = () => {
                             { color: "#3b82f6" },
                             { color: "#10b981" },
                             { color: "#f59e0b" },
-                            { color: "#8b5cf6" }
+                            { color: "#8b5cf6" },
                           ].map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
@@ -325,25 +395,49 @@ const AnalyticsPage: NextPage = () => {
 
                 {/* 写作习惯分析 */}
                 {writingHabits && (
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">写作习惯分析</h3>
+                  <div className="rounded-lg bg-white p-6 shadow">
+                    <h3 className="mb-4 text-lg font-medium text-gray-900">
+                      写作习惯分析
+                    </h3>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">平均字数</span>
-                        <span className="text-sm font-medium text-gray-900">{writingHabits.averageWords} 字/篇</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">写作一致性</span>
-                        <span className="text-sm font-medium text-gray-900">{writingHabits.consistency.toFixed(1)} 篇/天</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">最活跃时间</span>
-                        <span className="text-sm font-medium text-gray-900">{writingHabits.mostActiveHour}:00</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">最活跃日期</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {["周日", "周一", "周二", "周三", "周四", "周五", "周六"][writingHabits.mostActiveDay]}
+                          {writingHabits.averageWords} 字/篇
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          写作一致性
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {writingHabits.consistency.toFixed(1)} 篇/天
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          最活跃时间
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {writingHabits.mostActiveHour}:00
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          最活跃日期
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {
+                            [
+                              "周日",
+                              "周一",
+                              "周二",
+                              "周三",
+                              "周四",
+                              "周五",
+                              "周六",
+                            ][writingHabits.mostActiveDay]
+                          }
                         </span>
                       </div>
                     </div>
@@ -351,8 +445,10 @@ const AnalyticsPage: NextPage = () => {
                 )}
 
                 {/* 跨模块关联分析 */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">跨模块关联分析</h3>
+                <div className="rounded-lg bg-white p-6 shadow">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    跨模块关联分析
+                  </h3>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -361,19 +457,25 @@ const AnalyticsPage: NextPage = () => {
                             {
                               name: "关联任务的笔记",
                               value: noteStats?.notesWithTasks || 0,
-                              color: "#3b82f6"
+                              color: "#3b82f6",
                             },
                             {
                               name: "独立笔记",
-                              value: Math.max(0, (noteStats?.totalNotes || 0) - (noteStats?.notesWithTasks || 0)),
-                              color: "#e5e7eb"
-                            }
+                              value: Math.max(
+                                0,
+                                (noteStats?.totalNotes || 0) -
+                                  (noteStats?.notesWithTasks || 0),
+                              ),
+                              color: "#e5e7eb",
+                            },
                           ]}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
                           label={({ name, value, percent }) =>
-                            value > 0 ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)` : ''
+                            value > 0
+                              ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                              : ""
                           }
                           outerRadius={100}
                           fill="#8884d8"
@@ -391,31 +493,47 @@ const AnalyticsPage: NextPage = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 text-sm text-gray-600">
-                    <p>显示笔记与任务的关联程度，帮助了解知识管理与任务执行的结合情况</p>
+                    <p>
+                      显示笔记与任务的关联程度，帮助了解知识管理与任务执行的结合情况
+                    </p>
                   </div>
                 </div>
 
                 {/* 标签分类统计 */}
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">标签分类统计</h3>
+                <div className="rounded-lg bg-white p-6 shadow">
+                  <h3 className="mb-4 text-lg font-medium text-gray-900">
+                    标签分类统计
+                  </h3>
                   {tagStats ? (
                     <div className="space-y-8">
                       {/* 系统标签 vs 自定义标签 */}
                       <div>
-                        <h4 className="text-base font-medium text-gray-800 mb-4">标签来源分布</h4>
+                        <h4 className="mb-4 text-base font-medium text-gray-800">
+                          标签来源分布
+                        </h4>
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                               <Pie
                                 data={[
-                                  { name: "系统标签", value: tagStats.system ?? 0, color: "#6b7280" },
-                                  { name: "自定义标签", value: tagStats.custom ?? 0, color: "#8b5cf6" }
+                                  {
+                                    name: "系统标签",
+                                    value: tagStats.system ?? 0,
+                                    color: "#6b7280",
+                                  },
+                                  {
+                                    name: "自定义标签",
+                                    value: tagStats.custom ?? 0,
+                                    color: "#8b5cf6",
+                                  },
                                 ]}
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
                                 label={({ name, value, percent }) =>
-                                  value > 0 ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)` : ''
+                                  value > 0
+                                    ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
+                                    : ""
                                 }
                                 outerRadius={80}
                                 fill="#8884d8"
@@ -436,20 +554,25 @@ const AnalyticsPage: NextPage = () => {
 
                       {/* 标签类型分布 */}
                       <div>
-                        <h4 className="text-base font-medium text-gray-800 mb-4">标签类型分布</h4>
+                        <h4 className="mb-4 text-base font-medium text-gray-800">
+                          标签类型分布
+                        </h4>
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart
-                              data={Object.entries(tagStats.byType || {}).map(([type, count]) => ({
-                                name: {
-                                  CONTEXT: "上下文",
-                                  PROJECT: "项目",
-                                  CUSTOM: "自定义",
-                                  PRIORITY: "优先级"
-                                }[type] || type,
-                                value: count,
-                                type
-                              }))}
+                              data={Object.entries(tagStats.byType || {}).map(
+                                ([type, count]) => ({
+                                  name:
+                                    {
+                                      CONTEXT: "上下文",
+                                      PROJECT: "项目",
+                                      CUSTOM: "自定义",
+                                      PRIORITY: "优先级",
+                                    }[type] || type,
+                                  value: count,
+                                  type,
+                                }),
+                              )}
                               margin={{
                                 top: 20,
                                 right: 30,
@@ -457,16 +580,16 @@ const AnalyticsPage: NextPage = () => {
                                 bottom: 20,
                               }}
                             >
-                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#f0f0f0"
+                              />
                               <XAxis
                                 dataKey="name"
                                 stroke="#6b7280"
                                 fontSize={12}
                               />
-                              <YAxis
-                                stroke="#6b7280"
-                                fontSize={12}
-                              />
+                              <YAxis stroke="#6b7280" fontSize={12} />
                               <Tooltip
                                 formatter={(value, name) => [value, "标签数量"]}
                                 labelFormatter={(label) => `类型: ${label}`}
@@ -485,7 +608,9 @@ const AnalyticsPage: NextPage = () => {
                     <div className="flex h-64 items-center justify-center text-gray-500">
                       <div className="text-center">
                         <div className="text-lg font-medium">暂无标签数据</div>
-                        <div className="text-sm">创建一些标签后这里会显示使用统计</div>
+                        <div className="text-sm">
+                          创建一些标签后这里会显示使用统计
+                        </div>
                       </div>
                     </div>
                   )}
@@ -493,9 +618,11 @@ const AnalyticsPage: NextPage = () => {
               </div>
 
               {/* 生产力洞察 */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">生产力洞察</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="rounded-lg bg-white p-6 shadow">
+                <h3 className="mb-4 text-lg font-medium text-gray-900">
+                  生产力洞察
+                </h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">
                       {journalStats?.consecutiveDays ?? 0}

@@ -287,8 +287,6 @@ const SearchPage: NextPage = () => {
   const totalResults = searchResults?.totalCount || 0;
   const hasResults = totalResults > 0;
 
-
-
   // 计算实际可显示的总数据量
   const totalAvailableResults = searchResults
     ? (searchResults.tasks?.length || 0) +
@@ -1275,9 +1273,7 @@ const SearchPage: NextPage = () => {
                         const sortLabel =
                           sortLabels[sortBy as keyof typeof sortLabels] ||
                           sortBy;
-                        const orderLabel =
-                          orderLabels[sortOrder] ||
-                          sortOrder;
+                        const orderLabel = orderLabels[sortOrder] || sortOrder;
                         return `${sortLabel} ${orderLabel}`;
                       })()}
                       <button

@@ -40,21 +40,24 @@ export default function SavedSearchModal({
   }, [initialData, isOpen]);
 
   // 处理提交
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) return;
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!formData.name.trim()) return;
 
-    onSave({
-      ...formData,
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-    });
-  }, [formData, onSave]);
+      onSave({
+        ...formData,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+      });
+    },
+    [formData, onSave],
+  );
 
   // 添加 Ctrl+Enter 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         // 检查表单是否有效且不在提交中
         if (formData.name.trim() && !isLoading) {
@@ -68,11 +71,11 @@ export default function SavedSearchModal({
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, formData.name, isLoading, handleSubmit]);
 

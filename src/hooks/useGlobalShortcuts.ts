@@ -194,7 +194,7 @@ export function getShortcutText(shortcut: Partial<ShortcutConfig>): string {
     // 根据平台显示不同的修饰键
     const isMac =
       typeof navigator !== "undefined" &&
-      navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      navigator.platform.toUpperCase().includes("MAC");
     parts.push(isMac ? "⌘" : "Ctrl");
   }
 

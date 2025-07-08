@@ -12,8 +12,8 @@ import {
 
 interface CompletionTrendData {
   date: string;
-  created: number;      // 新建任务数
-  completed: number;    // 完成任务数
+  created: number; // 新建任务数
+  completed: number; // 完成任务数
   completionRate: number; // 完成率
 }
 
@@ -28,7 +28,7 @@ const CompletionTrendChart: React.FC<CompletionTrendChartProps> = ({
 }) => {
   // 自定义 Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0].payload;
       return (
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">

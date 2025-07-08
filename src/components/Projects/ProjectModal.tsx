@@ -116,38 +116,50 @@ export default function ProjectModal({
   }, [isOpen]);
 
   // 处理提交
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!formData.name.trim()) {
-      showError("请输入项目名称");
-      return;
-    }
-
-    try {
-      const submitData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        color: formData.color,
-      };
-
-      if (isEditing) {
-        await updateProject.mutateAsync({
-          id: projectId,
-          ...submitData,
-        });
-      } else {
-        await createProject.mutateAsync(submitData);
+      if (!formData.name.trim()) {
+        showError("请输入项目名称");
+        return;
       }
-    } catch (error) {
-      console.error("保存项目失败:", error);
-    }
-  }, [formData.name, formData.description, formData.color, isEditing, projectId, updateProject, createProject, showError]);
+
+      try {
+        const submitData = {
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          color: formData.color,
+        };
+
+        if (isEditing) {
+          await updateProject.mutateAsync({
+            id: projectId,
+            ...submitData,
+          });
+        } else {
+          await createProject.mutateAsync(submitData);
+        }
+      } catch (error) {
+        console.error("保存项目失败:", error);
+      }
+    },
+    [
+      formData.name,
+      formData.description,
+      formData.color,
+      isEditing,
+      projectId,
+      updateProject,
+      createProject,
+      showError,
+    ],
+  );
 
   // 添加 Ctrl+Enter 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         // 检查表单是否有效且不在提交中
         const isSubmitting = createProject.isPending || updateProject.isPending;
@@ -162,13 +174,19 @@ export default function ProjectModal({
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, formData.name, createProject.isPending, updateProject.isPending, handleSubmit]);
+  }, [
+    isOpen,
+    formData.name,
+    createProject.isPending,
+    updateProject.isPending,
+    handleSubmit,
+  ]);
 
   const handleClose = () => {
     if (createProject.isPending || updateProject.isPending) return;

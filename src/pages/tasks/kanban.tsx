@@ -393,7 +393,10 @@ const KanbanPage: NextPage = () => {
     window.addEventListener("global-shortcut-new-task", handleGlobalShortcuts);
 
     return () => {
-      window.removeEventListener("global-shortcut-new-task", handleGlobalShortcuts);
+      window.removeEventListener(
+        "global-shortcut-new-task",
+        handleGlobalShortcuts,
+      );
     };
   }, []);
 

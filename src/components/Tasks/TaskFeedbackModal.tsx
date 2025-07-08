@@ -103,20 +103,23 @@ export default function TaskFeedbackModal({
   };
 
   // 处理提交
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    updateTask.mutate({
-      id: taskId,
-      feedback: formData.feedback,
-      tagIds: formData.tagIds,
-    });
-  }, [taskId, formData.feedback, formData.tagIds, updateTask]);
+      updateTask.mutate({
+        id: taskId,
+        feedback: formData.feedback,
+        tagIds: formData.tagIds,
+      });
+    },
+    [taskId, formData.feedback, formData.tagIds, updateTask],
+  );
 
   // 添加 Ctrl+Enter 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         // 检查是否不在提交中
         if (!updateTask.isPending) {
@@ -130,11 +133,11 @@ export default function TaskFeedbackModal({
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, updateTask.isPending, handleSubmit]);
 

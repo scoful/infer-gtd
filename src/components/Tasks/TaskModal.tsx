@@ -218,7 +218,7 @@ export default function TaskModal({
   // 添加 Ctrl+Enter 快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === 'Enter') {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
         e.preventDefault();
         // 检查表单是否有效且不在提交中
         const isSubmitting = createTask.isPending || updateTask.isPending;
@@ -233,13 +233,19 @@ export default function TaskModal({
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, formData.title, createTask.isPending, updateTask.isPending, handleSubmit]);
+  }, [
+    isOpen,
+    formData.title,
+    createTask.isPending,
+    updateTask.isPending,
+    handleSubmit,
+  ]);
 
   // 处理任务类型变更
   const handleTypeChange = (newType: TaskType) => {
