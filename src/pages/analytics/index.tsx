@@ -395,61 +395,94 @@ const AnalyticsPage: NextPage = () => {
                   </div>
                 </div>
 
-                {/* 标签统计 */}
+                {/* 标签分类统计 */}
                 <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">标签使用统计</h3>
-                  {tagStats?.byType && Object.keys(tagStats.byType).length > 0 ? (
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={[
-                            { name: "系统标签", value: tagStats.system ?? 0, type: "system" },
-                            { name: "自定义标签", value: tagStats.custom ?? 0, type: "custom" },
-                            ...Object.entries(tagStats.byType).map(([type, count]) => ({
-                              name: {
-                                CONTEXT: "上下文",
-                                CATEGORY: "分类",
-                                STATUS: "状态",
-                                PRIORITY: "优先级"
-                              }[type] || type,
-                              value: count,
-                              type
-                            }))
-                          ]}
-                          margin={{
-                            top: 20,
-                            right: 30,
-                            left: 20,
-                            bottom: 20,
-                          }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis
-                            dataKey="name"
-                            stroke="#6b7280"
-                            fontSize={12}
-                            angle={-45}
-                            textAnchor="end"
-                            height={80}
-                          />
-                          <YAxis
-                            stroke="#6b7280"
-                            fontSize={12}
-                          />
-                          <Tooltip
-                            formatter={(value, name) => [value, "标签数量"]}
-                            labelFormatter={(label) => `类型: ${label}`}
-                          />
-                          <Bar
-                            dataKey="value"
-                            radius={[4, 4, 0, 0]}
-                            fill="#8b5cf6"
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">标签分类统计</h3>
+                  {tagStats ? (
+                    <div className="space-y-8">
+                      {/* 系统标签 vs 自定义标签 */}
+                      <div>
+                        <h4 className="text-base font-medium text-gray-800 mb-4">标签来源分布</h4>
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { name: "系统标签", value: tagStats.system ?? 0, color: "#6b7280" },
+                                  { name: "自定义标签", value: tagStats.custom ?? 0, color: "#8b5cf6" }
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value, percent }) =>
+                                  value > 0 ? `${name}: ${value} (${(percent * 100).toFixed(1)}%)` : ''
+                                }
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                <Cell fill="#6b7280" />
+                                <Cell fill="#8b5cf6" />
+                              </Pie>
+                              <Tooltip
+                                formatter={(value, name) => [value, name]}
+                                labelFormatter={() => ""}
+                              />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* 标签类型分布 */}
+                      <div>
+                        <h4 className="text-base font-medium text-gray-800 mb-4">标签类型分布</h4>
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={Object.entries(tagStats.byType || {}).map(([type, count]) => ({
+                                name: {
+                                  CONTEXT: "上下文",
+                                  PROJECT: "项目",
+                                  CUSTOM: "自定义",
+                                  PRIORITY: "优先级"
+                                }[type] || type,
+                                value: count,
+                                type
+                              }))}
+                              margin={{
+                                top: 20,
+                                right: 30,
+                                left: 20,
+                                bottom: 20,
+                              }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <XAxis
+                                dataKey="name"
+                                stroke="#6b7280"
+                                fontSize={12}
+                              />
+                              <YAxis
+                                stroke="#6b7280"
+                                fontSize={12}
+                              />
+                              <Tooltip
+                                formatter={(value, name) => [value, "标签数量"]}
+                                labelFormatter={(label) => `类型: ${label}`}
+                              />
+                              <Bar
+                                dataKey="value"
+                                radius={[4, 4, 0, 0]}
+                                fill="#8b5cf6"
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex h-80 items-center justify-center text-gray-500">
+                    <div className="flex h-64 items-center justify-center text-gray-500">
                       <div className="text-center">
                         <div className="text-lg font-medium">暂无标签数据</div>
                         <div className="text-sm">创建一些标签后这里会显示使用统计</div>
