@@ -30,9 +30,9 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
     IDEA: { label: "想法", color: "#8b5cf6" }, // violet-500
     TODO: { label: "待处理", color: "#3b82f6" }, // blue-500
     IN_PROGRESS: { label: "进行中", color: "#f59e0b" }, // amber-500
-    WAITING: { label: "等待中", color: "#6b7280" }, // gray-500
+    WAITING: { label: "等待中", color: "#f97316" }, // orange-500
     DONE: { label: "已完成", color: "#10b981" }, // emerald-500
-    ARCHIVED: { label: "已归档", color: "#64748b" }, // slate-500
+    ARCHIVED: { label: "已归档", color: "#6b7280" }, // gray-500
   };
 
   // 计算总任务数
@@ -74,6 +74,23 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
     return null;
   };
 
+  // 自定义 Cursor
+  const CustomCursor = (props: any) => {
+    const { x, y, width, height } = props;
+    const barWidth = 60; // 与 maxBarSize 一致
+    const barX = x + (width - barWidth) / 2; // 居中对齐
+
+    return (
+      <rect
+        x={barX}
+        y={y}
+        width={barWidth}
+        height={height}
+        fill="rgba(0, 0, 0, 0.1)"
+      />
+    );
+  };
+
   // 如果没有任务数据
   if (totalTasks === 0) {
     return (
@@ -111,7 +128,10 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({
               stroke="#6b7280"
               fontSize={12}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={<CustomCursor />}
+            />
             <Bar
               dataKey="count"
               radius={[6, 6, 0, 0]}
