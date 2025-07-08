@@ -131,7 +131,7 @@ const TaskReviewPage: NextPage = () => {
   const { data: sessionData } = useSession();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [showCharts, setShowCharts] = useState(false);
+
 
   // 计算当前时间范围的日期范围
   const dateRange = useMemo(() => {
@@ -241,25 +241,33 @@ const TaskReviewPage: NextPage = () => {
     const completedCount = completed.length;
     const completionRate = totalTasks > 0 ? (completedCount / totalTasks) * 100 : 0;
 
-    // 优先级统计
-    const priorityStats = allTasks.reduce(
-      (acc, task) => {
-        if (task.priority) {
-          acc[task.priority] = (acc[task.priority] || 0) + 1;
-        }
-        return acc;
-      },
-      {} as Record<Priority, number>,
-    );
+    // 优先级统计 - 确保所有优先级都有值
+    const priorityStats: Record<Priority, number> = {
+      URGENT: 0,
+      HIGH: 0,
+      MEDIUM: 0,
+      LOW: 0,
+    };
 
-    // 状态统计
-    const statusStats = allTasks.reduce(
-      (acc, task) => {
-        acc[task.status] = (acc[task.status] || 0) + 1;
-        return acc;
-      },
-      {} as Record<TaskStatus, number>,
-    );
+    allTasks.forEach((task) => {
+      if (task.priority) {
+        priorityStats[task.priority]++;
+      }
+    });
+
+    // 状态统计 - 确保所有状态都有值
+    const statusStats: Record<TaskStatus, number> = {
+      IDEA: 0,
+      TODO: 0,
+      IN_PROGRESS: 0,
+      WAITING: 0,
+      DONE: 0,
+      ARCHIVED: 0,
+    };
+
+    allTasks.forEach((task) => {
+      statusStats[task.status]++;
+    });
 
     // 时间统计
     const totalTimeSpent = entries.reduce((total, entry) => {
@@ -471,18 +479,7 @@ const TaskReviewPage: NextPage = () => {
                 ))}
               </div>
 
-              {/* 图表显示切换 */}
-              <button
-                onClick={() => setShowCharts(!showCharts)}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                  showCharts
-                    ? "border-blue-300 bg-blue-50 text-blue-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <ChartBarIcon className="h-4 w-4" />
-                {showCharts ? "隐藏图表" : "显示图表"}
-              </button>
+
             </div>
           </div>
 
@@ -609,7 +606,7 @@ const TaskReviewPage: NextPage = () => {
                           {detailedStats.feedbackRate.toFixed(1)}%
                         </p>
                         <p className="text-xs text-gray-500">
-                          {detailedStats.tasksWithFeedback} 个任务有反馈
+                          {detailedStats.tasksWithFeedback}/{completedTasks.totalCount} 个任务有反馈
                         </p>
                       </div>
                     </div>
@@ -625,7 +622,8 @@ const TaskReviewPage: NextPage = () => {
                       优先级分布
                     </h3>
                     <div className="space-y-3">
-                      {Object.entries(detailedStats.priorityStats).map(([priority, count]) => {
+                      {(["URGENT", "HIGH", "MEDIUM", "LOW"] as Priority[]).map((priority) => {
+                        const count = detailedStats.priorityStats[priority] || 0;
                         const percentage = detailedStats.totalTasks > 0 ? (count / detailedStats.totalTasks) * 100 : 0;
                         const priorityColors: Record<Priority, string> = {
                           URGENT: "bg-red-500",
@@ -642,9 +640,9 @@ const TaskReviewPage: NextPage = () => {
                         return (
                           <div key={priority} className="flex items-center justify-between">
                             <div className="flex items-center">
-                              <div className={`mr-3 h-3 w-3 rounded-full ${priorityColors[priority as Priority]}`}></div>
+                              <div className={`mr-3 h-3 w-3 rounded-full ${priorityColors[priority]}`}></div>
                               <span className="text-sm text-gray-700">
-                                {priorityLabels[priority as Priority]}
+                                {priorityLabels[priority]}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -664,7 +662,8 @@ const TaskReviewPage: NextPage = () => {
                       状态分布
                     </h3>
                     <div className="space-y-3">
-                      {Object.entries(detailedStats.statusStats).map(([status, count]) => {
+                      {(["IDEA", "TODO", "IN_PROGRESS", "WAITING", "DONE", "ARCHIVED"] as TaskStatus[]).map((status) => {
+                        const count = detailedStats.statusStats[status] || 0;
                         const percentage = detailedStats.totalTasks > 0 ? (count / detailedStats.totalTasks) * 100 : 0;
                         const statusColors: Record<TaskStatus, string> = {
                           IDEA: "bg-gray-500",
@@ -685,9 +684,9 @@ const TaskReviewPage: NextPage = () => {
                         return (
                           <div key={status} className="flex items-center justify-between">
                             <div className="flex items-center">
-                              <div className={`mr-3 h-3 w-3 rounded-full ${statusColors[status as TaskStatus]}`}></div>
+                              <div className={`mr-3 h-3 w-3 rounded-full ${statusColors[status]}`}></div>
                               <span className="text-sm text-gray-700">
-                                {statusLabels[status as TaskStatus]}
+                                {statusLabels[status]}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -829,7 +828,7 @@ const TaskReviewPage: NextPage = () => {
                 )}
 
                 {/* 数据可视化图表 */}
-                {showCharts && detailedStats && (
+                {detailedStats && (
                   <div className="space-y-8">
                     <div className="rounded-lg border border-gray-200 bg-white p-6">
                       <h3 className="mb-6 flex items-center text-lg font-medium text-gray-900">
@@ -883,7 +882,7 @@ const TaskReviewPage: NextPage = () => {
                         )}
 
                         {/* 优先级分布柱状图 */}
-                        {Object.keys(detailedStats.priorityStats).length > 0 && (
+                        {detailedStats && (
                           <div>
                             <h4 className="mb-2 text-base font-medium text-gray-800">
                               优先级分布
