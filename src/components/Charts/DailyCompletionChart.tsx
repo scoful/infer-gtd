@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  Cell,
 } from "recharts";
 
 interface DailyCompletionData {
@@ -96,12 +97,7 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
     }
   };
 
-  // 自定义柱状图颜色
-  const CustomBar = (props: any) => {
-    const { payload, ...rest } = props;
-    const color = payload.isWeekend ? "#94a3b8" : "#3b82f6"; // 周末用灰色，工作日用蓝色
-    return <Bar {...rest} fill={color} />;
-  };
+
 
   // 如果没有数据
   if (chartData.length === 0) {
@@ -150,8 +146,18 @@ const DailyCompletionChart: React.FC<DailyCompletionChartProps> = ({
             <Bar
               dataKey="count"
               radius={[2, 2, 0, 0]}
-              shape={CustomBar}
-            />
+              fill="#3b82f6"
+            >
+              {chartData.map((entry, index) => {
+                const color = entry.isWeekend ? "#94a3b8" : "#3b82f6";
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={color}
+                  />
+                );
+              })}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

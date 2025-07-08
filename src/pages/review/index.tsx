@@ -21,8 +21,8 @@ import {
   TimeDistributionHeatmap,
   ProjectCompletionPieChart,
   PriorityDistributionChart,
-  SimpleCompletionTrend,
-  SimpleDailyCompletion,
+  CompletionTrendChart,
+  DailyCompletionChart,
 } from "@/components/Charts";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { TaskStatus, Priority } from "@prisma/client";
@@ -847,7 +847,7 @@ const TaskReviewPage: NextPage = () => {
                             <p className="mb-4 text-sm text-gray-600">
                               显示每日创建任务数量和完成率变化趋势，帮助了解工作节奏
                             </p>
-                            <SimpleCompletionTrend
+                            <CompletionTrendChart
                               data={trendData}
                               timeRange={timeRange}
                             />
@@ -907,7 +907,7 @@ const TaskReviewPage: NextPage = () => {
                             <p className="mb-4 text-sm text-gray-600">
                               显示每天实际完成的任务数量和工作模式分析
                             </p>
-                            <SimpleDailyCompletion
+                            <DailyCompletionChart
                               data={detailedStats.dailyCompletion}
                               timeRange={timeRange}
                               dateRange={dateRange}
