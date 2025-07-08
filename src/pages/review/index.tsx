@@ -478,7 +478,7 @@ const TaskReviewPage: NextPage = () => {
       <MainLayout>
         <Head>
           <title>任务回顾 | Infer GTD</title>
-          <meta name="description" content="任务回顾和分析" />
+          <meta name="description" content="特定时间段的任务深度分析和洞察" />
         </Head>
 
         <div className="space-y-6">
@@ -495,7 +495,7 @@ const TaskReviewPage: NextPage = () => {
                 )}
               </div>
               <p className="mt-1 text-sm text-gray-600">
-                回顾任务完成情况和时间投入分析
+                特定时间段的任务完成情况、效率分析和深度洞察
               </p>
             </div>
 
