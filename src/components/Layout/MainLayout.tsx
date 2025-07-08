@@ -262,7 +262,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           // 触发搜索框聚焦
           const searchInput = document.querySelector(
             'input[placeholder*="搜索"]',
-          )!;
+          ) as HTMLInputElement | null;
           if (searchInput) {
             searchInput.focus();
           }
