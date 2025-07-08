@@ -11,6 +11,8 @@ import {
   ExclamationTriangleIcon,
   ChartBarIcon,
   CalendarIcon,
+  TableCellsIcon,
+  PresentationChartLineIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";
@@ -133,6 +135,7 @@ const TaskReviewPage: NextPage = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showAllCompleted, setShowAllCompleted] = useState(false);
+  const [viewMode, setViewMode] = useState<"data" | "visualization">("data");
 
 
   // 计算当前时间范围的日期范围
@@ -514,7 +517,31 @@ const TaskReviewPage: NextPage = () => {
                 ))}
               </div>
 
-
+              {/* 视图模式切换器 */}
+              <div className="flex rounded-lg border border-gray-300 bg-white">
+                <button
+                  onClick={() => setViewMode("data")}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
+                    viewMode === "data"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-700 hover:bg-gray-50"
+                  } rounded-l-lg`}
+                >
+                  <TableCellsIcon className="h-4 w-4" />
+                  数据模式
+                </button>
+                <button
+                  onClick={() => setViewMode("visualization")}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors ${
+                    viewMode === "visualization"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-700 hover:bg-gray-50"
+                  } rounded-r-lg`}
+                >
+                  <PresentationChartLineIcon className="h-4 w-4" />
+                  可视化模式
+                </button>
+              </div>
             </div>
           </div>
 
@@ -555,6 +582,8 @@ const TaskReviewPage: NextPage = () => {
           >
             {detailedStats && (
               <>
+                {viewMode === "data" && (
+                  <>
                 {/* 关键指标卡片 */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
                   {/* 任务完成率 */}
@@ -896,6 +925,213 @@ const TaskReviewPage: NextPage = () => {
                   </div>
                 )}
 
+                {/* 数据详情表格 */}
+                <div className="space-y-6">
+                  {/* 优先级分布数据表 */}
+                  <div className="rounded-lg border border-gray-200 bg-white p-6">
+                    <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+                      <TableCellsIcon className="mr-2 h-5 w-5 text-blue-500" />
+                      优先级分布数据
+                    </h3>
+                    <div className="overflow-hidden rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              优先级
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              任务数量
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              占比
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {Object.entries({
+                            URGENT: { label: "紧急", color: "#ef4444" },
+                            HIGH: { label: "高", color: "#f97316" },
+                            MEDIUM: { label: "中", color: "#eab308" },
+                            LOW: { label: "低", color: "#22c55e" },
+                          }).map(([priority, config]) => {
+                            const count = detailedStats.priorityStats[priority as Priority] || 0;
+                            const percentage = detailedStats.totalTasks > 0 ? (count / detailedStats.totalTasks) * 100 : 0;
+                            return (
+                              <tr key={priority}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div
+                                      className="h-3 w-3 rounded-full mr-3"
+                                      style={{ backgroundColor: config.color }}
+                                    ></div>
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {config.label}优先级
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {count}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {percentage.toFixed(1)}%
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 状态分布数据表 */}
+                  <div className="rounded-lg border border-gray-200 bg-white p-6">
+                    <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+                      <TableCellsIcon className="mr-2 h-5 w-5 text-green-500" />
+                      状态分布数据
+                    </h3>
+                    <div className="overflow-hidden rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              状态
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              任务数量
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                              占比
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {Object.entries({
+                            IDEA: { label: "想法", color: "#8b5cf6" },
+                            TODO: { label: "待处理", color: "#3b82f6" },
+                            IN_PROGRESS: { label: "进行中", color: "#f59e0b" },
+                            WAITING: { label: "等待中", color: "#f97316" },
+                            DONE: { label: "已完成", color: "#10b981" },
+                            ARCHIVED: { label: "已归档", color: "#6b7280" },
+                          }).map(([status, config]) => {
+                            const count = detailedStats.statusStats[status as TaskStatus] || 0;
+                            const percentage = detailedStats.totalTasks > 0 ? (count / detailedStats.totalTasks) * 100 : 0;
+                            return (
+                              <tr key={status}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div
+                                      className="h-3 w-3 rounded-full mr-3"
+                                      style={{ backgroundColor: config.color }}
+                                    ></div>
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {config.label}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {count}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {percentage.toFixed(1)}%
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 完成的任务列表 */}
+                  {completedTasks?.tasks && completedTasks.tasks.length > 0 && (
+                    <div className="rounded-lg border border-gray-200 bg-white p-6">
+                      <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
+                        <CheckCircleIcon className="mr-2 h-5 w-5 text-green-500" />
+                        {timeRange === "week" ? "本周" : timeRange === "month" ? "本月" : "本年"}完成的任务
+                      </h3>
+                      <div className="space-y-4">
+                        {completedTasks.tasks.slice(0, showAllCompleted ? undefined : 10).map((task) => (
+                          <div
+                            key={task.id}
+                            className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
+                          >
+                            <div className="mb-2 flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="text-base font-medium text-gray-900">
+                                  {task.title}
+                                </h4>
+                                {task.description && (
+                                  <p className="mt-1 line-clamp-1 text-xs text-gray-600">
+                                    {task.description}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="ml-4 flex flex-col items-end gap-1">
+                                {task.priority && (
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                      task.priority === "URGENT"
+                                        ? "bg-red-100 text-red-800"
+                                        : task.priority === "HIGH"
+                                          ? "bg-orange-100 text-orange-800"
+                                          : task.priority === "MEDIUM"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : "bg-green-100 text-green-800"
+                                    }`}
+                                  >
+                                    {task.priority === "URGENT"
+                                      ? "紧急"
+                                      : task.priority === "HIGH"
+                                        ? "高"
+                                        : task.priority === "MEDIUM"
+                                          ? "中"
+                                          : "低"}
+                                  </span>
+                                )}
+                                {task.totalTimeSpent > 0 && (
+                                  <span className="text-xs text-gray-500">
+                                    {formatTime(task.totalTimeSpent)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {task.feedback && (
+                              <div className="mt-2 rounded-md bg-gray-50 p-3">
+                                <p className="text-sm text-gray-700">{task.feedback}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {completedTasks.tasks.length > 10 && !showAllCompleted && (
+                          <div className="pt-4 text-center">
+                            <button
+                              onClick={() => setShowAllCompleted(true)}
+                              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                              加载更多 ({completedTasks.tasks.length - 10} 个)
+                            </button>
+                          </div>
+                        )}
+                        {showAllCompleted && completedTasks.tasks.length > 10 && (
+                          <div className="pt-4 text-center">
+                            <button
+                              onClick={() => setShowAllCompleted(false)}
+                              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            >
+                              收起
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                </>
+                )}
+
+                {viewMode === "visualization" && (
+                <>
                 {/* 数据可视化图表 */}
                 {detailedStats && (
                   <div className="space-y-8">
@@ -906,6 +1142,23 @@ const TaskReviewPage: NextPage = () => {
                       </h3>
 
                       <div className="space-y-8">
+                        {/* 每日完成趋势图 */}
+                        {timeRange !== "year" && Object.keys(detailedStats.dailyCompletion).length > 0 && (
+                          <div>
+                            <h4 className="mb-2 text-base font-medium text-gray-800">
+                              每日完成趋势
+                            </h4>
+                            <p className="mb-4 text-sm text-gray-600">
+                              显示每天实际完成的任务数量和工作模式分析
+                            </p>
+                            <DailyCompletionChart
+                              data={detailedStats.dailyCompletion}
+                              timeRange={timeRange}
+                              dateRange={dateRange}
+                            />
+                          </div>
+                        )}
+
                         {/* 任务完成趋势图 */}
                         {trendData.length > 0 && (
                           <div>
@@ -981,109 +1234,14 @@ const TaskReviewPage: NextPage = () => {
                           </div>
                         )}
 
-                        {/* 每日完成趋势图 */}
-                        {timeRange !== "year" && Object.keys(detailedStats.dailyCompletion).length > 0 && (
-                          <div>
-                            <h4 className="mb-2 text-base font-medium text-gray-800">
-                              每日完成趋势
-                            </h4>
-                            <p className="mb-4 text-sm text-gray-600">
-                              显示每天实际完成的任务数量和工作模式分析
-                            </p>
-                            <DailyCompletionChart
-                              data={detailedStats.dailyCompletion}
-                              timeRange={timeRange}
-                              dateRange={dateRange}
-                            />
-                          </div>
-                        )}
+
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 完成的任务列表 */}
-                {completedTasks?.tasks && completedTasks.tasks.length > 0 && (
-                  <div className="rounded-lg border border-gray-200 bg-white p-6">
-                    <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
-                      <CheckCircleIcon className="mr-2 h-5 w-5 text-green-500" />
-                      {timeRange === "week" ? "本周" : timeRange === "month" ? "本月" : "本年"}完成的任务
-                    </h3>
-                    <div className="space-y-4">
-                      {completedTasks.tasks.slice(0, showAllCompleted ? undefined : 10).map((task) => (
-                        <div
-                          key={task.id}
-                          className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="text-base font-medium text-gray-900">
-                                {task.title}
-                              </h4>
-                              {task.description && (
-                                <p className="mt-1 line-clamp-1 text-xs text-gray-600">
-                                  {task.description}
-                                </p>
-                              )}
-                            </div>
-                            <div className="ml-4 flex flex-col items-end gap-1">
-                              {task.priority && (
-                                <span
-                                  className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                    task.priority === "URGENT"
-                                      ? "bg-red-100 text-red-800"
-                                      : task.priority === "HIGH"
-                                        ? "bg-orange-100 text-orange-800"
-                                        : task.priority === "MEDIUM"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : "bg-green-100 text-green-800"
-                                  }`}
-                                >
-                                  {task.priority === "URGENT"
-                                    ? "紧急"
-                                    : task.priority === "HIGH"
-                                      ? "高"
-                                      : task.priority === "MEDIUM"
-                                        ? "中"
-                                        : "低"}
-                                </span>
-                              )}
-                              {task.totalTimeSpent > 0 && (
-                                <span className="text-xs text-gray-500">
-                                  {formatTime(task.totalTimeSpent)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {task.feedback && (
-                            <div className="mt-2 rounded-md bg-gray-50 p-3">
-                              <p className="text-sm text-gray-700">{task.feedback}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                      {completedTasks.tasks.length > 10 && !showAllCompleted && (
-                        <div className="pt-4 text-center">
-                          <button
-                            onClick={() => setShowAllCompleted(true)}
-                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                          >
-                            加载更多 ({completedTasks.tasks.length - 10} 个)
-                          </button>
-                        </div>
-                      )}
-                      {showAllCompleted && completedTasks.tasks.length > 10 && (
-                        <div className="pt-4 text-center">
-                          <button
-                            onClick={() => setShowAllCompleted(false)}
-                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                          >
-                            收起
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+
+                </>
                 )}
               </>
             )}
