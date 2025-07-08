@@ -21,6 +21,7 @@ import {
   TimeDistributionHeatmap,
   ProjectCompletionPieChart,
   PriorityDistributionChart,
+  StatusDistributionChart,
   CompletionTrendChart,
   DailyCompletionChart,
 } from "@/components/Charts";
@@ -948,7 +949,7 @@ const TaskReviewPage: NextPage = () => {
                           </div>
                         )}
 
-                        {/* 优先级分布柱状图 */}
+                        {/* 优先级分布饼图 */}
                         {detailedStats && (
                           <div>
                             <h4 className="mb-2 text-base font-medium text-gray-800">
@@ -960,6 +961,21 @@ const TaskReviewPage: NextPage = () => {
                             <PriorityDistributionChart
                               data={detailedStats.priorityStats}
                               totalTasks={detailedStats.totalTasks}
+                            />
+                          </div>
+                        )}
+
+                        {/* 状态分布柱状图 */}
+                        {detailedStats && (
+                          <div>
+                            <h4 className="mb-2 text-base font-medium text-gray-800">
+                              状态分布
+                            </h4>
+                            <p className="mb-4 text-sm text-gray-600">
+                              显示不同状态任务的数量分布，帮助了解任务执行情况
+                            </p>
+                            <StatusDistributionChart
+                              data={detailedStats.statusStats}
                             />
                           </div>
                         )}
