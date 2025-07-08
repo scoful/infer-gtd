@@ -1,10 +1,8 @@
 import React from "react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
   Tooltip,
   ResponsiveContainer,
   Legend,
@@ -16,6 +14,7 @@ interface PriorityDistributionData {
   count: number;
   percentage: number;
   color: string;
+  originalCount?: number; // 原始数量，用于显示
 }
 
 interface PriorityDistributionChartProps {
@@ -35,32 +34,32 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
     [Priority.LOW]: { label: "低", color: "#22c55e" }, // green-500
   };
 
-  // 转换数据格式
+  // 转换数据格式 - 显示所有优先级，数量为0的显示为0.1以便在饼图中显示细线
   const chartData: PriorityDistributionData[] = Object.entries(priorityConfig)
     .map(([priority, config]) => {
       const count = data[priority as Priority] || 0;
       const percentage = totalTasks > 0 ? (count / totalTasks) * 100 : 0;
       return {
         priority: config.label,
-        count,
+        count: count === 0 ? 0.1 : count, // 0值显示为0.1，在饼图中显示细线
         percentage,
         color: config.color,
+        originalCount: count, // 保存原始数量用于显示
       };
-    })
-    .filter((item) => item.count > 0); // 只显示有数据的优先级
+    }); // 显示所有优先级，数量为0的显示细线
 
   // 自定义 Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p className="text-sm font-medium text-gray-900">
-            {label}优先级
+            {data.priority}优先级
           </p>
           <div className="mt-1 space-y-1">
             <p className="text-sm text-blue-600">
-              任务数: {data.count} 个
+              任务数: {data.originalCount ?? data.count} 个
             </p>
             <p className="text-sm text-gray-600">
               占比: {data.percentage.toFixed(1)}%
@@ -72,13 +71,8 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
     return null;
   };
 
-  // 获取柱状图颜色
-  const getBarColor = (index: number) => {
-    return chartData[index]?.color || "#3b82f6";
-  };
-
-  // 如果没有数据
-  if (chartData.length === 0) {
+  // 如果没有任何任务数据
+  if (totalTasks === 0) {
     return (
       <div className="flex h-80 items-center justify-center text-gray-500">
         <div className="text-center">
@@ -93,32 +87,34 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
     <div className="w-full">
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 20,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="priority"
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <YAxis
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ priority, percentage }) =>
+                percentage > 5 ? `${priority} ${percentage.toFixed(0)}%` : ''
+              }
+              outerRadius={100}
+              fill="#8884d8"
               dataKey="count"
-              radius={[4, 4, 0, 0]}
-              fill="#3b82f6"
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              verticalAlign="bottom"
+              height={36}
+              formatter={(value, entry: any) => (
+                <span style={{ color: entry.color }}>
+                  {entry.payload.priority} ({entry.payload.originalCount ?? entry.payload.count})
+                </span>
+              )}
             />
-          </BarChart>
+          </PieChart>
         </ResponsiveContainer>
       </div>
 
@@ -127,7 +123,7 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
         {Object.entries(priorityConfig).map(([priority, config]) => {
           const count = data[priority as Priority] || 0;
           const percentage = totalTasks > 0 ? (count / totalTasks) * 100 : 0;
-          
+
           return (
             <div
               key={priority}

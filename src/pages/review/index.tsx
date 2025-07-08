@@ -835,9 +835,9 @@ const TaskReviewPage: NextPage = () => {
                       <CalendarIcon className="mr-2 h-5 w-5 text-emerald-500" />
                       热门标签
                     </h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {detailedStats.tagStats
-                        .slice(0, 10)
+                        .slice(0, 12)
                         .map(({ tag, count }) => {
                           // 获取标签颜色，如果没有则使用默认颜色
                           const tagColor = tag.color || "#6B7280";
@@ -845,21 +845,23 @@ const TaskReviewPage: NextPage = () => {
                           return (
                             <span
                               key={tag.id}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
                               style={{
                                 backgroundColor: tagColor,
                               }}
                             >
                               {tag.icon && (
-                                <span className="mr-1.5 text-xs">
+                                <span className="mr-1 text-xs">
                                   {tag.icon}
                                 </span>
                               )}
-                              {tag.name}
+                              <span className="truncate max-w-16">
+                                {tag.name}
+                              </span>
                               <span
-                                className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
+                                className="ml-1.5 text-xs px-1 py-0.5 rounded-full font-semibold"
                                 style={{
-                                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
                                   color: 'white',
                                 }}
                               >
