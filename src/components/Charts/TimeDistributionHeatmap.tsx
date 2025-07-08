@@ -7,16 +7,17 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  Legend,
 } from "recharts";
 
 interface TimeDistributionData {
   hour: number;
-  count: number;
+  created: number;
+  completed: number;
 }
 
 interface TimeDistributionHeatmapProps {
-  data: Record<number, number>;
+  data: Record<number, { created: number; completed: number }>;
   maxCount?: number;
 }
 
@@ -26,7 +27,8 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
 }) => {
   // 生成24小时的数据
   const hours = Array.from({ length: 24 }, (_, i) => i);
-  const max = maxCount || Math.max(...Object.values(data), 1);
+  const allCounts = Object.values(data).flatMap(d => [d.created, d.completed]);
+  const max = maxCount || Math.max(...allCounts, 1);
 
   // 格式化时间
   const formatHour = (hour: number) => {
@@ -36,7 +38,8 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
   // 准备图表数据
   const chartData = hours.map(hour => ({
     hour: formatHour(hour),
-    count: data[hour] || 0,
+    created: data[hour]?.created || 0,
+    completed: data[hour]?.completed || 0,
     hourNumber: hour
   }));
 
@@ -63,7 +66,8 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
       return (
         <div className="rounded-lg border bg-white p-3 shadow-lg">
           <p className="font-medium">{`时间: ${label}`}</p>
-          <p className="text-blue-600">{`任务数: ${data.count}`}</p>
+          <p className="text-orange-600">{`新建任务: ${data.created}`}</p>
+          <p className="text-blue-600">{`完成任务: ${data.completed}`}</p>
         </div>
       );
     }
@@ -71,7 +75,7 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
   };
 
   // 如果没有数据
-  if (Object.keys(data).length === 0 || Object.values(data).every(count => count === 0)) {
+  if (Object.keys(data).length === 0 || Object.values(data).every(d => d.created === 0 && d.completed === 0)) {
     return (
       <div className="flex h-80 items-center justify-center text-gray-500">
         <div className="text-center">
@@ -107,37 +111,43 @@ const TimeDistributionHeatmap: React.FC<TimeDistributionHeatmapProps> = ({
               fontSize={12}
             />
             <Tooltip content={<CustomTooltip />} />
+            <Legend />
             <Bar
-              dataKey="count"
+              dataKey="created"
+              radius={[2, 2, 0, 0]}
+              fill="#f97316"
+              name="新建任务"
+            />
+            <Bar
+              dataKey="completed"
               radius={[2, 2, 0, 0]}
               fill="#3b82f6"
-            >
-              {chartData.map((entry, index) => {
-                const intensity = getIntensity(entry.count);
-                const color = getColor(intensity);
-                return (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={color}
-                  />
-                );
-              })}
-            </Bar>
+              name="完成任务"
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* 统计信息 */}
-      <div className="mt-4 grid grid-cols-2 gap-4 text-center text-sm">
+      <div className="mt-4 grid grid-cols-3 gap-4 text-center text-sm">
         <div>
-          <div className="font-medium text-gray-900">
-            {Object.values(data).reduce((sum, count) => sum + count, 0)}
+          <div className="font-medium text-orange-600">
+            {Object.values(data).reduce((sum, d) => sum + d.created, 0)}
+          </div>
+          <div className="text-gray-500">总新建任务</div>
+        </div>
+        <div>
+          <div className="font-medium text-blue-600">
+            {Object.values(data).reduce((sum, d) => sum + d.completed, 0)}
           </div>
           <div className="text-gray-500">总完成任务</div>
         </div>
         <div>
           <div className="font-medium text-gray-900">
-            {Object.keys(data).filter((hour) => data[parseInt(hour)] > 0).length}
+            {Object.keys(data).filter((hour) => {
+              const d = data[parseInt(hour)];
+              return d && (d.created > 0 || d.completed > 0);
+            }).length}
           </div>
           <div className="text-gray-500">活跃时段</div>
         </div>

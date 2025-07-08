@@ -12,9 +12,9 @@ import {
 
 interface CompletionTrendData {
   date: string;
-  completed: number;
-  total: number;
-  completionRate: number;
+  created: number;      // 新建任务数
+  completed: number;    // 完成任务数
+  completionRate: number; // 完成率
 }
 
 interface CompletionTrendChartProps {
@@ -34,11 +34,11 @@ const CompletionTrendChart: React.FC<CompletionTrendChartProps> = ({
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <p className="text-sm font-medium text-gray-900">{label}</p>
           <div className="mt-1 space-y-1">
+            <p className="text-sm text-orange-600">
+              新建: {data.created} 个任务
+            </p>
             <p className="text-sm text-blue-600">
               完成: {data.completed} 个任务
-            </p>
-            <p className="text-sm text-gray-600">
-              总计: {data.total} 个任务
             </p>
             <p className="text-sm text-green-600">
               完成率: {data.completionRate.toFixed(1)}%
@@ -114,6 +114,16 @@ const CompletionTrendChart: React.FC<CompletionTrendChartProps> = ({
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
+          <Line
+            yAxisId="count"
+            type="monotone"
+            dataKey="created"
+            stroke="#f97316"
+            strokeWidth={2}
+            dot={{ fill: "#f97316", strokeWidth: 2, r: 4 }}
+            activeDot={{ r: 6, stroke: "#f97316", strokeWidth: 2 }}
+            name="新建任务数"
+          />
           <Line
             yAxisId="count"
             type="monotone"

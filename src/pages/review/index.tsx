@@ -291,12 +291,25 @@ const TaskReviewPage: NextPage = () => {
     );
     const feedbackRate = completedCount > 0 ? (tasksWithFeedback.length / completedCount) * 100 : 0;
 
-    // 时间分布分析
-    const completionTimeDistribution: Record<number, number> = {};
+    // 时间分布分析 - 新建任务和完成任务
+    const timeDistribution: Record<number, { created: number; completed: number }> = {};
+
+    // 初始化24小时数据
+    for (let hour = 0; hour < 24; hour++) {
+      timeDistribution[hour] = { created: 0, completed: 0 };
+    }
+
+    // 统计新建任务的时间分布
+    allTasks.forEach((task) => {
+      const hour = new Date(task.createdAt).getHours();
+      timeDistribution[hour].created++;
+    });
+
+    // 统计完成任务的时间分布
     completed.forEach((task) => {
       if (task.completedAt) {
         const hour = new Date(task.completedAt).getHours();
-        completionTimeDistribution[hour] = (completionTimeDistribution[hour] || 0) + 1;
+        timeDistribution[hour].completed++;
       }
     });
 
@@ -313,14 +326,23 @@ const TaskReviewPage: NextPage = () => {
       return acc;
     }, {} as Record<string, { total: number; completed: number }>);
 
-    // 标签使用统计
-    const tagStats: Record<string, number> = {};
+    // 标签使用统计 - 包含完整标签信息
+    const tagStatsMap = new Map<string, { tag: any; count: number }>();
     allTasks.forEach((task) => {
       task.tags?.forEach((taskTag) => {
-        const tagName = taskTag.tag.name;
-        tagStats[tagName] = (tagStats[tagName] || 0) + 1;
+        const tagId = taskTag.tag.id;
+        const existing = tagStatsMap.get(tagId);
+        if (existing) {
+          existing.count++;
+        } else {
+          tagStatsMap.set(tagId, { tag: taskTag.tag, count: 1 });
+        }
       });
     });
+
+    // 转换为数组并按使用次数排序
+    const tagStats = Array.from(tagStatsMap.values())
+      .sort((a, b) => b.count - a.count);
 
     // 每日完成趋势（仅对周和月有效）
     const dailyCompletion: Record<string, number> = {};
@@ -337,8 +359,8 @@ const TaskReviewPage: NextPage = () => {
     const insights = [];
 
     // 最活跃的完成时间
-    const mostActiveHour = Object.entries(completionTimeDistribution).reduce(
-      (max, [hour, count]) => count > max.count ? { hour: parseInt(hour), count } : max,
+    const mostActiveHour = Object.entries(timeDistribution).reduce(
+      (max, [hour, data]) => data.completed > max.count ? { hour: parseInt(hour), count: data.completed } : max,
       { hour: 0, count: 0 }
     );
 
@@ -372,7 +394,7 @@ const TaskReviewPage: NextPage = () => {
       averageCompletionPerDay,
       tasksWithFeedback: tasksWithFeedback.length,
       feedbackRate,
-      completionTimeDistribution,
+      timeDistribution,
       projectStats,
       tagStats,
       dailyCompletion,
@@ -381,13 +403,18 @@ const TaskReviewPage: NextPage = () => {
     };
   }, [tasks, completedTasks, timeEntries, timeRange]);
 
-  // 生成趋势数据
+  // 生成趋势数据 - 新建任务、完成任务、完成率三条线
   const trendData = useMemo(() => {
     if (!tasks?.tasks || !completedTasks?.tasks) {
       return [];
     }
 
-    const dates: Array<{ date: string; completed: number; total: number; completionRate: number }> = [];
+    const dates: Array<{
+      date: string;
+      created: number;      // 新建任务数
+      completed: number;    // 完成任务数
+      completionRate: number; // 完成率
+    }> = [];
     const startTime = dateRange.start.getTime();
     const endTime = dateRange.end.getTime();
     const oneDay = 24 * 60 * 60 * 1000;
@@ -396,25 +423,31 @@ const TaskReviewPage: NextPage = () => {
       const current = new Date(time);
       const dateKey = current.toISOString().split("T")[0]!;
 
-      const dayTasks = tasks.tasks.filter(task => {
+      // 当日新建的任务
+      const dayCreated = tasks.tasks.filter(task => {
         const taskDate = new Date(task.createdAt).toISOString().split("T")[0];
         return taskDate === dateKey;
       });
 
+      // 当日完成的任务
       const dayCompleted = completedTasks.tasks.filter(task => {
         if (!task.completedAt) return false;
         const completedDate = new Date(task.completedAt).toISOString().split("T")[0];
         return completedDate === dateKey;
       });
 
-      const total = dayTasks.length;
+      const created = dayCreated.length;
       const completed = dayCompleted.length;
-      const completionRate = total > 0 ? (completed / total) * 100 : 0;
+
+      // 计算完成率：当日完成任务数 / 当日新建任务数
+      // 如果当日没有新建任务但有完成任务，则显示为100%
+      const completionRate = created > 0 ? (completed / created) * 100 :
+                           completed > 0 ? 100 : 0;
 
       dates.push({
         date: dateKey,
+        created,
         completed,
-        total,
         completionRate,
       });
     }
@@ -703,34 +736,48 @@ const TaskReviewPage: NextPage = () => {
                 {/* 高级分析 */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {/* 时间分布分析 */}
-                  {Object.keys(detailedStats.completionTimeDistribution).length > 0 && (
+                  {Object.keys(detailedStats.timeDistribution).length > 0 && (
                     <div className="rounded-lg border border-gray-200 bg-white p-6">
                       <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
                         <ClockIcon className="mr-2 h-5 w-5 text-purple-500" />
                         完成时间分布
                       </h3>
                       <div className="space-y-2">
-                        {Object.entries(detailedStats.completionTimeDistribution)
+                        {Object.entries(detailedStats.timeDistribution)
                           .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                          .filter(([, data]) => data.created > 0 || data.completed > 0)
                           .slice(0, 8)
-                          .map(([hour, count]) => {
-                            const maxCount = Math.max(...Object.values(detailedStats.completionTimeDistribution));
-                            const percentage = (count / maxCount) * 100;
+                          .map(([hour, data]) => {
+                            const maxCount = Math.max(...Object.values(detailedStats.timeDistribution).map(d => Math.max(d.created, d.completed)));
+                            const createdPercentage = maxCount > 0 ? (data.created / maxCount) * 100 : 0;
+                            const completedPercentage = maxCount > 0 ? (data.completed / maxCount) * 100 : 0;
                             return (
-                              <div key={hour} className="flex items-center">
-                                <div className="w-16 text-sm text-gray-600">
-                                  {hour.padStart(2, '0')}:00
-                                </div>
-                                <div className="flex-1 mx-3">
-                                  <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-purple-500 transition-all duration-300"
-                                      style={{ width: `${percentage}%` }}
-                                    ></div>
+                              <div key={hour} className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="text-sm font-medium text-gray-700">
+                                    {hour.padStart(2, '0')}:00
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    新建:{data.created} 完成:{data.completed}
                                   </div>
                                 </div>
-                                <div className="w-8 text-sm text-gray-900 text-right">
-                                  {count}
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex h-2 overflow-hidden rounded-full bg-gray-200">
+                                      <div
+                                        className="bg-orange-400"
+                                        style={{ width: `${createdPercentage}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex h-2 overflow-hidden rounded-full bg-gray-200">
+                                      <div
+                                        className="bg-blue-500"
+                                        style={{ width: `${completedPercentage}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -782,27 +829,45 @@ const TaskReviewPage: NextPage = () => {
                 </div>
 
                 {/* 标签使用分析 */}
-                {Object.keys(detailedStats.tagStats).length > 0 && (
+                {detailedStats.tagStats.length > 0 && (
                   <div className="rounded-lg border border-gray-200 bg-white p-6">
                     <h3 className="mb-4 flex items-center text-lg font-medium text-gray-900">
                       <CalendarIcon className="mr-2 h-5 w-5 text-emerald-500" />
                       热门标签
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(detailedStats.tagStats)
-                        .sort(([,a], [,b]) => b - a)
+                      {detailedStats.tagStats
                         .slice(0, 10)
-                        .map(([tagName, count]) => (
-                          <span
-                            key={tagName}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800"
-                          >
-                            {tagName}
-                            <span className="ml-1 text-xs bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded-full">
-                              {count}
+                        .map(({ tag, count }) => {
+                          // 获取标签颜色，如果没有则使用默认颜色
+                          const tagColor = tag.color || "#6B7280";
+
+                          return (
+                            <span
+                              key={tag.id}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                              style={{
+                                backgroundColor: tagColor,
+                              }}
+                            >
+                              {tag.icon && (
+                                <span className="mr-1.5 text-xs">
+                                  {tag.icon}
+                                </span>
+                              )}
+                              {tag.name}
+                              <span
+                                className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
+                                style={{
+                                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                  color: 'white',
+                                }}
+                              >
+                                {count}
+                              </span>
                             </span>
-                          </span>
-                        ))}
+                          );
+                        })}
                     </div>
                   </div>
                 )}
@@ -844,7 +909,7 @@ const TaskReviewPage: NextPage = () => {
                               任务完成趋势
                             </h4>
                             <p className="mb-4 text-sm text-gray-600">
-                              显示每日创建任务数量和完成率变化趋势，帮助了解工作节奏
+                              显示每日新建任务、完成任务数量和完成率的变化趋势，帮助了解工作节奏和效率
                             </p>
                             <CompletionTrendChart
                               data={trendData}
@@ -853,16 +918,16 @@ const TaskReviewPage: NextPage = () => {
                           </div>
                         )}
 
-                        {/* 时间分布热力图 */}
+                        {/* 时间分布柱状图 */}
                         <div>
                           <h4 className="mb-2 text-base font-medium text-gray-800">
-                            完成时间分布
+                            时间分布分析
                           </h4>
                           <p className="mb-4 text-sm text-gray-600">
-                            显示已完成任务在一天中不同时段的分布情况，帮助识别最佳工作时段
+                            显示新建任务和完成任务在一天中不同时段的分布情况，帮助识别最佳工作时段
                           </p>
                           <TimeDistributionHeatmap
-                            data={detailedStats.completionTimeDistribution}
+                            data={detailedStats.timeDistribution}
                           />
                         </div>
 
