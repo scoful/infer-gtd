@@ -27,31 +27,39 @@ echo "✅ 版本号已更新并添加到提交中"
 // pre-push 钩子内容
 const prePushHook = `#!/bin/sh
 # 自动版本管理 - pre-push hook
-# 每次推送时自动增加 minor 版本号
+# 推送时进行 minor 版本更新（在推送前完成）
 
-echo "🔄 自动更新版本号 (minor)..."
+echo "🔄 准备推送，检查版本更新..."
 
-# 检查是否有未提交的更改
-if ! git diff-index --quiet HEAD --; then
-  echo "⚠️ 检测到未提交的更改，跳过版本更新"
+# 检查版本文件是否有未提交的更改
+if ! git diff-index --quiet HEAD -- version.json package.json; then
+  echo "⚠️ 版本文件有未提交的更改，请先提交 version.json 和 package.json"
+  exit 1
+fi
+
+# 检查是否有待推送的提交
+if git diff --quiet HEAD @{upstream} 2>/dev/null; then
+  echo "ℹ️ 没有新的提交需要推送"
   exit 0
 fi
 
-# 更新版本号
+echo "🔄 更新 minor 版本号..."
 node scripts/version-manager.js minor
 
 # 检查版本文件是否有变化
-if git diff --quiet version.json package.json; then
-  echo "ℹ️ 版本号无变化，跳过提交"
-  exit 0
-fi
+if ! git diff --quiet version.json package.json; then
+  # 有版本变化，需要创建新的提交
+  git add version.json package.json
 
-# 创建版本更新提交
-git add version.json package.json
-if git commit -m "chore: bump version to $(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json', 'utf8')).version)")"; then
-  echo "✅ 版本号已更新并提交"
+  if git commit -m "chore: bump version to $(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json', 'utf8')).version)")"; then
+    echo "✅ 版本号已更新并提交"
+    echo "📤 新的版本提交将包含在此次推送中"
+  else
+    echo "❌ 版本提交失败，推送被取消"
+    exit 1
+  fi
 else
-  echo "❌ 版本提交失败，但推送将继续"
+  echo "ℹ️ 版本号无变化，继续推送"
 fi
 `;
 
@@ -116,10 +124,15 @@ switch (command) {
     console.log("");
     console.log("📋 自动版本管理规则:");
     console.log("   • git commit: 自动增加 patch 版本 (x.x.+1)");
-    console.log("   • git push: 自动增加 minor 版本 (x.+1.0)");
+    console.log("   • git push: 自动增加 minor 版本 (x.+1.0) 并包含在推送中");
     console.log(
       "   • 手动增加 major 版本: node scripts/version-manager.js major",
     );
+    console.log("");
+    console.log("⚠️ 重要提示:");
+    console.log("   • push 时会自动创建版本更新提交并包含在推送中");
+    console.log("   • 确保 version.json 和 package.json 没有未提交的更改");
+    console.log("   • 其他文件可以保持未提交状态");
     break;
 
   case "uninstall":
