@@ -6,24 +6,6 @@ const prisma = new PrismaClient();
 const systemTags = [
   // 上下文标签
   {
-    name: "@电脑",
-    type: TagType.CONTEXT,
-    category: "context",
-    color: "#3B82F6", // blue-500
-    description: "需要使用电脑完成的任务",
-    icon: "💻",
-    isSystem: true,
-  },
-  {
-    name: "@电话",
-    type: TagType.CONTEXT,
-    category: "context",
-    color: "#10B981", // green-500
-    description: "需要打电话或通话的任务",
-    icon: "📞",
-    isSystem: true,
-  },
-  {
     name: "@办公室",
     type: TagType.CONTEXT,
     category: "context",
@@ -48,15 +30,6 @@ const systemTags = [
     color: "#EF4444", // red-500
     description: "需要外出办理的任务",
     icon: "🚗",
-    isSystem: true,
-  },
-  {
-    name: "@在线",
-    type: TagType.CONTEXT,
-    category: "context",
-    color: "#06B6D4", // cyan-500
-    description: "需要网络连接的在线任务",
-    icon: "🌐",
     isSystem: true,
   },
   {
