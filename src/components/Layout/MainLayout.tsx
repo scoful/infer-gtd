@@ -863,6 +863,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                           alt={sessionData.user.name ?? "User"}
                           width={32}
                           height={32}
+                          unoptimized
                         />
                       ) : (
                         <UserCircleIcon className="h-8 w-8 text-gray-400" />

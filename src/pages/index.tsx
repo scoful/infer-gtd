@@ -1,5 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
@@ -185,10 +186,13 @@ const Home: NextPage = () => {
                   </p>
                 </div>
                 {sessionData?.user?.image && (
-                  <img
+                  <Image
                     className="h-16 w-16 rounded-full"
                     src={sessionData.user.image}
                     alt={sessionData.user.name ?? "User"}
+                    width={64}
+                    height={64}
+                    unoptimized
                   />
                 )}
               </div>
