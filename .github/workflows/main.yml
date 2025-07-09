@@ -17,11 +17,46 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # 需要写权限来推送版本更新
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 获取完整历史以便版本管理
+
+      - name: Set up Node.js for version management
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update minor version
+        run: |
+          echo "🔄 更新 minor 版本号..."
+          node scripts/version-manager.js minor
+
+          # 检查是否有版本变化
+          if ! git diff --quiet version.json package.json; then
+            # 配置 Git 用户信息
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+
+            # 提交版本更新
+            git add version.json package.json
+            NEW_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json', 'utf8')).version)")
+            git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+
+            # 推送版本更新
+            git push origin main
+
+            echo "✅ 版本已更新到 $NEW_VERSION"
+            echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          else
+            echo "ℹ️ 版本号无变化"
+            CURRENT_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json', 'utf8')).version)")
+            echo "NEW_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          fi
 
       - name: Set up environment variables
         run: |
@@ -48,6 +83,7 @@ jobs:
             type=sha,prefix={{branch}}-,suffix=-{{date 'YYYYMMDD-HHmmss'}},format=short
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=${{ env.GITHUB_SHA_SHORT }}
+            type=raw,value=v${{ env.NEW_VERSION }},enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=GTD Task Management System
             org.opencontainers.image.description=Next.js + tRPC + Prisma GTD Application
@@ -69,3 +105,10 @@ jobs:
 
       - name: Image digest
         run: echo "Image pushed with digest ${{ steps.build.outputs.digest }}"
+
+      - name: Deployment summary
+        run: |
+          echo "🎉 部署完成！"
+          echo "📦 版本: ${{ env.NEW_VERSION }}"
+          echo "🏷️ 镜像标签: ${{ steps.meta.outputs.tags }}"
+          echo "🔗 镜像摘要: ${{ steps.build.outputs.digest }}"
