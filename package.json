@@ -1,6 +1,6 @@
 {
   "name": "infer-gtd",
-  "version": "0.1.0",
+  "version": "1.5.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,6 +26,7 @@
     "version:minor": "node scripts/version-manager.js minor",
     "version:major": "node scripts/version-manager.js major",
     "version:show": "node scripts/version-manager.js show",
+    "version:sync": "node scripts/version-manager.js sync",
     "version:set-env": "node scripts/version-manager.js set-env",
     "hooks:install": "node scripts/install-hooks.js install",
     "hooks:uninstall": "node scripts/install-hooks.js uninstall",

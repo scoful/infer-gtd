@@ -10,6 +10,7 @@ import path from "path";
 import { execSync } from "child_process";
 
 const VERSION_FILE = "version.json";
+const PACKAGE_FILE = "package.json";
 
 /**
  * 读取版本文件
@@ -42,6 +43,29 @@ function writeVersionFile(versionData) {
       error instanceof Error ? error.message : String(error),
     );
     process.exit(1);
+  }
+}
+
+/**
+ * 同步更新 package.json 中的版本号
+ * @param {string} version - 版本号
+ */
+function updatePackageVersion(version) {
+  try {
+    if (fs.existsSync(PACKAGE_FILE)) {
+      const packageContent = fs.readFileSync(PACKAGE_FILE, "utf8");
+      const packageData = JSON.parse(packageContent);
+      packageData.version = version;
+
+      const updatedContent = JSON.stringify(packageData, null, 2);
+      fs.writeFileSync(PACKAGE_FILE, updatedContent, "utf8");
+      console.log(`✅ package.json 版本已同步: ${version}`);
+    }
+  } catch (error) {
+    console.warn(
+      "⚠️ 无法更新 package.json 版本:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 }
 
@@ -100,6 +124,7 @@ function updateVersion(type) {
   versionData.gitBranch = gitBranch;
 
   writeVersionFile(versionData);
+  updatePackageVersion(versionData.version);
   return versionData;
 }
 
@@ -117,6 +142,7 @@ function setEnvironment(env) {
   versionData.gitBranch = gitBranch;
 
   writeVersionFile(versionData);
+  updatePackageVersion(versionData.version);
   return versionData;
 }
 
@@ -131,6 +157,15 @@ function showVersion() {
   console.log(`   Git 提交: ${versionData.gitCommit}`);
   console.log(`   Git 分支: ${versionData.gitBranch}`);
   console.log(`   环境: ${versionData.environment}`);
+}
+
+/**
+ * 同步版本号到 package.json
+ */
+function syncVersion() {
+  const versionData = readVersionFile();
+  updatePackageVersion(versionData.version);
+  console.log("✅ 版本号已同步到 package.json");
 }
 
 // 命令行参数处理
@@ -153,6 +188,9 @@ switch (command) {
   case "show":
     showVersion();
     break;
+  case "sync":
+    syncVersion();
+    break;
   default:
     console.log("📖 版本管理脚本使用说明:");
     console.log("   node scripts/version-manager.js patch    # 增加补丁版本");
@@ -160,5 +198,6 @@ switch (command) {
     console.log("   node scripts/version-manager.js major    # 增加主版本");
     console.log("   node scripts/version-manager.js set-env <env>  # 设置环境");
     console.log("   node scripts/version-manager.js show     # 显示当前版本");
+    console.log("   node scripts/version-manager.js sync     # 同步版本到 package.json");
     break;
 }

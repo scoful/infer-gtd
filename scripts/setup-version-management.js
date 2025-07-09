@@ -40,6 +40,7 @@ try {
   console.log("   • pnpm version:minor   # 手动增加 minor 版本");
   console.log("   • pnpm version:major   # 手动增加 major 版本");
   console.log("   • pnpm version:show    # 显示当前版本信息");
+  console.log("   • pnpm version:sync    # 同步版本到 package.json");
   console.log("");
   console.log("🔧 环境管理:");
   console.log("   • pnpm version:set-env development   # 设置开发环境");

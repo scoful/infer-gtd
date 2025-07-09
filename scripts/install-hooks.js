@@ -19,7 +19,7 @@ echo "🔄 自动更新版本号 (patch)..."
 node scripts/version-manager.js patch
 
 # 将版本文件添加到当前提交
-git add version.json
+git add version.json package.json
 
 echo "✅ 版本号已更新并添加到提交中"
 `;
@@ -30,13 +30,29 @@ const prePushHook = `#!/bin/sh
 # 每次推送时自动增加 minor 版本号
 
 echo "🔄 自动更新版本号 (minor)..."
+
+# 检查是否有未提交的更改
+if ! git diff-index --quiet HEAD --; then
+  echo "⚠️ 检测到未提交的更改，跳过版本更新"
+  exit 0
+fi
+
+# 更新版本号
 node scripts/version-manager.js minor
 
-# 创建一个新的提交包含版本更新
-git add version.json
-git commit -m "chore: bump version to $(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json', 'utf8')).version)")"
+# 检查版本文件是否有变化
+if git diff --quiet version.json package.json; then
+  echo "ℹ️ 版本号无变化，跳过提交"
+  exit 0
+fi
 
-echo "✅ 版本号已更新并提交"
+# 创建版本更新提交
+git add version.json package.json
+if git commit -m "chore: bump version to $(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json', 'utf8')).version)")"; then
+  echo "✅ 版本号已更新并提交"
+else
+  echo "❌ 版本提交失败，但推送将继续"
+fi
 `;
 
 /**
