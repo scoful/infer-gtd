@@ -198,6 +198,8 @@ switch (command) {
     console.log("   node scripts/version-manager.js major    # 增加主版本");
     console.log("   node scripts/version-manager.js set-env <env>  # 设置环境");
     console.log("   node scripts/version-manager.js show     # 显示当前版本");
-    console.log("   node scripts/version-manager.js sync     # 同步版本到 package.json");
+    console.log(
+      "   node scripts/version-manager.js sync     # 同步版本到 package.json",
+    );
     break;
 }

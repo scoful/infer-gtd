@@ -33,7 +33,9 @@ try {
   console.log("");
   console.log("🔄 自动版本管理:");
   console.log("   • git commit: 自动增加 patch 版本 (1.0.0 → 1.0.1)");
-  console.log("   • git push: GitHub Actions 自动增加 minor 版本 (1.0.1 → 1.1.0)");
+  console.log(
+    "   • git push: GitHub Actions 自动增加 minor 版本 (1.0.1 → 1.1.0)",
+  );
   console.log("");
   console.log("🛠️ 手动版本管理:");
   console.log("   • pnpm version:patch   # 手动增加 patch 版本");
