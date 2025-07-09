@@ -1,10 +1,10 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import {
   AdjustmentsHorizontalIcon,
-  ArchiveBoxIcon,
   ArrowRightEndOnRectangleIcon,
   Bars3Icon,
   BoltIcon,
@@ -209,7 +209,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [collapsedExpandedItems, setCollapsedExpandedItems] = useState<
     Set<string>
   >(new Set());
-  const { isCollapsed, toggleSidebar } = useSidebarState();
+  const { isCollapsed, toggleSidebar } = useSidebarState() as {
+    isCollapsed: boolean;
+    toggleSidebar: () => void;
+  };
   const { refreshPage } = useRefresh();
 
   // 初始化全局快捷键
@@ -262,9 +265,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           // 触发搜索框聚焦
           const searchInput = document.querySelector(
             'input[placeholder*="搜索"]',
-          ) as HTMLInputElement | null;
-          if (searchInput) {
-            searchInput.focus();
+          );
+          if (searchInput && "focus" in searchInput) {
+            (searchInput as HTMLInputElement).focus();
           }
           break;
         case "global-shortcut-new-task":
@@ -854,10 +857,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   <div className="relative">
                     <div className="flex items-center gap-x-2">
                       {sessionData.user.image ? (
-                        <img
+                        <Image
                           className="h-8 w-8 rounded-full bg-gray-50"
                           src={sessionData.user.image}
                           alt={sessionData.user.name ?? "User"}
+                          width={32}
+                          height={32}
                         />
                       ) : (
                         <UserCircleIcon className="h-8 w-8 text-gray-400" />

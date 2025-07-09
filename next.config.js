@@ -19,6 +19,11 @@ const config = {
   },
   transpilePackages: ["next-auth"],
 
+  // 图片配置
+  images: {
+    domains: ["avatars.githubusercontent.com"],
+  },
+
   // Docker 部署优化
   output: "standalone",
 
