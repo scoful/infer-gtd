@@ -56,6 +56,7 @@ const Home: NextPage = () => {
   const router = useRouter();
   const { data: sessionData } = useSession();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false); // 手动刷新状态
 
   // 获取首页数据 - 使用 useMemo 避免重复计算日期
   const thirtyDaysAgo = useMemo(() => {
@@ -65,12 +66,12 @@ const Home: NextPage = () => {
   }, []);
 
   const {
-    data: taskStats,
+    data: stats,
     isLoading: isLoadingStats,
+    isFetching: isFetchingStats,
     error: statsError,
     refetch: refetchStats,
-    isFetching: isFetchingStats,
-  } = api.task.getStats.useQuery(
+  } = api.dashboard.getStats.useQuery(
     { startDate: thirtyDaysAgo },
     {
       enabled: !!sessionData,
@@ -82,6 +83,7 @@ const Home: NextPage = () => {
   const {
     data: recentTasks,
     isLoading: isLoadingTasks,
+    isFetching: isFetchingTasks,
     error: tasksError,
     refetch: refetchTasks,
   } = api.task.getAll.useQuery(
@@ -96,6 +98,7 @@ const Home: NextPage = () => {
   const {
     data: recentNotes,
     isLoading: isLoadingNotes,
+    isFetching: isFetchingNotes,
     error: notesError,
     refetch: refetchNotes,
   } = api.note.getAll.useQuery(
@@ -110,6 +113,7 @@ const Home: NextPage = () => {
   const {
     data: recentJournals,
     isLoading: isLoadingJournals,
+    isFetching: isFetchingJournals,
     error: journalsError,
     refetch: refetchJournals,
   } = api.journal.getRecent.useQuery(
@@ -124,6 +128,7 @@ const Home: NextPage = () => {
   const {
     data: dailyActivity,
     isLoading: isLoadingActivity,
+    isFetching: isFetchingActivity,
     error: activityError,
     refetch: refetchActivity,
   } = api.task.getDailyActivity.useQuery(
@@ -138,6 +143,7 @@ const Home: NextPage = () => {
   const {
     data: pinnedNotes,
     isLoading: isLoadingPinnedNotes,
+    isFetching: isFetchingPinnedNotes,
     error: pinnedNotesError,
     refetch: refetchPinnedNotes,
   } = api.note.getPinned.useQuery(
@@ -153,6 +159,7 @@ const Home: NextPage = () => {
   const {
     data: inProgressTasks,
     isLoading: isLoadingInProgress,
+    isFetching: isFetchingInProgress,
     error: inProgressError,
     refetch: refetchInProgress,
   } = api.task.getByStatus.useQuery(
@@ -168,6 +175,7 @@ const Home: NextPage = () => {
   const {
     data: waitingTasks,
     isLoading: isLoadingWaiting,
+    isFetching: isFetchingWaiting,
     error: waitingError,
     refetch: refetchWaiting,
   } = api.task.getByStatus.useQuery(
@@ -179,18 +187,54 @@ const Home: NextPage = () => {
     },
   );
 
+  // 计算总的加载状态
+  const isLoading =
+    isLoadingStats ||
+    isLoadingTasks ||
+    isLoadingNotes ||
+    isLoadingJournals ||
+    isLoadingActivity ||
+    isLoadingPinnedNotes ||
+    isLoadingInProgress ||
+    isLoadingWaiting;
+
+  // 计算刷新状态（包括手动刷新和数据获取）
+  const isFetching =
+    isFetchingStats ||
+    isFetchingTasks ||
+    isFetchingNotes ||
+    isFetchingJournals ||
+    isFetchingActivity ||
+    isFetchingPinnedNotes ||
+    isFetchingInProgress ||
+    isFetchingWaiting;
+
+  const isRefreshing = isManualRefreshing || isFetching;
+
+  // 监听查询状态变化，在刷新完成后重置标志
+  useEffect(() => {
+    if (isManualRefreshing && !isFetching) {
+      setIsManualRefreshing(false);
+    }
+  }, [isManualRefreshing, isFetching]);
+
   // 注册页面刷新函数
-  usePageRefresh(() => {
-    void Promise.all([
-      refetchStats(),
-      refetchTasks(),
-      refetchNotes(),
-      refetchJournals(),
-      refetchActivity(),
-      refetchPinnedNotes(),
-      refetchInProgress(),
-      refetchWaiting(),
-    ]);
+  usePageRefresh(async () => {
+    setIsManualRefreshing(true);
+    try {
+      await Promise.all([
+        refetchStats(),
+        refetchTasks(),
+        refetchNotes(),
+        refetchJournals(),
+        refetchActivity(),
+        refetchPinnedNotes(),
+        refetchInProgress(),
+        refetchWaiting(),
+      ]);
+    } finally {
+      setIsManualRefreshing(false);
+    }
   }, [
     refetchStats,
     refetchTasks,
@@ -257,9 +301,17 @@ const Home: NextPage = () => {
                   {/* 欢迎信息 */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">
-                        欢迎回来，{sessionData?.user?.name}！
-                      </h1>
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-gray-900">
+                          欢迎回来，{sessionData?.user?.name}！
+                        </h1>
+                        {isRefreshing && (
+                          <div className="flex items-center text-sm text-blue-600">
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                            刷新中...
+                          </div>
+                        )}
+                      </div>
                       <p className="mt-1 text-sm text-gray-500">
                         今天是{" "}
                         {new Date().toLocaleDateString("zh-CN", {
