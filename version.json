@@ -1,10 +1,10 @@
 {
-  "version": "1.8.2",
+  "version": "1.9.0",
   "major": 1,
-  "minor": 8,
-  "patch": 2,
-  "buildTime": "2025-07-10T08:26:51.863Z",
-  "gitCommit": "56970816a026a499327e4dd6fb82a9dde1c774e0",
+  "minor": 9,
+  "patch": 0,
+  "buildTime": "2025-07-10T08:28:40.341Z",
+  "gitCommit": "5fceaec132909aab851ad0e817a5845b6a4c94f9",
   "gitBranch": "main",
   "environment": "development"
 }
