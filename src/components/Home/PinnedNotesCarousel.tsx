@@ -200,8 +200,9 @@ export default function PinnedNotesCarousel({
         onClick={(e) => {
           // 确保点击的不是按钮区域
           if (
-            e.target === e.currentTarget ||
-            (e.target as HTMLElement).closest(".clickable-content")
+            currentLine &&
+            (e.target === e.currentTarget ||
+              (e.target as HTMLElement).closest(".clickable-content"))
           ) {
             void router.push(`/notes/${currentLine.noteId}`);
           }
@@ -230,7 +231,7 @@ export default function PinnedNotesCarousel({
                 : "translate-y-0 scale-100 transform opacity-100"
             }`}
           >
-            {currentLine.line}
+            {currentLine?.line}
           </p>
         </div>
 

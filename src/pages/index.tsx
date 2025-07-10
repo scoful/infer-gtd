@@ -71,7 +71,7 @@ const Home: NextPage = () => {
     isFetching: isFetchingStats,
     error: statsError,
     refetch: refetchStats,
-  } = api.dashboard.getStats.useQuery(
+  } = api.task.getStats.useQuery(
     { startDate: thirtyDaysAgo },
     {
       enabled: !!sessionData,
@@ -126,7 +126,7 @@ const Home: NextPage = () => {
   );
 
   const {
-    data: dailyActivity,
+    data: activityData,
     isLoading: isLoadingActivity,
     isFetching: isFetchingActivity,
     error: activityError,
@@ -227,12 +227,12 @@ const Home: NextPage = () => {
       refetchNotes(),
       refetchJournals(),
       refetchActivity(),
-        refetchPinnedNotes(),
-        refetchInProgress(),
-        refetchWaiting(),
-      ]).finally(() => {
-        setIsManualRefreshing(false);
-      });
+      refetchPinnedNotes(),
+      refetchInProgress(),
+      refetchWaiting(),
+    ]).finally(() => {
+      setIsManualRefreshing(false);
+    });
   }, [
     refetchStats,
     refetchTasks,
@@ -368,7 +368,7 @@ const Home: NextPage = () => {
                         {inProgressTasks?.tasks &&
                           inProgressTasks.tasks.length > 0 && (
                             <TaskTitleHover
-                              title={inProgressTasks.tasks[0].title}
+                              title={inProgressTasks.tasks[0]?.title ?? ""}
                               textColor="text-yellow-700"
                             />
                           )}
@@ -409,7 +409,7 @@ const Home: NextPage = () => {
                         {waitingTasks?.tasks &&
                           waitingTasks.tasks.length > 0 && (
                             <TaskTitleHover
-                              title={waitingTasks.tasks[0].title}
+                              title={waitingTasks.tasks[0]?.title ?? ""}
                               textColor="text-purple-700"
                             />
                           )}
@@ -500,8 +500,8 @@ const Home: NextPage = () => {
                 error={activityError}
                 loadingMessage="加载活动数据中..."
               >
-                {dailyActivity && (
-                  <ActivityHeatmap data={dailyActivity} className="w-full" />
+                {activityData && (
+                  <ActivityHeatmap data={activityData} className="w-full" />
                 )}
               </QueryLoading>
             </div>
