@@ -98,7 +98,10 @@ export default function TaskWaitingReasonModal({
     (e: React.FormEvent) => {
       e.preventDefault();
 
-      console.log("提交等待原因:", { taskId, waitingReason: formData.waitingReason });
+      console.log("提交等待原因:", {
+        taskId,
+        waitingReason: formData.waitingReason,
+      });
 
       if (!taskId) {
         showError("任务ID无效");
@@ -146,7 +149,10 @@ export default function TaskWaitingReasonModal({
   }, [isOpen, formData.waitingReason, updateTask.isPending, handleSubmit]);
 
   // 处理输入变化
-  const handleInputChange = (field: keyof WaitingReasonFormData, value: string) => {
+  const handleInputChange = (
+    field: keyof WaitingReasonFormData,
+    value: string,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -165,7 +171,7 @@ export default function TaskWaitingReasonModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="bg-opacity-25 fixed inset-0 bg-black" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -183,13 +189,13 @@ export default function TaskWaitingReasonModal({
                 <div className="flex items-center justify-between">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
+                    className="text-lg leading-6 font-medium text-gray-900"
                   >
                     等待原因
                   </Dialog.Title>
                   <button
                     type="button"
-                    className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="rounded-md text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                     onClick={handleClose}
                   >
                     <span className="sr-only">关闭</span>
@@ -199,15 +205,20 @@ export default function TaskWaitingReasonModal({
 
                 <div className="mt-4">
                   <p className="text-sm text-gray-500">
-                    任务 <span className="font-medium text-gray-900">"{taskTitle}"</span> 已移动到等待中状态。
-                    请说明等待的原因，以便后续跟进。
+                    任务{" "}
+                    <span className="font-medium text-gray-900">
+                      "{taskTitle}"
+                    </span>{" "}
+                    已移动到等待中状态。 请说明等待的原因，以便后续跟进。
                   </p>
                 </div>
 
                 {isLoadingTask ? (
                   <div className="mt-4 flex items-center justify-center py-8">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-                    <span className="ml-2 text-sm text-gray-500">加载任务信息...</span>
+                    <span className="ml-2 text-sm text-gray-500">
+                      加载任务信息...
+                    </span>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -227,12 +238,15 @@ export default function TaskWaitingReasonModal({
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                           placeholder="请描述任务等待的具体原因，例如：等待他人回复、等待资源到位、等待审批等..."
                           value={formData.waitingReason}
-                          onChange={(e) => handleInputChange("waitingReason", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("waitingReason", e.target.value)
+                          }
                           required
                         />
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        详细的等待原因有助于后续跟进和处理。按 Ctrl+Enter 快速保存
+                        详细的等待原因有助于后续跟进和处理。按 Ctrl+Enter
+                        快速保存
                       </p>
                     </div>
 
@@ -240,7 +254,7 @@ export default function TaskWaitingReasonModal({
                     <div className="flex justify-end space-x-3 pt-4">
                       <button
                         type="button"
-                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                         onClick={handleClose}
                       >
                         取消
@@ -248,7 +262,7 @@ export default function TaskWaitingReasonModal({
                       <button
                         type="submit"
                         disabled={updateTask.isPending}
-                        className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
                       >
                         {updateTask.isPending ? (
                           <ButtonLoading message="保存中..." size="sm" />

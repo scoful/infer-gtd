@@ -137,9 +137,13 @@ const KanbanPage: NextPage = () => {
   const [feedbackTaskTitle, setFeedbackTaskTitle] = useState<string>("");
 
   // 等待原因模态框状态
-  const [isWaitingReasonModalOpen, setIsWaitingReasonModalOpen] = useState(false);
-  const [waitingReasonTaskId, setWaitingReasonTaskId] = useState<string | null>(null);
-  const [waitingReasonTaskTitle, setWaitingReasonTaskTitle] = useState<string>("");
+  const [isWaitingReasonModalOpen, setIsWaitingReasonModalOpen] =
+    useState(false);
+  const [waitingReasonTaskId, setWaitingReasonTaskId] = useState<string | null>(
+    null,
+  );
+  const [waitingReasonTaskTitle, setWaitingReasonTaskTitle] =
+    useState<string>("");
   const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
     taskId: string;
     targetStatus: TaskStatus;
@@ -2441,7 +2445,9 @@ function TaskCard({
         {task.status === TaskStatus.WAITING && task.waitingReason && (
           <div className="rounded-md border border-purple-200 bg-purple-50 px-2 py-1.5">
             <div className="flex items-start">
-              <span className="mr-1 text-xs font-medium text-purple-600">⏳</span>
+              <span className="mr-1 text-xs font-medium text-purple-600">
+                ⏳
+              </span>
               <p
                 className="line-clamp-3 text-xs text-purple-700"
                 title={task.waitingReason}

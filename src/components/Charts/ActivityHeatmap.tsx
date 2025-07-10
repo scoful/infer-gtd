@@ -211,19 +211,20 @@ export default function ActivityHeatmap({
                       <div
                         className="absolute inset-0 rounded-sm border-2 border-blue-400"
                         style={{
-                          animation: 'pulse-glow 2s ease-in-out infinite',
+                          animation: "pulse-glow 2s ease-in-out infinite",
                         }}
                       />
                       {/* 内部光晕 */}
                       <div
                         className="absolute inset-0.5 rounded-sm bg-blue-400/20"
                         style={{
-                          animation: 'inner-glow 2s ease-in-out infinite',
+                          animation: "inner-glow 2s ease-in-out infinite",
                         }}
                       />
                       <style jsx>{`
                         @keyframes pulse-glow {
-                          0%, 100% {
+                          0%,
+                          100% {
                             box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
                             transform: scale(1);
                             border-color: rgb(96, 165, 250);
@@ -236,7 +237,8 @@ export default function ActivityHeatmap({
                         }
 
                         @keyframes inner-glow {
-                          0%, 100% {
+                          0%,
+                          100% {
                             opacity: 0.2;
                           }
                           50% {

@@ -37,14 +37,14 @@ function TaskTitleHover({ title, textColor }: TaskTitleHoverProps) {
   const shouldShowTooltip = title.length > 15;
 
   return (
-    <div className="relative group">
-      <p className={`text-xs ${textColor} leading-relaxed line-clamp-2`}>
+    <div className="group relative">
+      <p className={`text-xs ${textColor} line-clamp-2 leading-relaxed`}>
         {title}
       </p>
 
       {/* hover时显示完整标题 */}
       {shouldShowTooltip && (
-        <div className="absolute left-0 -top-1 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50 max-w-xs break-words whitespace-normal opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        <div className="pointer-events-none absolute -top-1 left-0 z-50 max-w-xs rounded bg-gray-800 px-2 py-1 text-xs break-words whitespace-normal text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
           {title}
         </div>
       )}
@@ -297,7 +297,7 @@ const Home: NextPage = () => {
             <div className="px-4 py-5 sm:p-6">
               <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
                 {/* 左侧：欢迎信息和任务状态 */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="space-y-4 lg:col-span-2">
                   {/* 欢迎信息 */}
                   <div className="flex items-center justify-between">
                     <div>
@@ -337,70 +337,84 @@ const Home: NextPage = () => {
                   {/* 任务状态卡片 */}
                   <div className="grid grid-cols-2 gap-3">
                     {/* 进行中任务 */}
-                    <div className="rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200/60 p-3">
+                    <div className="rounded-lg border border-yellow-200/60 bg-gradient-to-br from-yellow-50 to-orange-50 p-3">
                       <QueryLoading
                         isLoading={isLoadingInProgress}
                         error={inProgressError}
                         loadingMessage=""
                         loadingComponent={
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <PlayIcon className="h-4 w-4 text-yellow-600" />
-                              <span className="text-sm font-medium text-yellow-800">进行中</span>
+                              <span className="text-sm font-medium text-yellow-800">
+                                进行中
+                              </span>
                             </div>
-                            <div className="text-lg font-bold text-yellow-600">-</div>
+                            <div className="text-lg font-bold text-yellow-600">
+                              -
+                            </div>
                           </div>
                         }
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="mb-2 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <PlayIcon className="h-4 w-4 text-yellow-600" />
-                            <span className="text-sm font-medium text-yellow-800">进行中</span>
+                            <span className="text-sm font-medium text-yellow-800">
+                              进行中
+                            </span>
                           </div>
                           <div className="text-lg font-bold text-yellow-600">
                             {inProgressTasks?.tasks?.length ?? 0}
                           </div>
                         </div>
-                        {inProgressTasks?.tasks && inProgressTasks.tasks.length > 0 && (
-                          <TaskTitleHover
-                            title={inProgressTasks.tasks[0].title}
-                            textColor="text-yellow-700"
-                          />
-                        )}
+                        {inProgressTasks?.tasks &&
+                          inProgressTasks.tasks.length > 0 && (
+                            <TaskTitleHover
+                              title={inProgressTasks.tasks[0].title}
+                              textColor="text-yellow-700"
+                            />
+                          )}
                       </QueryLoading>
                     </div>
 
                     {/* 等待中任务 */}
-                    <div className="rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/60 p-3">
+                    <div className="rounded-lg border border-purple-200/60 bg-gradient-to-br from-purple-50 to-indigo-50 p-3">
                       <QueryLoading
                         isLoading={isLoadingWaiting}
                         error={waitingError}
                         loadingMessage=""
                         loadingComponent={
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <ClockIcon className="h-4 w-4 text-purple-600" />
-                              <span className="text-sm font-medium text-purple-800">等待中</span>
+                              <span className="text-sm font-medium text-purple-800">
+                                等待中
+                              </span>
                             </div>
-                            <div className="text-lg font-bold text-purple-600">-</div>
+                            <div className="text-lg font-bold text-purple-600">
+                              -
+                            </div>
                           </div>
                         }
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="mb-2 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <ClockIcon className="h-4 w-4 text-purple-600" />
-                            <span className="text-sm font-medium text-purple-800">等待中</span>
+                            <span className="text-sm font-medium text-purple-800">
+                              等待中
+                            </span>
                           </div>
                           <div className="text-lg font-bold text-purple-600">
                             {waitingTasks?.tasks?.length ?? 0}
                           </div>
                         </div>
-                        {waitingTasks?.tasks && waitingTasks.tasks.length > 0 && (
-                          <TaskTitleHover
-                            title={waitingTasks.tasks[0].title}
-                            textColor="text-purple-700"
-                          />
-                        )}
+                        {waitingTasks?.tasks &&
+                          waitingTasks.tasks.length > 0 && (
+                            <TaskTitleHover
+                              title={waitingTasks.tasks[0].title}
+                              textColor="text-purple-700"
+                            />
+                          )}
                       </QueryLoading>
                     </div>
                   </div>
