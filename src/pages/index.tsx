@@ -33,6 +33,9 @@ interface TaskTitleHoverProps {
 function TaskTitleHover({ title, textColor }: TaskTitleHoverProps) {
   if (!title) return null;
 
+  // 降低阈值，大部分标题都会显示tooltip
+  const shouldShowTooltip = title.length > 15;
+
   return (
     <div className="relative group">
       <p className={`text-xs ${textColor} leading-relaxed line-clamp-2`}>
@@ -40,8 +43,8 @@ function TaskTitleHover({ title, textColor }: TaskTitleHoverProps) {
       </p>
 
       {/* hover时显示完整标题 */}
-      {title.length > 40 && (
-        <div className="absolute left-0 top-0 invisible group-hover:visible bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50 max-w-xs break-words">
+      {shouldShowTooltip && (
+        <div className="absolute left-0 -top-1 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50 max-w-xs break-words whitespace-normal opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
           {title}
         </div>
       )}
