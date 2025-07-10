@@ -1175,6 +1175,16 @@ const KanbanPage: NextPage = () => {
     setIsFeedbackModalOpen(true);
   };
 
+  // 补充等待原因
+  const handleAddWaitingReason = (taskId: string) => {
+    const task = getAllTasks().find((t) => t.id === taskId);
+    if (!task) return;
+
+    setWaitingReasonTaskId(taskId);
+    setWaitingReasonTaskTitle(task.title);
+    setIsWaitingReasonModalOpen(true);
+  };
+
   // 处理快速上浮到第一位
   const handleMoveToTop = async (taskId: string) => {
     const task = getAllTasks().find((t) => t.id === taskId);
@@ -1520,6 +1530,7 @@ const KanbanPage: NextPage = () => {
                     onViewTimeEntries={handleViewTimeEntries}
                     onDuplicateTask={handleDuplicateTask}
                     onAddFeedback={handleAddFeedback}
+                    onAddWaitingReason={handleAddWaitingReason}
                     onPostponeTask={handlePostponeTask}
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive}
@@ -1551,6 +1562,7 @@ const KanbanPage: NextPage = () => {
                     onViewTimeEntries={() => {}}
                     onDuplicateTask={() => {}}
                     onAddFeedback={() => {}}
+                    onAddWaitingReason={() => {}}
                     onPostponeTask={() => {}}
                     formatTimeSpent={formatTimeSpent}
                     isTimerActive={isTimerActive(activeTask)}
@@ -1647,6 +1659,7 @@ interface KanbanColumnProps {
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
   onAddFeedback: (taskId: string) => void; // 新增：补充反馈
+  onAddWaitingReason: (taskId: string) => void; // 新增：补充等待原因
   onPostponeTask: (taskId: string) => void; // 新增：延期任务
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: (task: TaskWithRelations) => boolean;
@@ -1673,6 +1686,7 @@ function KanbanColumn({
   onViewTimeEntries,
   onDuplicateTask,
   onAddFeedback,
+  onAddWaitingReason,
   onPostponeTask,
   formatTimeSpent,
   isTimerActive,
@@ -1735,6 +1749,7 @@ function KanbanColumn({
               onViewTimeEntries={onViewTimeEntries}
               onDuplicateTask={onDuplicateTask}
               onAddFeedback={onAddFeedback}
+              onAddWaitingReason={onAddWaitingReason}
               onPostponeTask={onPostponeTask}
               formatTimeSpent={formatTimeSpent}
               isTimerActive={isTimerActive(task)}
@@ -1830,6 +1845,7 @@ interface DraggableTaskCardProps {
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
   onAddFeedback: (taskId: string) => void; // 新增：补充反馈
+  onAddWaitingReason: (taskId: string) => void; // 新增：补充等待原因
   onPostponeTask: (taskId: string) => void; // 新增：延期任务
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
@@ -1889,6 +1905,7 @@ interface TaskCardProps {
   onViewTimeEntries: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void; // 新增：重新安排任务
   onAddFeedback: (taskId: string) => void; // 新增：补充反馈
+  onAddWaitingReason: (taskId: string) => void; // 新增：补充等待原因
   onPostponeTask: (taskId: string) => void; // 新增：延期任务
   formatTimeSpent: (seconds: number) => string;
   isTimerActive: boolean;
@@ -1908,6 +1925,7 @@ function TaskCard({
   onViewTimeEntries,
   onDuplicateTask,
   onAddFeedback,
+  onAddWaitingReason,
   onPostponeTask,
   formatTimeSpent,
   isTimerActive,
@@ -2168,6 +2186,22 @@ function TaskCard({
                       >
                         <ChatBubbleLeftEllipsisIcon className="mr-2 h-4 w-4 text-green-500" />
                         补充反馈
+                      </button>
+                    )}
+
+                    {/* 补充原因选项 - 仅在等待中任务中显示 */}
+                    {task.status === TaskStatus.WAITING && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          onAddWaitingReason(task.id);
+                        }}
+                        className="flex w-full items-center px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+                      >
+                        <ClockIcon className="mr-2 h-4 w-4 text-purple-500" />
+                        补充原因
                       </button>
                     )}
 
