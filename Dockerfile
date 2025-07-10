@@ -44,18 +44,7 @@ RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
     pnpm config set store-dir ~/.pnpm-store && \
     pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
-# 生产依赖安装阶段
-FROM base AS prod-deps
-
-# 传递构建参数
-ARG USE_CHINA_MIRROR=false
-
-# 根据构建参数配置 pnpm 镜像源并安装生产依赖
-RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
-        pnpm config set registry https://registry.npmmirror.com; \
-    fi && \
-    pnpm config set store-dir ~/.pnpm-store && \
-    pnpm install --frozen-lockfile --prod=true --ignore-scripts
+# 注释：移除prod-deps阶段，standalone模式已包含所需依赖
 
 # 构建阶段
 FROM base AS builder
@@ -104,17 +93,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # 设置工作目录
 WORKDIR /app
 
-# 复制构建产物
+# 复制构建产物 - 使用standalone自包含模式
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=root:root /app/.next/standalone ./
+COPY --from=builder --chown=root:root /app/.next/static ./.next/static
 
-# 复制生产依赖（仅包含运行时需要的包）
-COPY --from=prod-deps /app/node_modules ./node_modules
-
-# 复制 Prisma 相关文件
+# 复制 Prisma 相关文件（standalone模式需要）
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package.json ./package.json
 
 # 复制版本信息文件
 COPY --from=builder /app/version.json ./public/version.json
@@ -123,9 +108,9 @@ COPY --from=builder /app/version.json ./public/version.json
 COPY scripts/docker-entrypoint.sh ./scripts/
 RUN chmod +x ./scripts/docker-entrypoint.sh
 
-# 生成 Prisma 客户端（使用已有的依赖）
+# 生成 Prisma 客户端（使用standalone中的依赖）
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
-RUN npx prisma generate
+RUN cd /app && npx prisma generate
 
 # 创建日志目录并清理不必要的文件
 RUN mkdir -p /app/logs && \
@@ -154,6 +139,6 @@ LABEL org.opencontainers.image.created=$BUILD_DATE \
       org.opencontainers.image.title="GTD Task Management System" \
       org.opencontainers.image.description="Next.js + tRPC + Prisma GTD Application"
 
-# 设置入口点和启动命令
+# 设置入口点和启动命令 - 使用standalone模式的server.js
 ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
