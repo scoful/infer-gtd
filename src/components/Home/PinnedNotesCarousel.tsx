@@ -149,6 +149,7 @@ export default function PinnedNotesCarousel({
     interval,
     currentLineIndex,
     isTransitioning,
+    smoothTransition,
   ]);
 
   // 手动切换
@@ -202,7 +203,7 @@ export default function PinnedNotesCarousel({
             e.target === e.currentTarget ||
             (e.target as HTMLElement).closest(".clickable-content")
           ) {
-            router.push(`/notes/${currentLine.noteId}`);
+            void router.push(`/notes/${currentLine.noteId}`);
           }
         }}
       >

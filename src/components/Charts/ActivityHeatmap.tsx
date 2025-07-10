@@ -58,8 +58,8 @@ export default function ActivityHeatmap({
 
         currentWeek.push({
           date: dateStr,
-          count: activityData?.count || 0,
-          level: activityData?.level || 0,
+          count: activityData?.count ?? 0,
+          level: activityData?.level ?? 0,
         });
 
         currentDate.setDate(currentDate.getDate() + 1);

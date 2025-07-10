@@ -219,22 +219,20 @@ const Home: NextPage = () => {
   }, [isManualRefreshing, isFetching]);
 
   // 注册页面刷新函数
-  usePageRefresh(async () => {
+  usePageRefresh(() => {
     setIsManualRefreshing(true);
-    try {
-      await Promise.all([
-        refetchStats(),
-        refetchTasks(),
-        refetchNotes(),
-        refetchJournals(),
-        refetchActivity(),
+    void Promise.all([
+      refetchStats(),
+      refetchTasks(),
+      refetchNotes(),
+      refetchJournals(),
+      refetchActivity(),
         refetchPinnedNotes(),
         refetchInProgress(),
         refetchWaiting(),
-      ]);
-    } finally {
-      setIsManualRefreshing(false);
-    }
+      ]).finally(() => {
+        setIsManualRefreshing(false);
+      });
   }, [
     refetchStats,
     refetchTasks,
