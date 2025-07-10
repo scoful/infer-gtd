@@ -44,6 +44,19 @@ RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
     pnpm config set store-dir ~/.pnpm-store && \
     pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
+# 生产依赖安装阶段
+FROM base AS prod-deps
+
+# 传递构建参数
+ARG USE_CHINA_MIRROR=false
+
+# 根据构建参数配置 pnpm 镜像源并安装生产依赖
+RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
+        pnpm config set registry https://registry.npmmirror.com; \
+    fi && \
+    pnpm config set store-dir ~/.pnpm-store && \
+    pnpm install --frozen-lockfile --prod=true --ignore-scripts
+
 # 构建阶段
 FROM base AS builder
 
@@ -68,20 +81,17 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # 构建应用
 RUN pnpm build
 
+# 清理构建缓存和不必要的文件
+RUN rm -rf .next/cache && \
+    rm -rf node_modules/.cache && \
+    rm -rf ~/.pnpm-store
+
 # 生产运行阶段
 FROM node:20-alpine AS runner
 
-# 安装运行时依赖
-RUN apk add --no-cache curl netcat-openbsd
-
-# 传递构建参数
-ARG USE_CHINA_MIRROR=false
-
-# 根据构建参数配置 npm 镜像源并安装 pnpm（用于 Prisma 客户端生成）
-RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
-        npm config set registry https://registry.npmmirror.com; \
-    fi && \
-    npm install -g pnpm@9.6.0
+# 安装运行时依赖（最小化）
+RUN apk add --no-cache curl && \
+    rm -rf /var/cache/apk/*
 
 # 设置生产环境
 ENV NODE_ENV=production
@@ -99,6 +109,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# 复制生产依赖（仅包含运行时需要的包）
+COPY --from=prod-deps /app/node_modules ./node_modules
+
 # 复制 Prisma 相关文件
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
@@ -110,21 +123,14 @@ COPY --from=builder /app/version.json ./public/version.json
 COPY scripts/docker-entrypoint.sh ./scripts/
 RUN chmod +x ./scripts/docker-entrypoint.sh
 
-# 传递构建参数
-ARG USE_CHINA_MIRROR=false
-
-# 根据构建参数配置 pnpm 镜像源并安装 Prisma 相关包
-RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
-        pnpm config set registry https://registry.npmmirror.com; \
-    fi && \
-    pnpm add @prisma/client prisma --prod
-
-# 生成 Prisma 客户端
+# 生成 Prisma 客户端（使用已有的依赖）
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 RUN npx prisma generate
 
-# 创建日志目录
-RUN mkdir -p /app/logs
+# 创建日志目录并清理不必要的文件
+RUN mkdir -p /app/logs && \
+    rm -rf /tmp/* /var/tmp/* && \
+    npm cache clean --force 2>/dev/null || true
 
 # 注释：使用 root 用户运行，无需切换用户
 # USER nextjs

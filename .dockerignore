@@ -81,3 +81,27 @@ prisma/verify-data.ts
 # 其他
 .eslintcache
 .tsbuildinfo
+
+# 开发工具和缓存
+.cache
+.parcel-cache
+.turbo
+.swc
+.webpack
+.rollup.cache
+
+# 包管理器缓存
+.pnpm-store
+.yarn
+.npm
+
+# 数据库文件（开发用）
+*.db
+*.sqlite
+*.sqlite3
+
+# 备份和临时文件
+*.bak
+*.tmp
+*.temp
+*~
