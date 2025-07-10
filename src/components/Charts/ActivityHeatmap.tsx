@@ -207,36 +207,40 @@ export default function ActivityHeatmap({
                 >
                   {isTodaySquare && (
                     <>
-                      {/* 边框轨道 */}
-                      <div className="absolute inset-0 rounded-sm border border-blue-300 opacity-50" />
-                      {/* 运动的小点 */}
+                      {/* 脉冲呼吸效果 */}
                       <div
-                        className="absolute w-1 h-1 bg-blue-500 rounded-full shadow-sm"
+                        className="absolute inset-0 rounded-sm border-2 border-blue-400"
                         style={{
-                          animation: 'borderTrace 2s linear infinite',
+                          animation: 'pulse-glow 2s ease-in-out infinite',
+                        }}
+                      />
+                      {/* 内部光晕 */}
+                      <div
+                        className="absolute inset-0.5 rounded-sm bg-blue-400/20"
+                        style={{
+                          animation: 'inner-glow 2s ease-in-out infinite',
                         }}
                       />
                       <style jsx>{`
-                        @keyframes borderTrace {
-                          0% {
-                            top: -2px;
-                            left: -2px;
-                          }
-                          25% {
-                            top: -2px;
-                            left: calc(100% + 2px);
+                        @keyframes pulse-glow {
+                          0%, 100% {
+                            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+                            transform: scale(1);
+                            border-color: rgb(96, 165, 250);
                           }
                           50% {
-                            top: calc(100% + 2px);
-                            left: calc(100% + 2px);
+                            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0);
+                            transform: scale(1.1);
+                            border-color: rgb(59, 130, 246);
                           }
-                          75% {
-                            top: calc(100% + 2px);
-                            left: -2px;
+                        }
+
+                        @keyframes inner-glow {
+                          0%, 100% {
+                            opacity: 0.2;
                           }
-                          100% {
-                            top: -2px;
-                            left: -2px;
+                          50% {
+                            opacity: 0.4;
                           }
                         }
                       `}</style>
