@@ -100,6 +100,17 @@ export default function ActivityHeatmap({
     return `${dateStr}: ${item.count} 个操作`;
   };
 
+  // 判断是否是当天
+  const isToday = (dateString: string): boolean => {
+    const today = new Date();
+    const date = new Date(dateString);
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  };
+
   return (
     <div className={`w-full ${className}`}>
       {/* 标题和图例 */}
@@ -186,13 +197,54 @@ export default function ActivityHeatmap({
           style={{ gridTemplateRows: "repeat(7, 1fr)" }}
         >
           {weeks.map((week, weekIndex) =>
-            week.map((day, dayIndex) => (
-              <div
-                key={`${weekIndex}-${dayIndex}`}
-                className={`h-2 w-2 rounded-sm sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-3.5 lg:w-3.5 xl:h-4 xl:w-4 ${getColorClass(day.level)} cursor-pointer transition-all hover:ring-1 hover:ring-gray-400`}
-                title={getTooltipText(day)}
-              />
-            )),
+            week.map((day, dayIndex) => {
+              const isTodaySquare = isToday(day.date);
+              return (
+                <div
+                  key={`${weekIndex}-${dayIndex}`}
+                  className={`relative h-2 w-2 rounded-sm sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 lg:h-3.5 lg:w-3.5 xl:h-4 xl:w-4 ${getColorClass(day.level)} cursor-pointer transition-all hover:ring-1 hover:ring-gray-400`}
+                  title={getTooltipText(day)}
+                >
+                  {isTodaySquare && (
+                    <>
+                      {/* 边框轨道 */}
+                      <div className="absolute inset-0 rounded-sm border border-blue-300 opacity-50" />
+                      {/* 运动的小点 */}
+                      <div
+                        className="absolute w-1 h-1 bg-blue-500 rounded-full shadow-sm"
+                        style={{
+                          animation: 'borderTrace 2s linear infinite',
+                        }}
+                      />
+                      <style jsx>{`
+                        @keyframes borderTrace {
+                          0% {
+                            top: -2px;
+                            left: -2px;
+                          }
+                          25% {
+                            top: -2px;
+                            left: calc(100% + 2px);
+                          }
+                          50% {
+                            top: calc(100% + 2px);
+                            left: calc(100% + 2px);
+                          }
+                          75% {
+                            top: calc(100% + 2px);
+                            left: -2px;
+                          }
+                          100% {
+                            top: -2px;
+                            left: -2px;
+                          }
+                        }
+                      `}</style>
+                    </>
+                  )}
+                </div>
+              );
+            }),
           )}
         </div>
       </div>
