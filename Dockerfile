@@ -79,7 +79,7 @@ RUN rm -rf .next/cache && \
 FROM node:20-alpine AS runner
 
 # 安装运行时依赖（最小化）
-RUN apk add --no-cache curl && \
+RUN apk add --no-cache curl netcat-openbsd && \
     rm -rf /var/cache/apk/*
 
 # 设置生产环境
