@@ -354,9 +354,9 @@ const Home: NextPage = () => {
                   </div>
                 </div>
 
-                {/* 右侧：置顶笔记轮播 - 增加宽度 */}
+                {/* 右侧：置顶笔记轮播 - 自适应高度 */}
                 <div className="lg:col-span-3">
-                  <div className="h-40 lg:h-32">
+                  <div className="h-full">
                     <QueryLoading
                       isLoading={isLoadingPinnedNotes}
                       error={pinnedNotesError}

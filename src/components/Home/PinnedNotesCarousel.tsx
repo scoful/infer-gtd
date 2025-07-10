@@ -255,9 +255,9 @@ export default function PinnedNotesCarousel({
         )}
       </div>
 
-      {/* 进度指示器 - 增强视觉效果 */}
+      {/* 进度指示器 - 居中下方显示 */}
       {contentLines.length > 1 && (
-        <div className="absolute -bottom-2 right-8 opacity-75 hover:opacity-100 transition-all duration-300 hover:scale-105">
+        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-75 hover:opacity-100 transition-all duration-300 hover:scale-105">
           <div className="bg-white/95 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-gray-200/60">
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-600 font-medium">
