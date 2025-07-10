@@ -20,6 +20,7 @@ import { QueryLoading, SectionLoading } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import TaskModal from "@/components/Tasks/TaskModal";
 import ActivityHeatmap from "@/components/Charts/ActivityHeatmap";
+import PinnedNotesCarousel from "@/components/Home/PinnedNotesCarousel";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -104,6 +105,20 @@ const Home: NextPage = () => {
     },
   );
 
+  const {
+    data: pinnedNotes,
+    isLoading: isLoadingPinnedNotes,
+    error: pinnedNotesError,
+    refetch: refetchPinnedNotes,
+  } = api.note.getPinned.useQuery(
+    { limit: 5 },
+    {
+      enabled: !!sessionData,
+      staleTime: 5 * 60 * 1000, // 5分钟内不重新获取
+      refetchOnWindowFocus: false, // 窗口聚焦时不重新获取
+    },
+  );
+
   // 注册页面刷新函数
   usePageRefresh(() => {
     void Promise.all([
@@ -112,6 +127,7 @@ const Home: NextPage = () => {
       refetchNotes(),
       refetchJournals(),
       refetchActivity(),
+      refetchPinnedNotes(),
     ]);
   }, [
     refetchStats,
@@ -119,6 +135,7 @@ const Home: NextPage = () => {
     refetchNotes,
     refetchJournals,
     refetchActivity,
+    refetchPinnedNotes,
   ]);
 
   const quickActions = [
@@ -167,34 +184,63 @@ const Home: NextPage = () => {
         </Head>
 
         <div className="space-y-6">
-          {/* 快速操作 */}
+          {/* 欢迎区域 - 左右分割布局 */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="px-4 py-5 sm:p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    欢迎回来，{sessionData?.user?.name}！
-                  </h1>
-                  <p className="mt-1 text-sm text-gray-500">
-                    今天是{" "}
-                    {new Date().toLocaleDateString("zh-CN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      weekday: "long",
-                    })}
-                  </p>
+              <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
+                {/* 左侧：欢迎信息 */}
+                <div className="lg:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        欢迎回来，{sessionData?.user?.name}！
+                      </h1>
+                      <p className="mt-1 text-sm text-gray-500">
+                        今天是{" "}
+                        {new Date().toLocaleDateString("zh-CN", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          weekday: "long",
+                        })}
+                      </p>
+                    </div>
+                    {sessionData?.user?.image && (
+                      <Image
+                        className="h-16 w-16 rounded-full lg:hidden"
+                        src={sessionData.user.image}
+                        alt={sessionData.user.name ?? "User"}
+                        width={64}
+                        height={64}
+                        unoptimized
+                      />
+                    )}
+                  </div>
                 </div>
-                {sessionData?.user?.image && (
-                  <Image
-                    className="h-16 w-16 rounded-full"
-                    src={sessionData.user.image}
-                    alt={sessionData.user.name ?? "User"}
-                    width={64}
-                    height={64}
-                    unoptimized
-                  />
-                )}
+
+                {/* 右侧：置顶笔记轮播 - 增加宽度 */}
+                <div className="lg:col-span-3">
+                  <div className="h-40 lg:h-32">
+                    <QueryLoading
+                      isLoading={isLoadingPinnedNotes}
+                      error={pinnedNotesError}
+                      loadingMessage="加载置顶笔记中..."
+                      loadingComponent={
+                        <div className="flex h-full items-center justify-center">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                        </div>
+                      }
+                    >
+                      {pinnedNotes && (
+                        <PinnedNotesCarousel
+                          notes={pinnedNotes}
+                          autoPlay={true}
+                          interval={6000}
+                        />
+                      )}
+                    </QueryLoading>
+                  </div>
+                </div>
               </div>
 
               {/* 快速操作按钮 */}

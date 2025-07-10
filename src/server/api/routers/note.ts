@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
@@ -875,6 +876,51 @@ export const noteRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "批量操作失败",
+          cause: error,
+        });
+      }
+    }),
+
+  // 获取置顶笔记（用于首页展示）
+  getPinned: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(10).default(5),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const pinnedNotes = await ctx.db.note.findMany({
+          where: {
+            createdById: ctx.session.user.id,
+            isPinned: true,
+            isArchived: false,
+          },
+          take: input.limit,
+          orderBy: [
+            { updatedAt: "desc" }, // 最近更新的置顶笔记优先
+          ],
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            summary: true,
+            updatedAt: true,
+            project: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          },
+        });
+
+        return pinnedNotes;
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "获取置顶笔记失败",
           cause: error,
         });
       }
