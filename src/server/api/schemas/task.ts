@@ -36,8 +36,9 @@ export const updateTaskSchema = z.object({
     .optional(),
   projectId: z.string().cuid("无效的项目ID").optional(),
   tagIds: z.array(z.string().cuid("无效的标签ID")).optional(),
-  // 反馈相关字段
+  // 反馈和等待原因相关字段
   feedback: z.string().max(1000, "反馈内容过长").optional(),
+  waitingReason: z.string().max(1000, "等待原因过长").optional(),
 });
 
 // 任务状态更新 Schema

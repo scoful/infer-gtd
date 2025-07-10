@@ -152,8 +152,9 @@ model Task {
     // Sorting and ordering
     sortOrder       Int        @default(0) // For custom ordering within same status
 
-    // Task feedback
+    // Task feedback and waiting reason
     feedback        String?    // Task completion feedback
+    waitingReason   String?    // Reason for waiting status
 
     createdAt       DateTime   @default(now())
     updatedAt       DateTime   @updatedAt

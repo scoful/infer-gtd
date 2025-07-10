@@ -42,6 +42,7 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import TaskModal from "@/components/Tasks/TaskModal";
 import TaskFeedbackModal from "@/components/Tasks/TaskFeedbackModal";
+import TaskWaitingReasonModal from "@/components/Tasks/TaskWaitingReasonModal";
 import TimeEntryModal from "@/components/TimeEntryModal";
 import PostponeTaskModal from "@/components/Tasks/PostponeTaskModal";
 import { ConfirmModal, PageLoading } from "@/components/UI";
@@ -133,6 +134,16 @@ const KanbanPage: NextPage = () => {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackTaskId, setFeedbackTaskId] = useState<string | null>(null);
   const [feedbackTaskTitle, setFeedbackTaskTitle] = useState<string>("");
+
+  // 等待原因模态框状态
+  const [isWaitingReasonModalOpen, setIsWaitingReasonModalOpen] = useState(false);
+  const [waitingReasonTaskId, setWaitingReasonTaskId] = useState<string | null>(null);
+  const [waitingReasonTaskTitle, setWaitingReasonTaskTitle] = useState<string>("");
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
+    taskId: string;
+    targetStatus: TaskStatus;
+    insertIndex?: number;
+  } | null>(null);
 
   // 延期模态框状态
   const [isPostponeModalOpen, setIsPostponeModalOpen] = useState(false);
@@ -956,6 +967,59 @@ const KanbanPage: NextPage = () => {
     handleFeedbackModalClose();
   };
 
+  // 处理等待原因模态框关闭
+  const handleWaitingReasonModalClose = () => {
+    setIsWaitingReasonModalOpen(false);
+    setWaitingReasonTaskId(null);
+    setWaitingReasonTaskTitle("");
+    setPendingStatusUpdate(null);
+  };
+
+  // 处理等待原因保存成功
+  const handleWaitingReasonSuccess = async () => {
+    if (!pendingStatusUpdate) return;
+
+    const { taskId, targetStatus, insertIndex } = pendingStatusUpdate;
+
+    // 重新应用乐观更新
+    setOptimisticUpdates((prev) => ({
+      ...prev,
+      [taskId]: targetStatus,
+    }));
+
+    // 乐观更新排序
+    if (insertIndex !== undefined) {
+      const targetStatusTasks = tasksByStatus[targetStatus] ?? [];
+      const newTaskIds = [
+        ...targetStatusTasks.map((t: TaskWithRelations) => t.id),
+      ];
+      newTaskIds.splice(insertIndex, 0, taskId);
+
+      setOptimisticTaskOrder((prev) => ({
+        ...prev,
+        [targetStatus]: newTaskIds,
+      }));
+    }
+
+    // 标记任务为更新中
+    setUpdatingTasks((prev) => new Set(prev).add(taskId));
+
+    try {
+      // 执行状态更新
+      await updateStatusWithPosition.mutateAsync({
+        id: taskId,
+        status: targetStatus,
+        insertIndex,
+        note: `拖拽到${KANBAN_COLUMNS.find((col) => col.status === targetStatus)?.title}`,
+      });
+    } catch (error) {
+      console.error("等待状态更新失败:", error);
+    }
+
+    // 关闭模态框
+    handleWaitingReasonModalClose();
+  };
+
   // 为特定状态加载更多任务
   const handleLoadMoreForStatus = (status: TaskStatus) => {
     setLoadingMoreStatuses((prev) => new Set(prev).add(status)); // 记录正在加载更多的状态
@@ -1265,6 +1329,30 @@ const KanbanPage: NextPage = () => {
         }));
       }
 
+      // 检查是否拖拽到等待中状态，如果是则显示等待原因模态框
+      if (targetStatus === TaskStatus.WAITING) {
+        // 保存待处理的状态更新信息
+        setPendingStatusUpdate({
+          taskId: draggedTaskId,
+          targetStatus,
+          insertIndex: targetInsertIndex,
+        });
+
+        // 显示等待原因模态框
+        setWaitingReasonTaskId(draggedTaskId);
+        setWaitingReasonTaskTitle(draggedTask.title);
+        setIsWaitingReasonModalOpen(true);
+
+        // 清除乐观更新，等待用户填写原因
+        setOptimisticUpdates((prev) => {
+          const newUpdates = { ...prev };
+          delete newUpdates[draggedTaskId];
+          return newUpdates;
+        });
+
+        return;
+      }
+
       // 标记任务为更新中
       setUpdatingTasks((prev) => new Set(prev).add(draggedTaskId));
 
@@ -1498,6 +1586,15 @@ const KanbanPage: NextPage = () => {
           taskId={feedbackTaskId ?? ""}
           taskTitle={feedbackTaskTitle}
           onSuccess={handleFeedbackSuccess}
+        />
+
+        {/* 等待原因模态框 */}
+        <TaskWaitingReasonModal
+          isOpen={isWaitingReasonModalOpen}
+          onClose={handleWaitingReasonModalClose}
+          taskId={waitingReasonTaskId ?? ""}
+          taskTitle={waitingReasonTaskTitle}
+          onSuccess={handleWaitingReasonSuccess}
         />
 
         {/* 延期任务模态框 */}
