@@ -100,10 +100,8 @@ export default function NoteModal({
   const autoSaveNote = api.note.update.useMutation({
     onSuccess: () => {
       // 自动保存成功，不显示通知，不关闭模态框
-      console.log("✅ 笔记自动保存成功");
     },
-    onError: (error) => {
-      console.error("❌ 笔记自动保存失败:", error.message);
+    onError: () => {
       // 自动保存失败也不显示错误通知，避免打扰用户
     },
   });
@@ -167,7 +165,7 @@ export default function NoteModal({
           ...submitData,
         });
       } catch (error) {
-        console.error("更新笔记失败:", error);
+        // 错误已由mutation的onError处理
       }
     },
     [formData, noteId, updateNote, showError],

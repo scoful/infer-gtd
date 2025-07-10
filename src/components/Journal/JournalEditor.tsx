@@ -78,9 +78,8 @@ export default function JournalEditor({
       void utils.journal.getRecent.invalidate();
       void utils.journal.getAll.invalidate();
     },
-    onError: (error) => {
+    onError: () => {
       // 自动保存失败时也不显示错误通知，避免干扰用户
-      console.error("自动保存日记失败:", error);
     },
   });
 

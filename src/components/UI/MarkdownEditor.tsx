@@ -194,10 +194,8 @@ export default function MarkdownEditor({
 
       // 设置新的定时器（5秒防抖，API保存需要更长间隔）
       autoSaveTimeoutRef.current = setTimeout(() => {
-        console.log("🔄 自动保存定时器触发");
         setSaveStatus("saving");
         try {
-          console.log("📤 调用 onAutoSave:", value.substring(0, 50));
           onAutoSave(value);
           setLastSavedValue(value);
 
@@ -206,9 +204,7 @@ export default function MarkdownEditor({
           if (autoSaveType === "local") {
             setSaveStatus("saved");
           }
-          console.log("✅ onAutoSave 调用完成");
         } catch (error) {
-          console.error("❌ 自动保存失败:", error);
           setSaveStatus("unsaved");
         }
       }, 5000); // 改为5秒，避免频繁API调用

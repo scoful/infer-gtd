@@ -74,17 +74,12 @@ export default function TaskWaitingReasonModal({
   // 更新任务（包含等待原因）
   const updateTask = api.task.update.useMutation({
     onSuccess: (result) => {
-      console.log("等待原因保存成功:", result);
       showSuccess(`任务 "${result.title}" 等待原因已保存`);
       onSuccess?.();
       onClose();
     },
     onError: (error) => {
-      console.error("等待原因保存失败:", error);
       showError(error.message ?? "保存失败");
-    },
-    onMutate: (variables) => {
-      console.log("开始保存等待原因:", variables);
     },
   });
 
@@ -98,11 +93,6 @@ export default function TaskWaitingReasonModal({
     (e: React.FormEvent) => {
       e.preventDefault();
 
-      console.log("提交等待原因:", {
-        taskId,
-        waitingReason: formData.waitingReason,
-      });
-
       if (!taskId) {
         showError("任务ID无效");
         return;
@@ -113,7 +103,6 @@ export default function TaskWaitingReasonModal({
         return;
       }
 
-      console.log("准备调用API更新任务");
       updateTask.mutate({
         id: taskId,
         status: TaskStatus.WAITING,

@@ -204,14 +204,12 @@ const TaskListPage: NextPage = () => {
 
   // 批量删除任务
   const batchDeleteTasks = api.task.batchDelete.useMutation({
-    onSuccess: (result) => {
+    onSuccess: () => {
       void refetch();
       setSelectedTasks(new Set());
-      // 显示删除成功消息
-      console.log(`成功删除 ${result.deletedCount} 个任务`);
     },
-    onError: (error) => {
-      console.error("批量删除失败:", error);
+    onError: () => {
+      // 错误处理已在mutation中统一处理
     },
   });
 
@@ -286,7 +284,7 @@ const TaskListPage: NextPage = () => {
           updates: { status },
         });
       } catch (error) {
-        console.error("批量更新失败:", error);
+        // 错误处理已在mutation中统一处理
       }
     },
     [selectedTasks, batchUpdateTasks],

@@ -65,7 +65,6 @@ const NewNotePage: NextPage = () => {
     const savedDraft = localStorage.getItem(draftKey);
     if (savedDraft) {
       try {
-        console.log("尝试恢复草稿:", savedDraft);
         const draft = JSON.parse(savedDraft) as Partial<NoteFormData>;
         setFormData((prev) => ({
           ...prev,
@@ -74,9 +73,7 @@ const NewNotePage: NextPage = () => {
           // 如果URL中有projectId参数，优先使用URL参数
           projectId: (router.query.projectId as string) || draft.projectId,
         }));
-        console.log("草稿恢复成功");
       } catch (error) {
-        console.error("恢复草稿失败，清除无效草稿:", error);
         localStorage.removeItem(draftKey);
       }
     }
@@ -135,11 +132,6 @@ const NewNotePage: NextPage = () => {
 
   // 处理自动保存（本地草稿保存）
   const handleAutoSave = (content: string) => {
-    console.log("🚀 handleAutoSave 被调用 - 保存到本地草稿:", {
-      contentLength: content.length,
-      content: content.substring(0, 50),
-    });
-
     // 准备保存数据
     const draftData = {
       title: formData.title,
@@ -153,9 +145,8 @@ const NewNotePage: NextPage = () => {
     const draftKey = "note-draft-new";
     try {
       localStorage.setItem(draftKey, JSON.stringify(draftData));
-      console.log("✅ 草稿已保存到本地");
     } catch (error) {
-      console.error("❌ 保存草稿失败:", error);
+      // 保存失败，静默处理
     }
   };
 
