@@ -72,9 +72,17 @@ export default function TaskWaitingReasonModal({
   }, [taskDetail, taskError]);
 
   // 更新任务（包含等待原因）
+  const utils = api.useUtils();
+
   const updateTask = api.task.update.useMutation({
     onSuccess: (result) => {
       showSuccess(`任务 "${result.title}" 等待原因已保存`);
+
+      // 刷新相关查询缓存
+      void utils.task.getAll.invalidate();
+      void utils.task.getByStatus.invalidate();
+      void utils.task.getById.invalidate({ id: result.id });
+
       onSuccess?.();
       onClose();
     },
