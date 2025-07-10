@@ -93,6 +93,7 @@ const KANBAN_COLUMNS = [
 // 扩展Task类型以包含关联数据
 type TaskWithRelations = Task & {
   feedback?: string | null;
+  waitingReason?: string | null;
   project?: { id: string; name: string; color?: string | null } | null;
   tags: Array<{
     tag: {
@@ -2397,6 +2398,21 @@ function TaskCard({
                 title={task.feedback}
               >
                 {task.feedback}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 等待原因（仅在等待中且有等待原因时显示） */}
+        {task.status === TaskStatus.WAITING && task.waitingReason && (
+          <div className="rounded-md border border-purple-200 bg-purple-50 px-2 py-1.5">
+            <div className="flex items-start">
+              <span className="mr-1 text-xs font-medium text-purple-600">⏳</span>
+              <p
+                className="line-clamp-3 text-xs text-purple-700"
+                title={task.waitingReason}
+              >
+                {task.waitingReason}
               </p>
             </div>
           </div>

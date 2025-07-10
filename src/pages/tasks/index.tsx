@@ -62,6 +62,7 @@ type TaskWithRelations = {
   totalTimeSpent: number;
   isTimerActive: boolean;
   feedback?: string | null;
+  waitingReason?: string | null;
   createdAt: Date;
   updatedAt: Date;
   project?: { id: string; name: string; color?: string | null } | null;
@@ -1441,6 +1442,23 @@ function TaskListCard({
             </div>
           )}
 
+          {/* 等待原因（仅在等待中且有等待原因时显示） */}
+          {task.status === TaskStatus.WAITING && task.waitingReason && (
+            <div className="mb-3 rounded-md border border-purple-200 bg-purple-50 px-3 py-2">
+              <div className="flex items-start">
+                <span className="mr-2 text-sm font-medium text-purple-600">
+                  ⏳
+                </span>
+                <p
+                  className="line-clamp-2 text-sm text-purple-700"
+                  title={task.waitingReason}
+                >
+                  {task.waitingReason}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* 底部信息 */}
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-2">
@@ -1733,6 +1751,23 @@ function TimeTrackingTaskCard({
                   title={task.feedback}
                 >
                   {task.feedback}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 等待原因（仅在等待中且有等待原因时显示） */}
+          {task.status === TaskStatus.WAITING && task.waitingReason && (
+            <div className="mb-2 rounded-md border border-purple-200 bg-purple-50 px-3 py-2">
+              <div className="flex items-start">
+                <span className="mr-2 text-sm font-medium text-purple-600">
+                  ⏳
+                </span>
+                <p
+                  className="line-clamp-2 text-sm text-purple-700"
+                  title={task.waitingReason}
+                >
+                  {task.waitingReason}
                 </p>
               </div>
             </div>

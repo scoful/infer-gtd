@@ -120,6 +120,31 @@ export default function TaskWaitingReasonModal({
     [taskId, formData.waitingReason, updateTask, showError],
   );
 
+  // 添加 Ctrl+Enter 快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen && e.ctrlKey && e.key === "Enter") {
+        e.preventDefault();
+        // 检查表单是否有效且不在提交中
+        if (formData.waitingReason.trim() && !updateTask.isPending) {
+          // 创建一个模拟的表单事件
+          const mockEvent = {
+            preventDefault: () => {},
+          } as React.FormEvent;
+          handleSubmit(mockEvent);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, formData.waitingReason, updateTask.isPending, handleSubmit]);
+
   // 处理输入变化
   const handleInputChange = (field: keyof WaitingReasonFormData, value: string) => {
     setFormData((prev) => ({
@@ -207,7 +232,7 @@ export default function TaskWaitingReasonModal({
                         />
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        详细的等待原因有助于后续跟进和处理
+                        详细的等待原因有助于后续跟进和处理。按 Ctrl+Enter 快速保存
                       </p>
                     </div>
 
