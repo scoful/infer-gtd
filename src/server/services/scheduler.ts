@@ -217,7 +217,12 @@ class TaskScheduler {
     }
 
     try {
-      await this.executeTask(task);
+      // 特殊处理日记生成任务，手动执行时强制生成
+      if (taskId === "auto-generate-journal") {
+        await this.handleAutoGenerateJournal(true); // 传递 forceExecute = true
+      } else {
+        await this.executeTask(task);
+      }
       return true;
     } catch (error) {
       return false;
@@ -246,7 +251,7 @@ class TaskScheduler {
    * 自动生成日记任务处理器
    * 检查每个用户的设置，在正确的时间生成日记
    */
-  private async handleAutoGenerateJournal() {
+  private async handleAutoGenerateJournal(forceExecute: boolean = false) {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -276,12 +281,17 @@ class TaskScheduler {
               if (autoJournalSettings?.enabled && autoJournalSettings?.dailySchedule) {
                 scheduleTime = autoJournalSettings.scheduleTime || "23:55";
 
-                // 检查是否到了该用户的生成时间
-                const [scheduleHour, scheduleMinute] = scheduleTime.split(":").map(Number);
-
-                // 允许1分钟的误差范围
-                if (currentHour === scheduleHour && Math.abs(currentMinute - scheduleMinute) <= 1) {
+                if (forceExecute) {
+                  // 手动执行时，忽略时间检查
                   shouldGenerate = true;
+                } else {
+                  // 定时执行时，检查是否到了该用户的生成时间
+                  const [scheduleHour, scheduleMinute] = scheduleTime.split(":").map(Number);
+
+                  // 允许1分钟的误差范围
+                  if (currentHour === scheduleHour && Math.abs(currentMinute - scheduleMinute) <= 1) {
+                    shouldGenerate = true;
+                  }
                 }
               }
             } catch (error) {
