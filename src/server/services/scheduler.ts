@@ -30,11 +30,11 @@ class TaskScheduler {
    * 注册默认定时任务
    */
   private registerDefaultTasks() {
-    // 每小时检查用户设置并生成日记（动态时间）
+    // 每分钟检查用户设置并生成日记（动态时间）
     this.registerTask({
       id: "auto-generate-journal",
       name: "自动生成日记",
-      cronExpression: "0 * * * *", // 每小时检查一次
+      cronExpression: "* * * * *", // 每分钟检查一次
       handler: this.handleAutoGenerateJournal.bind(this),
       enabled: true,
     });
