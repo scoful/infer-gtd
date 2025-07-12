@@ -51,6 +51,9 @@ model User {
     emailVerified DateTime?
     image         String?
 
+    // User settings (JSON)
+    settings      String?   // JSON string for user preferences
+
     // NextAuth relations
     accounts      Account[]
     sessions      Session[]

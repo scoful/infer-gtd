@@ -1,0 +1,282 @@
+/**
+ * 定时任务调度器
+ * 
+ * 功能：
+ * 1. 每天晚上11:55自动生成日记
+ * 2. 可扩展的定时任务管理
+ */
+
+import { serverLoggers } from "@/utils/logger-server";
+import { autoGenerateJournalForAllUsers } from "./journal-auto-generator";
+
+interface ScheduledTask {
+  id: string;
+  name: string;
+  cronExpression: string;
+  handler: () => Promise<void>;
+  enabled: boolean;
+}
+
+class TaskScheduler {
+  private tasks: Map<string, ScheduledTask> = new Map();
+  private intervals: Map<string, NodeJS.Timeout> = new Map();
+  private isRunning = false;
+
+  constructor() {
+    this.registerDefaultTasks();
+  }
+
+  /**
+   * 注册默认定时任务
+   */
+  private registerDefaultTasks() {
+    // 每天晚上11:55自动生成日记
+    this.registerTask({
+      id: "auto-generate-journal",
+      name: "自动生成日记",
+      cronExpression: "55 23 * * *", // 每天23:55
+      handler: this.handleAutoGenerateJournal.bind(this),
+      enabled: true,
+    });
+  }
+
+  /**
+   * 注册定时任务
+   */
+  registerTask(task: ScheduledTask) {
+    this.tasks.set(task.id, task);
+    serverLoggers.app.info(
+      { taskId: task.id, name: task.name, cron: task.cronExpression },
+      "定时任务已注册",
+    );
+  }
+
+  /**
+   * 启动调度器
+   */
+  start() {
+    if (this.isRunning) {
+      serverLoggers.app.warn("定时任务调度器已在运行中");
+      return;
+    }
+
+    this.isRunning = true;
+    
+    for (const [taskId, task] of this.tasks) {
+      if (task.enabled) {
+        this.scheduleTask(taskId, task);
+      }
+    }
+
+    serverLoggers.app.info(
+      { enabledTasks: Array.from(this.tasks.values()).filter(t => t.enabled).length },
+      "定时任务调度器已启动",
+    );
+  }
+
+  /**
+   * 停止调度器
+   */
+  stop() {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.isRunning = false;
+
+    for (const [taskId, interval] of this.intervals) {
+      clearInterval(interval);
+      this.intervals.delete(taskId);
+    }
+
+    serverLoggers.app.info("定时任务调度器已停止");
+  }
+
+  /**
+   * 调度单个任务
+   */
+  private scheduleTask(taskId: string, task: ScheduledTask) {
+    const intervalMs = this.cronToInterval(task.cronExpression);
+    
+    if (intervalMs === null) {
+      serverLoggers.app.error(
+        { taskId, cron: task.cronExpression },
+        "无效的cron表达式，跳过任务调度",
+      );
+      return;
+    }
+
+    // 计算下次执行时间
+    const nextRun = this.getNextRunTime(task.cronExpression);
+    const delay = nextRun.getTime() - Date.now();
+
+    // 设置初始延迟执行
+    const initialTimeout = setTimeout(() => {
+      this.executeTask(task);
+      
+      // 设置周期性执行
+      const interval = setInterval(() => {
+        this.executeTask(task);
+      }, intervalMs);
+      
+      this.intervals.set(taskId, interval);
+    }, delay);
+
+    serverLoggers.app.info(
+      { 
+        taskId, 
+        name: task.name, 
+        nextRun: nextRun.toISOString(),
+        delayMs: delay,
+      },
+      "定时任务已调度",
+    );
+  }
+
+  /**
+   * 执行任务
+   */
+  private async executeTask(task: ScheduledTask) {
+    const startTime = Date.now();
+    
+    try {
+      serverLoggers.app.info(
+        { taskId: task.id, name: task.name },
+        "开始执行定时任务",
+      );
+
+      await task.handler();
+
+      const duration = Date.now() - startTime;
+      serverLoggers.app.info(
+        { taskId: task.id, name: task.name, duration },
+        "定时任务执行成功",
+      );
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      serverLoggers.app.error(
+        { 
+          taskId: task.id, 
+          name: task.name, 
+          duration,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "定时任务执行失败",
+      );
+    }
+  }
+
+  /**
+   * 将简化的cron表达式转换为间隔毫秒数
+   * 支持格式: "分 时 日 月 周"
+   */
+  private cronToInterval(cron: string): number | null {
+    const parts = cron.split(" ");
+    if (parts.length !== 5) {
+      return null;
+    }
+
+    const [minute, hour, day, month, weekday] = parts;
+
+    // 简单实现：只支持每日执行
+    if (day === "*" && month === "*" && weekday === "*") {
+      return 24 * 60 * 60 * 1000; // 24小时
+    }
+
+    return null;
+  }
+
+  /**
+   * 计算下次执行时间
+   */
+  private getNextRunTime(cron: string): Date {
+    const parts = cron.split(" ");
+    const [minute, hour] = parts;
+
+    const now = new Date();
+    const next = new Date();
+    
+    next.setHours(parseInt(hour || "0"), parseInt(minute || "0"), 0, 0);
+    
+    // 如果今天的时间已过，设置为明天
+    if (next <= now) {
+      next.setDate(next.getDate() + 1);
+    }
+
+    return next;
+  }
+
+  /**
+   * 手动执行任务（用于测试）
+   */
+  async executeTaskManually(taskId: string): Promise<boolean> {
+    const task = this.tasks.get(taskId);
+    if (!task) {
+      serverLoggers.app.error({ taskId }, "任务不存在");
+      return false;
+    }
+
+    try {
+      await this.executeTask(task);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * 获取任务状态
+   */
+  getTaskStatus() {
+    return {
+      isRunning: this.isRunning,
+      tasks: Array.from(this.tasks.values()).map(task => ({
+        id: task.id,
+        name: task.name,
+        cronExpression: task.cronExpression,
+        enabled: task.enabled,
+        nextRun: task.enabled ? this.getNextRunTime(task.cronExpression) : null,
+      })),
+    };
+  }
+
+  // ========== 具体任务处理器 ==========
+
+  /**
+   * 自动生成日记任务处理器
+   */
+  private async handleAutoGenerateJournal() {
+    const today = new Date();
+    const result = await autoGenerateJournalForAllUsers(today);
+    
+    serverLoggers.app.info(
+      { 
+        date: today.toISOString().split('T')[0],
+        total: result.total,
+        success: result.success,
+        failed: result.failed,
+      },
+      "定时日记生成任务完成",
+    );
+  }
+}
+
+// 创建全局调度器实例
+export const taskScheduler = new TaskScheduler();
+
+// 在应用启动时自动启动调度器
+if (typeof window === "undefined") {
+  // 只在服务器端启动
+  process.nextTick(() => {
+    taskScheduler.start();
+  });
+
+  // 优雅关闭
+  process.on("SIGTERM", () => {
+    taskScheduler.stop();
+  });
+
+  process.on("SIGINT", () => {
+    taskScheduler.stop();
+  });
+}

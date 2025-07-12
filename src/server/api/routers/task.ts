@@ -23,6 +23,7 @@ import {
   updateTaskStatusWithPositionSchema,
 } from "@/server/api/schemas/task";
 import { arrayMove } from "@dnd-kit/sortable";
+import { autoGenerateJournalForUser } from "@/server/services/journal-auto-generator";
 
 export const taskRouter = createTRPCRouter({
   // 创建任务
@@ -605,6 +606,36 @@ export const taskRouter = createTRPCRouter({
           },
         });
 
+        // 如果任务完成，检查用户设置并触发日记自动生成
+        if (toStatus === TaskStatus.DONE) {
+          try {
+            // 检查用户是否启用了任务完成时自动生成日记
+            const user = await ctx.db.user.findUnique({
+              where: { id: ctx.session.user.id },
+              select: { settings: true },
+            });
+
+            let shouldGenerate = true; // 默认启用
+            if (user?.settings) {
+              try {
+                const settings = JSON.parse(user.settings);
+                const autoJournalSettings = settings.autoJournalGeneration;
+                shouldGenerate = autoJournalSettings?.enabled !== false &&
+                               autoJournalSettings?.onTaskComplete !== false;
+              } catch (error) {
+                // 解析失败，使用默认行为
+              }
+            }
+
+            if (shouldGenerate) {
+              await autoGenerateJournalForUser(ctx.session.user.id);
+            }
+          } catch (error) {
+            // 日记生成失败不影响任务状态更新
+            console.warn("任务完成后自动生成日记失败:", error);
+          }
+        }
+
         return {
           success: true,
           message: `任务 "${existingTask.title}" 状态已更新为 ${toStatus}`,
@@ -1085,6 +1116,34 @@ export const taskRouter = createTRPCRouter({
             note: "计时结束，任务完成",
           },
         });
+
+        // 任务完成，检查用户设置并触发日记自动生成
+        try {
+          // 检查用户是否启用了任务完成时自动生成日记
+          const user = await ctx.db.user.findUnique({
+            where: { id: ctx.session.user.id },
+            select: { settings: true },
+          });
+
+          let shouldGenerate = true; // 默认启用
+          if (user?.settings) {
+            try {
+              const settings = JSON.parse(user.settings);
+              const autoJournalSettings = settings.autoJournalGeneration;
+              shouldGenerate = autoJournalSettings?.enabled !== false &&
+                             autoJournalSettings?.onTaskComplete !== false;
+            } catch (error) {
+              // 解析失败，使用默认行为
+            }
+          }
+
+          if (shouldGenerate) {
+            await autoGenerateJournalForUser(ctx.session.user.id);
+          }
+        } catch (error) {
+          // 日记生成失败不影响任务完成
+          console.warn("任务完成后自动生成日记失败:", error);
+        }
 
         const hours = Math.floor(sessionDuration / 3600);
         const minutes = Math.floor((sessionDuration % 3600) / 60);
@@ -1939,6 +1998,36 @@ export const taskRouter = createTRPCRouter({
             await ctx.db.taskTag.createMany({
               data: tagRelations,
             });
+          }
+        }
+
+        // 如果有任务状态变为已完成，检查用户设置并触发日记自动生成
+        if (updates.status === TaskStatus.DONE) {
+          try {
+            // 检查用户是否启用了任务完成时自动生成日记
+            const user = await ctx.db.user.findUnique({
+              where: { id: ctx.session.user.id },
+              select: { settings: true },
+            });
+
+            let shouldGenerate = true; // 默认启用
+            if (user?.settings) {
+              try {
+                const settings = JSON.parse(user.settings);
+                const autoJournalSettings = settings.autoJournalGeneration;
+                shouldGenerate = autoJournalSettings?.enabled !== false &&
+                               autoJournalSettings?.onTaskComplete !== false;
+              } catch (error) {
+                // 解析失败，使用默认行为
+              }
+            }
+
+            if (shouldGenerate) {
+              await autoGenerateJournalForUser(ctx.session.user.id);
+            }
+          } catch (error) {
+            // 日记生成失败不影响任务更新
+            console.warn("批量任务完成后自动生成日记失败:", error);
           }
         }
 

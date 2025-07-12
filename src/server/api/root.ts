@@ -5,6 +5,8 @@ import { noteRouter } from "@/server/api/routers/note";
 import { journalRouter } from "@/server/api/routers/journal";
 import { tagRouter } from "@/server/api/routers/tag";
 import { searchRouter } from "@/server/api/routers/search";
+import { schedulerRouter } from "@/server/api/routers/scheduler";
+import { userSettingsRouter } from "@/server/api/routers/user-settings";
 
 /**
  * This is the primary router for your server.
@@ -18,6 +20,8 @@ export const appRouter = createTRPCRouter({
   journal: journalRouter,
   tag: tagRouter,
   search: searchRouter,
+  scheduler: schedulerRouter,
+  userSettings: userSettingsRouter,
 });
 
 // export type definition of API

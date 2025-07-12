@@ -17,6 +17,7 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
   ClockIcon,
+  CogIcon,
   DocumentDuplicateIcon,
   DocumentTextIcon,
   FolderIcon,
@@ -24,6 +25,7 @@ import {
   LightBulbIcon,
   ListBulletIcon,
   MagnifyingGlassIcon,
+  ShieldCheckIcon,
   Squares2X2Icon,
   TagIcon,
   UserCircleIcon,
@@ -173,6 +175,26 @@ const navigation: NavigationItem[] = [
       },
     ],
   },
+  {
+    name: "系统设置",
+    href: "/settings",
+    icon: CogIcon,
+    description: "个人设置和偏好配置",
+    children: [
+      {
+        name: "个人设置",
+        href: "/settings",
+        icon: CogIcon,
+        description: "个性化配置和偏好设置",
+      },
+      {
+        name: "系统管理",
+        href: "/admin/scheduler",
+        icon: ShieldCheckIcon,
+        description: "定时任务和系统管理",
+      },
+    ],
+  },
 ];
 
 export default function MainLayout({ children }: MainLayoutProps) {
@@ -201,6 +223,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
         window.location.pathname.startsWith("/review")
       ) {
         initialExpanded.add("统计分析");
+      }
+      if (
+        window.location.pathname.startsWith("/settings") ||
+        window.location.pathname.startsWith("/admin")
+      ) {
+        initialExpanded.add("系统设置");
       }
     }
     return initialExpanded;
@@ -234,6 +262,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
       router.pathname.startsWith("/review")
     ) {
       setExpandedItems((prev) => new Set(prev).add("统计分析"));
+    }
+    if (
+      router.pathname.startsWith("/settings") ||
+      router.pathname.startsWith("/admin")
+    ) {
+      setExpandedItems((prev) => new Set(prev).add("系统设置"));
     }
   }, [router.pathname]);
 
@@ -414,6 +448,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return (
         router.pathname.startsWith("/analytics") ||
         router.pathname.startsWith("/review")
+      );
+    }
+    if (item.name === "系统设置") {
+      return (
+        router.pathname.startsWith("/settings") ||
+        router.pathname.startsWith("/admin")
       );
     }
     return isActivePath(item.href);
