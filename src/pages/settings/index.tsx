@@ -22,10 +22,13 @@ import { api } from "@/utils/api";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
+import { useConfirm } from "@/hooks/useConfirm";
+import { ConfirmModal } from "@/components/UI";
 import type { UserSettings } from "@/server/api/schemas/user-settings";
 
 function SettingsPage() {
   const { showSuccess, showError } = useGlobalNotifications();
+  const { confirmState, showConfirm, hideConfirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<"journal" | "notifications" | "ui">("journal");
 
   // 获取用户设置
@@ -66,8 +69,16 @@ function SettingsPage() {
   };
 
   // 处理重置设置
-  const handleResetSettings = () => {
-    if (confirm("确定要重置所有设置为默认值吗？此操作不可撤销。")) {
+  const handleResetSettings = async () => {
+    const confirmed = await showConfirm({
+      title: "重置设置",
+      message: "确定要重置所有设置为默认值吗？\n\n此操作不可撤销，但会保留您的管理员权限。",
+      confirmText: "重置",
+      cancelText: "取消",
+      type: "warning",
+    });
+
+    if (confirmed) {
       resetSettings.mutate();
     }
   };
@@ -354,6 +365,19 @@ function SettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* 确认模态框 */}
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={hideConfirm}
+          onConfirm={confirmState.onConfirm}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          type={confirmState.type}
+          isLoading={confirmState.isLoading}
+        />
       </div>
     </>
   );
