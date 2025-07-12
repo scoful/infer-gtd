@@ -42,7 +42,7 @@ export const updateUserSettingsSchema = z.object({
 // 获取用户设置 Schema（用于查询参数）
 export const getUserSettingsSchema = z.object({
   category: z.enum(["autoJournalGeneration", "notifications", "ui"]).optional(),
-});
+}).optional().default({});
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
 export type AutoJournalSettings = NonNullable<UserSettings["autoJournalGeneration"]>;

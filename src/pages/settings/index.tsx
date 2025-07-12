@@ -29,7 +29,7 @@ function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"journal" | "notifications" | "ui">("journal");
 
   // 获取用户设置
-  const { data: userSettings, refetch } = api.userSettings.get.useQuery();
+  const { data: userSettings, refetch } = api.userSettings.get.useQuery({});
 
   // 更新用户设置
   const updateSettings = api.userSettings.update.useMutation({

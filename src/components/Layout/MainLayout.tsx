@@ -224,7 +224,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // 获取用户设置以检查管理员权限
   const { data: userSettings } = api.userSettings.get.useQuery(
-    undefined,
+    {},
     { enabled: !!sessionData?.user }
   );
 

@@ -89,7 +89,7 @@ export const userSettingsRouter = createTRPCRouter({
         }
 
         // 如果指定了类别，只返回该类别的设置
-        if (input.category) {
+        if (input?.category) {
           return {
             success: true,
             data: { [input.category]: userSettings[input.category] },
