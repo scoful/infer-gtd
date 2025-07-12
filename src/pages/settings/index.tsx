@@ -57,7 +57,12 @@ function SettingsPage() {
 
   // 处理设置更新
   const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
-    updateSettings.mutate({ settings: newSettings });
+    // 确保保留当前的role字段
+    const settingsWithRole = {
+      ...newSettings,
+      role: settings?.role || "user", // 保留现有role或默认为user
+    };
+    updateSettings.mutate({ settings: settingsWithRole });
   };
 
   // 处理重置设置

@@ -117,8 +117,8 @@ export const userSettingsRouter = createTRPCRouter({
     .input(updateUserSettingsSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // 验证设置数据
-        const validatedSettings = userSettingsSchema.parse(input.settings);
+        // 验证设置数据（部分更新）
+        const validatedSettings = userSettingsSchema.partial().parse(input.settings);
 
         // 获取当前设置
         const user = await ctx.db.user.findUnique({
@@ -158,21 +158,28 @@ export const userSettingsRouter = createTRPCRouter({
           }
         }
 
-        // 合并新设置
+        // 合并新设置，确保role字段被保留
         const updatedSettings: UserSettings = {
-          role: validatedSettings.role || currentSettings.role,
-          autoJournalGeneration: {
-            ...currentSettings.autoJournalGeneration,
-            ...validatedSettings.autoJournalGeneration,
-          },
-          notifications: {
-            ...currentSettings.notifications,
-            ...validatedSettings.notifications,
-          },
-          ui: {
-            ...currentSettings.ui,
-            ...validatedSettings.ui,
-          },
+          // 保留现有role，除非明确传递了新的role值
+          role: validatedSettings.role !== undefined ? validatedSettings.role : currentSettings.role,
+          autoJournalGeneration: validatedSettings.autoJournalGeneration
+            ? {
+                ...currentSettings.autoJournalGeneration,
+                ...validatedSettings.autoJournalGeneration,
+              }
+            : currentSettings.autoJournalGeneration,
+          notifications: validatedSettings.notifications
+            ? {
+                ...currentSettings.notifications,
+                ...validatedSettings.notifications,
+              }
+            : currentSettings.notifications,
+          ui: validatedSettings.ui
+            ? {
+                ...currentSettings.ui,
+                ...validatedSettings.ui,
+              }
+            : currentSettings.ui,
         };
 
         // 保存到数据库
@@ -198,18 +205,40 @@ export const userSettingsRouter = createTRPCRouter({
       }
     }),
 
-  // 重置设置为默认值
+  // 重置设置为默认值（保留role字段）
   reset: protectedProcedure.mutation(async ({ ctx }) => {
     try {
+      // 获取当前设置以保留role字段
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { settings: true },
+      });
+
+      let currentRole = "user";
+      if (user?.settings) {
+        try {
+          const parsedSettings = JSON.parse(user.settings);
+          currentRole = parsedSettings.role || "user";
+        } catch (error) {
+          console.warn("解析现有设置失败，使用默认role");
+        }
+      }
+
+      // 重置为默认设置但保留role
+      const resetSettings = {
+        ...defaultSettings,
+        role: currentRole, // 保留现有的role
+      };
+
       await ctx.db.user.update({
         where: { id: ctx.session.user.id },
-        data: { settings: JSON.stringify(defaultSettings) },
+        data: { settings: JSON.stringify(resetSettings) },
       });
 
       return {
         success: true,
-        message: "用户设置已重置为默认值",
-        data: defaultSettings,
+        message: "用户设置已重置为默认值（保留管理员权限）",
+        data: resetSettings,
       };
     } catch (error) {
       throw new TRPCError({

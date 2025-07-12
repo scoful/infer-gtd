@@ -34,9 +34,9 @@ export const userSettingsSchema = z.object({
   }).optional(),
 });
 
-// 更新用户设置 Schema
+// 更新用户设置 Schema（支持部分更新）
 export const updateUserSettingsSchema = z.object({
-  settings: userSettingsSchema,
+  settings: userSettingsSchema.partial(),
 });
 
 // 获取用户设置 Schema（用于查询参数）
