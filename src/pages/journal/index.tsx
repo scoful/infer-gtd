@@ -108,25 +108,26 @@ const JournalPage: NextPage = () => {
   };
 
   const handleEdit = () => {
-    // 检查是否为今天的日期
+    // 如果当前日期已有日记，直接跳转到编辑页面（不限制日期）
+    if (currentJournal) {
+      void router.push(`/journal/${currentJournal.id}?edit=true&from=index`);
+      return;
+    }
+
+    // 如果当前日期没有日记，检查是否为今天
     const today = new Date();
     const isToday = currentDate.toDateString() === today.toDateString();
 
     if (!isToday) {
-      // 如果不是今天，提示用户只能为今天创建日记
+      // 如果不是今天且没有日记，提示用户只能为今天创建新日记
       alert(
         "只能为今天创建新日记。如需查看或编辑其他日期的日记，请从日记列表中选择。",
       );
       return;
     }
 
-    // 如果当前日期已有日记，跳转到编辑页面
-    if (currentJournal) {
-      void router.push(`/journal/${currentJournal.id}?edit=true&from=index`);
-    } else {
-      // 如果当前日期没有日记，跳转到新建日记页面
-      void router.push("/journal/new?from=index");
-    }
+    // 如果是今天且没有日记，跳转到新建日记页面
+    void router.push("/journal/new?from=index");
   };
 
   const goToToday = () => {
