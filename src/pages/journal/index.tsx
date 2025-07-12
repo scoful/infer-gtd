@@ -150,10 +150,7 @@ const JournalPage: NextPage = () => {
       // 刷新当前日记数据
       void refetchCurrentJournal();
       void refetchRecentJournals();
-      // 如果创建了新日记，跳转到编辑页面
-      if (result.journal) {
-        void router.push(`/journal/${result.journal.id}?edit=true&from=index`);
-      }
+      // 不再自动跳转到编辑页面，让用户自主选择
     },
     onError: (error) => {
       showError(error.message || "自动生成日记失败");
