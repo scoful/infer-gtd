@@ -30,11 +30,11 @@ class TaskScheduler {
    * 注册默认定时任务
    */
   private registerDefaultTasks() {
-    // 每天晚上11:55自动生成日记
+    // 每小时检查用户设置并生成日记（动态时间）
     this.registerTask({
       id: "auto-generate-journal",
       name: "自动生成日记",
-      cronExpression: "55 23 * * *", // 每天23:55
+      cronExpression: "0 * * * *", // 每小时检查一次
       handler: this.handleAutoGenerateJournal.bind(this),
       enabled: true,
     });
@@ -244,20 +244,97 @@ class TaskScheduler {
 
   /**
    * 自动生成日记任务处理器
+   * 检查每个用户的设置，在正确的时间生成日记
    */
   private async handleAutoGenerateJournal() {
-    const today = new Date();
-    const result = await autoGenerateJournalForAllUsers(today);
-    
-    serverLoggers.app.info(
-      { 
-        date: today.toISOString().split('T')[0],
-        total: result.total,
-        success: result.success,
-        failed: result.failed,
-      },
-      "定时日记生成任务完成",
-    );
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    try {
+      // 获取所有启用了定时生成的用户
+      const { db } = await import("@/server/db");
+      const users = await db.user.findMany({
+        select: { id: true, email: true, settings: true },
+      });
+
+      let processedUsers = 0;
+      let successCount = 0;
+      let failedCount = 0;
+
+      for (const user of users) {
+        try {
+          // 解析用户设置
+          let shouldGenerate = false;
+          let scheduleTime = "23:55"; // 默认时间
+
+          if (user.settings) {
+            try {
+              const settings = JSON.parse(user.settings);
+              const autoJournalSettings = settings.autoJournalGeneration;
+
+              if (autoJournalSettings?.enabled && autoJournalSettings?.dailySchedule) {
+                scheduleTime = autoJournalSettings.scheduleTime || "23:55";
+
+                // 检查是否到了该用户的生成时间
+                const [scheduleHour, scheduleMinute] = scheduleTime.split(":").map(Number);
+
+                // 允许1分钟的误差范围
+                if (currentHour === scheduleHour && Math.abs(currentMinute - scheduleMinute) <= 1) {
+                  shouldGenerate = true;
+                }
+              }
+            } catch (error) {
+              // 解析失败，跳过该用户
+              continue;
+            }
+          }
+
+          if (shouldGenerate) {
+            processedUsers++;
+            const result = await autoGenerateJournalForAllUsers(now, [user.id]);
+
+            if (result.success > 0) {
+              successCount++;
+              serverLoggers.app.info(
+                { userId: user.id, email: user.email, scheduleTime },
+                "用户定时日记生成成功",
+              );
+            } else {
+              failedCount++;
+            }
+          }
+        } catch (error) {
+          failedCount++;
+          serverLoggers.app.error(
+            {
+              userId: user.id,
+              email: user.email,
+              error: error instanceof Error ? error.message : String(error),
+            },
+            "用户定时日记生成失败",
+          );
+        }
+      }
+
+      if (processedUsers > 0) {
+        serverLoggers.app.info(
+          {
+            date: now.toISOString().split('T')[0],
+            time: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`,
+            processed: processedUsers,
+            success: successCount,
+            failed: failedCount,
+          },
+          "定时日记生成任务完成",
+        );
+      }
+    } catch (error) {
+      serverLoggers.app.error(
+        { error: error instanceof Error ? error.message : String(error) },
+        "定时日记生成任务执行失败",
+      );
+    }
   }
 }
 

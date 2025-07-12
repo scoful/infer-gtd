@@ -302,42 +302,62 @@ ${completedTasksList}
  */
 export async function autoGenerateJournalForAllUsers(
   targetDate: Date = new Date(),
+  specificUserIds?: string[], // 可选：指定用户ID列表
 ): Promise<{ success: number; failed: number; total: number }> {
   try {
-    // 获取所有活跃用户（最近30天有活动的用户）
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    let activeUsers;
 
-    const activeUsers = await db.user.findMany({
-      where: {
-        OR: [
-          {
-            tasks: {
-              some: {
-                updatedAt: {
-                  gte: thirtyDaysAgo,
+    if (specificUserIds && specificUserIds.length > 0) {
+      // 如果指定了用户ID，直接获取这些用户
+      activeUsers = await db.user.findMany({
+        where: {
+          id: {
+            in: specificUserIds,
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          settings: true,
+        },
+      });
+    } else {
+      // 获取所有活跃用户（最近30天有活动的用户）
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      activeUsers = await db.user.findMany({
+        where: {
+          OR: [
+            {
+              tasks: {
+                some: {
+                  updatedAt: {
+                    gte: thirtyDaysAgo,
+                  },
                 },
               },
             },
-          },
-          {
-            journals: {
-              some: {
-                updatedAt: {
-                  gte: thirtyDaysAgo,
+            {
+              journals: {
+                some: {
+                  updatedAt: {
+                    gte: thirtyDaysAgo,
+                  },
                 },
               },
             },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        settings: true,
-      },
-    });
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          settings: true,
+        },
+      });
+    }
 
     let successCount = 0;
     let failedCount = 0;

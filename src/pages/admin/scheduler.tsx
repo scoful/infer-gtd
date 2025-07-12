@@ -33,6 +33,9 @@ function SchedulerPage() {
   // 获取调度器状态
   const { data: schedulerStatus, refetch: refetchStatus, error: statusError } = api.scheduler.getStatus.useQuery();
 
+  // 获取用户定时设置统计
+  const { data: scheduleStats } = api.scheduler.getUserScheduleStats.useQuery();
+
   // 手动执行日记生成
   const executeJournalGeneration = api.scheduler.executeJournalGeneration.useMutation({
     onSuccess: (result) => {
@@ -202,6 +205,24 @@ function SchedulerPage() {
                     <div className="mt-2 space-y-1 text-sm text-gray-600">
                       <div>Cron 表达式: <code className="bg-gray-100 px-1 rounded">{task.cronExpression}</code></div>
                       <div>下次执行: {formatNextRun(task.nextRun)}</div>
+                      {task.id === "auto-generate-journal" && scheduleStats?.data && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                          <div className="text-xs text-blue-800 font-medium mb-1">用户定时设置统计：</div>
+                          <div className="text-xs text-blue-700">
+                            • 启用用户：{scheduleStats.data.enabledUsers}/{scheduleStats.data.totalUsers}
+                          </div>
+                          <div className="text-xs text-blue-700">
+                            • 最常用时间：{scheduleStats.data.mostCommonTime}
+                          </div>
+                          {Object.keys(scheduleStats.data.scheduleDistribution).length > 1 && (
+                            <div className="text-xs text-blue-700">
+                              • 时间分布：{Object.entries(scheduleStats.data.scheduleDistribution)
+                                .map(([time, count]) => `${time}(${count}人)`)
+                                .join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

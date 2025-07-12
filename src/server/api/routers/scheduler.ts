@@ -94,4 +94,56 @@ export const schedulerRouter = createTRPCRouter({
         });
       }
     }),
+
+  // 获取用户定时设置统计
+  getUserScheduleStats: adminProcedure.query(async ({ ctx }) => {
+    try {
+      // 获取所有用户的定时设置
+      const users = await ctx.db.user.findMany({
+        select: { id: true, email: true, settings: true },
+      });
+
+      const scheduleStats: Record<string, number> = {};
+      let enabledCount = 0;
+      let disabledCount = 0;
+
+      for (const user of users) {
+        if (user.settings) {
+          try {
+            const settings = JSON.parse(user.settings);
+            const autoJournalSettings = settings.autoJournalGeneration;
+
+            if (autoJournalSettings?.enabled && autoJournalSettings?.dailySchedule) {
+              enabledCount++;
+              const scheduleTime = autoJournalSettings.scheduleTime || "23:55";
+              scheduleStats[scheduleTime] = (scheduleStats[scheduleTime] || 0) + 1;
+            } else {
+              disabledCount++;
+            }
+          } catch (error) {
+            disabledCount++;
+          }
+        } else {
+          disabledCount++;
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          totalUsers: users.length,
+          enabledUsers: enabledCount,
+          disabledUsers: disabledCount,
+          scheduleDistribution: scheduleStats,
+          mostCommonTime: Object.entries(scheduleStats).sort(([,a], [,b]) => b - a)[0]?.[0] || "23:55",
+        },
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "获取用户定时设置统计失败",
+        cause: error,
+      });
+    }
+  }),
 });
