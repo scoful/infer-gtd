@@ -108,26 +108,19 @@ const JournalPage: NextPage = () => {
   };
 
   const handleEdit = () => {
-    // 如果当前日期已有日记，直接跳转到编辑页面（不限制日期）
+    // 如果当前日期已有日记，直接跳转到编辑页面
     if (currentJournal) {
       void router.push(`/journal/${currentJournal.id}?edit=true&from=index`);
       return;
     }
 
-    // 如果当前日期没有日记，检查是否为今天
-    const today = new Date();
-    const isToday = currentDate.toDateString() === today.toDateString();
+    // 如果当前日期没有日记，跳转到新建日记页面（支持任意日期）
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const day = String(currentDate.getDate()).padStart(2, "0");
+    const dateStr = `${year}-${month}-${day}`;
 
-    if (!isToday) {
-      // 如果不是今天且没有日记，提示用户只能为今天创建新日记
-      alert(
-        "只能为今天创建新日记。如需查看或编辑其他日期的日记，请从日记列表中选择。",
-      );
-      return;
-    }
-
-    // 如果是今天且没有日记，跳转到新建日记页面
-    void router.push("/journal/new?from=index");
+    void router.push(`/journal/new?date=${dateStr}&from=index`);
   };
 
   const goToToday = () => {
@@ -212,11 +205,11 @@ const JournalPage: NextPage = () => {
                 自动生成日记
               </button>
               <button
-                onClick={goToToday}
+                onClick={handleEdit}
                 className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
-                写今日日记
+                写日记
               </button>
             </div>
           </div>

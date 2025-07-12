@@ -32,23 +32,29 @@ const NewJournalPage: NextPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 使用 useMemo 缓存今天的日期，避免每次渲染都创建新的 Date 对象
-  const today = useMemo(() => {
+  // 从URL参数获取日期，如果没有则使用今天
+  const targetDate = useMemo(() => {
+    const dateParam = router.query.date as string;
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      const date = new Date(dateParam + 'T00:00:00');
+      return date;
+    }
+
     const date = new Date();
     // 重置时间为当天的开始，确保日期比较的一致性
     date.setHours(0, 0, 0, 0);
     return date;
-  }, []);
+  }, [router.query.date]);
 
-  // 检查今天是否已有日记
+  // 检查目标日期是否已有日记
   const { data: existingJournal } = api.journal.getByDate.useQuery(
-    { date: today },
+    { date: targetDate },
     {
-      enabled: !!sessionData,
+      enabled: !!sessionData && router.isReady,
     },
   );
 
-  // 如果今天已有日记，重定向到编辑页面
+  // 如果目标日期已有日记，重定向到编辑页面
   useEffect(() => {
     if (existingJournal) {
       void router.replace(`/journal/${existingJournal.id}`);
@@ -106,7 +112,7 @@ const NewJournalPage: NextPage = () => {
   // 最终提交（创建日记）
   const finalSubmit = () => {
     const saveData = {
-      date: today,
+      date: targetDate,
       content: formData.content,
       template: formData.template,
     };
@@ -169,9 +175,9 @@ const NewJournalPage: NextPage = () => {
 
   // 默认模板
   const defaultTemplate = `# ${(() => {
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+    const day = String(targetDate.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   })()} 日记
 
@@ -190,7 +196,7 @@ const NewJournalPage: NextPage = () => {
 ## 明日计划
 - `;
 
-  // 如果今天已有日记，显示加载状态
+  // 如果目标日期已有日记，显示加载状态
   if (existingJournal) {
     return (
       <AuthGuard>
@@ -198,7 +204,7 @@ const NewJournalPage: NextPage = () => {
           <div className="flex h-96 items-center justify-center">
             <div className="text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-              <p className="mt-2 text-sm text-gray-500">跳转到今日日记...</p>
+              <p className="mt-2 text-sm text-gray-500">跳转到日记...</p>
             </div>
           </div>
         </MainLayout>
@@ -211,7 +217,7 @@ const NewJournalPage: NextPage = () => {
       <MainLayout>
         <Head>
           <title>新建日记 | Infer GTD</title>
-          <meta name="description" content="创建今日日记" />
+          <meta name="description" content="创建日记" />
         </Head>
 
         <div className="space-y-6">
@@ -230,7 +236,7 @@ const NewJournalPage: NextPage = () => {
                   <h1 className="text-2xl font-bold text-gray-900">新建日记</h1>
                   <div className="flex items-center text-sm text-gray-500">
                     <CalendarIcon className="mr-1 h-4 w-4" />
-                    {today.toLocaleDateString("zh-CN", {
+                    {targetDate.toLocaleDateString("zh-CN", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -270,7 +276,7 @@ const NewJournalPage: NextPage = () => {
                     onChange={(content) =>
                       setFormData({ ...formData, content })
                     }
-                    placeholder="开始写今天的日记..."
+                    placeholder="开始写日记..."
                     height={400}
                     preview="live"
                     enableJetBrainsShortcuts={true}
