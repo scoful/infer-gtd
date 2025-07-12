@@ -6,9 +6,31 @@ import {
   logApiCall,
 } from "@/utils/logger-core";
 
+// 需要管理员权限的路径
+const ADMIN_PATHS = [
+  "/admin",
+  "/admin/scheduler",
+];
+
+// 在中间件中不进行权限检查，因为Edge Runtime不支持Prisma
+// 所有权限检查都交给AdminGuard组件处理
+
 export function middleware(request: NextRequest) {
   const start = Date.now();
   const requestId = generateRequestId();
+  const { pathname } = request.nextUrl;
+
+  // 检查是否为管理员路径，记录访问日志
+  const isAdminPath = ADMIN_PATHS.some(path =>
+    pathname === path || pathname.startsWith(path + "/")
+  );
+
+  if (isAdminPath) {
+    coreLoggers.middleware.info(
+      { path: pathname, requestId },
+      "管理员页面访问（权限检查由前端AdminGuard处理）"
+    );
+  }
 
   // 添加请求ID到响应头
   const response = NextResponse.next();
