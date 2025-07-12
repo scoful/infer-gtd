@@ -39,6 +39,7 @@ import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import VersionDisplay from "./VersionDisplay";
 import QuickSearch from "@/components/Search/QuickSearch";
 import ShortcutHelpModal from "@/components/UI/ShortcutHelpModal";
+import { api } from "@/utils/api";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -197,9 +198,41 @@ const navigation: NavigationItem[] = [
   },
 ];
 
+// 生成动态导航配置
+function getNavigationItems(isAdmin: boolean): NavigationItem[] {
+  const baseNavigation = [...navigation];
+
+  // 如果不是管理员，移除系统管理子菜单
+  if (!isAdmin) {
+    const settingsIndex = baseNavigation.findIndex(item => item.name === "系统设置");
+    if (settingsIndex !== -1 && baseNavigation[settingsIndex]?.children) {
+      baseNavigation[settingsIndex] = {
+        ...baseNavigation[settingsIndex]!,
+        children: baseNavigation[settingsIndex]!.children!.filter(
+          child => child.name !== "系统管理"
+        ),
+      };
+    }
+  }
+
+  return baseNavigation;
+}
+
 export default function MainLayout({ children }: MainLayoutProps) {
   const { data: sessionData } = useSession();
   const router = useRouter();
+
+  // 获取用户设置以检查管理员权限
+  const { data: userSettings } = api.userSettings.get.useQuery(
+    undefined,
+    { enabled: !!sessionData?.user }
+  );
+
+  // 检查是否为管理员
+  const isAdmin = userSettings?.data?.role === "admin";
+
+  // 获取动态导航配置
+  const navigationItems = getNavigationItems(isAdmin);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
@@ -539,7 +572,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </button>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => {
+            {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.href);
               const hasChildren = item.children && item.children.length > 0;
@@ -668,7 +701,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
           <div className="mt-5 flex flex-grow flex-col">
             <nav className="flex-1 space-y-1 px-2 pb-4">
-              {navigation.map((item) => {
+              {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.href);
                 const hasChildren = item.children && item.children.length > 0;

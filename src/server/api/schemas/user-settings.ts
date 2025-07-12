@@ -2,6 +2,9 @@ import { z } from "zod";
 
 // 用户设置 Schema
 export const userSettingsSchema = z.object({
+  // 用户角色
+  role: z.enum(["user", "admin"]).default("user"),
+
   // 日记自动生成设置
   autoJournalGeneration: z.object({
     enabled: z.boolean().default(true),

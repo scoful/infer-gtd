@@ -18,6 +18,7 @@ import {
 
 // 默认用户设置
 const defaultSettings: UserSettings = {
+  role: "user",
   autoJournalGeneration: {
     enabled: true,
     onTaskComplete: true,
@@ -67,6 +68,7 @@ export const userSettingsRouter = createTRPCRouter({
             const parsedSettings = JSON.parse(user.settings);
             // 合并默认设置和用户设置，确保所有字段都存在
             userSettings = {
+              role: parsedSettings.role || defaultSettings.role,
               autoJournalGeneration: {
                 ...defaultSettings.autoJournalGeneration,
                 ...parsedSettings.autoJournalGeneration,
@@ -137,6 +139,7 @@ export const userSettingsRouter = createTRPCRouter({
           try {
             const parsedSettings = JSON.parse(user.settings);
             currentSettings = {
+              role: parsedSettings.role || defaultSettings.role,
               autoJournalGeneration: {
                 ...defaultSettings.autoJournalGeneration,
                 ...parsedSettings.autoJournalGeneration,
@@ -157,6 +160,7 @@ export const userSettingsRouter = createTRPCRouter({
 
         // 合并新设置
         const updatedSettings: UserSettings = {
+          role: validatedSettings.role || currentSettings.role,
           autoJournalGeneration: {
             ...currentSettings.autoJournalGeneration,
             ...validatedSettings.autoJournalGeneration,

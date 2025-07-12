@@ -9,13 +9,13 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { taskScheduler } from "@/server/services/scheduler";
 import { autoGenerateJournalForUser } from "@/server/services/journal-auto-generator";
 
 export const schedulerRouter = createTRPCRouter({
   // 获取调度器状态
-  getStatus: protectedProcedure.query(async ({ ctx }) => {
+  getStatus: adminProcedure.query(async ({ ctx }) => {
     try {
       const status = taskScheduler.getTaskStatus();
       return {
@@ -62,7 +62,7 @@ export const schedulerRouter = createTRPCRouter({
     }),
 
   // 手动执行指定的定时任务
-  executeTask: protectedProcedure
+  executeTask: adminProcedure
     .input(
       z.object({
         taskId: z.string(),

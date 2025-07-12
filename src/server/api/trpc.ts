@@ -15,6 +15,7 @@ import { ZodError } from "zod";
 
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
+import { createAdminMiddleware } from "@/server/api/middleware/admin";
 
 /**
  * 1. CONTEXT
@@ -202,3 +203,13 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Admin (authenticated + admin role) procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to admin users, use this. It verifies
+ * the session is valid and the user has admin role in their settings.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const adminProcedure = protectedProcedure.use(createAdminMiddleware());

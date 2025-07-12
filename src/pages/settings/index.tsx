@@ -9,12 +9,13 @@
 
 import { useState } from "react";
 import Head from "next/head";
-import { 
+import {
   CogIcon,
   BookOpenIcon,
   BellIcon,
   PaintBrushIcon,
   ClockIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";
@@ -286,6 +287,24 @@ function SettingsPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* 管理员专用设置 */}
+                  {settings?.role === "admin" && (
+                    <div className="border-t pt-6">
+                      <h3 className="text-sm font-medium text-gray-900 mb-4">管理员设置</h3>
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <div className="flex items-center">
+                          <ShieldCheckIcon className="h-5 w-5 text-blue-600 mr-2" />
+                          <span className="text-sm font-medium text-blue-800">
+                            您拥有管理员权限
+                          </span>
+                        </div>
+                        <p className="text-sm text-blue-700 mt-1">
+                          可以访问系统管理功能，包括定时任务管理等
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

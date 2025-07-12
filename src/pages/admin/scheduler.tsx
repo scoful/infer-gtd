@@ -31,7 +31,7 @@ function SchedulerPage() {
   );
 
   // 获取调度器状态
-  const { data: schedulerStatus, refetch: refetchStatus } = api.scheduler.getStatus.useQuery();
+  const { data: schedulerStatus, refetch: refetchStatus, error: statusError } = api.scheduler.getStatus.useQuery();
 
   // 手动执行日记生成
   const executeJournalGeneration = api.scheduler.executeJournalGeneration.useMutation({
@@ -88,6 +88,32 @@ function SchedulerPage() {
       return `${diffMinutes}分钟后 (${date.toLocaleString()})`;
     }
   };
+
+  // 权限错误处理
+  if (statusError?.data?.code === "FORBIDDEN") {
+    return (
+      <>
+        <Head>
+          <title>访问被拒绝 | Smart GTD</title>
+        </Head>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <ExclamationTriangleIcon className="mx-auto h-16 w-16 text-red-600" />
+            <h1 className="mt-4 text-3xl font-bold text-gray-900">访问被拒绝</h1>
+            <p className="mt-2 text-gray-600">
+              您需要管理员权限才能访问此页面
+            </p>
+            <button
+              onClick={() => router.push('/')}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            >
+              返回首页
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
