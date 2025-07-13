@@ -178,7 +178,17 @@ class TaskScheduler {
 
     const [minute, hour, day, month, weekday] = parts;
 
-    // 简单实现：只支持每日执行
+    // 支持每分钟执行 (* * * * *)
+    if (minute === "*" && hour === "*" && day === "*" && month === "*" && weekday === "*") {
+      return 60 * 1000; // 1分钟
+    }
+
+    // 支持每小时执行 (分 * * * *)
+    if (hour === "*" && day === "*" && month === "*" && weekday === "*") {
+      return 60 * 60 * 1000; // 1小时
+    }
+
+    // 支持每日执行 (分 时 * * *)
     if (day === "*" && month === "*" && weekday === "*") {
       return 24 * 60 * 60 * 1000; // 24小时
     }
@@ -195,9 +205,48 @@ class TaskScheduler {
 
     const now = new Date();
     const next = new Date();
-    
-    next.setHours(parseInt(hour || "0"), parseInt(minute || "0"), 0, 0);
-    
+
+    // 处理每分钟执行的情况 (* * * * *)
+    if (minute === "*") {
+      // 下一分钟执行
+      next.setTime(now.getTime() + 60 * 1000);
+      next.setSeconds(0, 0);
+      return next;
+    }
+
+    // 处理每小时执行的情况 (0 * * * *)
+    if (hour === "*") {
+      const targetMinute = parseInt(minute || "0");
+      if (isNaN(targetMinute)) {
+        // 如果分钟解析失败，默认下一分钟执行
+        next.setTime(now.getTime() + 60 * 1000);
+        next.setSeconds(0, 0);
+        return next;
+      }
+
+      next.setMinutes(targetMinute, 0, 0);
+
+      // 如果当前小时的目标分钟已过，设置为下一小时
+      if (next <= now) {
+        next.setHours(next.getHours() + 1);
+      }
+
+      return next;
+    }
+
+    // 处理每日执行的情况 (分 时 * * *)
+    const targetHour = parseInt(hour || "0");
+    const targetMinute = parseInt(minute || "0");
+
+    if (isNaN(targetHour) || isNaN(targetMinute)) {
+      // 如果解析失败，默认下一分钟执行
+      next.setTime(now.getTime() + 60 * 1000);
+      next.setSeconds(0, 0);
+      return next;
+    }
+
+    next.setHours(targetHour, targetMinute, 0, 0);
+
     // 如果今天的时间已过，设置为明天
     if (next <= now) {
       next.setDate(next.getDate() + 1);
