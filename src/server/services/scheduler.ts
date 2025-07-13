@@ -305,6 +305,17 @@ class TaskScheduler {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
+    // 每10分钟打印一次状态日志，避免日志过多
+    if (currentMinute % 10 === 0 || forceExecute) {
+      serverLoggers.app.info(
+        {
+          time: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`,
+          forceExecute
+        },
+        "定时日记生成任务开始检查",
+      );
+    }
+
     try {
       // 获取所有启用了定时生成的用户
       const { db } = await import("@/server/db");
@@ -335,10 +346,13 @@ class TaskScheduler {
                   shouldGenerate = true;
                 } else {
                   // 定时执行时，检查是否到了该用户的生成时间
-                  const [scheduleHour, scheduleMinute] = scheduleTime.split(":").map(Number);
+                  const timeParts = scheduleTime.split(":").map(Number);
+                  const scheduleHour = timeParts[0];
+                  const scheduleMinute = timeParts[1];
 
                   // 允许1分钟的误差范围
-                  if (currentHour === scheduleHour && Math.abs(currentMinute - scheduleMinute) <= 1) {
+                  if (scheduleHour !== undefined && scheduleMinute !== undefined &&
+                      currentHour === scheduleHour && Math.abs(currentMinute - scheduleMinute) <= 1) {
                     shouldGenerate = true;
                   }
                 }
@@ -386,6 +400,15 @@ class TaskScheduler {
             failed: failedCount,
           },
           "定时日记生成任务完成",
+        );
+      } else if (currentMinute % 10 === 0) {
+        // 每10分钟打印一次状态，显示没有用户需要处理
+        serverLoggers.app.info(
+          {
+            time: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`,
+            totalUsers: users.length,
+          },
+          "定时日记生成任务检查完成，无用户需要处理",
         );
       }
     } catch (error) {
