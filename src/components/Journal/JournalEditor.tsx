@@ -190,24 +190,7 @@ export default function JournalEditor({
             </button>
           )}
 
-          {/* 保存按钮 */}
-          <button
-            onClick={handleSave}
-            disabled={saveJournal.isPending || !content.trim()}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saveJournal.isPending ? "保存中..." : "保存"}
-          </button>
 
-          {/* 取消按钮 */}
-          {onCancel && (
-            <button
-              onClick={handleCancel}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              取消
-            </button>
-          )}
         </div>
       </div>
 
@@ -242,6 +225,32 @@ export default function JournalEditor({
           }}
           className="h-full"
         />
+      </div>
+
+      {/* 底部按钮 */}
+      <div className="flex justify-end gap-3 border-t border-gray-200 bg-white px-6 py-4">
+        {onCancel && (
+          <button
+            onClick={handleCancel}
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+          >
+            取消
+          </button>
+        )}
+        <button
+          onClick={handleSave}
+          disabled={saveJournal.isPending || !content.trim()}
+          className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saveJournal.isPending ? (
+            <>
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+              保存中...
+            </>
+          ) : (
+            "保存"
+          )}
+        </button>
       </div>
     </div>
   );

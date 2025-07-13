@@ -231,11 +231,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 检查是否为管理员
   const isAdmin = userSettings?.data?.role === "admin";
 
-  // 调试信息
-  console.log("用户设置数据:", userSettings?.data);
-  console.log("用户角色:", userSettings?.data?.role);
-  console.log("是否为管理员:", isAdmin);
-
   // 获取动态导航配置
   const navigationItems = getNavigationItems(isAdmin);
   const [sidebarOpen, setSidebarOpen] = useState(false);
