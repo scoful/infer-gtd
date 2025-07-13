@@ -137,7 +137,6 @@ export const schedulerRouter = createTRPCRouter({
           enabledUsers: enabledCount,
           disabledUsers: disabledCount,
           scheduleDistribution: scheduleStats,
-          mostCommonTime: Object.entries(scheduleStats).sort(([,a], [,b]) => b - a)[0]?.[0] || "23:55",
         },
       };
     } catch (error) {

@@ -211,9 +211,6 @@ function SchedulerPage() {
                           <div className="text-xs text-blue-700">
                             • 启用用户：{scheduleStats.data.enabledUsers}/{scheduleStats.data.totalUsers}
                           </div>
-                          <div className="text-xs text-blue-700">
-                            • 最常用时间：{scheduleStats.data.mostCommonTime}
-                          </div>
                           {Object.keys(scheduleStats.data.scheduleDistribution).length > 1 && (
                             <div className="text-xs text-blue-700">
                               • 时间分布：{Object.entries(scheduleStats.data.scheduleDistribution)
