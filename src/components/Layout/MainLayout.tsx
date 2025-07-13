@@ -231,6 +231,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 检查是否为管理员
   const isAdmin = userSettings?.data?.role === "admin";
 
+  // 调试信息
+  console.log("用户设置数据:", userSettings?.data);
+  console.log("用户角色:", userSettings?.data?.role);
+  console.log("是否为管理员:", isAdmin);
+
   // 获取动态导航配置
   const navigationItems = getNavigationItems(isAdmin);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -562,7 +567,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="bg-opacity-75 fixed inset-0 bg-gray-600" />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold text-gray-900">Infer GTD</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-gray-900">Infer GTD</h1>
+              {isAdmin && (
+                <span className="inline-flex items-center rounded-full bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                  <ShieldCheckIcon className="h-3 w-3" />
+                </span>
+              )}
+            </div>
             <button
               type="button"
               className="text-gray-400 hover:text-gray-600"
@@ -920,8 +932,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
               {sessionData?.user ? (
                 <div className="flex items-center gap-x-4">
                   <div className="hidden lg:flex lg:flex-col lg:items-end lg:leading-6">
-                    <div className="text-sm font-semibold text-gray-900">
-                      {sessionData.user.name}
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {sessionData.user.name}
+                      </div>
+                      {isAdmin && (
+                        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          <ShieldCheckIcon className="mr-1 h-3 w-3" />
+                          管理员
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-500">
                       {sessionData.user.email}
