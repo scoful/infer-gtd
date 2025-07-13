@@ -18,6 +18,8 @@ export default function ActivityHeatmap({
   // 生成过去一年的日期网格
   const { weeks, months } = useMemo(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // 重置时间为当天开始
+
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(today.getFullYear() - 1);
 
@@ -39,8 +41,19 @@ export default function ActivityHeatmap({
       dataMap.set(item.date, item);
     });
 
-    // 生成53周的数据（一年多一点）
-    for (let week = 0; week < 53; week++) {
+    // 动态计算需要的周数，确保包含今天
+    let weekCount = 0;
+    const tempDate = new Date(startDate);
+    while (tempDate <= today) {
+      tempDate.setDate(tempDate.getDate() + 7);
+      weekCount++;
+    }
+
+    // 确保至少有53周，最多55周（避免过多的空白）
+    weekCount = Math.max(53, Math.min(55, weekCount));
+
+    // 生成动态周数的数据
+    for (let week = 0; week < weekCount; week++) {
       currentWeek = [];
 
       for (let day = 0; day < 7; day++) {
