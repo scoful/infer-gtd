@@ -620,8 +620,7 @@ export const taskRouter = createTRPCRouter({
               try {
                 const settings = JSON.parse(user.settings);
                 const autoJournalSettings = settings.autoJournalGeneration;
-                shouldGenerate = autoJournalSettings?.enabled !== false &&
-                               autoJournalSettings?.onTaskComplete !== false;
+                shouldGenerate = autoJournalSettings?.onTaskComplete !== false;
               } catch (error) {
                 // 解析失败，使用默认行为
               }
@@ -1130,8 +1129,7 @@ export const taskRouter = createTRPCRouter({
             try {
               const settings = JSON.parse(user.settings);
               const autoJournalSettings = settings.autoJournalGeneration;
-              shouldGenerate = autoJournalSettings?.enabled !== false &&
-                             autoJournalSettings?.onTaskComplete !== false;
+              shouldGenerate = autoJournalSettings?.onTaskComplete !== false;
             } catch (error) {
               // 解析失败，使用默认行为
             }
@@ -2015,8 +2013,7 @@ export const taskRouter = createTRPCRouter({
               try {
                 const settings = JSON.parse(user.settings);
                 const autoJournalSettings = settings.autoJournalGeneration;
-                shouldGenerate = autoJournalSettings?.enabled !== false &&
-                               autoJournalSettings?.onTaskComplete !== false;
+                shouldGenerate = autoJournalSettings?.onTaskComplete !== false;
               } catch (error) {
                 // 解析失败，使用默认行为
               }

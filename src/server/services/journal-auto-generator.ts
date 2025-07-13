@@ -34,26 +34,7 @@ export async function autoGenerateJournalForUser(
         select: { settings: true },
       });
 
-      if (user?.settings) {
-        try {
-          const settings = JSON.parse(user.settings);
-          const autoJournalSettings = settings.autoJournalGeneration;
-
-          // 如果用户禁用了自动生成，直接返回
-          if (autoJournalSettings && !autoJournalSettings.enabled) {
-            return {
-              success: false,
-              message: "用户已禁用日记自动生成功能",
-            };
-          }
-        } catch (error) {
-          // 解析设置失败，继续执行默认行为
-          serverLoggers.app.warn(
-            { userId, error: error instanceof Error ? error.message : String(error) },
-            "解析用户设置失败，使用默认行为",
-          );
-        }
-      }
+      // 移除了总开关检查，现在由具体的子功能开关控制
     }
 
     // 标准化日期为当天的开始时间
@@ -370,8 +351,7 @@ export async function autoGenerateJournalForAllUsers(
           try {
             const settings = JSON.parse(user.settings);
             const autoJournalSettings = settings.autoJournalGeneration;
-            shouldGenerate = autoJournalSettings?.enabled !== false &&
-                           autoJournalSettings?.dailySchedule !== false;
+            shouldGenerate = autoJournalSettings?.dailySchedule !== false;
           } catch (error) {
             // 解析失败，使用默认行为
             serverLoggers.app.warn(

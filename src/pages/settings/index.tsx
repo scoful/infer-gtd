@@ -143,31 +143,7 @@ function SettingsPage() {
                   </div>
 
                   <div className="space-y-6">
-                    {/* 启用自动生成 */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">启用自动生成</h3>
-                        <p className="text-sm text-gray-500">
-                          自动根据完成的任务生成日记内容
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings?.autoJournalGeneration?.enabled ?? true}
-                          onChange={(e) =>
-                            handleUpdateSettings({
-                              autoJournalGeneration: {
-                                ...settings?.autoJournalGeneration,
-                                enabled: e.target.checked,
-                              },
-                            })
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
+
 
                     {/* 任务完成时触发 */}
                     <div className="flex items-center justify-between">

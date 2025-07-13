@@ -20,7 +20,6 @@ import {
 const defaultSettings: UserSettings = {
   role: "user",
   autoJournalGeneration: {
-    enabled: true,
     onTaskComplete: true,
     dailySchedule: true,
     scheduleTime: "23:55",

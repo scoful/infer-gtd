@@ -113,9 +113,9 @@ export const schedulerRouter = createTRPCRouter({
             const settings = JSON.parse(user.settings);
             const autoJournalSettings = settings.autoJournalGeneration;
 
-            if (autoJournalSettings?.enabled && autoJournalSettings?.dailySchedule) {
+            if (autoJournalSettings?.dailySchedule !== false) {
               enabledCount++;
-              const scheduleTime = autoJournalSettings.scheduleTime || "23:55";
+              const scheduleTime = autoJournalSettings?.scheduleTime || "23:55";
               scheduleStats[scheduleTime] = (scheduleStats[scheduleTime] || 0) + 1;
             } else {
               disabledCount++;

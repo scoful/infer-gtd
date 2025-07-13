@@ -7,7 +7,6 @@ export const userSettingsSchema = z.object({
 
   // 日记自动生成设置
   autoJournalGeneration: z.object({
-    enabled: z.boolean().default(true),
     onTaskComplete: z.boolean().default(true), // 任务完成时自动更新日记
     dailySchedule: z.boolean().default(true),  // 每日定时生成
     scheduleTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).default("23:55"), // 定时生成时间

@@ -278,8 +278,8 @@ class TaskScheduler {
               const settings = JSON.parse(user.settings);
               const autoJournalSettings = settings.autoJournalGeneration;
 
-              if (autoJournalSettings?.enabled && autoJournalSettings?.dailySchedule) {
-                scheduleTime = autoJournalSettings.scheduleTime || "23:55";
+              if (autoJournalSettings?.dailySchedule !== false) {
+                scheduleTime = autoJournalSettings?.scheduleTime || "23:55";
 
                 if (forceExecute) {
                   // 手动执行时，忽略时间检查
