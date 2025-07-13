@@ -23,7 +23,6 @@ import {
   updateTaskStatusWithPositionSchema,
 } from "@/server/api/schemas/task";
 import { arrayMove } from "@dnd-kit/sortable";
-import { autoGenerateJournalForUser } from "@/server/services/journal-auto-generator";
 
 export const taskRouter = createTRPCRouter({
   // 创建任务
@@ -572,6 +571,8 @@ export const taskRouter = createTRPCRouter({
           return { success: true, message: "任务状态未发生变化" };
         }
 
+
+
         // 更新任务状态
         const updateData: any = { status: toStatus };
 
@@ -606,39 +607,7 @@ export const taskRouter = createTRPCRouter({
           },
         });
 
-        // 如果任务完成，检查用户设置并触发日记自动生成
-        if (toStatus === TaskStatus.DONE) {
-          try {
-            // 检查用户是否启用了任务完成时自动生成日记
-            const user = await ctx.db.user.findUnique({
-              where: { id: ctx.session.user.id },
-              select: { settings: true },
-            });
 
-            let shouldGenerate = true; // 默认启用
-            if (user?.settings) {
-              try {
-                const settings = JSON.parse(user.settings);
-                const autoJournalSettings = settings.autoJournalGeneration;
-                shouldGenerate = autoJournalSettings?.onTaskComplete !== false;
-              } catch (error) {
-                // 解析失败，使用默认行为
-              }
-            }
-
-            if (shouldGenerate) {
-              await autoGenerateJournalForUser(
-                ctx.session.user.id,
-                new Date(),
-                false, // 不强制生成，遵循用户设置
-                "任务完成自动生成", // 模板名称
-              );
-            }
-          } catch (error) {
-            // 日记生成失败不影响任务状态更新
-            console.warn("任务完成后自动生成日记失败:", error);
-          }
-        }
 
         return {
           success: true,
@@ -1076,6 +1045,8 @@ export const taskRouter = createTRPCRouter({
           (now.getTime() - task.timerStartedAt.getTime()) / 1000,
         );
 
+
+
         // 查找当前活跃的时间记录
         const activeTimeEntry = await ctx.db.timeEntry.findFirst({
           where: {
@@ -1121,37 +1092,7 @@ export const taskRouter = createTRPCRouter({
           },
         });
 
-        // 任务完成，检查用户设置并触发日记自动生成
-        try {
-          // 检查用户是否启用了任务完成时自动生成日记
-          const user = await ctx.db.user.findUnique({
-            where: { id: ctx.session.user.id },
-            select: { settings: true },
-          });
 
-          let shouldGenerate = true; // 默认启用
-          if (user?.settings) {
-            try {
-              const settings = JSON.parse(user.settings);
-              const autoJournalSettings = settings.autoJournalGeneration;
-              shouldGenerate = autoJournalSettings?.onTaskComplete !== false;
-            } catch (error) {
-              // 解析失败，使用默认行为
-            }
-          }
-
-          if (shouldGenerate) {
-            await autoGenerateJournalForUser(
-              ctx.session.user.id,
-              new Date(),
-              false, // 不强制生成，遵循用户设置
-              "任务完成自动生成", // 模板名称
-            );
-          }
-        } catch (error) {
-          // 日记生成失败不影响任务完成
-          console.warn("任务完成后自动生成日记失败:", error);
-        }
 
         const hours = Math.floor(sessionDuration / 3600);
         const minutes = Math.floor((sessionDuration % 3600) / 60);
@@ -2009,39 +1950,7 @@ export const taskRouter = createTRPCRouter({
           }
         }
 
-        // 如果有任务状态变为已完成，检查用户设置并触发日记自动生成
-        if (updates.status === TaskStatus.DONE) {
-          try {
-            // 检查用户是否启用了任务完成时自动生成日记
-            const user = await ctx.db.user.findUnique({
-              where: { id: ctx.session.user.id },
-              select: { settings: true },
-            });
 
-            let shouldGenerate = true; // 默认启用
-            if (user?.settings) {
-              try {
-                const settings = JSON.parse(user.settings);
-                const autoJournalSettings = settings.autoJournalGeneration;
-                shouldGenerate = autoJournalSettings?.onTaskComplete !== false;
-              } catch (error) {
-                // 解析失败，使用默认行为
-              }
-            }
-
-            if (shouldGenerate) {
-              await autoGenerateJournalForUser(
-                ctx.session.user.id,
-                new Date(),
-                false, // 不强制生成，遵循用户设置
-                "任务完成自动生成", // 模板名称
-              );
-            }
-          } catch (error) {
-            // 日记生成失败不影响任务更新
-            console.warn("批量任务完成后自动生成日记失败:", error);
-          }
-        }
 
         return {
           success: true,

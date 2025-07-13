@@ -28,6 +28,17 @@ export async function autoGenerateJournalForUser(
   templateName: string = "默认模板", // 模板名称
 ): Promise<AutoGenerateResult> {
   try {
+    // 添加调试日志
+    serverLoggers.app.info(
+      {
+        userId,
+        targetDate: targetDate.toISOString(),
+        forceGenerate,
+        templateName,
+      },
+      "开始自动生成日记",
+    );
+
     // 检查用户设置（除非强制生成）
     if (!forceGenerate) {
       const user = await db.user.findUnique({
@@ -47,6 +58,7 @@ export async function autoGenerateJournalForUser(
     const endOfDay = new Date(normalizedDate);
     endOfDay.setHours(23, 59, 59, 999);
 
+    // 查询当天完成的任务
     const completedTasks = await db.task.findMany({
       where: {
         createdById: userId,
@@ -84,8 +96,19 @@ export async function autoGenerateJournalForUser(
       },
     });
 
+    // 添加调试日志
+    serverLoggers.app.info(
+      {
+        userId,
+        completedTasksCount: completedTasks.length,
+        taskTitles: completedTasks.map(t => t.title),
+      },
+      "查询到的完成任务",
+    );
+
     // 如果没有完成的任务，不生成日记
     if (completedTasks.length === 0) {
+      serverLoggers.app.info({ userId }, "没有完成的任务，跳过日记生成");
       return {
         success: false,
         message: "当天没有完成的任务，无需生成日记",
@@ -341,15 +364,19 @@ ${completedTasksList}
           };
         }
       } else {
-        // 如果找不到"今日完成"部分，直接替换整个内容
+        // 如果找不到"今日完成"部分，在开头添加
+        const updatedContent = `## 今日完成\n${completedTasksList}\n\n${existingContent}`;
         journal = await db.journal.update({
           where: { id: existingJournal.id },
-          data: { content: templateContent },
+          data: {
+            content: updatedContent,
+            template: templateName,
+          },
         });
 
         return {
           success: true,
-          message: `已更新当天日记，包含 ${completedTasks.length} 个完成的任务`,
+          message: `已更新当天日记，添加了 ${completedTasks.length} 个完成的任务`,
           journalId: journal.id,
           tasksCount: completedTasks.length,
         };
