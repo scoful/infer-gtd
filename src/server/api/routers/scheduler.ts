@@ -44,7 +44,7 @@ export const schedulerRouter = createTRPCRouter({
         const result = await autoGenerateJournalForUser(
           ctx.session.user.id,
           targetDate,
-          false, // 不强制生成，遵循用户设置
+          true, // 手动执行时强制生成，忽略用户设置
           "手动生成", // 模板名称
         );
 

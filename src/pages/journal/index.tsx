@@ -6,7 +6,6 @@ import {
   BookOpenIcon,
   ClockIcon,
   PlusIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
@@ -137,35 +136,7 @@ const JournalPage: NextPage = () => {
     }
   };
 
-  // 自动生成日记的mutation
-  const autoGenerateJournal = api.journal.autoGenerate.useMutation({
-    onSuccess: (result) => {
-      showSuccess(result.message);
-      // 刷新当前日记数据
-      void refetchCurrentJournal();
-      void refetchRecentJournals();
-      // 不再自动跳转到编辑页面，让用户自主选择
-    },
-    onError: (error) => {
-      showError(error.message || "自动生成日记失败");
-    },
-  });
 
-  // 处理自动生成日记
-  const handleAutoGenerate = () => {
-    const today = new Date();
-    const isToday = currentDate.toDateString() === today.toDateString();
-
-    if (!isToday) {
-      showError("只能为今天自动生成日记");
-      return;
-    }
-
-    autoGenerateJournal.mutate({
-      date: today,
-      templateName: "默认模板",
-    });
-  };
 
   return (
     <AuthGuard>
@@ -192,18 +163,6 @@ const JournalPage: NextPage = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <button
-                onClick={handleAutoGenerate}
-                disabled={autoGenerateJournal.isPending}
-                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {autoGenerateJournal.isPending ? (
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                ) : (
-                  <SparklesIcon className="mr-2 h-4 w-4" />
-                )}
-                自动生成日记
-              </button>
               <button
                 onClick={handleEdit}
                 className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -275,19 +234,7 @@ const JournalPage: NextPage = () => {
               <p className="mt-1 text-sm text-gray-500">
                 开始记录这一天的思考和感悟吧
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <button
-                  onClick={handleAutoGenerate}
-                  disabled={autoGenerateJournal.isPending}
-                  className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {autoGenerateJournal.isPending ? (
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  ) : (
-                    <SparklesIcon className="mr-2 h-4 w-4" />
-                  )}
-                  自动生成日记
-                </button>
+              <div className="mt-6 flex justify-center">
                 <button
                   onClick={handleEdit}
                   className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
