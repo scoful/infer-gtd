@@ -227,17 +227,14 @@ ${completedTasksList}
       if (match) {
         const existingTasksSection = match[1];
         
-        // 提取现有任务标题（去重用）- 兼容新旧格式
+        // 提取现有任务标题（去重用）- 只匹配新格式
         const existingTaskTitles = new Set<string>();
         const existingTaskLines = existingTasksSection
           .split("\n")
           .filter((line) => line.trim());
         existingTaskLines.forEach((line) => {
-          // 匹配任务行：- [x] **任务标题** 或 - [x] 任务标题 或 - 任务标题
-          const taskMatch =
-            /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(
-              line,
-            );
+          // 只匹配新格式：- [x] **任务标题**
+          const taskMatch = /^-\s*\[x\]\s*\*\*(.+?)\*\*/.exec(line);
           if (taskMatch?.[1]) {
             existingTaskTitles.add(taskMatch[1].trim());
           }
