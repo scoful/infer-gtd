@@ -25,6 +25,7 @@ export async function autoGenerateJournalForUser(
   userId: string,
   targetDate: Date = new Date(),
   forceGenerate: boolean = false, // 是否强制生成（忽略用户设置）
+  templateName: string = "默认模板", // 模板名称
 ): Promise<AutoGenerateResult> {
   try {
     // 检查用户设置（除非强制生成）
@@ -116,21 +117,70 @@ export async function autoGenerateJournalForUser(
       }
     }
 
-    // 生成任务列表内容
+    // 生成任务列表内容（使用美观的格式）
     const completedTasksList = completedTasks
       .map((task) => {
-        const timeSpent = includeTimeSpent && task.totalTimeSpent > 0
-          ? ` (用时: ${formatDuration(task.totalTimeSpent)})`
-          : "";
-        const project = includeProject && task.project ? ` [${task.project.name}]` : "";
-        const priority = task.priority ? ` [${task.priority}]` : "";
-        const tags = includeTags && task.tags.length > 0
-          ? ` #${task.tags.map(t => t.tag.name).join(" #")}`
-          : "";
+        let taskLine = `- [x] **${task.title}**`;
 
-        return `- ${task.title}${project}${priority}${timeSpent}${tags}`;
+        // 添加项目信息
+        if (includeProject && task.project?.name) {
+          taskLine += ` (${task.project.name})`;
+        }
+
+        // 添加优先级（中文显示）
+        if (task.priority) {
+          const priorityMap = {
+            LOW: "低",
+            MEDIUM: "中",
+            HIGH: "高",
+            URGENT: "紧急",
+          };
+          taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
+        }
+
+        // 添加任务类型（中文显示）
+        if (task.type) {
+          const typeMap = {
+            NORMAL: "普通",
+            DEADLINE: "限时",
+          };
+          taskLine += ` [${typeMap[task.type] || task.type}]`;
+        }
+
+        // 添加耗时信息
+        if (includeTimeSpent && task.totalTimeSpent > 0) {
+          const hours = Math.floor(task.totalTimeSpent / 3600);
+          const minutes = Math.floor((task.totalTimeSpent % 3600) / 60);
+          if (hours > 0) {
+            taskLine += ` [耗时: ${hours}h${minutes}m]`;
+          } else if (minutes > 0) {
+            taskLine += ` [耗时: ${minutes}m]`;
+          }
+        }
+
+        // 添加标签
+        if (includeTags && task.tags && task.tags.length > 0) {
+          const tagNames = task.tags.map((t) => t.tag.name).join(", ");
+          taskLine += ` #${tagNames}`;
+        }
+
+        // 添加描述（如果有，否则使用占位符）
+        if (task.description) {
+          taskLine += `\n  > ${task.description}`;
+        } else {
+          taskLine += `\n  > _暂无描述_`;
+        }
+
+        // 添加反馈（如果有，否则使用占位符）
+        if (task.feedback) {
+          taskLine += `\n  💭 ${task.feedback}`;
+        } else {
+          taskLine += `\n  💭 _暂无反馈_`;
+        }
+
+        return taskLine;
       })
-      .join("\n");
+      .join("\n\n");
 
     // 生成默认模板内容
     const year = normalizedDate.getFullYear();
@@ -177,13 +227,21 @@ ${completedTasksList}
       if (match) {
         const existingTasksSection = match[1];
         
-        // 提取现有任务标题（去重用）
+        // 提取现有任务标题（去重用）- 兼容新旧格式
         const existingTaskTitles = new Set<string>();
-        const taskLineRegex = /^- (.+?)(?:\s*\[.*?\])*(?:\s*\(用时:.*?\))*(?:\s*#.*)?$/gm;
-        let taskMatch;
-        while ((taskMatch = taskLineRegex.exec(existingTasksSection)) !== null) {
-          existingTaskTitles.add(taskMatch[1]?.trim() || "");
-        }
+        const existingTaskLines = existingTasksSection
+          .split("\n")
+          .filter((line) => line.trim());
+        existingTaskLines.forEach((line) => {
+          // 匹配任务行：- [x] **任务标题** 或 - [x] 任务标题 或 - 任务标题
+          const taskMatch =
+            /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(
+              line,
+            );
+          if (taskMatch?.[1]) {
+            existingTaskTitles.add(taskMatch[1].trim());
+          }
+        });
 
         // 过滤出新任务
         const newTasks = completedTasks.filter(
@@ -191,24 +249,73 @@ ${completedTasksList}
         );
 
         if (newTasks.length > 0) {
-          // 生成新任务列表（使用相同的用户设置）
+          // 生成新任务列表（使用美观格式）
           const newTasksList = newTasks
             .map((task) => {
-              const timeSpent = includeTimeSpent && task.totalTimeSpent > 0
-                ? ` (用时: ${formatDuration(task.totalTimeSpent)})`
-                : "";
-              const project = includeProject && task.project ? ` [${task.project.name}]` : "";
-              const priority = task.priority ? ` [${task.priority}]` : "";
-              const tags = includeTags && task.tags.length > 0
-                ? ` #${task.tags.map(t => t.tag.name).join(" #")}`
-                : "";
+              let taskLine = `- [x] **${task.title}**`;
 
-              return `- ${task.title}${project}${priority}${timeSpent}${tags}`;
+              // 添加项目信息
+              if (includeProject && task.project?.name) {
+                taskLine += ` (${task.project.name})`;
+              }
+
+              // 添加优先级（中文显示）
+              if (task.priority) {
+                const priorityMap = {
+                  LOW: "低",
+                  MEDIUM: "中",
+                  HIGH: "高",
+                  URGENT: "紧急",
+                };
+                taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
+              }
+
+              // 添加任务类型（中文显示）
+              if (task.type) {
+                const typeMap = {
+                  NORMAL: "普通",
+                  DEADLINE: "限时",
+                };
+                taskLine += ` [${typeMap[task.type] || task.type}]`;
+              }
+
+              // 添加耗时信息
+              if (includeTimeSpent && task.totalTimeSpent > 0) {
+                const hours = Math.floor(task.totalTimeSpent / 3600);
+                const minutes = Math.floor((task.totalTimeSpent % 3600) / 60);
+                if (hours > 0) {
+                  taskLine += ` [耗时: ${hours}h${minutes}m]`;
+                } else if (minutes > 0) {
+                  taskLine += ` [耗时: ${minutes}m]`;
+                }
+              }
+
+              // 添加标签
+              if (includeTags && task.tags && task.tags.length > 0) {
+                const tagNames = task.tags.map((t) => t.tag.name).join(", ");
+                taskLine += ` #${tagNames}`;
+              }
+
+              // 添加描述（如果有，否则使用占位符）
+              if (task.description) {
+                taskLine += `\n  > ${task.description}`;
+              } else {
+                taskLine += `\n  > _暂无描述_`;
+              }
+
+              // 添加反馈（如果有，否则使用占位符）
+              if (task.feedback) {
+                taskLine += `\n  💭 ${task.feedback}`;
+              } else {
+                taskLine += `\n  💭 _暂无反馈_`;
+              }
+
+              return taskLine;
             })
-            .join("\n");
+            .join("\n\n");
 
-          // 更新内容：在现有任务后追加新任务
-          const updatedTasksSection = existingTasksSection.trim() + "\n" + newTasksList;
+          // 更新内容：在现有任务后追加新任务（使用双换行分隔）
+          const updatedTasksSection = existingTasksSection.trim() + "\n\n" + newTasksList;
           const updatedContent = existingContent.replace(
             completedSectionRegex,
             `## 今日完成\n${updatedTasksSection}\n`,
@@ -216,7 +323,10 @@ ${completedTasksList}
 
           journal = await db.journal.update({
             where: { id: existingJournal.id },
-            data: { content: updatedContent },
+            data: {
+              content: updatedContent,
+              template: templateName,
+            },
           });
 
           return {
@@ -253,7 +363,7 @@ ${completedTasksList}
         data: {
           date: normalizedDate,
           content: templateContent,
-          template: "自动生成",
+          template: templateName,
           createdById: userId,
         },
       });
@@ -369,7 +479,12 @@ export async function autoGenerateJournalForAllUsers(
           continue;
         }
 
-        const result = await autoGenerateJournalForUser(user.id, targetDate, true); // 强制生成，因为已经检查过设置
+        const result = await autoGenerateJournalForUser(
+          user.id,
+          targetDate,
+          true, // 强制生成，因为已经检查过设置
+          "定时自动生成", // 模板名称
+        );
         if (result.success) {
           successCount++;
           serverLoggers.app.info(

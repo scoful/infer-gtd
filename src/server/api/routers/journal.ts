@@ -12,6 +12,7 @@ import {
   updateJournalSchema,
   autoGenerateJournalSchema,
 } from "@/server/api/schemas/journal";
+import { autoGenerateJournalForUser } from "@/server/services/journal-auto-generator";
 
 export const journalRouter = createTRPCRouter({
   // 创建日记
@@ -739,339 +740,30 @@ export const journalRouter = createTRPCRouter({
     .input(autoGenerateJournalSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // 确定目标日期
-        const targetDate = input.date || new Date();
-        const normalizedDate = new Date(targetDate);
-        normalizedDate.setHours(0, 0, 0, 0);
+        // 调用统一的日记生成函数
+        const result = await autoGenerateJournalForUser(
+          ctx.session.user.id,
+          input.date || new Date(),
+          false, // 不强制生成，遵循用户设置
+          input.templateName || "默认模板",
+        );
 
-        // 获取当天完成的任务
-        const startOfDay = new Date(normalizedDate);
-        const endOfDay = new Date(normalizedDate);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const completedTasks = await ctx.db.task.findMany({
-          where: {
-            createdById: ctx.session.user.id,
-            completedAt: {
-              gte: startOfDay,
-              lte: endOfDay,
-            },
-          },
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            priority: true,
-            type: true,
-            feedback: true,
-            totalTimeSpent: true,
-            project: {
-              select: {
-                name: true,
-              },
-            },
-            tags: {
-              select: {
-                tag: {
-                  select: {
-                    name: true,
-                    color: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            completedAt: "asc",
-          },
-        });
-
-        // 如果没有完成的任务，不生成日记
-        if (completedTasks.length === 0) {
-          return {
-            success: false,
-            message: "当天没有完成的任务，无需生成日记",
-          };
-        }
-
-        // 生成默认模板内容
-        const year = normalizedDate.getFullYear();
-        const month = String(normalizedDate.getMonth() + 1).padStart(2, "0");
-        const day = String(normalizedDate.getDate()).padStart(2, "0");
-
-        // 构建今日完成任务列表（使用已完成的复选框语法）
-        const completedTasksList = completedTasks
-          .map((task) => {
-            let taskLine = `- [x] **${task.title}**`;
-
-            // 添加项目信息
-            if (task.project?.name) {
-              taskLine += ` (${task.project.name})`;
-            }
-
-            // 添加优先级
-            if (task.priority) {
-              const priorityMap = {
-                LOW: "低",
-                MEDIUM: "中",
-                HIGH: "高",
-                URGENT: "紧急",
-              };
-              taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
-            }
-
-            // 添加任务类型
-            if (task.type) {
-              const typeMap = {
-                NORMAL: "普通",
-                DEADLINE: "限时",
-              };
-              taskLine += ` [${typeMap[task.type] || task.type}]`;
-            }
-
-            // 添加耗时信息
-            if (task.totalTimeSpent > 0) {
-              const hours = Math.floor(task.totalTimeSpent / 3600);
-              const minutes = Math.floor((task.totalTimeSpent % 3600) / 60);
-              if (hours > 0) {
-                taskLine += ` [耗时: ${hours}h${minutes}m]`;
-              } else if (minutes > 0) {
-                taskLine += ` [耗时: ${minutes}m]`;
-              }
-            }
-
-            // 添加标签
-            if (task.tags && task.tags.length > 0) {
-              const tagNames = task.tags.map((t) => t.tag.name).join(", ");
-              taskLine += ` #${tagNames}`;
-            }
-
-            // 添加描述（如果有，否则使用占位符）
-            if (task.description) {
-              taskLine += `\n  > ${task.description}`;
-            } else {
-              taskLine += `\n  > _暂无描述_`;
-            }
-
-            // 添加反馈（如果有，否则使用占位符）
-            if (task.feedback) {
-              taskLine += `\n  💭 ${task.feedback}`;
-            } else {
-              taskLine += `\n  💭 _暂无反馈_`;
-            }
-
-            return taskLine;
-          })
-          .join("\n\n");
-
-        const templateContent = `# ${year}-${month}-${day} 日记
-
-## 今日完成
-${completedTasksList}
-
-## 今日学习
--
-
-## 心得感悟
--
-
-## 遇到的问题
--
-
-## 明日计划
-- `;
-
-        // 检查当天是否已有日记
-        const existingJournal = await ctx.db.journal.findFirst({
-          where: {
-            date: {
-              gte: startOfDay,
-              lte: endOfDay,
-            },
-            createdById: ctx.session.user.id,
-          },
-        });
-
-        let journal;
-        if (existingJournal) {
-          // 更新现有日记，在"今日完成"部分追加任务（去重）
-          const existingContent = existingJournal.content;
-
-          // 查找"今日完成"部分
-          const completedSectionRegex = /## 今日完成\n([\s\S]*?)(?=\n## |$)/;
-          const match = completedSectionRegex.exec(existingContent);
-
-          let updatedContent;
-          if (match) {
-            // 如果找到"今日完成"部分，进行去重合并
-            const existingTasksText = match[1]?.trim() || "";
-
-            // 提取现有任务的标题（用于去重）
-            const existingTaskTitles = new Set<string>();
-            const existingTaskLines = existingTasksText
-              .split("\n")
-              .filter((line) => line.trim());
-            existingTaskLines.forEach((line) => {
-              // 匹配任务行：- [x] **任务标题** 或 - [x] 任务标题 或 - 任务标题
-              const taskMatch =
-                /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(
-                  line,
-                );
-              if (taskMatch?.[1]) {
-                existingTaskTitles.add(taskMatch[1].trim());
-              }
-            });
-
-            // 过滤出新的任务（去重）
-            const newTasks = completedTasks.filter(
-              (task) => !existingTaskTitles.has(task.title),
-            );
-
-            if (newTasks.length > 0) {
-              // 构建新任务列表（使用相同的格式化逻辑）
-              const newTasksList = newTasks
-                .map((task) => {
-                  let taskLine = `- [x] **${task.title}**`;
-
-                  // 添加项目信息
-                  if (task.project?.name) {
-                    taskLine += ` (${task.project.name})`;
-                  }
-
-                  // 添加优先级
-                  if (task.priority) {
-                    const priorityMap = {
-                      LOW: "低",
-                      MEDIUM: "中",
-                      HIGH: "高",
-                      URGENT: "紧急",
-                    };
-                    taskLine += ` [${priorityMap[task.priority] || task.priority}]`;
-                  }
-
-                  // 添加任务类型
-                  if (task.type) {
-                    const typeMap = {
-                      NORMAL: "普通",
-                      DEADLINE: "限时",
-                    };
-                    taskLine += ` [${typeMap[task.type] || task.type}]`;
-                  }
-
-                  // 添加耗时信息
-                  if (task.totalTimeSpent > 0) {
-                    const hours = Math.floor(task.totalTimeSpent / 3600);
-                    const minutes = Math.floor(
-                      (task.totalTimeSpent % 3600) / 60,
-                    );
-                    if (hours > 0) {
-                      taskLine += ` [耗时: ${hours}h${minutes}m]`;
-                    } else if (minutes > 0) {
-                      taskLine += ` [耗时: ${minutes}m]`;
-                    }
-                  }
-
-                  // 添加标签
-                  if (task.tags && task.tags.length > 0) {
-                    const tagNames = task.tags
-                      .map((t) => t.tag.name)
-                      .join(", ");
-                    taskLine += ` #${tagNames}`;
-                  }
-
-                  // 添加描述（如果有，否则使用占位符）
-                  if (task.description) {
-                    taskLine += `\n  > ${task.description}`;
-                  } else {
-                    taskLine += `\n  > _暂无描述_`;
-                  }
-
-                  // 添加反馈（如果有，否则使用占位符）
-                  if (task.feedback) {
-                    taskLine += `\n  💭 ${task.feedback}`;
-                  } else {
-                    taskLine += `\n  💭 _暂无反馈_`;
-                  }
-
-                  return taskLine;
-                })
-                .join("\n\n");
-
-              const newTasksSection = existingTasksText
-                ? `${existingTasksText}\n${newTasksList}`
-                : newTasksList;
-
-              updatedContent = existingContent.replace(
-                completedSectionRegex,
-                `## 今日完成\n${newTasksSection}\n`,
-              );
-            } else {
-              // 没有新任务，不更新内容
-              updatedContent = existingContent;
-            }
-          } else {
-            // 如果没有找到"今日完成"部分，在开头添加
-            updatedContent = `## 今日完成\n${completedTasksList}\n\n${existingContent}`;
-          }
-
-          // 只有在内容有变化时才更新
-          if (updatedContent !== existingContent) {
-            journal = await ctx.db.journal.update({
-              where: { id: existingJournal.id },
-              data: {
-                content: updatedContent,
-                template: input.templateName,
-              },
-            });
-
-            // 计算实际添加的新任务数量（使用相同的去重逻辑）
-            const existingTasksText = match ? match[1]?.trim() || "" : "";
-            const existingTaskTitles = new Set<string>();
-            if (existingTasksText) {
-              const existingTaskLines = existingTasksText
-                .split("\n")
-                .filter((line) => line.trim());
-              existingTaskLines.forEach((line) => {
-                const taskMatch =
-                  /^-\s*(?:\[x\]\s*)?(?:\*\*)?(.+?)(?:\*\*)?(?:\s*\([^)]+\))?(?:\s*\[[^\]]+\])?(?:\s*#.*)?$/.exec(
-                    line,
-                  );
-                if (taskMatch?.[1]) {
-                  existingTaskTitles.add(taskMatch[1].trim());
-                }
-              });
-            }
-            const newTasksCount = completedTasks.filter(
-              (task) => !existingTaskTitles.has(task.title),
-            ).length;
-
-            return {
-              success: true,
-              message: `已更新当天日记，添加了 ${newTasksCount} 个新完成的任务`,
-              journal,
-            };
-          } else {
-            return {
-              success: true,
-              message: "当天日记已包含所有完成的任务，无需更新",
-              journal: existingJournal,
-            };
-          }
-        } else {
-          // 创建新日记
-          journal = await ctx.db.journal.create({
-            data: {
-              date: normalizedDate,
-              content: templateContent,
-              template: input.templateName,
-              createdById: ctx.session.user.id,
-            },
-          });
+        // 转换返回格式以保持兼容性
+        if (result.success) {
+          // 获取生成的日记对象
+          const journal = result.journalId ? await ctx.db.journal.findUnique({
+            where: { id: result.journalId },
+          }) : null;
 
           return {
             success: true,
-            message: `已创建新日记，包含 ${completedTasks.length} 个完成的任务`,
+            message: result.message,
             journal,
+          };
+        } else {
+          return {
+            success: false,
+            message: result.message,
           };
         }
       } catch (error) {

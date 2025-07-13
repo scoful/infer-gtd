@@ -627,7 +627,12 @@ export const taskRouter = createTRPCRouter({
             }
 
             if (shouldGenerate) {
-              await autoGenerateJournalForUser(ctx.session.user.id);
+              await autoGenerateJournalForUser(
+                ctx.session.user.id,
+                new Date(),
+                false, // 不强制生成，遵循用户设置
+                "任务完成自动生成", // 模板名称
+              );
             }
           } catch (error) {
             // 日记生成失败不影响任务状态更新
@@ -1136,7 +1141,12 @@ export const taskRouter = createTRPCRouter({
           }
 
           if (shouldGenerate) {
-            await autoGenerateJournalForUser(ctx.session.user.id);
+            await autoGenerateJournalForUser(
+              ctx.session.user.id,
+              new Date(),
+              false, // 不强制生成，遵循用户设置
+              "任务完成自动生成", // 模板名称
+            );
           }
         } catch (error) {
           // 日记生成失败不影响任务完成
@@ -2020,7 +2030,12 @@ export const taskRouter = createTRPCRouter({
             }
 
             if (shouldGenerate) {
-              await autoGenerateJournalForUser(ctx.session.user.id);
+              await autoGenerateJournalForUser(
+                ctx.session.user.id,
+                new Date(),
+                false, // 不强制生成，遵循用户设置
+                "任务完成自动生成", // 模板名称
+              );
             }
           } catch (error) {
             // 日记生成失败不影响任务更新
