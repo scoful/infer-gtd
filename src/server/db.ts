@@ -32,7 +32,11 @@ const createPrismaClient = () => {
   // 监听数据库查询事件
   prisma.$on("query", (e) => {
     if (env.NODE_ENV === "development") {
-      logDatabaseOperation("query", "unknown", e.duration, {
+      // 尝试从SQL查询中解析表名
+      const tableMatch = e.query.match(/FROM\s+"?(\w+)"?\.?"?(\w+)"?/i);
+      const tableName = tableMatch?.[2] ?? "unknown";
+
+      logDatabaseOperation("query", tableName, e.duration, {
         query: e.query,
         params: e.params,
         target: e.target,
