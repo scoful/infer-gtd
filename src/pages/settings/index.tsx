@@ -70,14 +70,15 @@ function SettingsPage() {
     dailySchedule?: boolean;
   }
 
-  const autoJournalSettings = (settings?.autoJournalGeneration as AutoJournalSettings) || {};
+  const autoJournalSettings =
+    (settings?.autoJournalGeneration as AutoJournalSettings) || {};
 
   // 处理设置更新
   const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
     // 确保保留当前的role字段
     const settingsWithRole: Partial<UserSettings> = {
       ...newSettings,
-      role: settings?.role || "user", // 保留现有role或默认为user
+      role: (settings?.role as "user" | "admin") || "user", // 保留现有role或默认为user
     };
     updateSettings.mutate({ settings: settingsWithRole });
   };
@@ -171,19 +172,23 @@ function SettingsPage() {
                       <label className="relative inline-flex cursor-pointer items-center">
                         <input
                           type="checkbox"
-                          checked={
-                            autoJournalSettings?.dailySchedule ??
-                            true
-                          }
+                          checked={autoJournalSettings?.dailySchedule ?? true}
                           onChange={(e) =>
                             handleUpdateSettings({
                               autoJournalGeneration: {
-                                templateName: autoJournalSettings.templateName || "默认模板",
-                                includeTimeSpent: autoJournalSettings.includeTimeSpent ?? true,
-                                includeProject: autoJournalSettings.includeProject ?? true,
-                                includeTags: autoJournalSettings.includeTags ?? true,
-                                scheduleTime: autoJournalSettings.scheduleTime || "23:55",
-                                onTaskComplete: autoJournalSettings.onTaskComplete ?? true,
+                                templateName:
+                                  autoJournalSettings.templateName ||
+                                  "默认模板",
+                                includeTimeSpent:
+                                  autoJournalSettings.includeTimeSpent ?? true,
+                                includeProject:
+                                  autoJournalSettings.includeProject ?? true,
+                                includeTags:
+                                  autoJournalSettings.includeTags ?? true,
+                                scheduleTime:
+                                  autoJournalSettings.scheduleTime || "23:55",
+                                onTaskComplete:
+                                  autoJournalSettings.onTaskComplete ?? true,
                                 dailySchedule: e.target.checked,
                               },
                             })
@@ -195,7 +200,7 @@ function SettingsPage() {
                     </div>
 
                     {/* 定时生成时间 */}
-                    {settings?.autoJournalGeneration?.dailySchedule && (
+                    {autoJournalSettings.dailySchedule && (
                       <div>
                         <label className="mb-2 block text-sm font-medium text-gray-700">
                           定时生成时间
@@ -204,18 +209,24 @@ function SettingsPage() {
                           <ClockIcon className="h-5 w-5 text-gray-400" />
                           <input
                             type="time"
-                            value={
-                              autoJournalSettings.scheduleTime || "23:55"
-                            }
+                            value={autoJournalSettings.scheduleTime || "23:55"}
                             onChange={(e) =>
                               handleUpdateSettings({
                                 autoJournalGeneration: {
-                                  templateName: autoJournalSettings.templateName || "默认模板",
-                                  includeTimeSpent: autoJournalSettings.includeTimeSpent ?? true,
-                                  includeProject: autoJournalSettings.includeProject ?? true,
-                                  includeTags: autoJournalSettings.includeTags ?? true,
-                                  onTaskComplete: autoJournalSettings.onTaskComplete ?? true,
-                                  dailySchedule: autoJournalSettings.dailySchedule ?? true,
+                                  templateName:
+                                    autoJournalSettings.templateName ||
+                                    "默认模板",
+                                  includeTimeSpent:
+                                    autoJournalSettings.includeTimeSpent ??
+                                    true,
+                                  includeProject:
+                                    autoJournalSettings.includeProject ?? true,
+                                  includeTags:
+                                    autoJournalSettings.includeTags ?? true,
+                                  onTaskComplete:
+                                    autoJournalSettings.onTaskComplete ?? true,
+                                  dailySchedule:
+                                    autoJournalSettings.dailySchedule ?? true,
                                   scheduleTime: e.target.value,
                                 },
                               })
@@ -241,12 +252,19 @@ function SettingsPage() {
                             onChange={(e) =>
                               handleUpdateSettings({
                                 autoJournalGeneration: {
-                                  templateName: autoJournalSettings.templateName || "默认模板",
-                                  includeProject: autoJournalSettings.includeProject ?? true,
-                                  includeTags: autoJournalSettings.includeTags ?? true,
-                                  scheduleTime: autoJournalSettings.scheduleTime || "23:55",
-                                  onTaskComplete: autoJournalSettings.onTaskComplete ?? true,
-                                  dailySchedule: autoJournalSettings.dailySchedule ?? true,
+                                  templateName:
+                                    autoJournalSettings.templateName ||
+                                    "默认模板",
+                                  includeProject:
+                                    autoJournalSettings.includeProject ?? true,
+                                  includeTags:
+                                    autoJournalSettings.includeTags ?? true,
+                                  scheduleTime:
+                                    autoJournalSettings.scheduleTime || "23:55",
+                                  onTaskComplete:
+                                    autoJournalSettings.onTaskComplete ?? true,
+                                  dailySchedule:
+                                    autoJournalSettings.dailySchedule ?? true,
                                   includeTimeSpent: e.target.checked,
                                 },
                               })
@@ -261,18 +279,24 @@ function SettingsPage() {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={
-                              autoJournalSettings.includeProject ?? true
-                            }
+                            checked={autoJournalSettings.includeProject ?? true}
                             onChange={(e) =>
                               handleUpdateSettings({
                                 autoJournalGeneration: {
-                                  templateName: autoJournalSettings.templateName || "默认模板",
-                                  includeTimeSpent: autoJournalSettings.includeTimeSpent ?? true,
-                                  includeTags: autoJournalSettings.includeTags ?? true,
-                                  scheduleTime: autoJournalSettings.scheduleTime || "23:55",
-                                  onTaskComplete: autoJournalSettings.onTaskComplete ?? true,
-                                  dailySchedule: autoJournalSettings.dailySchedule ?? true,
+                                  templateName:
+                                    autoJournalSettings.templateName ||
+                                    "默认模板",
+                                  includeTimeSpent:
+                                    autoJournalSettings.includeTimeSpent ??
+                                    true,
+                                  includeTags:
+                                    autoJournalSettings.includeTags ?? true,
+                                  scheduleTime:
+                                    autoJournalSettings.scheduleTime || "23:55",
+                                  onTaskComplete:
+                                    autoJournalSettings.onTaskComplete ?? true,
+                                  dailySchedule:
+                                    autoJournalSettings.dailySchedule ?? true,
                                   includeProject: e.target.checked,
                                 },
                               })
@@ -287,18 +311,24 @@ function SettingsPage() {
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={
-                              autoJournalSettings.includeTags ?? true
-                            }
+                            checked={autoJournalSettings.includeTags ?? true}
                             onChange={(e) =>
                               handleUpdateSettings({
                                 autoJournalGeneration: {
-                                  templateName: autoJournalSettings.templateName || "默认模板",
-                                  includeTimeSpent: autoJournalSettings.includeTimeSpent ?? true,
-                                  includeProject: autoJournalSettings.includeProject ?? true,
-                                  scheduleTime: autoJournalSettings.scheduleTime || "23:55",
-                                  onTaskComplete: autoJournalSettings.onTaskComplete ?? true,
-                                  dailySchedule: autoJournalSettings.dailySchedule ?? true,
+                                  templateName:
+                                    autoJournalSettings.templateName ||
+                                    "默认模板",
+                                  includeTimeSpent:
+                                    autoJournalSettings.includeTimeSpent ??
+                                    true,
+                                  includeProject:
+                                    autoJournalSettings.includeProject ?? true,
+                                  scheduleTime:
+                                    autoJournalSettings.scheduleTime || "23:55",
+                                  onTaskComplete:
+                                    autoJournalSettings.onTaskComplete ?? true,
+                                  dailySchedule:
+                                    autoJournalSettings.dailySchedule ?? true,
                                   includeTags: e.target.checked,
                                 },
                               })

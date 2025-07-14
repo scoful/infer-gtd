@@ -41,26 +41,26 @@ const createPrismaClient = () => {
       } else if (e.query.includes("FROM")) {
         // 匹配 FROM "schema"."table" 或 FROM table 格式
         const tableMatch =
-          (/FROM\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query)) ||
-          (/FROM\s+"?(\w+)"?/i.exec(e.query));
+          /FROM\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query) ||
+          /FROM\s+"?(\w+)"?/i.exec(e.query);
         tableName = tableMatch?.[1] ?? "unknown";
       } else if (e.query.includes("INSERT INTO")) {
         // 匹配 INSERT INTO "schema"."table" 格式
         const insertMatch =
-          (/INSERT INTO\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query)) ||
-          (/INSERT INTO\s+"?(\w+)"?/i.exec(e.query));
+          /INSERT INTO\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query) ||
+          /INSERT INTO\s+"?(\w+)"?/i.exec(e.query);
         tableName = insertMatch?.[1] ?? "unknown";
       } else if (e.query.includes("UPDATE")) {
         // 匹配 UPDATE "schema"."table" 格式
         const updateMatch =
-          (/UPDATE\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query)) ||
-          (/UPDATE\s+"?(\w+)"?/i.exec(e.query));
+          /UPDATE\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query) ||
+          /UPDATE\s+"?(\w+)"?/i.exec(e.query);
         tableName = updateMatch?.[1] ?? "unknown";
       } else if (e.query.includes("DELETE FROM")) {
         // 匹配 DELETE FROM "schema"."table" 格式
         const deleteMatch =
-          (/DELETE FROM\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query)) ||
-          (/DELETE FROM\s+"?(\w+)"?/i.exec(e.query));
+          /DELETE FROM\s+"?(?:\w+)"?\."?(\w+)"?/i.exec(e.query) ||
+          /DELETE FROM\s+"?(\w+)"?/i.exec(e.query);
         tableName = deleteMatch?.[1] ?? "unknown";
       }
 
