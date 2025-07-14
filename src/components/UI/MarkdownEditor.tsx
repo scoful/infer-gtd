@@ -26,6 +26,7 @@ interface MarkdownEditorProps {
   onAutoSave?: (value: string) => void; // 新增：自动保存回调
   autoSaveType?: "local" | "server"; // 新增：自动保存类型
   autoSaveStatus?: "saved" | "saving" | "unsaved"; // 新增：外部控制的保存状态
+  onCtrlEnterSave?: () => void; // 新增：Ctrl+Enter 保存回调
 }
 
 export default function MarkdownEditor({
@@ -42,6 +43,7 @@ export default function MarkdownEditor({
   onAutoSave,
   autoSaveType = "server",
   autoSaveStatus,
+  onCtrlEnterSave,
 }: MarkdownEditorProps) {
   const [mounted, setMounted] = useState(false);
   const [currentPreview, setCurrentPreview] = useState<
@@ -92,6 +94,37 @@ export default function MarkdownEditor({
     };
   }, [mounted]);
 
+  // 专门为 Ctrl+Enter 添加的事件监听器
+  useEffect(() => {
+    if (!mounted || !onCtrlEnterSave) return;
+
+    const handleCtrlEnterKeyDown = (event: KeyboardEvent) => {
+      // 检查是否是 Ctrl+Enter
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        // 检查焦点是否在当前编辑器内
+        const activeElement = document.activeElement;
+        if (activeElement && activeElement.tagName === "TEXTAREA") {
+          const mdEditorContainer = activeElement.closest(".w-md-editor");
+          if (mdEditorContainer) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            // 立即执行保存
+            onCtrlEnterSave();
+          }
+        }
+      }
+    };
+
+    // 使用捕获阶段监听，优先级更高
+    document.addEventListener('keydown', handleCtrlEnterKeyDown, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleCtrlEnterKeyDown, true);
+    };
+  }, [mounted, onCtrlEnterSave]);
+
   // 初始化lastSavedValue
   useEffect(() => {
     if (mounted) {
@@ -113,7 +146,7 @@ export default function MarkdownEditor({
 
   // 全局键盘事件监听器
   useEffect(() => {
-    if (!mounted || !enableJetBrainsShortcuts) return;
+    if (!mounted) return;
 
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
       // 检查焦点是否在MDEditor的textarea上
@@ -126,6 +159,18 @@ export default function MarkdownEditor({
 
       const textarea = activeElement as HTMLTextAreaElement;
       const { selectionStart, selectionEnd, value: textValue } = textarea;
+
+      // Ctrl+Enter - 触发保存（如果提供了回调）- 始终可用
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        if (onCtrlEnterSave) {
+          onCtrlEnterSave();
+        }
+        return;
+      }
+
+      // 以下快捷键需要启用 JetBrains 快捷键才生效
+      if (!enableJetBrainsShortcuts) return;
 
       // Ctrl+Y - 删除当前行
       if (event.ctrlKey && event.key === "y") {
@@ -331,8 +376,20 @@ export default function MarkdownEditor({
     );
   }
 
+  // 处理容器级别的键盘事件
+  const handleContainerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    // Ctrl+Enter - 触发保存
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      if (onCtrlEnterSave) {
+        onCtrlEnterSave();
+      }
+    }
+  };
+
   return (
-    <div className={className}>
+    <div className={className} onKeyDown={handleContainerKeyDown}>
       <PreviewModeToggle />
       <div
         className={`overflow-hidden rounded-md border ${
@@ -353,6 +410,20 @@ export default function MarkdownEditor({
               lineHeight: 1.6,
               fontFamily:
                 '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+            },
+            onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+              // Ctrl+Enter - 触发保存
+              if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                event.preventDefault();
+                event.stopPropagation();
+                if (onCtrlEnterSave) {
+                  // 使用 setTimeout 确保事件处理完成后再执行
+                  setTimeout(() => {
+                    onCtrlEnterSave();
+                  }, 0);
+                }
+                return false;
+              }
             },
           }}
           previewOptions={{

@@ -179,11 +179,25 @@ export default function NoteModal({
       }
     };
 
-    // 阻止全屏模式下的 ESC 键关闭模态框
+    // 处理全屏模式下的键盘事件
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isEditorFullscreen && event.key === 'Escape') {
-        // 让编辑器处理 ESC 键，不要关闭模态框
-        event.stopPropagation();
+      if (isEditorFullscreen) {
+        // ESC 键：让编辑器处理，不要关闭模态框
+        if (event.key === 'Escape') {
+          event.stopPropagation();
+        }
+
+        // Ctrl+Enter：触发保存
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          // 触发保存操作
+          const mockEvent = {
+            preventDefault: () => {},
+          } as React.FormEvent;
+          void handleSubmit(mockEvent);
+        }
       }
     };
 
@@ -477,6 +491,13 @@ export default function NoteModal({
                             id: noteId,
                             ...saveData,
                           });
+                        }}
+                        onCtrlEnterSave={() => {
+                          // Ctrl+Enter 快捷键保存
+                          const mockEvent = {
+                            preventDefault: () => {},
+                          } as React.FormEvent;
+                          void handleSubmit(mockEvent);
                         }}
                       />
                     </div>
