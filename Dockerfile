@@ -104,8 +104,9 @@ COPY --from=builder /app/prisma ./prisma
 # 复制版本信息文件
 COPY --from=builder /app/version.json ./public/version.json
 
-# 复制启动脚本
+# 复制启动脚本和管理员设置脚本
 COPY scripts/docker-entrypoint.sh ./scripts/
+COPY scripts/setup-admin.js ./scripts/
 RUN chmod +x ./scripts/docker-entrypoint.sh
 
 # 生成 Prisma 客户端（使用standalone中的依赖）
