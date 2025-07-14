@@ -24,9 +24,9 @@ export interface AutoGenerateResult {
 export async function autoGenerateJournalForUser(
   userId: string,
   targetDate: Date = new Date(),
-  forceGenerate: boolean = false, // 是否强制生成（忽略用户设置）
-  templateName: string = "默认模板", // 模板名称
-  respectIncludeSettings: boolean = true, // 是否遵循包含信息设置
+  forceGenerate = false, // 是否强制生成（忽略用户设置）
+  templateName = "默认模板", // 模板名称
+  respectIncludeSettings = true, // 是否遵循包含信息设置
 ): Promise<AutoGenerateResult> {
   try {
     // 添加调试日志

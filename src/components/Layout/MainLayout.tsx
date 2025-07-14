@@ -209,8 +209,8 @@ function getNavigationItems(isAdmin: boolean): NavigationItem[] {
     );
     if (settingsIndex !== -1 && baseNavigation[settingsIndex]?.children) {
       baseNavigation[settingsIndex] = {
-        ...baseNavigation[settingsIndex]!,
-        children: baseNavigation[settingsIndex]!.children!.filter(
+        ...baseNavigation[settingsIndex],
+        children: baseNavigation[settingsIndex].children.filter(
           (child) => child.name !== "系统管理",
         ),
       };

@@ -18,8 +18,8 @@ interface ScheduledTask {
 }
 
 class TaskScheduler {
-  private tasks: Map<string, ScheduledTask> = new Map();
-  private intervals: Map<string, NodeJS.Timeout> = new Map();
+  private tasks = new Map<string, ScheduledTask>();
+  private intervals = new Map<string, NodeJS.Timeout>();
   private isRunning = false;
 
   constructor() {
@@ -309,7 +309,7 @@ class TaskScheduler {
    * 自动生成日记任务处理器
    * 检查每个用户的设置，在正确的时间生成日记
    */
-  private async handleAutoGenerateJournal(forceExecute: boolean = false) {
+  private async handleAutoGenerateJournal(forceExecute = false) {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
