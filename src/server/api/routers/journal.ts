@@ -746,6 +746,7 @@ export const journalRouter = createTRPCRouter({
           input.date || new Date(),
           false, // 不强制生成，遵循用户设置
           input.templateName || "默认模板",
+          true, // 遵循用户的包含信息设置
         );
 
         // 转换返回格式以保持兼容性

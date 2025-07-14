@@ -26,6 +26,7 @@ export async function autoGenerateJournalForUser(
   targetDate: Date = new Date(),
   forceGenerate: boolean = false, // 是否强制生成（忽略用户设置）
   templateName: string = "默认模板", // 模板名称
+  respectIncludeSettings: boolean = true, // 是否遵循包含信息设置
 ): Promise<AutoGenerateResult> {
   try {
     // 添加调试日志
@@ -120,7 +121,7 @@ export async function autoGenerateJournalForUser(
     let includeProject = true;
     let includeTags = true;
 
-    if (!forceGenerate) {
+    if (respectIncludeSettings) {
       const user = await db.user.findUnique({
         where: { id: userId },
         select: { settings: true },
@@ -131,9 +132,23 @@ export async function autoGenerateJournalForUser(
           const settings = JSON.parse(user.settings);
           const autoJournalSettings = settings.autoJournalGeneration;
 
-          includeTimeSpent = autoJournalSettings?.includeTimeSpent !== false;
-          includeProject = autoJournalSettings?.includeProject !== false;
-          includeTags = autoJournalSettings?.includeTags !== false;
+          // 明确检查设置值，默认为true
+          includeTimeSpent = autoJournalSettings?.includeTimeSpent ?? true;
+          includeProject = autoJournalSettings?.includeProject ?? true;
+          includeTags = autoJournalSettings?.includeTags ?? true;
+
+          // 添加调试日志
+          serverLoggers.app.info(
+            {
+              userId,
+              respectIncludeSettings,
+              includeTimeSpent,
+              includeProject,
+              includeTags,
+              rawSettings: autoJournalSettings,
+            },
+            "包含信息设置读取结果",
+          );
         } catch (error) {
           // 解析失败，使用默认设置
         }
@@ -508,6 +523,7 @@ export async function autoGenerateJournalForAllUsers(
           targetDate,
           true, // 强制生成，因为已经检查过设置
           "定时自动生成", // 模板名称
+          true, // 遵循用户的包含信息设置
         );
         if (result.success) {
           successCount++;

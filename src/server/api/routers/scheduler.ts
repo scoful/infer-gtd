@@ -46,6 +46,7 @@ export const schedulerRouter = createTRPCRouter({
           targetDate,
           true, // 手动执行时强制生成，忽略用户设置
           "手动生成", // 模板名称
+          false, // 管理员手动执行时忽略包含信息设置，显示完整信息
         );
 
         return {
