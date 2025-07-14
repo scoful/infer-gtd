@@ -268,8 +268,8 @@ ${completedTasksList}
         // 提取现有任务标题（去重用）- 只匹配新格式
         const existingTaskTitles = new Set<string>();
         const existingTaskLines = existingTasksSection
-          .split("\n")
-          .filter((line) => line.trim());
+          ? existingTasksSection.split("\n").filter((line) => line.trim())
+          : [];
         existingTaskLines.forEach((line) => {
           // 只匹配新格式：- [x] **任务标题**
           const taskMatch = /^-\s*\[x\]\s*\*\*(.+?)\*\*/.exec(line);
@@ -351,7 +351,7 @@ ${completedTasksList}
 
           // 更新内容：在现有任务后追加新任务（使用双换行分隔）
           const updatedTasksSection =
-            existingTasksSection.trim() + "\n\n" + newTasksList;
+            (existingTasksSection?.trim() || "") + "\n\n" + newTasksList;
           const updatedContent = existingContent.replace(
             completedSectionRegex,
             `## 今日完成\n${updatedTasksSection}\n`,

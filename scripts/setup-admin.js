@@ -12,6 +12,9 @@ import { PrismaClient } from "@prisma/client";
 
 const db = new PrismaClient();
 
+/**
+ * @param {string} userEmail
+ */
 async function setUserAsAdmin(userEmail) {
   try {
     const user = await db.user.findUnique({
@@ -136,7 +139,7 @@ async function main() {
   const email = args[0];
 
   // 简单的邮箱格式验证
-  if (!email.includes("@")) {
+  if (!email || !email.includes("@")) {
     console.error("❌ 请提供有效的邮箱地址");
     return;
   }

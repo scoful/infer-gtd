@@ -27,7 +27,7 @@ function SchedulerPage() {
   const router = useRouter();
   const { showSuccess, showError } = useGlobalNotifications();
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0],
+    new Date().toISOString().split("T")[0]!,
   );
 
   // 获取调度器状态
@@ -75,7 +75,7 @@ function SchedulerPage() {
   };
 
   // 格式化下次执行时间
-  const formatNextRun = (nextRun: string | null) => {
+  const formatNextRun = (nextRun: string | Date | null) => {
     if (!nextRun) return "未调度";
 
     const date = new Date(nextRun);
