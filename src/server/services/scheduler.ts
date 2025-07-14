@@ -114,12 +114,12 @@ class TaskScheduler {
     const delay = nextRun.getTime() - Date.now();
 
     // 设置初始延迟执行
-    const initialTimeout = setTimeout(() => {
-      this.executeTask(task);
+    setTimeout(() => {
+      void this.executeTask(task);
 
       // 设置周期性执行
       const interval = setInterval(() => {
-        this.executeTask(task);
+        void this.executeTask(task);
       }, intervalMs);
 
       this.intervals.set(taskId, interval);
