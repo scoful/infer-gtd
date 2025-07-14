@@ -3,6 +3,12 @@
 # 日志查看脚本
 # 提供便捷的日志查看和搜索功能
 
+# 加载 .env 文件中的环境变量
+if [ -f ".env" ]; then
+    # 导出 .env 文件中的变量（忽略注释和空行）
+    export $(grep -v '^#' .env | grep -v '^$' | xargs)
+fi
+
 LOG_DIR="${LOG_DIR:-./logs}"
 LOG_FILE="$LOG_DIR/app.log"
 

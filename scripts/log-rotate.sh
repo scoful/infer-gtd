@@ -3,6 +3,12 @@
 # 日志轮转脚本
 # 用于定期清理和压缩应用日志文件
 
+# 加载 .env 文件中的环境变量
+if [ -f ".env" ]; then
+    # 导出 .env 文件中的变量（忽略注释和空行）
+    export $(grep -v '^#' .env | grep -v '^$' | xargs)
+fi
+
 LOG_DIR="${LOG_DIR:-/app/logs}"
 LOG_FILE="$LOG_DIR/app.log"
 MAX_SIZE="${LOG_MAX_SIZE:-100M}"
