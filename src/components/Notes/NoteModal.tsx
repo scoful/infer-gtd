@@ -41,6 +41,9 @@ export default function NoteModal({
   const isEditing = true;
   const { showSuccess, showError } = useGlobalNotifications();
 
+  // 添加状态来跟踪编辑器是否处于全屏模式
+  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
+
   // 获取笔记详情（编辑模式）
   const {
     data: noteDetail,
@@ -123,6 +126,13 @@ export default function NoteModal({
         // 创建模式：重置表单为默认值
         resetForm();
       }
+    } else {
+      // 模态框关闭时，确保清理全屏相关的样式
+      setIsEditorFullscreen(false);
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('w-md-editor-fullscreen');
+      document.documentElement.classList.remove('w-md-editor-fullscreen');
     }
   }, [isOpen, isEditing, noteDetail]);
 
@@ -136,12 +146,97 @@ export default function NoteModal({
     });
   };
 
+  // 监听全屏状态变化和点击事件
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreen = !!document.fullscreenElement;
+      setIsEditorFullscreen(isFullscreen);
+
+      // 如果退出全屏，确保恢复页面滚动
+      if (!isFullscreen) {
+        // 延迟执行，确保全屏退出动画完成
+        setTimeout(() => {
+          document.body.style.overflow = '';
+          document.documentElement.style.overflow = '';
+          document.body.classList.remove('w-md-editor-fullscreen');
+          document.documentElement.classList.remove('w-md-editor-fullscreen');
+        }, 100);
+      }
+    };
+
+    // 阻止全屏模式下的点击事件冒泡到 Dialog
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (isEditorFullscreen) {
+        // 检查点击是否来自编辑器外部
+        const target = event.target as Element;
+        const editorElement = document.querySelector('.w-md-editor-fullscreen');
+
+        if (editorElement && !editorElement.contains(target)) {
+          // 阻止事件冒泡，防止触发 Dialog 的关闭
+          event.stopPropagation();
+          event.preventDefault();
+        }
+      }
+    };
+
+    // 阻止全屏模式下的 ESC 键关闭模态框
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditorFullscreen && event.key === 'Escape') {
+        // 让编辑器处理 ESC 键，不要关闭模态框
+        event.stopPropagation();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    document.addEventListener('click', handleDocumentClick, true); // 使用捕获阶段
+    document.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      document.removeEventListener('click', handleDocumentClick, true);
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [isEditorFullscreen]);
+
   const handleClose = () => {
+    // 如果编辑器处于全屏模式，不允许关闭模态框
+    if (isEditorFullscreen) {
+      console.log('阻止模态框关闭：编辑器处于全屏模式');
+      return;
+    }
+
+    // 确保清理任何残留的样式
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.classList.remove('w-md-editor-fullscreen');
+    document.documentElement.classList.remove('w-md-editor-fullscreen');
+
     onClose();
     if (!isEditing) {
       resetForm();
     }
   };
+
+  // 创建一个更安全的关闭处理函数
+  const safeHandleClose = useCallback(() => {
+    // 双重检查全屏状态
+    const isCurrentlyFullscreen = !!document.fullscreenElement ||
+                                  document.body.classList.contains('w-md-editor-fullscreen') ||
+                                  !!document.querySelector('.w-md-editor-fullscreen');
+
+    if (isCurrentlyFullscreen) {
+      console.log('阻止模态框关闭：检测到全屏状态');
+      return;
+    }
+
+    handleClose();
+  }, [isEditorFullscreen]);
 
   // 处理提交
   const handleSubmit = useCallback(
@@ -210,7 +305,12 @@ export default function NoteModal({
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+      <Dialog
+        as="div"
+        className="relative z-50"
+        onClose={safeHandleClose}
+        static={isEditorFullscreen}
+      >
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"

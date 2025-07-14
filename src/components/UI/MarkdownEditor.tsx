@@ -58,6 +58,40 @@ export default function MarkdownEditor({
     setMounted(true);
   }, []);
 
+  // 监听全屏状态变化，确保正确处理样式
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreen = !!document.fullscreenElement;
+
+      // 如果退出全屏，确保恢复页面滚动
+      if (!isFullscreen) {
+        // 延迟执行，确保 MDEditor 的清理逻辑完成
+        setTimeout(() => {
+          document.body.style.overflow = '';
+          document.documentElement.style.overflow = '';
+
+          // 移除可能的全屏相关类名
+          document.body.classList.remove('w-md-editor-fullscreen');
+          document.documentElement.classList.remove('w-md-editor-fullscreen');
+        }, 100);
+      }
+    };
+
+    if (mounted) {
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    }
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, [mounted]);
+
   // 初始化lastSavedValue
   useEffect(() => {
     if (mounted) {
@@ -65,6 +99,17 @@ export default function MarkdownEditor({
       setSaveStatus("saved");
     }
   }, [mounted]); // 只在mounted变化时执行
+
+  // 组件卸载时清理全屏相关样式
+  useEffect(() => {
+    return () => {
+      // 确保组件卸载时恢复页面滚动
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('w-md-editor-fullscreen');
+      document.documentElement.classList.remove('w-md-editor-fullscreen');
+    };
+  }, []);
 
   // 全局键盘事件监听器
   useEffect(() => {
