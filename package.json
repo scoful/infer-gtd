@@ -1,6 +1,6 @@
 {
   "name": "infer-gtd",
-  "version": "1.10.30",
+  "version": "1.10.31",
   "private": true,
   "type": "module",
   "scripts": {
