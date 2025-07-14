@@ -120,7 +120,6 @@
 
 ### 调试工具
 
-- 测试页面：`/test-journal-auto`（开发环境）
 - 管理页面：`/admin/scheduler`
 - 设置页面：`/settings`
 
