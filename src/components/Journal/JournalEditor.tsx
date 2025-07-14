@@ -189,8 +189,6 @@ export default function JournalEditor({
               使用模板
             </button>
           )}
-
-
         </div>
       </div>
 

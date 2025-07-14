@@ -752,9 +752,11 @@ export const journalRouter = createTRPCRouter({
         // 转换返回格式以保持兼容性
         if (result.success) {
           // 获取生成的日记对象
-          const journal = result.journalId ? await ctx.db.journal.findUnique({
-            where: { id: result.journalId },
-          }) : null;
+          const journal = result.journalId
+            ? await ctx.db.journal.findUnique({
+                where: { id: result.journalId },
+              })
+            : null;
 
           return {
             success: true,

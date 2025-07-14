@@ -1,6 +1,6 @@
 /**
  * 定时任务调度器
- * 
+ *
  * 功能：
  * 1. 每天晚上11:55自动生成日记
  * 2. 可扩展的定时任务管理
@@ -61,7 +61,7 @@ class TaskScheduler {
     }
 
     this.isRunning = true;
-    
+
     for (const [taskId, task] of this.tasks) {
       if (task.enabled) {
         this.scheduleTask(taskId, task);
@@ -69,7 +69,10 @@ class TaskScheduler {
     }
 
     serverLoggers.app.info(
-      { enabledTasks: Array.from(this.tasks.values()).filter(t => t.enabled).length },
+      {
+        enabledTasks: Array.from(this.tasks.values()).filter((t) => t.enabled)
+          .length,
+      },
       "定时任务调度器已启动",
     );
   }
@@ -97,7 +100,7 @@ class TaskScheduler {
    */
   private scheduleTask(taskId: string, task: ScheduledTask) {
     const intervalMs = this.cronToInterval(task.cronExpression);
-    
+
     if (intervalMs === null) {
       serverLoggers.app.error(
         { taskId, cron: task.cronExpression },
@@ -113,19 +116,19 @@ class TaskScheduler {
     // 设置初始延迟执行
     const initialTimeout = setTimeout(() => {
       this.executeTask(task);
-      
+
       // 设置周期性执行
       const interval = setInterval(() => {
         this.executeTask(task);
       }, intervalMs);
-      
+
       this.intervals.set(taskId, interval);
     }, delay);
 
     serverLoggers.app.info(
-      { 
-        taskId, 
-        name: task.name, 
+      {
+        taskId,
+        name: task.name,
         nextRun: nextRun.toISOString(),
         delayMs: delay,
       },
@@ -138,7 +141,7 @@ class TaskScheduler {
    */
   private async executeTask(task: ScheduledTask) {
     const startTime = Date.now();
-    
+
     try {
       serverLoggers.app.info(
         { taskId: task.id, name: task.name },
@@ -155,9 +158,9 @@ class TaskScheduler {
     } catch (error) {
       const duration = Date.now() - startTime;
       serverLoggers.app.error(
-        { 
-          taskId: task.id, 
-          name: task.name, 
+        {
+          taskId: task.id,
+          name: task.name,
           duration,
           error: error instanceof Error ? error.message : String(error),
         },
@@ -179,7 +182,13 @@ class TaskScheduler {
     const [minute, hour, day, month, weekday] = parts;
 
     // 支持每分钟执行 (* * * * *)
-    if (minute === "*" && hour === "*" && day === "*" && month === "*" && weekday === "*") {
+    if (
+      minute === "*" &&
+      hour === "*" &&
+      day === "*" &&
+      month === "*" &&
+      weekday === "*"
+    ) {
       return 60 * 1000; // 1分钟
     }
 
@@ -284,7 +293,7 @@ class TaskScheduler {
   getTaskStatus() {
     return {
       isRunning: this.isRunning,
-      tasks: Array.from(this.tasks.values()).map(task => ({
+      tasks: Array.from(this.tasks.values()).map((task) => ({
         id: task.id,
         name: task.name,
         cronExpression: task.cronExpression,
@@ -309,8 +318,8 @@ class TaskScheduler {
     if (currentMinute % 10 === 0 || forceExecute) {
       serverLoggers.app.info(
         {
-          time: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`,
-          forceExecute
+          time: `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
+          forceExecute,
         },
         "定时日记生成任务开始检查",
       );
@@ -351,8 +360,12 @@ class TaskScheduler {
                   const scheduleMinute = timeParts[1];
 
                   // 允许1分钟的误差范围
-                  if (scheduleHour !== undefined && scheduleMinute !== undefined &&
-                      currentHour === scheduleHour && Math.abs(currentMinute - scheduleMinute) <= 1) {
+                  if (
+                    scheduleHour !== undefined &&
+                    scheduleMinute !== undefined &&
+                    currentHour === scheduleHour &&
+                    Math.abs(currentMinute - scheduleMinute) <= 1
+                  ) {
                     shouldGenerate = true;
                   }
                 }
@@ -393,8 +406,8 @@ class TaskScheduler {
       if (processedUsers > 0) {
         serverLoggers.app.info(
           {
-            date: now.toISOString().split('T')[0],
-            time: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`,
+            date: now.toISOString().split("T")[0],
+            time: `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
             processed: processedUsers,
             success: successCount,
             failed: failedCount,
@@ -405,7 +418,7 @@ class TaskScheduler {
         // 每10分钟打印一次状态，显示没有用户需要处理
         serverLoggers.app.info(
           {
-            time: `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`,
+            time: `${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`,
             totalUsers: users.length,
           },
           "定时日记生成任务检查完成，无用户需要处理",

@@ -1,6 +1,6 @@
 /**
  * 日记自动生成服务
- * 
+ *
  * 功能：
  * 1. 定时任务：每天晚上11:55自动生成日记
  * 2. 任务完成触发：完成任务时自动更新日记
@@ -102,7 +102,7 @@ export async function autoGenerateJournalForUser(
       {
         userId,
         completedTasksCount: completedTasks.length,
-        taskTitles: completedTasks.map(t => t.title),
+        taskTitles: completedTasks.map((t) => t.title),
       },
       "查询到的完成任务",
     );
@@ -264,7 +264,7 @@ ${completedTasksList}
 
       if (match) {
         const existingTasksSection = match[1];
-        
+
         // 提取现有任务标题（去重用）- 只匹配新格式
         const existingTaskTitles = new Set<string>();
         const existingTaskLines = existingTasksSection
@@ -350,7 +350,8 @@ ${completedTasksList}
             .join("\n\n");
 
           // 更新内容：在现有任务后追加新任务（使用双换行分隔）
-          const updatedTasksSection = existingTasksSection.trim() + "\n\n" + newTasksList;
+          const updatedTasksSection =
+            existingTasksSection.trim() + "\n\n" + newTasksList;
           const updatedContent = existingContent.replace(
             completedSectionRegex,
             `## 今日完成\n${updatedTasksSection}\n`,
@@ -419,7 +420,7 @@ ${completedTasksList}
       { error: error instanceof Error ? error.message : String(error), userId },
       "自动生成日记失败",
     );
-    
+
     return {
       success: false,
       message: "自动生成日记失败",
@@ -504,7 +505,10 @@ export async function autoGenerateJournalForAllUsers(
           } catch (error) {
             // 解析失败，使用默认行为
             serverLoggers.app.warn(
-              { userId: user.id, error: error instanceof Error ? error.message : String(error) },
+              {
+                userId: user.id,
+                error: error instanceof Error ? error.message : String(error),
+              },
               "解析用户设置失败，使用默认行为",
             );
           }
@@ -543,7 +547,7 @@ export async function autoGenerateJournalForAllUsers(
         serverLoggers.app.error(
           {
             userId: user.id,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           },
           "用户日记自动生成失败",
         );
@@ -551,11 +555,11 @@ export async function autoGenerateJournalForAllUsers(
     }
 
     serverLoggers.app.info(
-      { 
-        total: activeUsers.length, 
-        success: successCount, 
+      {
+        total: activeUsers.length,
+        success: successCount,
         failed: failedCount,
-        date: targetDate.toISOString().split('T')[0],
+        date: targetDate.toISOString().split("T")[0],
       },
       "批量日记自动生成完成",
     );
@@ -570,7 +574,7 @@ export async function autoGenerateJournalForAllUsers(
       { error: error instanceof Error ? error.message : String(error) },
       "批量日记自动生成失败",
     );
-    
+
     return {
       success: 0,
       failed: 0,

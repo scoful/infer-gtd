@@ -2,11 +2,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import {
-  BookOpenIcon,
-  ClockIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
+import { BookOpenIcon, ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
@@ -135,8 +131,6 @@ const JournalPage: NextPage = () => {
       void router.push("/journal/new?from=index");
     }
   };
-
-
 
   return (
     <AuthGuard>

@@ -1,14 +1,14 @@
 /**
  * 管理员设置脚本
- * 
+ *
  * 使用方法：
  * node scripts/setup-admin.js <email>
- * 
+ *
  * 例如：
  * node scripts/setup-admin.js admin@example.com
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const db = new PrismaClient();
 
@@ -21,7 +21,7 @@ async function setUserAsAdmin(userEmail) {
 
     if (!user) {
       console.error(`❌ 用户不存在: ${userEmail}`);
-      console.log('请确保用户已经通过OAuth登录过系统');
+      console.log("请确保用户已经通过OAuth登录过系统");
       return false;
     }
 
@@ -70,7 +70,9 @@ async function setUserAsAdmin(userEmail) {
       data: { settings: JSON.stringify(settings) },
     });
 
-    console.log(`✅ 用户 ${user.name || userEmail} (${userEmail}) 已设置为管理员`);
+    console.log(
+      `✅ 用户 ${user.name || userEmail} (${userEmail}) 已设置为管理员`,
+    );
     return true;
   } catch (error) {
     console.error("❌ 设置管理员失败:", error);
@@ -84,7 +86,7 @@ async function listAdminUsers() {
       select: { id: true, email: true, name: true, settings: true },
     });
 
-    const adminUsers = users.filter(user => {
+    const adminUsers = users.filter((user) => {
       if (!user.settings) return false;
       try {
         const settings = JSON.parse(user.settings);
@@ -98,8 +100,8 @@ async function listAdminUsers() {
       console.log("📋 当前没有管理员用户");
     } else {
       console.log("📋 当前管理员用户列表:");
-      adminUsers.forEach(user => {
-        console.log(`  - ${user.name || '未设置姓名'} (${user.email})`);
+      adminUsers.forEach((user) => {
+        console.log(`  - ${user.name || "未设置姓名"} (${user.email})`);
       });
     }
 
@@ -112,7 +114,7 @@ async function listAdminUsers() {
 
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0) {
     console.log("📖 管理员设置脚本");
     console.log("");
@@ -126,23 +128,23 @@ async function main() {
     return;
   }
 
-  if (args[0] === '--list') {
+  if (args[0] === "--list") {
     await listAdminUsers();
     return;
   }
 
   const email = args[0];
-  
+
   // 简单的邮箱格式验证
-  if (!email.includes('@')) {
+  if (!email.includes("@")) {
     console.error("❌ 请提供有效的邮箱地址");
     return;
   }
 
   console.log(`🔧 正在设置 ${email} 为管理员...`);
-  
+
   const success = await setUserAsAdmin(email);
-  
+
   if (success) {
     console.log("");
     console.log("🎉 设置完成！用户现在可以访问管理员功能:");

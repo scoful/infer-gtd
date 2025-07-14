@@ -1,6 +1,6 @@
 /**
  * 定时任务调度器 API 路由
- * 
+ *
  * 功能：
  * 1. 查看调度器状态
  * 2. 手动执行任务
@@ -9,7 +9,11 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  adminProcedure,
+} from "@/server/api/trpc";
 import { taskScheduler } from "@/server/services/scheduler";
 import { autoGenerateJournalForUser } from "@/server/services/journal-auto-generator";
 
@@ -119,7 +123,8 @@ export const schedulerRouter = createTRPCRouter({
             if (autoJournalSettings?.dailySchedule !== false) {
               enabledCount++;
               const scheduleTime = autoJournalSettings?.scheduleTime || "23:55";
-              scheduleStats[scheduleTime] = (scheduleStats[scheduleTime] || 0) + 1;
+              scheduleStats[scheduleTime] =
+                (scheduleStats[scheduleTime] || 0) + 1;
             } else {
               disabledCount++;
             }

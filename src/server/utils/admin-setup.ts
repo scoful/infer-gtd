@@ -1,6 +1,6 @@
 /**
  * 管理员设置工具
- * 
+ *
  * 用于设置用户为管理员角色
  */
 
@@ -140,13 +140,15 @@ export async function checkUserIsAdmin(userEmail: string): Promise<boolean> {
 /**
  * 列出所有管理员用户
  */
-export async function listAdminUsers(): Promise<Array<{ id: string; email: string; name: string }>> {
+export async function listAdminUsers(): Promise<
+  Array<{ id: string; email: string; name: string }>
+> {
   try {
     const users = await db.user.findMany({
       select: { id: true, email: true, name: true, settings: true },
     });
 
-    const adminUsers = users.filter(user => {
+    const adminUsers = users.filter((user) => {
       if (!user.settings) return false;
       try {
         const settings = JSON.parse(user.settings);
@@ -156,7 +158,7 @@ export async function listAdminUsers(): Promise<Array<{ id: string; email: strin
       }
     });
 
-    return adminUsers.map(user => ({
+    return adminUsers.map((user) => ({
       id: user.id,
       email: user.email || "",
       name: user.name || "",

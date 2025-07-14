@@ -1,6 +1,6 @@
 /**
  * 用户设置 API 路由
- * 
+ *
  * 功能：
  * 1. 获取用户设置
  * 2. 更新用户设置
@@ -117,7 +117,9 @@ export const userSettingsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         // 验证设置数据（部分更新）
-        const validatedSettings = userSettingsSchema.partial().parse(input.settings);
+        const validatedSettings = userSettingsSchema
+          .partial()
+          .parse(input.settings);
 
         // 获取当前设置
         const user = await ctx.db.user.findUnique({
@@ -160,7 +162,10 @@ export const userSettingsRouter = createTRPCRouter({
         // 合并新设置，确保role字段被保留
         const updatedSettings: UserSettings = {
           // 保留现有role，除非明确传递了新的role值
-          role: validatedSettings.role !== undefined ? validatedSettings.role : currentSettings.role,
+          role:
+            validatedSettings.role !== undefined
+              ? validatedSettings.role
+              : currentSettings.role,
           autoJournalGeneration: validatedSettings.autoJournalGeneration
             ? {
                 ...currentSettings.autoJournalGeneration,

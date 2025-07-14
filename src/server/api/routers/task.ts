@@ -571,8 +571,6 @@ export const taskRouter = createTRPCRouter({
           return { success: true, message: "任务状态未发生变化" };
         }
 
-
-
         // 更新任务状态
         const updateData: any = { status: toStatus };
 
@@ -606,8 +604,6 @@ export const taskRouter = createTRPCRouter({
             note: input.note,
           },
         });
-
-
 
         return {
           success: true,
@@ -1045,8 +1041,6 @@ export const taskRouter = createTRPCRouter({
           (now.getTime() - task.timerStartedAt.getTime()) / 1000,
         );
 
-
-
         // 查找当前活跃的时间记录
         const activeTimeEntry = await ctx.db.timeEntry.findFirst({
           where: {
@@ -1091,8 +1085,6 @@ export const taskRouter = createTRPCRouter({
             note: "计时结束，任务完成",
           },
         });
-
-
 
         const hours = Math.floor(sessionDuration / 3600);
         const minutes = Math.floor((sessionDuration % 3600) / 60);
@@ -1949,8 +1941,6 @@ export const taskRouter = createTRPCRouter({
             });
           }
         }
-
-
 
         return {
           success: true,

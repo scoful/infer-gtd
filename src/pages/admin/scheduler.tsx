@@ -225,19 +225,19 @@ function SchedulerPage() {
                       <div>下次执行: {formatNextRun(task.nextRun)}</div>
                       {task.id === "auto-generate-journal" &&
                         scheduleStats?.data && (
-                          <div className="mt-2 inline-block rounded-md bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 px-2.5 py-2">
-                            <div className="mb-1.5 text-xs font-semibold text-emerald-800 flex items-center">
-                              <span className="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5"></span>
+                          <div className="mt-2 inline-block rounded-md border border-emerald-200 bg-gradient-to-r from-emerald-50 to-blue-50 px-2.5 py-2">
+                            <div className="mb-1.5 flex items-center text-xs font-semibold text-emerald-800">
+                              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                               用户设置统计
                             </div>
-                            <div className="text-xs text-emerald-700 font-medium">
+                            <div className="text-xs font-medium text-emerald-700">
                               • 启用自动生成：{scheduleStats.data.enabledUsers}/
                               {scheduleStats.data.totalUsers} 人
                             </div>
                             {Object.keys(
                               scheduleStats.data.scheduleDistribution,
                             ).length > 1 && (
-                              <div className="text-xs text-emerald-700 font-medium">
+                              <div className="text-xs font-medium text-emerald-700">
                                 • 生成时间分布：
                                 {Object.entries(
                                   scheduleStats.data.scheduleDistribution,

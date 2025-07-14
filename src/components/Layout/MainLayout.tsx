@@ -204,12 +204,14 @@ function getNavigationItems(isAdmin: boolean): NavigationItem[] {
 
   // 如果不是管理员，移除系统管理子菜单
   if (!isAdmin) {
-    const settingsIndex = baseNavigation.findIndex(item => item.name === "系统设置");
+    const settingsIndex = baseNavigation.findIndex(
+      (item) => item.name === "系统设置",
+    );
     if (settingsIndex !== -1 && baseNavigation[settingsIndex]?.children) {
       baseNavigation[settingsIndex] = {
         ...baseNavigation[settingsIndex]!,
         children: baseNavigation[settingsIndex]!.children!.filter(
-          child => child.name !== "系统管理"
+          (child) => child.name !== "系统管理",
         ),
       };
     }
@@ -225,7 +227,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 获取用户设置以检查管理员权限
   const { data: userSettings } = api.userSettings.get.useQuery(
     {},
-    { enabled: !!sessionData?.user }
+    { enabled: !!sessionData?.user },
   );
 
   // 检查是否为管理员
@@ -565,7 +567,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-900">Infer GTD</h1>
               {isAdmin && (
-                <span className="inline-flex items-center rounded-full bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                <span className="inline-flex items-center rounded-full border border-amber-300 bg-gradient-to-r from-amber-100 to-orange-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
                   <ShieldCheckIcon className="h-3 w-3" />
                 </span>
               )}
@@ -932,7 +934,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         {sessionData.user.name}
                       </div>
                       {isAdmin && (
-                        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        <span className="inline-flex items-center rounded-full border border-amber-300 bg-gradient-to-r from-amber-100 to-orange-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                           <ShieldCheckIcon className="mr-1 h-3 w-3" />
                           管理员
                         </span>
