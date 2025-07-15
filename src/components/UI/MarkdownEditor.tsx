@@ -408,8 +408,7 @@ export default function MarkdownEditor({
             style: {
               fontSize: 14,
               lineHeight: 1.6,
-              fontFamily:
-                '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+              fontFamily: 'inherit', // 使用浏览器默认字体
             },
             onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
               // Ctrl+Enter - 触发保存
