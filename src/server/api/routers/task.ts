@@ -2446,11 +2446,11 @@ export const taskRouter = createTRPCRouter({
 
         // 计算活动级别（0-4）- 使用固定阈值
         const getActivityLevel = (count: number): number => {
-          if (count === 0) return 0;      // 无活动
-          if (count <= 5) return 1;       // 1-5个活动 - 浅绿色
-          if (count <= 12) return 2;      // 6-12个活动 - 中绿色
-          if (count <= 25) return 3;      // 13-25个活动 - 深绿色
-          return 4;                       // 26+个活动 - 最深绿色
+          if (count === 0) return 0; // 无活动
+          if (count <= 5) return 1; // 1-5个活动 - 浅绿色
+          if (count <= 12) return 2; // 6-12个活动 - 中绿色
+          if (count <= 25) return 3; // 13-25个活动 - 深绿色
+          return 4; // 26+个活动 - 最深绿色
         };
 
         const activityData = Array.from(activityMap.entries()).map(

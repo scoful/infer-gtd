@@ -69,28 +69,40 @@ export default function MarkdownEditor({
       if (!isFullscreen) {
         // 延迟执行，确保 MDEditor 的清理逻辑完成
         setTimeout(() => {
-          document.body.style.overflow = '';
-          document.documentElement.style.overflow = '';
+          document.body.style.overflow = "";
+          document.documentElement.style.overflow = "";
 
           // 移除可能的全屏相关类名
-          document.body.classList.remove('w-md-editor-fullscreen');
-          document.documentElement.classList.remove('w-md-editor-fullscreen');
+          document.body.classList.remove("w-md-editor-fullscreen");
+          document.documentElement.classList.remove("w-md-editor-fullscreen");
         }, 100);
       }
     };
 
     if (mounted) {
-      document.addEventListener('fullscreenchange', handleFullscreenChange);
-      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+      document.addEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+      document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.addEventListener("MSFullscreenChange", handleFullscreenChange);
     }
 
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+      document.removeEventListener(
+        "mozfullscreenchange",
+        handleFullscreenChange,
+      );
+      document.removeEventListener(
+        "MSFullscreenChange",
+        handleFullscreenChange,
+      );
     };
   }, [mounted]);
 
@@ -118,10 +130,10 @@ export default function MarkdownEditor({
     };
 
     // 使用捕获阶段监听，优先级更高
-    document.addEventListener('keydown', handleCtrlEnterKeyDown, true);
+    document.addEventListener("keydown", handleCtrlEnterKeyDown, true);
 
     return () => {
-      document.removeEventListener('keydown', handleCtrlEnterKeyDown, true);
+      document.removeEventListener("keydown", handleCtrlEnterKeyDown, true);
     };
   }, [mounted, onCtrlEnterSave]);
 
@@ -137,10 +149,10 @@ export default function MarkdownEditor({
   useEffect(() => {
     return () => {
       // 确保组件卸载时恢复页面滚动
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.classList.remove('w-md-editor-fullscreen');
-      document.documentElement.classList.remove('w-md-editor-fullscreen');
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.classList.remove("w-md-editor-fullscreen");
+      document.documentElement.classList.remove("w-md-editor-fullscreen");
     };
   }, []);
 
@@ -377,7 +389,9 @@ export default function MarkdownEditor({
   }
 
   // 处理容器级别的键盘事件
-  const handleContainerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleContainerKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ) => {
     // Ctrl+Enter - 触发保存
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
@@ -408,7 +422,7 @@ export default function MarkdownEditor({
             style: {
               fontSize: 14,
               lineHeight: 1.6,
-              fontFamily: 'inherit', // 使用浏览器默认字体
+              fontFamily: "inherit", // 使用浏览器默认字体
             },
             onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
               // Ctrl+Enter - 触发保存

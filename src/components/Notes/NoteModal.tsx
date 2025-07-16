@@ -129,10 +129,10 @@ export default function NoteModal({
     } else {
       // 模态框关闭时，确保清理全屏相关的样式
       setIsEditorFullscreen(false);
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.classList.remove('w-md-editor-fullscreen');
-      document.documentElement.classList.remove('w-md-editor-fullscreen');
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.classList.remove("w-md-editor-fullscreen");
+      document.documentElement.classList.remove("w-md-editor-fullscreen");
     }
   }, [isOpen, isEditing, noteDetail]);
 
@@ -156,10 +156,10 @@ export default function NoteModal({
       if (!isFullscreen) {
         // 延迟执行，确保全屏退出动画完成
         setTimeout(() => {
-          document.body.style.overflow = '';
-          document.documentElement.style.overflow = '';
-          document.body.classList.remove('w-md-editor-fullscreen');
-          document.documentElement.classList.remove('w-md-editor-fullscreen');
+          document.body.style.overflow = "";
+          document.documentElement.style.overflow = "";
+          document.body.classList.remove("w-md-editor-fullscreen");
+          document.documentElement.classList.remove("w-md-editor-fullscreen");
         }, 100);
       }
     };
@@ -169,7 +169,7 @@ export default function NoteModal({
       if (isEditorFullscreen) {
         // 检查点击是否来自编辑器外部
         const target = event.target as Element;
-        const editorElement = document.querySelector('.w-md-editor-fullscreen');
+        const editorElement = document.querySelector(".w-md-editor-fullscreen");
 
         if (editorElement && !editorElement.contains(target)) {
           // 阻止事件冒泡，防止触发 Dialog 的关闭
@@ -183,12 +183,12 @@ export default function NoteModal({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isEditorFullscreen) {
         // ESC 键：让编辑器处理，不要关闭模态框
-        if (event.key === 'Escape') {
+        if (event.key === "Escape") {
           event.stopPropagation();
         }
 
         // Ctrl+Enter：触发保存
-        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
           event.preventDefault();
           event.stopPropagation();
 
@@ -201,35 +201,44 @@ export default function NoteModal({
       }
     };
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-    document.addEventListener('click', handleDocumentClick, true); // 使用捕获阶段
-    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+    document.addEventListener("click", handleDocumentClick, true); // 使用捕获阶段
+    document.addEventListener("keydown", handleKeyDown, true);
 
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-      document.removeEventListener('click', handleDocumentClick, true);
-      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+      document.removeEventListener(
+        "mozfullscreenchange",
+        handleFullscreenChange,
+      );
+      document.removeEventListener(
+        "MSFullscreenChange",
+        handleFullscreenChange,
+      );
+      document.removeEventListener("click", handleDocumentClick, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
     };
   }, [isEditorFullscreen]);
 
   const handleClose = () => {
     // 如果编辑器处于全屏模式，不允许关闭模态框
     if (isEditorFullscreen) {
-      console.log('阻止模态框关闭：编辑器处于全屏模式');
+      console.log("阻止模态框关闭：编辑器处于全屏模式");
       return;
     }
 
     // 确保清理任何残留的样式
-    document.body.style.overflow = '';
-    document.documentElement.style.overflow = '';
-    document.body.classList.remove('w-md-editor-fullscreen');
-    document.documentElement.classList.remove('w-md-editor-fullscreen');
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+    document.body.classList.remove("w-md-editor-fullscreen");
+    document.documentElement.classList.remove("w-md-editor-fullscreen");
 
     onClose();
     if (!isEditing) {
@@ -240,12 +249,13 @@ export default function NoteModal({
   // 创建一个更安全的关闭处理函数
   const safeHandleClose = useCallback(() => {
     // 双重检查全屏状态
-    const isCurrentlyFullscreen = !!document.fullscreenElement ||
-                                  document.body.classList.contains('w-md-editor-fullscreen') ||
-                                  !!document.querySelector('.w-md-editor-fullscreen');
+    const isCurrentlyFullscreen =
+      !!document.fullscreenElement ||
+      document.body.classList.contains("w-md-editor-fullscreen") ||
+      !!document.querySelector(".w-md-editor-fullscreen");
 
     if (isCurrentlyFullscreen) {
-      console.log('阻止模态框关闭：检测到全屏状态');
+      console.log("阻止模态框关闭：检测到全屏状态");
       return;
     }
 
