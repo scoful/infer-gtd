@@ -75,19 +75,19 @@ const customTimestamp = () => {
   const now = new Date();
   // 使用系统时区格式化时间，然后转换为ISO格式
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
 
   // 获取时区偏移
   const timezoneOffset = -now.getTimezoneOffset();
   const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60);
   const offsetMinutes = Math.abs(timezoneOffset) % 60;
-  const offsetSign = timezoneOffset >= 0 ? '+' : '-';
-  const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`;
+  const offsetSign = timezoneOffset >= 0 ? "+" : "-";
+  const offsetString = `${offsetSign}${String(offsetHours).padStart(2, "0")}:${String(offsetMinutes).padStart(2, "0")}`;
 
   const isoString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${offsetString}`;
   return `,"time":"${isoString}"`;
