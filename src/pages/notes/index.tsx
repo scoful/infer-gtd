@@ -760,20 +760,29 @@ function NoteCard({
   // 格式化日期
   const formatDate = (date: Date) => {
     const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-    if (diffInHours < 24) {
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    // 当天内：显示时分
+    if (today.getTime() === dateDay.getTime()) {
       return date.toLocaleTimeString("zh-CN", {
         hour: "2-digit",
         minute: "2-digit",
       });
-    } else if (diffInHours < 24 * 7) {
+    }
+    // 7天内：显示周几时分
+    else if (diffInDays < 7) {
       return date.toLocaleDateString("zh-CN", {
         weekday: "short",
         hour: "2-digit",
         minute: "2-digit",
       });
-    } else {
+    }
+    // 7天以上：显示月日时分
+    else {
       return date.toLocaleDateString("zh-CN", {
         month: "short",
         day: "numeric",
