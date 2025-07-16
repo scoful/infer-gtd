@@ -5,6 +5,10 @@
 # - USE_CHINA_MIRROR: 是否使用国内镜像源加速（默认false，适合GitHub Actions）
 #   本地构建时可设置为true: docker build --build-arg USE_CHINA_MIRROR=true .
 #   GitHub Actions构建时保持默认: docker build .
+#
+# 时区设置：
+# - 默认使用中国时区 (Asia/Shanghai)
+# - 可通过环境变量覆盖: docker run -e TZ=UTC your-image
 
 # 基础镜像
 FROM node:20-alpine AS base
@@ -12,8 +16,11 @@ FROM node:20-alpine AS base
 # 构建参数：是否使用国内镜像源（默认不使用，适合GitHub Actions）
 ARG USE_CHINA_MIRROR=false
 
-# 安装必要的系统依赖
-RUN apk add --no-cache libc6-compat curl
+# 安装必要的系统依赖和时区数据
+RUN apk add --no-cache libc6-compat curl tzdata
+
+# 设置时区环境变量（默认为中国时区）
+ENV TZ=Asia/Shanghai
 
 # 根据构建参数配置 npm 镜像源并安装 pnpm
 RUN if [ "$USE_CHINA_MIRROR" = "true" ]; then \
@@ -78,9 +85,12 @@ RUN rm -rf .next/cache && \
 # 生产运行阶段
 FROM node:20-alpine AS runner
 
-# 安装运行时依赖（最小化）
-RUN apk add --no-cache curl netcat-openbsd && \
+# 安装运行时依赖（最小化）和时区数据
+RUN apk add --no-cache curl netcat-openbsd tzdata && \
     rm -rf /var/cache/apk/*
+
+# 设置时区环境变量（可通过docker run -e TZ=xxx覆盖）
+ENV TZ=Asia/Shanghai
 
 # 设置生产环境
 ENV NODE_ENV=production

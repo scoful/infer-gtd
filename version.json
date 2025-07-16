@@ -1,10 +1,10 @@
 {
-  "version": "1.13.1",
+  "version": "1.13.2",
   "major": 1,
   "minor": 13,
-  "patch": 1,
-  "buildTime": "2025-07-15T13:12:42.942Z",
-  "gitCommit": "beb5d0a09ca3978dcde47dc39d60b31b75a5ab47",
+  "patch": 2,
+  "buildTime": "2025-07-16T01:59:15.171Z",
+  "gitCommit": "14e045083e0b47d58656f8032b18446c6b96bc1c",
   "gitBranch": "main",
   "environment": "development"
 }

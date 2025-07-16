@@ -18,6 +18,8 @@ services:
       - PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
       - LOG_DIR=/app/logs
       - USE_CHINA_MIRROR=true
+      # 时区设置 - 默认中国时区，可根据需要修改
+      - TZ=Asia/Shanghai
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health/basic"]
