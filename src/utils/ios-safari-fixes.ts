@@ -3,12 +3,35 @@
  * 解决iOS Safari特有的问题
  */
 
+// 检测是否为移动设备
+export function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
+// 检测是否为iOS设备
+export function isIOSDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
+// 检测是否为Safari浏览器
+export function isSafari(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+}
+
 // 检测iOS版本
 export function getIOSVersion(): number | null {
   if (typeof window === "undefined") return null;
 
   const match = /OS (\d+)_(\d+)_?(\d+)?/.exec(navigator.userAgent);
-  if (match) {
+  if (match?.[1]) {
     return parseInt(match[1], 10);
   }
   return null;
@@ -19,7 +42,7 @@ export function getSafariVersion(): number | null {
   if (typeof window === "undefined") return null;
 
   const match = /Version\/(\d+)\.(\d+)/.exec(navigator.userAgent);
-  if (match) {
+  if (match?.[1]) {
     return parseInt(match[1], 10);
   }
   return null;

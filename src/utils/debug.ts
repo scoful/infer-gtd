@@ -6,28 +6,7 @@
 import { applyIOSSafariFixes, isIOSDevice, isSafari } from "./ios-safari-fixes";
 import { applyNextAuthIOSFixes } from "./nextauth-ios-fixes";
 
-// 检测是否为移动设备
-export function isMobileDevice(): boolean {
-  if (typeof window === "undefined") return false;
 
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent,
-  );
-}
-
-// 检测是否为iOS设备
-export function isIOSDevice(): boolean {
-  if (typeof window === "undefined") return false;
-
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
-}
-
-// 检测是否为Safari浏览器
-export function isSafari(): boolean {
-  if (typeof window === "undefined") return false;
-
-  return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-}
 
 // 获取设备信息
 export function getDeviceInfo() {
@@ -44,7 +23,7 @@ export function getDeviceInfo() {
     windowWidth: window.innerWidth,
     windowHeight: window.innerHeight,
     devicePixelRatio: window.devicePixelRatio,
-    isMobile: isMobileDevice(),
+    isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
     isIOS: isIOSDevice(),
     isSafari: isSafari(),
   };
@@ -55,7 +34,7 @@ export async function initVConsole() {
   // 只在特定条件下启用
   const shouldEnable =
     process.env.NODE_ENV === "development" ||
-    isMobileDevice() ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
     window.location.search.includes("debug=true") ||
     window.location.search.includes("vconsole=true");
 
@@ -229,24 +208,25 @@ export function initNetworkMonitoring() {
   const originalXHROpen = XMLHttpRequest.prototype.open;
   const originalXHRSend = XMLHttpRequest.prototype.send;
 
-  XMLHttpRequest.prototype.open = function (method, url, ...args) {
-    this._debugInfo = { method, url, startTime: 0 };
-    return originalXHROpen.call(this, method, url, ...args);
+  XMLHttpRequest.prototype.open = function (method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null) {
+    (this as any)._debugInfo = { method, url: url.toString(), startTime: 0 };
+    return originalXHROpen.call(this, method, url, async ?? true, username, password);
   };
 
-  XMLHttpRequest.prototype.send = function (...args) {
-    if (this._debugInfo) {
-      this._debugInfo.startTime = Date.now();
+  XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+    const debugInfo = (this as any)._debugInfo;
+    if (debugInfo) {
+      debugInfo.startTime = Date.now();
 
       this.addEventListener("loadend", () => {
-        const duration = Date.now() - this._debugInfo.startTime;
+        const duration = Date.now() - debugInfo.startTime;
         console.log(
-          `🌐 XHR ${this.status}: ${this._debugInfo.method} ${this._debugInfo.url} (${duration}ms)`,
+          `🌐 XHR ${this.status}: ${debugInfo.method} ${debugInfo.url} (${duration}ms)`,
         );
       });
     }
 
-    return originalXHRSend.call(this, ...args);
+    return originalXHRSend.call(this, body);
   };
 }
 
@@ -271,7 +251,7 @@ export function initPerformanceMonitoring() {
             perfData.domContentLoadedEventEnd - perfData.responseEnd,
           ),
           页面加载: Math.round(
-            perfData.loadEventEnd - perfData.navigationStart,
+            perfData.loadEventEnd - perfData.fetchStart,
           ),
         });
       }
