@@ -205,8 +205,8 @@ export function initNetworkMonitoring() {
   };
 
   // 监控XMLHttpRequest
-  const originalXHROpen = XMLHttpRequest.prototype.open;
-  const originalXHRSend = XMLHttpRequest.prototype.send;
+  const originalXHROpen = XMLHttpRequest.prototype.open.bind(XMLHttpRequest.prototype);
+  const originalXHRSend = XMLHttpRequest.prototype.send.bind(XMLHttpRequest.prototype);
 
   XMLHttpRequest.prototype.open = function (method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null) {
     (this as any)._debugInfo = { method, url: url.toString(), startTime: 0 };

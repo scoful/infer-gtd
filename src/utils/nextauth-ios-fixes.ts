@@ -42,7 +42,7 @@ export function fixIOSCookies() {
   );
 
   if (originalCookieDescriptor?.set) {
-    const originalSet = originalCookieDescriptor.set;
+    const originalSet = originalCookieDescriptor.set.bind(document);
 
     Object.defineProperty(document, "cookie", {
       ...originalCookieDescriptor,
@@ -89,11 +89,10 @@ export function fixIOSSessionStorage() {
     const testKey = "__sessionStorage_test__";
     sessionStorage.setItem(testKey, "test");
     sessionStorage.removeItem(testKey);
-  } catch (e) {
+  } catch {
     console.warn("sessionStorage不可用，使用localStorage替代");
 
     // 使用localStorage模拟sessionStorage
-    const sessionData: Record<string, string> = {};
     const sessionId = `session_${Date.now()}_${Math.random()}`;
 
     Object.defineProperty(window, "sessionStorage", {
@@ -140,8 +139,8 @@ export function fixIOSOAuthRedirect() {
   if (typeof window === "undefined") return;
 
   // 监听OAuth回调
-  const originalPushState = history.pushState;
-  const originalReplaceState = history.replaceState;
+  const originalPushState = history.pushState.bind(history);
+  const originalReplaceState = history.replaceState.bind(history);
 
   history.pushState = function (state, title, url) {
     console.log("🔄 History pushState:", url);
@@ -238,8 +237,8 @@ export function monitorNextAuthSession() {
   if (typeof window === "undefined") return;
 
   // 监控session相关的localStorage变化
-  const originalSetItem = localStorage.setItem;
-  const originalRemoveItem = localStorage.removeItem;
+  const originalSetItem = localStorage.setItem.bind(localStorage);
+  const originalRemoveItem = localStorage.removeItem.bind(localStorage);
 
   localStorage.setItem = function (key: string, value: string) {
     if (key.includes("next-auth") || key.includes("session")) {
@@ -284,7 +283,7 @@ export function debugAuthState() {
   console.log("- In iframe:", isInIframe());
 
   // 检查第三方Cookie支持
-  checkThirdPartyCookieSupport().then((supported) => {
+  void checkThirdPartyCookieSupport().then((supported) => {
     console.log("- Third-party cookies:", supported ? "支持" : "不支持");
   });
 }

@@ -106,7 +106,7 @@ export function fixIOSLocalStorage() {
     const testKey = "__localStorage_test__";
     localStorage.setItem(testKey, "test");
     localStorage.removeItem(testKey);
-  } catch (e) {
+  } catch {
     console.warn("localStorage不可用，使用内存存储替代");
 
     // 创建内存存储替代方案
@@ -114,7 +114,7 @@ export function fixIOSLocalStorage() {
 
     Object.defineProperty(window, "localStorage", {
       value: {
-        getItem: (key: string) => memoryStorage[key] || null,
+        getItem: (key: string) => memoryStorage[key] ?? null,
         setItem: (key: string, value: string) => {
           memoryStorage[key] = value;
         },
@@ -129,7 +129,7 @@ export function fixIOSLocalStorage() {
         get length() {
           return Object.keys(memoryStorage).length;
         },
-        key: (index: number) => Object.keys(memoryStorage)[index] || null,
+        key: (index: number) => Object.keys(memoryStorage)[index] ?? null,
       },
       writable: false,
     });
@@ -243,7 +243,7 @@ export function fixIOSEventListeners() {
   if (typeof window === "undefined") return;
 
   // 修复iOS Safari的passive事件监听器问题
-  const originalAddEventListener = EventTarget.prototype.addEventListener;
+  const originalAddEventListener = EventTarget.prototype.addEventListener.bind(EventTarget.prototype);
 
   EventTarget.prototype.addEventListener = function (
     type: string,
@@ -267,8 +267,8 @@ export function fixIOSPromise() {
 
   // 检测Promise是否正常工作
   try {
-    new Promise((resolve) => resolve(1)).then((value) => value).catch(() => {});
-  } catch (e) {
+    new Promise((resolve) => resolve(1)).then((value) => value).catch(() => { /* noop */ });
+  } catch {
     console.warn("Promise可能存在问题，加载polyfill");
     // 这里可以动态加载Promise polyfill
   }
@@ -281,16 +281,16 @@ export function fixIOSConsole() {
   // 确保console对象存在
   if (!window.console) {
     window.console = {
-      log: () => {},
-      error: () => {},
-      warn: () => {},
-      info: () => {},
-      debug: () => {},
-      trace: () => {},
-      group: () => {},
-      groupEnd: () => {},
-      time: () => {},
-      timeEnd: () => {},
+      log: () => { /* noop */ },
+      error: () => { /* noop */ },
+      warn: () => { /* noop */ },
+      info: () => { /* noop */ },
+      debug: () => { /* noop */ },
+      trace: () => { /* noop */ },
+      group: () => { /* noop */ },
+      groupEnd: () => { /* noop */ },
+      time: () => { /* noop */ },
+      timeEnd: () => { /* noop */ },
     } as Console;
   }
 }
@@ -318,7 +318,7 @@ export function detectIOSCompatibilityIssues() {
   try {
     localStorage.setItem("test", "test");
     localStorage.removeItem("test");
-  } catch (e) {
+  } catch {
     issues.push("localStorage不可用");
   }
 
@@ -335,7 +335,7 @@ export function detectIOSCompatibilityIssues() {
   // 检测ES6特性支持
   try {
     eval("const test = () => {};");
-  } catch (e) {
+  } catch {
     issues.push("ES6语法不支持");
   }
 
