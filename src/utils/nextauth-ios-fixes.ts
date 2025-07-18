@@ -41,7 +41,7 @@ export function fixIOSCookies() {
     "cookie",
   );
 
-  if (originalCookieDescriptor && originalCookieDescriptor.set) {
+  if (originalCookieDescriptor?.set) {
     const originalSet = originalCookieDescriptor.set;
 
     Object.defineProperty(document, "cookie", {
@@ -93,7 +93,7 @@ export function fixIOSSessionStorage() {
     console.warn("sessionStorage不可用，使用localStorage替代");
 
     // 使用localStorage模拟sessionStorage
-    const sessionData: { [key: string]: string } = {};
+    const sessionData: Record<string, string> = {};
     const sessionId = `session_${Date.now()}_${Math.random()}`;
 
     Object.defineProperty(window, "sessionStorage", {
@@ -219,7 +219,7 @@ export function fixIOSWebCrypto() {
   if (typeof window === "undefined") return;
 
   // 检测WebCrypto API支持
-  if (!window.crypto || !window.crypto.subtle) {
+  if (!window.crypto?.subtle) {
     console.warn("⚠️ WebCrypto API不支持，可能影响认证功能");
     return;
   }

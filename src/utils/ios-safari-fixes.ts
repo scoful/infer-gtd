@@ -7,7 +7,7 @@
 export function getIOSVersion(): number | null {
   if (typeof window === "undefined") return null;
 
-  const match = navigator.userAgent.match(/OS (\d+)_(\d+)_?(\d+)?/);
+  const match = /OS (\d+)_(\d+)_?(\d+)?/.exec(navigator.userAgent);
   if (match) {
     return parseInt(match[1], 10);
   }
@@ -18,7 +18,7 @@ export function getIOSVersion(): number | null {
 export function getSafariVersion(): number | null {
   if (typeof window === "undefined") return null;
 
-  const match = navigator.userAgent.match(/Version\/(\d+)\.(\d+)/);
+  const match = /Version\/(\d+)\.(\d+)/.exec(navigator.userAgent);
   if (match) {
     return parseInt(match[1], 10);
   }
@@ -87,7 +87,7 @@ export function fixIOSLocalStorage() {
     console.warn("localStorage不可用，使用内存存储替代");
 
     // 创建内存存储替代方案
-    const memoryStorage: { [key: string]: string } = {};
+    const memoryStorage: Record<string, string> = {};
 
     Object.defineProperty(window, "localStorage", {
       value: {
