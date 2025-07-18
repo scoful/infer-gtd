@@ -30,6 +30,33 @@ export function getDeviceInfo() {
   };
 }
 
+// 获取vConsole主题设置
+function getVConsoleTheme(): "light" | "dark" {
+  // 检查URL参数
+  const urlParams = new URLSearchParams(window.location.search);
+  const themeParam = urlParams.get("vconsole-theme");
+  if (themeParam === "dark" || themeParam === "light") {
+    return themeParam;
+  }
+
+  // 检查localStorage设置
+  const savedTheme = localStorage.getItem("vconsole-theme");
+  if (savedTheme === "dark" || savedTheme === "light") {
+    return savedTheme;
+  }
+
+  // 检测系统主题偏好
+  if (
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  ) {
+    return "dark";
+  }
+
+  // 默认使用浅色主题
+  return "light";
+}
+
 // 初始化vConsole调试工具
 export async function initVConsole() {
   // 只在特定条件下启用
@@ -46,14 +73,32 @@ export async function initVConsole() {
   try {
     // 动态导入vConsole
     const VConsole = await import("vconsole");
+    const theme = getVConsoleTheme();
+
     const vConsole = new VConsole.default({
       defaultPlugins: ["system", "network", "element", "storage"],
-      theme: "dark",
+      theme: theme,
     });
 
     // 输出设备信息到控制台
     console.log("🔧 vConsole已启用");
+    console.log(`🎨 当前主题: ${theme}`);
+    console.log("💡 主题切换方法:");
+    console.log("  - URL参数: ?vconsole-theme=light 或 ?vconsole-theme=dark");
+    console.log(
+      "  - localStorage: localStorage.setItem('vconsole-theme', 'light')",
+    );
     console.log("📱 设备信息:", getDeviceInfo());
+
+    // 添加主题切换功能到全局
+    (window as any).switchVConsoleTheme = (newTheme: "light" | "dark") => {
+      localStorage.setItem("vconsole-theme", newTheme);
+      console.log(`🎨 主题已切换为: ${newTheme}，刷新页面生效`);
+    };
+
+    console.log(
+      "🔧 使用 switchVConsoleTheme('light') 或 switchVConsoleTheme('dark') 切换主题",
+    );
 
     return vConsole;
   } catch (error) {

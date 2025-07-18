@@ -52,6 +52,37 @@ yarn add vconsole
 https://your-domain.com?debug=true
 ```
 
+### vConsole主题设置
+支持浅色和深色主题，可通过以下方式设置：
+
+#### 方法1: URL参数
+```
+# 浅色主题
+https://your-domain.com?debug=true&vconsole-theme=light
+
+# 深色主题
+https://your-domain.com?debug=true&vconsole-theme=dark
+```
+
+#### 方法2: localStorage设置
+```javascript
+// 在浏览器控制台执行
+localStorage.setItem('vconsole-theme', 'light');  // 浅色主题
+localStorage.setItem('vconsole-theme', 'dark');   // 深色主题
+```
+
+#### 方法3: 全局函数切换
+```javascript
+// 在vConsole控制台执行
+switchVConsoleTheme('light');  // 切换到浅色主题
+switchVConsoleTheme('dark');   // 切换到深色主题
+```
+
+#### 自动主题检测
+- 如果没有手动设置，会自动检测系统主题偏好
+- 支持 `prefers-color-scheme` 媒体查询
+- 默认使用浅色主题
+
 ### 查看调试信息
 1. **vConsole面板**: 页面右下角会出现vConsole按钮
 2. **基础错误收集**: 页面左上角会出现🐛按钮（当vConsole不可用时）
