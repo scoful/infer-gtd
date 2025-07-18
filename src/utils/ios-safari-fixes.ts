@@ -5,23 +5,23 @@
 
 // 检测是否为移动设备
 export function isMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
 
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
+    navigator.userAgent,
   );
 }
 
 // 检测是否为iOS设备
 export function isIOSDevice(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
 
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
 }
 
 // 检测是否为Safari浏览器
 export function isSafari(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
 
   return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
@@ -243,7 +243,9 @@ export function fixIOSEventListeners() {
   if (typeof window === "undefined") return;
 
   // 修复iOS Safari的passive事件监听器问题
-  const originalAddEventListener = EventTarget.prototype.addEventListener.bind(EventTarget.prototype);
+  const originalAddEventListener = EventTarget.prototype.addEventListener.bind(
+    EventTarget.prototype,
+  );
 
   EventTarget.prototype.addEventListener = function (
     type: string,
@@ -267,7 +269,11 @@ export function fixIOSPromise() {
 
   // 检测Promise是否正常工作
   try {
-    new Promise((resolve) => resolve(1)).then((value) => value).catch(() => { /* noop */ });
+    new Promise((resolve) => resolve(1))
+      .then((value) => value)
+      .catch(() => {
+        /* noop */
+      });
   } catch {
     console.warn("Promise可能存在问题，加载polyfill");
     // 这里可以动态加载Promise polyfill
@@ -281,16 +287,36 @@ export function fixIOSConsole() {
   // 确保console对象存在
   if (!window.console) {
     window.console = {
-      log: () => { /* noop */ },
-      error: () => { /* noop */ },
-      warn: () => { /* noop */ },
-      info: () => { /* noop */ },
-      debug: () => { /* noop */ },
-      trace: () => { /* noop */ },
-      group: () => { /* noop */ },
-      groupEnd: () => { /* noop */ },
-      time: () => { /* noop */ },
-      timeEnd: () => { /* noop */ },
+      log: () => {
+        /* noop */
+      },
+      error: () => {
+        /* noop */
+      },
+      warn: () => {
+        /* noop */
+      },
+      info: () => {
+        /* noop */
+      },
+      debug: () => {
+        /* noop */
+      },
+      trace: () => {
+        /* noop */
+      },
+      group: () => {
+        /* noop */
+      },
+      groupEnd: () => {
+        /* noop */
+      },
+      time: () => {
+        /* noop */
+      },
+      timeEnd: () => {
+        /* noop */
+      },
     } as Console;
   }
 }

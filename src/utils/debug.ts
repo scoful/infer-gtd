@@ -6,8 +6,6 @@
 import { applyIOSSafariFixes, isIOSDevice, isSafari } from "./ios-safari-fixes";
 import { applyNextAuthIOSFixes } from "./nextauth-ios-fixes";
 
-
-
 // 获取设备信息
 export function getDeviceInfo() {
   if (typeof window === "undefined") return null;
@@ -23,7 +21,10 @@ export function getDeviceInfo() {
     windowWidth: window.innerWidth,
     windowHeight: window.innerHeight,
     devicePixelRatio: window.devicePixelRatio,
-    isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+    isMobile:
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      ),
     isIOS: isIOSDevice(),
     isSafari: isSafari(),
   };
@@ -34,7 +35,9 @@ export async function initVConsole() {
   // 只在特定条件下启用
   const shouldEnable =
     process.env.NODE_ENV === "development" ||
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    ) ||
     window.location.search.includes("debug=true") ||
     window.location.search.includes("vconsole=true");
 
@@ -205,15 +208,34 @@ export function initNetworkMonitoring() {
   };
 
   // 监控XMLHttpRequest
-  const originalXHROpen = XMLHttpRequest.prototype.open.bind(XMLHttpRequest.prototype);
-  const originalXHRSend = XMLHttpRequest.prototype.send.bind(XMLHttpRequest.prototype);
+  const originalXHROpen = XMLHttpRequest.prototype.open.bind(
+    XMLHttpRequest.prototype,
+  );
+  const originalXHRSend = XMLHttpRequest.prototype.send.bind(
+    XMLHttpRequest.prototype,
+  );
 
-  XMLHttpRequest.prototype.open = function (method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null) {
+  XMLHttpRequest.prototype.open = function (
+    method: string,
+    url: string | URL,
+    async?: boolean,
+    username?: string | null,
+    password?: string | null,
+  ) {
     (this as any)._debugInfo = { method, url: url.toString(), startTime: 0 };
-    return originalXHROpen.call(this, method, url, async ?? true, username, password);
+    return originalXHROpen.call(
+      this,
+      method,
+      url,
+      async ?? true,
+      username,
+      password,
+    );
   };
 
-  XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+  XMLHttpRequest.prototype.send = function (
+    body?: Document | XMLHttpRequestBodyInit | null,
+  ) {
     const debugInfo = (this as any)._debugInfo;
     if (debugInfo) {
       debugInfo.startTime = Date.now();
@@ -250,9 +272,7 @@ export function initPerformanceMonitoring() {
           DOM解析: Math.round(
             perfData.domContentLoadedEventEnd - perfData.responseEnd,
           ),
-          页面加载: Math.round(
-            perfData.loadEventEnd - perfData.fetchStart,
-          ),
+          页面加载: Math.round(perfData.loadEventEnd - perfData.fetchStart),
         });
       }
     }, 1000);
