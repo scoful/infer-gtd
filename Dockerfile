@@ -121,7 +121,7 @@ RUN chmod +x ./scripts/docker-entrypoint.sh
 
 # 生成 Prisma 客户端（使用standalone中的依赖）
 ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
-RUN cd /app && npx prisma@6.5.0 generate
+RUN cd /app && npx prisma@6.9.0 generate
 
 # 创建日志目录并清理不必要的文件
 RUN mkdir -p /app/logs && \
