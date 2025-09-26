@@ -205,7 +205,7 @@ echo "MIGRATED" > /tmp/app-status/startup.status
 # 生成 Prisma 客户端
 echo "$(date -Iseconds) [INFO] [DOCKER] ⚙️ Generating Prisma client..."
 echo "GENERATING_CLIENT" > /tmp/app-status/startup.status
-npx $NPX_REGISTRY prisma generate || {
+npx $NPX_REGISTRY prisma@6.9.0 generate || {
     echo "$(date -Iseconds) [ERROR] [DOCKER] ❌ Prisma client generation failed"
     echo "CLIENT_FAILED" > /tmp/app-status/startup.status
     exit 1
