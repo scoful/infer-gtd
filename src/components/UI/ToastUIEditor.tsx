@@ -122,7 +122,6 @@ export default function ToastUIEditor({
 
         const suspiciousPatterns = [
           "Write", "Preview", "Markdown", "WYSIWYG",
-          "在这里测试Toast UI Editor的所有功能",
           "Toast UI：", "JetBrains："
         ];
         const lines = currentContent.split("\n").map((s: string) => s.trim()).filter(Boolean);
@@ -603,18 +602,15 @@ export default function ToastUIEditor({
   const handleChange = () => {
     if (editorRef.current) {
       const markdown = editorRef.current.getInstance().getMarkdown();
-      console.log("ToastUIEditor handleChange:", { markdown: markdown.slice(0, 50), length: markdown.length });
 
       // 首次 onChange 监测：检测并阻止UI元素文本泄露
       if (firstChangeRef.current === null) {
         firstChangeRef.current = markdown;
-        console.log("First change detected:", { markdown: markdown.slice(0, 50) });
 
         // 扩展的泄露内容检测 - 只检测明确的UI元素文本，不包含placeholder
         const lines = markdown.split("\n").map((s: string) => s.trim()).filter(Boolean);
         const suspiciousPatterns = [
-          "Write", "Preview", "Markdown", "WYSIWYG",
-          "在这里测试Toast UI Editor的所有功能"
+          "Write", "Preview", "Markdown", "WYSIWYG"
         ];
 
         // 检测是否包含可疑的UI文本（只要包含就是泄露）
@@ -622,10 +618,7 @@ export default function ToastUIEditor({
           suspiciousPatterns.some(pattern => line.includes(pattern))
         );
 
-        console.log("Leak detection:", { lines, looksLikeLeak, suspiciousPatterns });
-
         if (looksLikeLeak && suppressInitialLeak) {
-          console.warn("Content leak detected, clearing editor");
           // 清空编辑器内容并重新设置
           setTimeout(() => {
             if (editorRef.current) {
@@ -636,7 +629,6 @@ export default function ToastUIEditor({
         }
       }
 
-      console.log("Calling onChange with:", markdown.slice(0, 50));
       onChange(markdown);
     }
   };

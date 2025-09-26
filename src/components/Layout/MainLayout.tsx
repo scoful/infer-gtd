@@ -194,12 +194,6 @@ const navigation: NavigationItem[] = [
         icon: ShieldCheckIcon,
         description: "定时任务和系统管理",
       },
-      {
-        name: "Markdown编辑器测试",
-        href: "/test/vditor",
-        icon: DocumentTextIcon,
-        description: "Toast UI Editor编辑器功能测试",
-      },
     ],
   },
 ];
