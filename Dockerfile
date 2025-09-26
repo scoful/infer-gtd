@@ -108,10 +108,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=root:root /app/.next/standalone ./
 COPY --from=builder --chown=root:root /app/.next/static ./.next/static
 
-# 复制 Prisma 相关文件和生成的客户端（从builder阶段）
+# 复制 Prisma 相关文件（standalone模式需要）
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # 复制版本信息文件
 COPY --from=builder /app/version.json ./public/version.json
@@ -120,6 +118,10 @@ COPY --from=builder /app/version.json ./public/version.json
 COPY scripts/docker-entrypoint.sh ./scripts/
 COPY scripts/setup-admin.js ./scripts/
 RUN chmod +x ./scripts/docker-entrypoint.sh
+
+# 生成 Prisma 客户端（使用standalone中的依赖）
+ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
+RUN cd /app && npx prisma@6.5.0 generate
 
 # 创建日志目录并清理不必要的文件
 RUN mkdir -p /app/logs && \
