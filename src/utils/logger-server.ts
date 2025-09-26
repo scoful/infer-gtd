@@ -10,7 +10,7 @@ import pino from "pino";
 import path from "path";
 import fs from "fs";
 import { env } from "@/env";
-import { coreLogger, createCoreModuleLogger } from "./logger-core";
+import { coreLogger } from "./logger-core";
 
 // 日志级别配置
 const LOG_LEVEL =

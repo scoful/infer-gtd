@@ -223,7 +223,7 @@ export const userSettingsRouter = createTRPCRouter({
         try {
           const parsedSettings = JSON.parse(user.settings);
           currentRole = parsedSettings.role || "user";
-        } catch (error) {
+        } catch {
           console.warn("解析现有设置失败，使用默认role");
         }
       }

@@ -46,7 +46,9 @@ export default function ToastUIEditor({
 
   // 自动保存相关
   const [lastSavedValue, setLastSavedValue] = useState(value);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">(
+    "saved",
+  );
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
@@ -121,21 +123,30 @@ export default function ToastUIEditor({
         const currentContent = editorRef.current.getInstance().getMarkdown();
 
         const suspiciousPatterns = [
-          "Write", "Preview", "Markdown", "WYSIWYG",
-          "Toast UI：", "JetBrains："
+          "Write",
+          "Preview",
+          "Markdown",
+          "WYSIWYG",
+          "Toast UI：",
+          "JetBrains：",
         ];
-        const lines = currentContent.split("\n").map((s: string) => s.trim()).filter(Boolean);
+        const lines = currentContent
+          .split("\n")
+          .map((s: string) => s.trim())
+          .filter(Boolean);
 
         // 检测是否包含可疑的UI文本（只要包含就清理，不需要全部匹配）
         const containsSuspiciousContent = lines.some((line: string) =>
-          suspiciousPatterns.some(pattern => line.includes(pattern))
+          suspiciousPatterns.some((pattern) => line.includes(pattern)),
         );
 
         // 如果内容看起来像是UI泄露（包含多个可疑模式或者内容很短但包含UI文本）
-        const looksLikeUILeak = containsSuspiciousContent && (
-          currentContent.length < 200 || // 短内容更可能是UI泄露
-          lines.filter(line => suspiciousPatterns.some(pattern => line.includes(pattern))).length >= 2 // 包含多个可疑模式
-        );
+        const looksLikeUILeak =
+          containsSuspiciousContent &&
+          (currentContent.length < 200 || // 短内容更可能是UI泄露
+            lines.filter((line: string) =>
+              suspiciousPatterns.some((pattern) => line.includes(pattern)),
+            ).length >= 2); // 包含多个可疑模式
 
         if (looksLikeUILeak) {
           editorRef.current.getInstance().setMarkdown(value || "");
@@ -152,8 +163,6 @@ export default function ToastUIEditor({
     return () => clearTimeout(timer);
   }, [Editor, mounted, value]); // 添加 value 依赖
 
-
-
   // 全屏状态变化时立即更新按钮样式（无延迟）
   useEffect(() => {
     if (!Editor || !mounted) return;
@@ -164,9 +173,8 @@ export default function ToastUIEditor({
 
   // 更新已存在的全屏按钮状态（立即更新，无延迟）
   const updateFullscreenButtonState = () => {
-    const existingButton = containerRef.current?.querySelector(
-      ".fullscreen-btn",
-    ) as HTMLButtonElement;
+    const existingButton =
+      containerRef.current?.querySelector(".fullscreen-btn");
     if (existingButton) {
       // 更新按钮图标和标签
       existingButton.innerHTML = isFullscreen ? "🗗" : "🗖";
@@ -190,7 +198,7 @@ export default function ToastUIEditor({
 
     let lastVisibleToolbar = null;
     allToolbarGroups?.forEach((group) => {
-      const style = window.getComputedStyle(group as Element);
+      const style = window.getComputedStyle(group);
       if (style.display !== "none") {
         lastVisibleToolbar = group;
       }
@@ -273,7 +281,7 @@ export default function ToastUIEditor({
       }
     };
 
-    loadEditor();
+    void loadEditor();
   }, [mounted]);
 
   useEffect(() => {
@@ -373,7 +381,7 @@ export default function ToastUIEditor({
 
           try {
             const selection = editorInstance.getSelection();
-            const [start, end] = selection as any;
+            const [start, end] = selection;
 
             // 仅在 Markdown 模式（[line, ch]）下处理；WYSIWYG 为 number 偏移，暂不支持
             if (!Array.isArray(start) || !Array.isArray(end)) {
@@ -414,7 +422,7 @@ export default function ToastUIEditor({
 
           try {
             const selection = editorInstance.getSelection();
-            const [start, end] = selection as any;
+            const [start, end] = selection;
 
             // 仅在 Markdown 模式下处理
             if (!Array.isArray(start) || !Array.isArray(end)) {
@@ -469,7 +477,7 @@ export default function ToastUIEditor({
 
           try {
             const selection = editorInstance.getSelection();
-            const [start, end] = selection as any;
+            const [start, end] = selection;
 
             // 仅在 Markdown 模式下处理
             if (!Array.isArray(start) || !Array.isArray(end)) {
@@ -531,7 +539,7 @@ export default function ToastUIEditor({
 
           try {
             const selection = editorInstance.getSelection();
-            const [start, end] = selection as any;
+            const [start, end] = selection;
 
             // 仅在 Markdown 模式下处理
             if (!Array.isArray(start) || !Array.isArray(end)) {
@@ -608,15 +616,18 @@ export default function ToastUIEditor({
         firstChangeRef.current = markdown;
 
         // 扩展的泄露内容检测 - 只检测明确的UI元素文本，不包含placeholder
-        const lines = markdown.split("\n").map((s: string) => s.trim()).filter(Boolean);
-        const suspiciousPatterns = [
-          "Write", "Preview", "Markdown", "WYSIWYG"
-        ];
+        const lines = markdown
+          .split("\n")
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+        const suspiciousPatterns = ["Write", "Preview", "Markdown", "WYSIWYG"];
 
         // 检测是否包含可疑的UI文本（只要包含就是泄露）
-        const looksLikeLeak = lines.length > 0 && lines.some((line: string) =>
-          suspiciousPatterns.some(pattern => line.includes(pattern))
-        );
+        const looksLikeLeak =
+          lines.length > 0 &&
+          lines.some((line: string) =>
+            suspiciousPatterns.some((pattern) => line.includes(pattern)),
+          );
 
         if (looksLikeLeak && suppressInitialLeak) {
           // 清空编辑器内容并重新设置
@@ -713,8 +724,6 @@ export default function ToastUIEditor({
           },
         }}
       />
-
-
     </div>
   );
 }
@@ -750,7 +759,7 @@ export function ToastUIViewer({
       }
     };
 
-    loadViewer();
+    void loadViewer();
   }, [mounted]);
 
   if (!mounted || !Viewer) {

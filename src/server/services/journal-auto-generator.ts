@@ -9,7 +9,6 @@
 
 import { db } from "@/server/db";
 import { serverLoggers } from "@/utils/logger-server";
-import { TaskStatus } from "@prisma/client";
 
 export interface AutoGenerateResult {
   success: boolean;
@@ -42,11 +41,6 @@ export async function autoGenerateJournalForUser(
 
     // 检查用户设置（除非强制生成）
     if (!forceGenerate) {
-      const user = await db.user.findUnique({
-        where: { id: userId },
-        select: { settings: true },
-      });
-
       // 移除了总开关检查，现在由具体的子功能开关控制
     }
 
@@ -149,7 +143,7 @@ export async function autoGenerateJournalForUser(
             },
             "包含信息设置读取结果",
           );
-        } catch (error) {
+        } catch {
           // 解析失败，使用默认设置
         }
       }
@@ -581,17 +575,4 @@ export async function autoGenerateJournalForAllUsers(
       total: 0,
     };
   }
-}
-
-/**
- * 格式化时长显示
- */
-function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  if (hours > 0) {
-    return `${hours}小时${minutes}分钟`;
-  }
-  return `${minutes}分钟`;
 }

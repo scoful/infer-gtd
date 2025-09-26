@@ -55,7 +55,7 @@ export async function setUserAsAdmin(userEmail: string): Promise<boolean> {
           ...existingSettings,
           role: "admin", // 强制设置为管理员
         };
-      } catch (error) {
+      } catch {
         console.warn("解析现有设置失败，使用默认设置");
       }
     }

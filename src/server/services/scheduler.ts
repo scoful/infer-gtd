@@ -282,7 +282,7 @@ class TaskScheduler {
         await this.executeTask(task);
       }
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -370,7 +370,7 @@ class TaskScheduler {
                   }
                 }
               }
-            } catch (error) {
+            } catch {
               // 解析失败，跳过该用户
               continue;
             }
