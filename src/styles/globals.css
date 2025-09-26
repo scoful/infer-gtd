@@ -45,3 +45,11 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+
+/* Hide Toast UI 'Write/Preview' tabs globally (we always use vertical preview) */
+.toastui-editor-tabs { display: none !important; }
+
+/* Also hide possible tab container wrapper to prevent stray 'Write/Preview' text */
+.toastui-editor-md-tab-container { display: none !important; }
+

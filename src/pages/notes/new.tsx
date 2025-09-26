@@ -13,7 +13,7 @@ import {
 import { api } from "@/utils/api";
 import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
-import { MarkdownEditor } from "@/components/UI";
+import { ToastUIEditor } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { TagSelector } from "@/components/Tags";
 
@@ -225,18 +225,24 @@ const NewNotePage: NextPage = () => {
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     笔记内容 *
                   </label>
-                  <MarkdownEditor
+                  <ToastUIEditor
                     value={formData.content}
                     onChange={(content) =>
                       setFormData({ ...formData, content })
                     }
                     placeholder="开始编写你的笔记内容..."
-                    height={400}
-                    preview="live"
+                    height="400px"
                     enableJetBrainsShortcuts={true}
                     autoSave={true}
                     autoSaveType="local"
                     onAutoSave={handleAutoSave}
+                    onCtrlEnterSave={() => {
+                      // Ctrl+Enter 快捷键保存
+                      const mockEvent = {
+                        preventDefault: () => {},
+                      } as React.FormEvent;
+                      void handleSubmit(mockEvent);
+                    }}
                   />
                 </div>
 

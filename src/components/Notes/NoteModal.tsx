@@ -3,7 +3,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";
-import { MarkdownEditor } from "@/components/UI";
+import { ToastUIEditor } from "@/components/UI";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { TagSelector } from "@/components/Tags";
 
@@ -466,14 +466,13 @@ export default function NoteModal({
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         笔记内容 *
                       </label>
-                      <MarkdownEditor
+                      <ToastUIEditor
                         value={formData.content}
                         onChange={(content) =>
                           setFormData({ ...formData, content })
                         }
                         placeholder="开始编写你的笔记内容..."
-                        height={350}
-                        preview="live"
+                        height="350px"
                         enableJetBrainsShortcuts={true}
                         autoSave={true}
                         autoSaveType="server"
@@ -486,12 +485,11 @@ export default function NoteModal({
                         }
                         onAutoSave={(content) => {
                           // 自动保存到服务器
-                          // 只检查是否有实际内容，但保留原始格式（包括换行）
                           if (!content.trim() || !noteId) return;
 
                           const saveData = {
-                            title: formData.title.trim() || "无标题笔记", // 标题仍然trim
-                            content: content, // 保留原始内容格式
+                            title: formData.title.trim() || "无标题笔记",
+                            content: content,
                             summary: formData.summary?.trim() || undefined,
                             projectId: formData.projectId || undefined,
                             tagIds: formData.tagIds,

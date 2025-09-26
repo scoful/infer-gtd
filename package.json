@@ -1,6 +1,6 @@
 {
   "name": "infer-gtd",
-  "version": "1.16.1",
+  "version": "1.16.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -42,11 +42,12 @@
     "@prisma/client": "^6.5.0",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.69.0",
+    "@toast-ui/editor": "^3.2.2",
+    "@toast-ui/react-editor": "^3.2.3",
     "@trpc/client": "^11.0.0",
     "@trpc/next": "^11.0.0",
     "@trpc/react-query": "^11.0.0",
     "@trpc/server": "^11.0.0",
-    "@uiw/react-md-editor": "^4.0.7",
     "next": "^15.2.3",
     "next-auth": "5.0.0-beta.25",
     "pino": "^9.7.0",

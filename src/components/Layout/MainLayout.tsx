@@ -194,6 +194,12 @@ const navigation: NavigationItem[] = [
         icon: ShieldCheckIcon,
         description: "定时任务和系统管理",
       },
+      {
+        name: "Markdown编辑器测试",
+        href: "/test/vditor",
+        icon: DocumentTextIcon,
+        description: "Toast UI Editor编辑器功能测试",
+      },
     ],
   },
 ];
@@ -202,7 +208,7 @@ const navigation: NavigationItem[] = [
 function getNavigationItems(isAdmin: boolean): NavigationItem[] {
   const baseNavigation = [...navigation];
 
-  // 如果不是管理员，移除系统管理子菜单
+  // 如果不是管理员，移除系统管理子菜单，但保留测试页面
   if (!isAdmin) {
     const settingsIndex = baseNavigation.findIndex(
       (item) => item.name === "系统设置",
@@ -300,7 +306,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
     }
     if (
       router.pathname.startsWith("/settings") ||
-      router.pathname.startsWith("/admin")
+      router.pathname.startsWith("/admin") ||
+      router.pathname.startsWith("/test")
     ) {
       setExpandedItems((prev) => new Set(prev).add("系统设置"));
     }

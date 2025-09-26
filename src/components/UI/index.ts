@@ -25,11 +25,10 @@ export {
   type ConfirmModalProps,
 } from "./ConfirmModal";
 
-// MarkdownEditor组件导出
-export {
-  default as MarkdownEditor,
-  SimpleMarkdownEditor,
-} from "./MarkdownEditor";
+
+
+// ToastUIEditor组件导出（新的推荐编辑器）
+export { default as ToastUIEditor } from "./ToastUIEditor";
 
 // MarkdownRenderer组件导出
 export { default as MarkdownRenderer } from "./MarkdownRenderer";

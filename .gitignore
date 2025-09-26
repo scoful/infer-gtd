@@ -54,3 +54,5 @@ yarn-error.log*
 test*
 .cunzhi-memory
 .env.prod
+
+*.code-workspace

@@ -6,7 +6,7 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 
-import MarkdownEditor from "@/components/UI/MarkdownEditor";
+import { ToastUIEditor } from "@/components/UI";
 import { api } from "@/utils/api";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 
@@ -194,12 +194,11 @@ export default function JournalEditor({
 
       {/* 编辑器 */}
       <div className="flex-1 overflow-hidden">
-        <MarkdownEditor
+        <ToastUIEditor
           value={content}
           onChange={handleContentChange}
           placeholder="开始写今天的日记..."
-          height={400}
-          preview="live"
+          height="400px"
           enableJetBrainsShortcuts={true}
           autoSave={true}
           autoSaveType="server"
@@ -212,15 +211,15 @@ export default function JournalEditor({
           }
           onAutoSave={(content) => {
             // 自动保存到服务器
-            // 只检查是否有实际内容，但保留原始格式（包括换行）
             if (!content.trim()) return;
 
             autoSaveJournal.mutate({
               date,
-              content: content, // 保留原始内容格式
+              content: content,
               template,
             });
           }}
+          onCtrlEnterSave={handleSave}
           className="h-full"
         />
       </div>

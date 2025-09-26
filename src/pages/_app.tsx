@@ -10,6 +10,10 @@ import { VersionProvider } from "@/contexts/VersionContext";
 import { initMobileDebug } from "@/utils/debug";
 
 import "@/styles/globals.css";
+// Toast UI Editor global styles (fix: ensure editor UI renders correctly)
+import "@toast-ui/editor/dist/toastui-editor.css";
+import "@toast-ui/editor/dist/toastui-editor-viewer.css";
+import "@toast-ui/editor/dist/theme/toastui-editor-dark.css";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
