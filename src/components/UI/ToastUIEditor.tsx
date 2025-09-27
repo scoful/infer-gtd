@@ -8,7 +8,7 @@ interface ToastUIEditorProps {
   className?: string;
   mode?: "markdown" | "wysiwyg";
   enableJetBrainsShortcuts?: boolean;
-  onCtrlEnterSave?: () => void;
+  onCtrlEnterSave?: (currentContent?: string) => void;
   // 自动保存功能
   autoSave?: boolean;
   onAutoSave?: (value: string) => void;
@@ -35,6 +35,7 @@ export default function ToastUIEditor({
 }: ToastUIEditorProps) {
   const editorRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const changeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [mounted, setMounted] = useState(false);
   const [Editor, setEditor] = useState<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -85,6 +86,9 @@ export default function ToastUIEditor({
     return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
+      }
+      if (changeTimeoutRef.current) {
+        clearTimeout(changeTimeoutRef.current);
       }
     };
   }, [value, autoSave, onAutoSave, lastSavedValue, mounted, autoSaveType]);
@@ -364,8 +368,16 @@ export default function ToastUIEditor({
         // Ctrl+Enter - 保存
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
           event.preventDefault();
+          event.stopPropagation();
+          // 强力阻断其他监听器，防止重复触发
+          try {
+            (event as any).stopImmediatePropagation?.();
+          } catch {}
+
           if (onCtrlEnterSave) {
-            onCtrlEnterSave();
+            // 获取当前编辑器内容并传递给回调
+            const currentContent = editorInstance.getMarkdown();
+            onCtrlEnterSave(currentContent);
           }
           return;
         }
@@ -640,7 +652,14 @@ export default function ToastUIEditor({
         }
       }
 
-      onChange(markdown);
+      // 防抖处理，避免频繁调用 onChange
+      if (changeTimeoutRef.current) {
+        clearTimeout(changeTimeoutRef.current);
+      }
+
+      changeTimeoutRef.current = setTimeout(() => {
+        onChange(markdown);
+      }, 50); // 50ms 防抖
     }
   };
 

@@ -95,10 +95,16 @@ const NewNotePage: NextPage = () => {
   });
 
   // 最终提交（创建笔记）
-  const finalSubmit = () => {
+  const finalSubmit = (overrideTitle?: string, overrideContent?: string) => {
+    // 获取当前实际的标题值
+    const currentTitle = overrideTitle || formData.title.trim();
+
+    // 获取当前实际的内容值
+    const currentContent = overrideContent || formData.content;
+
     const saveData = {
-      title: formData.title.trim(), // 标题仍然trim，避免前后空格
-      content: formData.content, // 内容保持原始格式
+      title: currentTitle,
+      content: currentContent,
       summary: formData.summary?.trim() || undefined,
       projectId: formData.projectId || undefined,
       tagIds: formData.tagIds,
@@ -112,9 +118,14 @@ const NewNotePage: NextPage = () => {
     void router.push("/notes");
   };
 
-  // 处理提交
+  // 处理提交（用于表单按钮提交）
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 防止重复提交
+    if (isSubmitting) {
+      return;
+    }
 
     if (!formData.title.trim()) {
       showError("请输入笔记标题");
@@ -236,12 +247,27 @@ const NewNotePage: NextPage = () => {
                     autoSave={true}
                     autoSaveType="local"
                     onAutoSave={handleAutoSave}
-                    onCtrlEnterSave={() => {
-                      // Ctrl+Enter 快捷键保存
-                      const mockEvent = {
-                        preventDefault: () => {},
-                      } as React.FormEvent;
-                      void handleSubmit(mockEvent);
+                    onCtrlEnterSave={(currentContent) => {
+                      // Ctrl+Enter 快捷键保存，直接使用编辑器当前内容
+                      const titleInput = document.getElementById("title") as HTMLInputElement;
+                      const currentTitle = titleInput?.value?.trim() || formData.title.trim();
+
+                      if (!currentTitle) {
+                        showError("请输入笔记标题");
+                        return;
+                      }
+
+                      if (!currentContent?.trim()) {
+                        showError("请输入笔记内容");
+                        return;
+                      }
+
+                      if (isSubmitting) {
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      finalSubmit(currentTitle, currentContent);
                     }}
                   />
                 </div>

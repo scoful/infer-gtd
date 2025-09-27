@@ -110,10 +110,12 @@ const NewJournalPage: NextPage = () => {
   });
 
   // 最终提交（创建日记）
-  const finalSubmit = () => {
+  const finalSubmit = (overrideContent?: string) => {
+    const currentContent = overrideContent || formData.content;
+
     const saveData = {
       date: targetDate,
-      content: formData.content,
+      content: currentContent,
       template: formData.template,
     };
 
@@ -282,12 +284,19 @@ const NewJournalPage: NextPage = () => {
                     autoSave={true}
                     autoSaveType="local"
                     onAutoSave={handleAutoSave}
-                    onCtrlEnterSave={() => {
-                      // Ctrl+Enter 快捷键保存
-                      const mockEvent = {
-                        preventDefault: () => {},
-                      } as React.FormEvent;
-                      void handleSubmit(mockEvent);
+                    onCtrlEnterSave={(currentContent) => {
+                      // Ctrl+Enter 快捷键保存，直接使用编辑器当前内容
+                      if (!currentContent?.trim()) {
+                        showError("请输入日记内容");
+                        return;
+                      }
+
+                      if (isSubmitting) {
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      finalSubmit(currentContent);
                     }}
                   />
                 </div>

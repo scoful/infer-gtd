@@ -38,7 +38,7 @@ export default function JournalEditor({
   // 监听日记数据变化，设置编辑器内容
   useEffect(() => {
     if (existingJournal) {
-      setContent(existingJournal.content);
+      setContent(existingJournal.content || "");
       setTemplate(existingJournal.template || undefined);
       setHasUnsavedChanges(false);
     } else {
@@ -90,15 +90,18 @@ export default function JournalEditor({
   };
 
   // 手动保存
-  const handleSave = () => {
-    if (!content.trim()) {
+  const handleSave = (currentContent?: string) => {
+    const contentToSave = currentContent || content;
+
+    // 确保 contentToSave 是字符串类型
+    if (typeof contentToSave !== 'string' || !contentToSave.trim()) {
       showError("日记内容不能为空");
       return;
     }
 
     saveJournal.mutate({
       date,
-      content: content.trim(),
+      content: contentToSave.trim(),
       template,
     });
   };
@@ -180,7 +183,7 @@ export default function JournalEditor({
 
         <div className="flex items-center space-x-2">
           {/* 模板按钮 */}
-          {!existingJournal && content.trim() === "" && (
+          {!existingJournal && typeof content === 'string' && content.trim() === "" && (
             <button
               onClick={() => applyTemplate(defaultTemplate)}
               className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -219,7 +222,10 @@ export default function JournalEditor({
               template,
             });
           }}
-          onCtrlEnterSave={handleSave}
+          onCtrlEnterSave={(currentContent) => {
+            // Ctrl+Enter 快捷键保存，直接使用编辑器当前内容
+            handleSave(currentContent);
+          }}
           className="h-full"
         />
       </div>
@@ -235,8 +241,8 @@ export default function JournalEditor({
           </button>
         )}
         <button
-          onClick={handleSave}
-          disabled={saveJournal.isPending || !content.trim()}
+          onClick={() => handleSave()}
+          disabled={saveJournal.isPending || typeof content !== 'string' || !content.trim()}
           className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saveJournal.isPending ? (

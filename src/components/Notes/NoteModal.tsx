@@ -186,18 +186,7 @@ export default function NoteModal({
         if (event.key === "Escape") {
           event.stopPropagation();
         }
-
-        // Ctrl+Enter：触发保存
-        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          // 触发保存操作
-          const mockEvent = {
-            preventDefault: () => {},
-          } as React.FormEvent;
-          void handleSubmit(mockEvent);
-        }
+        // Ctrl+Enter 已由 ToastUIEditor 统一处理，这里不再重复处理
       }
     };
 
@@ -267,6 +256,11 @@ export default function NoteModal({
     async (e: React.FormEvent) => {
       e.preventDefault();
 
+      // 防止重复提交
+      if (updateNote.isPending) {
+        return;
+      }
+
       if (!formData.title.trim() || !formData.content.trim()) {
         showError("标题和内容不能为空");
         return;
@@ -290,40 +284,7 @@ export default function NoteModal({
     [formData, noteId, updateNote, showError],
   );
 
-  // 添加 Ctrl+Enter 快捷键支持
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen && e.ctrlKey && e.key === "Enter") {
-        e.preventDefault();
-        // 检查表单是否有效且不在提交中
-        if (
-          formData.title.trim() &&
-          formData.content.trim() &&
-          !updateNote.isPending
-        ) {
-          // 创建一个模拟的表单事件
-          const mockEvent = {
-            preventDefault: () => {},
-          } as React.FormEvent;
-          void handleSubmit(mockEvent);
-        }
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [
-    isOpen,
-    formData.title,
-    formData.content,
-    updateNote.isPending,
-    handleSubmit,
-  ]);
+  // Ctrl+Enter 快捷键已由 ToastUIEditor 统一处理，通过 onCtrlEnterSave 回调触发
 
   const isSubmitting = updateNote.isPending;
 
@@ -500,12 +461,31 @@ export default function NoteModal({
                             ...saveData,
                           });
                         }}
-                        onCtrlEnterSave={() => {
-                          // Ctrl+Enter 快捷键保存
-                          const mockEvent = {
-                            preventDefault: () => {},
-                          } as React.FormEvent;
-                          void handleSubmit(mockEvent);
+                        onCtrlEnterSave={(currentContent) => {
+                          // Ctrl+Enter 快捷键保存，直接使用编辑器当前内容
+                          const titleInput = document.getElementById("title") as HTMLInputElement;
+                          const currentTitle = titleInput?.value?.trim() || formData.title.trim();
+
+                          if (!currentTitle || !currentContent?.trim()) {
+                            showError("标题和内容不能为空");
+                            return;
+                          }
+
+                          if (updateNote.isPending) {
+                            return;
+                          }
+
+                          const submitData = {
+                            ...formData,
+                            title: currentTitle,
+                            content: currentContent,
+                            projectId: formData.projectId ?? undefined,
+                          };
+
+                          void updateNote.mutateAsync({
+                            id: noteId,
+                            ...submitData,
+                          });
                         }}
                       />
                     </div>
