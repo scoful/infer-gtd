@@ -94,7 +94,7 @@ export default function JournalEditor({
     const contentToSave = currentContent || content;
 
     // 确保 contentToSave 是字符串类型
-    if (typeof contentToSave !== 'string' || !contentToSave.trim()) {
+    if (typeof contentToSave !== "string" || !contentToSave.trim()) {
       showError("日记内容不能为空");
       return;
     }
@@ -183,15 +183,17 @@ export default function JournalEditor({
 
         <div className="flex items-center space-x-2">
           {/* 模板按钮 */}
-          {!existingJournal && typeof content === 'string' && content.trim() === "" && (
-            <button
-              onClick={() => applyTemplate(defaultTemplate)}
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <DocumentTextIcon className="mr-1 h-4 w-4" />
-              使用模板
-            </button>
-          )}
+          {!existingJournal &&
+            typeof content === "string" &&
+            content.trim() === "" && (
+              <button
+                onClick={() => applyTemplate(defaultTemplate)}
+                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <DocumentTextIcon className="mr-1 h-4 w-4" />
+                使用模板
+              </button>
+            )}
         </div>
       </div>
 
@@ -242,7 +244,11 @@ export default function JournalEditor({
         )}
         <button
           onClick={() => handleSave()}
-          disabled={saveJournal.isPending || typeof content !== 'string' || !content.trim()}
+          disabled={
+            saveJournal.isPending ||
+            typeof content !== "string" ||
+            !content.trim()
+          }
           className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saveJournal.isPending ? (

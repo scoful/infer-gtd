@@ -2,7 +2,10 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import {
+  oneDark,
+  oneLight,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface MarkdownRendererProps {
   content: string;
@@ -22,13 +25,13 @@ export default function MarkdownRenderer({
       await navigator.clipboard?.writeText(text);
       setCopiedText(text);
       setTimeout(() => setCopiedText(null), 1500);
-    } catch (error) {
+    } catch {
       // 降级处理：使用传统方法
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
       setCopiedText(text);
       setTimeout(() => setCopiedText(null), 1500);
@@ -43,12 +46,12 @@ export default function MarkdownRenderer({
         components={{
           // 自定义组件样式
           h1: ({ children }) => (
-            <h1 className="mt-8 mb-4 text-3xl font-bold text-gray-900 first:mt-0 border-b border-gray-200 pb-2">
+            <h1 className="mt-8 mb-4 border-b border-gray-200 pb-2 text-3xl font-bold text-gray-900 first:mt-0">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mt-6 mb-4 text-2xl font-semibold text-gray-900 border-b border-gray-100 pb-1">
+            <h2 className="mt-6 mb-4 border-b border-gray-100 pb-1 text-2xl font-semibold text-gray-900">
               {children}
             </h2>
           ),
@@ -73,12 +76,14 @@ export default function MarkdownRenderer({
             </h6>
           ),
           p: ({ children }) => (
-            <p className="mb-4 leading-relaxed text-gray-700 text-base">{children}</p>
+            <p className="mb-4 text-base leading-relaxed text-gray-700">
+              {children}
+            </p>
           ),
           a: ({ href, children }) => (
             <a
               href={href}
-              className="text-blue-600 hover:text-blue-800 underline decoration-blue-300 hover:decoration-blue-500 underline-offset-2 transition-colors"
+              className="text-blue-600 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-800 hover:decoration-blue-500"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -92,24 +97,34 @@ export default function MarkdownRenderer({
             <em className="text-gray-700 italic">{children}</em>
           ),
           code: ({ children, className, ...props }) => {
-            const match = /language-(\w+)/.exec(className || "");
+            const match = /language-(\w+)/.exec(className ?? "");
             const language = match ? match[1] : "";
 
             // 内联代码
             if (!match) {
-              const codeText = String(children);
+              const codeText = Array.isArray(children)
+                ? children.join("")
+                : typeof children === "string"
+                  ? children
+                  : typeof children === "number"
+                    ? children.toString()
+                    : "";
               const isCopied = copiedText === codeText;
 
               return (
                 <code
-                  className="relative inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-pink-600 border cursor-pointer hover:bg-gray-200 hover:shadow-sm transition-all duration-200 group"
+                  className="group relative inline-flex cursor-pointer items-center rounded border bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-pink-600 transition-all duration-200 hover:bg-gray-200 hover:shadow-sm"
                   onClick={() => handleInlineCodeCopy(codeText)}
                   title="点击复制"
                   {...props}
                 >
-                  <span className={isCopied ? "text-green-600" : ""}>{children}</span>
+                  <span className={isCopied ? "text-green-600" : ""}>
+                    {children}
+                  </span>
                   {isCopied && (
-                    <span className="ml-1 text-xs text-green-600 font-normal">已复制</span>
+                    <span className="ml-1 text-xs font-normal text-green-600">
+                      已复制
+                    </span>
                   )}
                 </code>
               );
@@ -118,13 +133,22 @@ export default function MarkdownRenderer({
             // 代码块 - 使用语法高亮
             return (
               <div className="my-4 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2">
                   <span className="text-xs font-medium text-gray-600 uppercase">
-                    {language || "text"}
+                    {language ?? "text"}
                   </span>
                   <button
-                    onClick={() => navigator.clipboard?.writeText(String(children))}
-                    className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                    onClick={() => {
+                      const codeContent = Array.isArray(children)
+                        ? children.join("")
+                        : typeof children === "string"
+                          ? children
+                          : typeof children === "number"
+                            ? children.toString()
+                            : "";
+                      void navigator.clipboard?.writeText(codeContent);
+                    }}
+                    className="text-xs text-gray-500 transition-colors hover:text-gray-700"
                   >
                     复制
                   </button>
@@ -142,16 +166,25 @@ export default function MarkdownRenderer({
                     lineHeight: "1.5",
                   }}
                 >
-                  {String(children).replace(/\n$/, "")}
+                  {(Array.isArray(children)
+                    ? children.join("")
+                    : typeof children === "string"
+                      ? children
+                      : typeof children === "number"
+                        ? children.toString()
+                        : ""
+                  ).replace(/\n$/, "")}
                 </SyntaxHighlighter>
               </div>
             );
           },
 
           blockquote: ({ children }) => (
-            <blockquote className="mb-6 border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent py-4 pl-6 pr-4 italic text-gray-700 rounded-r-lg shadow-sm">
+            <blockquote className="mb-6 rounded-r-lg border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent py-4 pr-4 pl-6 text-gray-700 italic shadow-sm">
               <div className="relative">
-                <span className="absolute -left-2 -top-1 text-2xl text-blue-400 opacity-50">"</span>
+                <span className="absolute -top-1 -left-2 text-2xl text-blue-400 opacity-50">
+                  &ldquo;
+                </span>
                 {children}
               </div>
             </blockquote>
@@ -160,23 +193,26 @@ export default function MarkdownRenderer({
             <ul className="mb-4 ml-4 space-y-2">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="mb-4 ml-4 space-y-2">
-              {children}
-            </ol>
+            <ol className="mb-4 ml-4 space-y-2">{children}</ol>
           ),
           li: ({ children, ...props }) => {
             // 检查是否是任务列表项
-            const isTaskList = props.className?.includes('task-list-item');
+            const isTaskList = props.className?.includes("task-list-item");
             if (isTaskList) {
               return (
-                <li className="flex items-start space-x-2 leading-relaxed text-gray-700 list-none" {...props}>
+                <li
+                  className="flex list-none items-start space-x-2 leading-relaxed text-gray-700"
+                  {...props}
+                >
                   {children}
                 </li>
               );
             }
             return (
-              <li className="leading-relaxed text-gray-700 relative pl-2">
-                <span className="absolute left-0 top-0 text-blue-500 font-bold">•</span>
+              <li className="relative pl-2 leading-relaxed text-gray-700">
+                <span className="absolute top-0 left-0 font-bold text-blue-500">
+                  •
+                </span>
                 <div className="ml-3">{children}</div>
               </li>
             );
@@ -193,18 +229,20 @@ export default function MarkdownRenderer({
             <thead className="bg-gray-50">{children}</thead>
           ),
           tbody: ({ children }) => (
-            <tbody className="divide-y divide-gray-200 bg-white">{children}</tbody>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {children}
+            </tbody>
           ),
           tr: ({ children }) => (
-            <tr className="hover:bg-gray-50 transition-colors">{children}</tr>
+            <tr className="transition-colors hover:bg-gray-50">{children}</tr>
           ),
           th: ({ children }) => (
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">
               {children}
             </td>
           ),

@@ -249,8 +249,11 @@ const NewNotePage: NextPage = () => {
                     onAutoSave={handleAutoSave}
                     onCtrlEnterSave={(currentContent) => {
                       // Ctrl+Enter 快捷键保存，直接使用编辑器当前内容
-                      const titleInput = document.getElementById("title") as HTMLInputElement;
-                      const currentTitle = titleInput?.value?.trim() || formData.title.trim();
+                      const titleInput = document.getElementById(
+                        "title",
+                      ) as HTMLInputElement;
+                      const currentTitle =
+                        titleInput?.value?.trim() || formData.title.trim();
 
                       if (!currentTitle) {
                         showError("请输入笔记标题");
