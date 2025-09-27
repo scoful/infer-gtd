@@ -1,6 +1,6 @@
 {
   "name": "infer-gtd",
-  "version": "1.22.2",
+  "version": "1.22.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -48,6 +48,7 @@
     "@trpc/next": "^11.0.0",
     "@trpc/react-query": "^11.0.0",
     "@trpc/server": "^11.0.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "next": "^15.2.3",
     "next-auth": "5.0.0-beta.25",
     "pino": "^9.7.0",
@@ -55,6 +56,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.6",
     "recharts": "^3.0.2",
     "remark-gfm": "^4.0.1",
     "superjson": "^2.2.1",
