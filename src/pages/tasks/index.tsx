@@ -512,8 +512,8 @@ const TaskListPage: NextPage = () => {
 
       switch (sortField) {
         case "title":
-          aValue = a.title.toLowerCase();
-          bValue = b.title.toLowerCase();
+          aValue = a.title?.toLowerCase() || "";
+          bValue = b.title?.toLowerCase() || "";
           break;
         case "dueDate":
           aValue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;

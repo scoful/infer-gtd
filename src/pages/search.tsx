@@ -557,7 +557,7 @@ const SearchPage: NextPage = () => {
     // 处理标签搜索（需要等待标签数据加载）
     if (urlSearchBy === "tag" && urlQuery && tags?.tags) {
       const matchingTag = tags.tags.find(
-        (tag) => tag.name.toLowerCase() === urlQuery.toLowerCase(),
+        (tag) => tag.name?.toLowerCase() === urlQuery.toLowerCase(),
       );
       if (matchingTag) {
         setTagIds([matchingTag.id]);

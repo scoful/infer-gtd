@@ -12,6 +12,7 @@ import {
   TagIcon,
   FolderIcon,
   CalendarIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 import { api } from "@/utils/api";
@@ -244,7 +245,7 @@ const NoteDetailPage: NextPage = () => {
                           {note.updatedAt.getTime() !==
                             note.createdAt.getTime() && (
                             <div className="flex items-center">
-                              <CalendarIcon className="mr-1 h-4 w-4" />
+                              <ClockIcon className="mr-1 h-4 w-4" />
                               更新于 {formatDate(note.updatedAt)}
                             </div>
                           )}

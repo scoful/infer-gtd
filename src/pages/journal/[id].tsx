@@ -121,6 +121,17 @@ const JournalDetailPage: NextPage = () => {
     }
   };
 
+  // 格式化日期
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -215,29 +226,13 @@ const JournalDetailPage: NextPage = () => {
                   <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
                     <div className="flex items-center">
                       <CalendarIcon className="mr-1 h-4 w-4" />
-                      创建于{" "}
-                      {(() => {
-                        const d = new Date(journal.createdAt);
-                        const year = d.getFullYear();
-                        const month = String(d.getMonth() + 1).padStart(2, "0");
-                        const day = String(d.getDate()).padStart(2, "0");
-                        return `${year}-${month}-${day}`;
-                      })()}
+                      创建于 {formatDate(journal.createdAt)}
                     </div>
-                    {journal.updatedAt !== journal.createdAt && (
+                    {journal.updatedAt.getTime() !==
+                      journal.createdAt.getTime() && (
                       <div className="flex items-center">
                         <ClockIcon className="mr-1 h-4 w-4" />
-                        更新于{" "}
-                        {(() => {
-                          const d = new Date(journal.updatedAt);
-                          const year = d.getFullYear();
-                          const month = String(d.getMonth() + 1).padStart(
-                            2,
-                            "0",
-                          );
-                          const day = String(d.getDate()).padStart(2, "0");
-                          return `${year}-${month}-${day}`;
-                        })()}
+                        更新于 {formatDate(journal.updatedAt)}
                       </div>
                     )}
                   </div>

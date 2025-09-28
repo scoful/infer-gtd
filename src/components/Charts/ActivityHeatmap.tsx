@@ -175,11 +175,19 @@ export default function ActivityHeatmap({
                 const maxMiddleMonths = 6; // 最多显示6个中间月份
 
                 // 选择要显示的中间月份（平均间隔选择）
-                const step = Math.max(1, Math.floor(middleMonths.length / maxMiddleMonths));
-                const selectedMiddle = middleMonths.filter((_, index) => index % step === 0);
+                const step = Math.max(
+                  1,
+                  Math.floor(middleMonths.length / maxMiddleMonths),
+                );
+                const selectedMiddle = middleMonths.filter(
+                  (_, index) => index % step === 0,
+                );
 
                 selectedMiddle.forEach((month, index) => {
-                  const position = 0 + ((index + 1) * availableSpace) / (selectedMiddle.length + 1);
+                  const position =
+                    0 +
+                    ((index + 1) * availableSpace) /
+                      (selectedMiddle.length + 1);
                   displayMonths.push({
                     name: month.name,
                     position: Math.min(position, 92), // 确保不超过92%
