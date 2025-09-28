@@ -2,21 +2,16 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  oneDark,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
 
 interface MarkdownRendererProps {
   content: string;
   className?: string;
-  theme?: "light" | "dark";
 }
 
 export default function MarkdownRenderer({
   content,
   className = "",
-  theme = "light",
 }: MarkdownRendererProps) {
   const [copiedText, setCopiedText] = React.useState<string | null>(null);
 
@@ -154,7 +149,7 @@ export default function MarkdownRenderer({
                   </button>
                 </div>
                 <SyntaxHighlighter
-                  style={theme === "dark" ? oneDark : oneLight}
+                  style={oneLight}
                   language={language}
                   PreTag="div"
                   className="!m-0 !bg-transparent"
