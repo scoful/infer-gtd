@@ -171,12 +171,7 @@ export default function PinnedNotesCarousel({
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20"></div>
 
         <div className="relative z-10 p-6 text-center">
-          <div className="relative">
-            <BookmarkSolidIcon className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-100">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400"></div>
-            </div>
-          </div>
+          <BookmarkSolidIcon className="mx-auto mb-3 h-12 w-12 text-gray-300" />
           <p className="mb-1 text-sm font-medium text-gray-500">暂无置顶内容</p>
           <p className="text-xs text-gray-400">
             在笔记中点击 ⭐ 来置顶精彩内容

@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { TaskStatus, TaskType } from "@prisma/client";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { getLocalDateString } from "@/utils/timezone";
 import {
   batchDeleteTasksSchema,
   batchUpdateTasksSchema,
@@ -2322,7 +2323,7 @@ export const taskRouter = createTRPCRouter({
           )
           .reduce(
             (acc, task) => {
-              const dateKey = task.updatedAt.toISOString().split("T")[0]!;
+              const dateKey = getLocalDateString(task.updatedAt);
               acc[dateKey] = (acc[dateKey] || 0) + 1;
               return acc;
             },
@@ -2351,7 +2352,7 @@ export const taskRouter = createTRPCRouter({
           )
           .reduce(
             (acc, note) => {
-              const dateKey = note.updatedAt.toISOString().split("T")[0]!;
+              const dateKey = getLocalDateString(note.updatedAt);
               acc[dateKey] = (acc[dateKey] || 0) + 1;
               return acc;
             },
@@ -2381,7 +2382,7 @@ export const taskRouter = createTRPCRouter({
           )
           .reduce(
             (acc, journal) => {
-              const dateKey = journal.updatedAt.toISOString().split("T")[0]!;
+              const dateKey = getLocalDateString(journal.updatedAt);
               acc[dateKey] = (acc[dateKey] || 0) + 1;
               return acc;
             },
@@ -2393,7 +2394,7 @@ export const taskRouter = createTRPCRouter({
 
         // 处理任务创建
         taskCreations.forEach((item) => {
-          const dateKey = item.createdAt.toISOString().split("T")[0]!;
+          const dateKey = getLocalDateString(item.createdAt);
           activityMap.set(
             dateKey,
             (activityMap.get(dateKey) || 0) + item._count.id,
@@ -2403,7 +2404,7 @@ export const taskRouter = createTRPCRouter({
         // 处理任务完成
         taskCompletions.forEach((item) => {
           if (item.completedAt) {
-            const dateKey = item.completedAt.toISOString().split("T")[0]!;
+            const dateKey = getLocalDateString(item.completedAt);
             activityMap.set(
               dateKey,
               (activityMap.get(dateKey) || 0) + item._count.id,
@@ -2413,7 +2414,7 @@ export const taskRouter = createTRPCRouter({
 
         // 处理笔记创建
         noteCreations.forEach((item) => {
-          const dateKey = item.createdAt.toISOString().split("T")[0]!;
+          const dateKey = getLocalDateString(item.createdAt);
           activityMap.set(
             dateKey,
             (activityMap.get(dateKey) || 0) + item._count.id,
@@ -2422,7 +2423,7 @@ export const taskRouter = createTRPCRouter({
 
         // 处理日记创建
         journalCreations.forEach((item) => {
-          const dateKey = item.createdAt.toISOString().split("T")[0]!;
+          const dateKey = getLocalDateString(item.createdAt);
           activityMap.set(
             dateKey,
             (activityMap.get(dateKey) || 0) + item._count.id,

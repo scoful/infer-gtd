@@ -29,6 +29,15 @@ import {
 } from "@/components/Charts";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { TaskStatus, type Priority } from "@prisma/client";
+import {
+  getUTCDateRange,
+  getLocalHour,
+  getLocalDateString,
+  groupByLocalHour,
+  getLocalWeekRange,
+  getLocalMonthRange,
+  getLocalYearRange,
+} from "@/utils/timezone";
 
 // 时间范围类型
 type TimeRange = "week" | "month" | "year";
@@ -42,7 +51,7 @@ const TIME_RANGE_CONFIG = {
       const weekNumber = getWeekNumber(date);
       return `${year}年第${weekNumber}周`;
     },
-    getRange: (date: Date) => getWeekRange(date),
+    getRange: getLocalWeekRange,
     navigate: (date: Date, direction: "prev" | "next") => {
       const newDate = new Date(date);
       newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7));
@@ -54,7 +63,7 @@ const TIME_RANGE_CONFIG = {
     format: (date: Date) => {
       return `${date.getFullYear()}年${date.getMonth() + 1}月`;
     },
-    getRange: (date: Date) => getMonthRange(date),
+    getRange: getLocalMonthRange,
     navigate: (date: Date, direction: "prev" | "next") => {
       const newDate = new Date(date);
       newDate.setMonth(newDate.getMonth() + (direction === "next" ? 1 : -1));
@@ -66,7 +75,7 @@ const TIME_RANGE_CONFIG = {
     format: (date: Date) => {
       return `${date.getFullYear()}年`;
     },
-    getRange: (date: Date) => getYearRange(date),
+    getRange: getLocalYearRange,
     navigate: (date: Date, direction: "prev" | "next") => {
       const newDate = new Date(date);
       newDate.setFullYear(
@@ -82,43 +91,6 @@ function getWeekNumber(date: Date): number {
   const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
   const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-}
-
-// 获取周范围
-function getWeekRange(date: Date) {
-  const start = new Date(date);
-  const day = start.getDay();
-  const diff = start.getDate() - day + (day === 0 ? -6 : 1); // 周一开始
-  start.setDate(diff);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-}
-
-// 获取月范围
-function getMonthRange(date: Date) {
-  const start = new Date(date.getFullYear(), date.getMonth(), 1);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-}
-
-// 获取年范围
-function getYearRange(date: Date) {
-  const start = new Date(date.getFullYear(), 0, 1);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(date.getFullYear(), 11, 31);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
 }
 
 // 格式化日期范围
@@ -139,11 +111,16 @@ const TaskReviewPage: NextPage = () => {
   const [showAllCompleted, setShowAllCompleted] = useState(false);
   const [viewMode, setViewMode] = useState<"data" | "visualization">("data");
 
-  // 计算当前时间范围的日期范围
-  const dateRange = useMemo(() => {
+  // 计算当前时间范围的日期范围（本地时区）
+  const localDateRange = useMemo(() => {
     const config = TIME_RANGE_CONFIG[timeRange];
     return config.getRange(currentDate);
   }, [currentDate, timeRange]);
+
+  // 转换为UTC时间范围用于数据库查询
+  const utcDateRange = useMemo(() => {
+    return getUTCDateRange(localDateRange.start, localDateRange.end);
+  }, [localDateRange]);
 
   // 获取任务统计
   const {
@@ -152,8 +129,8 @@ const TaskReviewPage: NextPage = () => {
     isFetching: isFetchingStats,
   } = api.task.getStats.useQuery(
     {
-      startDate: dateRange.start,
-      endDate: dateRange.end,
+      startDate: utcDateRange.start,
+      endDate: utcDateRange.end,
     },
     { enabled: !!sessionData },
   );
@@ -166,8 +143,8 @@ const TaskReviewPage: NextPage = () => {
     isFetching: isFetchingTasks,
   } = api.task.getAll.useQuery(
     {
-      createdAfter: dateRange.start,
-      createdBefore: dateRange.end,
+      createdAfter: utcDateRange.start,
+      createdBefore: utcDateRange.end,
       limit: 100,
     },
     { enabled: !!sessionData },
@@ -181,8 +158,8 @@ const TaskReviewPage: NextPage = () => {
   } = api.task.getAll.useQuery(
     {
       status: TaskStatus.DONE,
-      completedAfter: dateRange.start,
-      completedBefore: dateRange.end,
+      completedAfter: utcDateRange.start,
+      completedBefore: utcDateRange.end,
       limit: 50,
     },
     { enabled: !!sessionData },
@@ -195,8 +172,8 @@ const TaskReviewPage: NextPage = () => {
     isFetching: isFetchingTimeEntries,
   } = api.task.getTimeEntries.useQuery(
     {
-      startDate: dateRange.start,
-      endDate: dateRange.end,
+      startDate: utcDateRange.start,
+      endDate: utcDateRange.end,
       limit: 100,
     },
     { enabled: !!sessionData },
@@ -312,7 +289,7 @@ const TaskReviewPage: NextPage = () => {
         ? (tasksWithFeedback.length / completedCount) * 100
         : 0;
 
-    // 时间分布分析 - 新建任务和完成任务
+    // 时间分布分析 - 新建任务和完成任务（使用本地时区）
     const timeDistribution: Record<
       number,
       { created: number; completed: number }
@@ -323,18 +300,18 @@ const TaskReviewPage: NextPage = () => {
       timeDistribution[hour] = { created: 0, completed: 0 };
     }
 
-    // 统计新建任务的时间分布
+    // 统计新建任务的时间分布（使用本地时区小时）
     allTasks.forEach((task) => {
-      const hour = new Date(task.createdAt).getHours();
+      const hour = getLocalHour(task.createdAt);
       if (timeDistribution[hour]) {
         timeDistribution[hour].created++;
       }
     });
 
-    // 统计完成任务的时间分布
+    // 统计完成任务的时间分布（使用本地时区小时）
     completed.forEach((task) => {
       if (task.completedAt) {
-        const hour = new Date(task.completedAt).getHours();
+        const hour = getLocalHour(task.completedAt);
         if (timeDistribution[hour]) {
           timeDistribution[hour].completed++;
         }
@@ -376,14 +353,12 @@ const TaskReviewPage: NextPage = () => {
       (a, b) => b.count - a.count,
     );
 
-    // 每日完成趋势（仅对周和月有效）
+    // 每日完成趋势（仅对周和月有效）- 使用本地时区日期
     const dailyCompletion: Record<string, number> = {};
     if (timeRange !== "year") {
       completed.forEach((task) => {
         if (task.completedAt) {
-          const dateKey = new Date(task.completedAt)
-            .toISOString()
-            .split("T")[0]!;
+          const dateKey = getLocalDateString(task.completedAt);
           dailyCompletion[dateKey] = (dailyCompletion[dateKey] || 0) + 1;
         }
       });
@@ -458,26 +433,24 @@ const TaskReviewPage: NextPage = () => {
       completed: number; // 完成任务数
       completionRate: number; // 完成率
     }> = [];
-    const startTime = dateRange.start.getTime();
-    const endTime = dateRange.end.getTime();
+    const startTime = localDateRange.start.getTime();
+    const endTime = localDateRange.end.getTime();
     const oneDay = 24 * 60 * 60 * 1000;
 
     for (let time = startTime; time <= endTime; time += oneDay) {
       const current = new Date(time);
-      const dateKey = current.toISOString().split("T")[0]!;
+      const dateKey = getLocalDateString(current);
 
       // 当日新建的任务
       const dayCreated = tasks.tasks.filter((task) => {
-        const taskDate = new Date(task.createdAt).toISOString().split("T")[0];
+        const taskDate = getLocalDateString(new Date(task.createdAt));
         return taskDate === dateKey;
       });
 
       // 当日完成的任务
       const dayCompleted = completedTasks.tasks.filter((task) => {
         if (!task.completedAt) return false;
-        const completedDate = new Date(task.completedAt)
-          .toISOString()
-          .split("T")[0];
+        const completedDate = getLocalDateString(new Date(task.completedAt));
         return completedDate === dateKey;
       });
 
@@ -501,8 +474,8 @@ const TaskReviewPage: NextPage = () => {
   }, [
     tasks?.tasks,
     completedTasks?.tasks,
-    dateRange.start.getTime(),
-    dateRange.end.getTime(),
+    localDateRange.start.getTime(),
+    localDateRange.end.getTime(),
   ]);
 
   // 导航到上一个/下一个时间段
@@ -610,7 +583,11 @@ const TaskReviewPage: NextPage = () => {
                 {TIME_RANGE_CONFIG[timeRange].format(currentDate)}
               </div>
               <div className="text-sm text-gray-500">
-                {formatDateRange(dateRange.start, dateRange.end, timeRange)}
+                {formatDateRange(
+                  localDateRange.start,
+                  localDateRange.end,
+                  timeRange,
+                )}
               </div>
             </div>
 
@@ -1333,7 +1310,7 @@ const TaskReviewPage: NextPage = () => {
                                   <DailyCompletionChart
                                     data={detailedStats.dailyCompletion}
                                     timeRange={timeRange}
-                                    dateRange={dateRange}
+                                    dateRange={localDateRange}
                                   />
                                 </div>
                               )}

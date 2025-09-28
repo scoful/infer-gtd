@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { getLocalDateString } from "@/utils/timezone";
 import {
   createJournalSchema,
   getJournalByDateSchema,
@@ -517,8 +518,8 @@ export const journalRouter = createTRPCRouter({
         // 生成日历数据（显示哪些日期有日记）
         const calendar: Record<string, boolean> = {};
         journals.forEach((journal) => {
-          const dateKey = journal.date.toISOString().split("T")[0];
-          calendar[dateKey!] = true;
+          const dateKey = getLocalDateString(journal.date);
+          calendar[dateKey] = true;
         });
 
         return {
@@ -637,7 +638,7 @@ export const journalRouter = createTRPCRouter({
         journals.forEach((journal) => {
           const hour = journal.createdAt.getHours();
           const dayOfWeek = journal.date.getDay();
-          const dateKey = journal.date.toISOString().split("T")[0]!;
+          const dateKey = getLocalDateString(journal.date);
 
           writingTimes[hour] = (writingTimes[hour] ?? 0) + 1;
           weeklyPattern[dayOfWeek] = (weeklyPattern[dayOfWeek] ?? 0) + 1;

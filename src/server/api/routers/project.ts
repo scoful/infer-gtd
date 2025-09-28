@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { TaskStatus } from "@prisma/client";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { getLocalDateString } from "@/utils/timezone";
 import {
   archiveProjectSchema,
   batchProjectOperationSchema,
@@ -426,7 +427,7 @@ export const projectRouter = createTRPCRouter({
         ];
 
         const uniqueDays = new Set(
-          allDates.map((date) => new Date(date).toISOString().split("T")[0]),
+          allDates.map((date) => getLocalDateString(new Date(date))),
         );
 
         const activeDays = uniqueDays.size;
