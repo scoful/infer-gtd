@@ -56,18 +56,19 @@ export default function ActivityHeatmap({
     for (let week = 0; week < weekCount; week++) {
       currentWeek = [];
 
+      // 在每周开始时检查是否需要添加月份标签
+      const weekStartMonth = currentDate.getMonth();
+      if (weekStartMonth !== lastMonth) {
+        months.push({
+          name: currentDate.toLocaleDateString("zh-CN", { month: "short" }),
+          startWeek: weekIndex,
+        });
+        lastMonth = weekStartMonth;
+      }
+
       for (let day = 0; day < 7; day++) {
         const dateStr = currentDate.toISOString().split("T")[0]!;
         const activityData = dataMap.get(dateStr);
-
-        // 检查是否是新月份
-        if (currentDate.getMonth() !== lastMonth && day === 0) {
-          months.push({
-            name: currentDate.toLocaleDateString("zh-CN", { month: "short" }),
-            startWeek: weekIndex,
-          });
-          lastMonth = currentDate.getMonth();
-        }
 
         currentWeek.push({
           date: dateStr,
@@ -148,40 +149,58 @@ export default function ActivityHeatmap({
         <div className="w-4 sm:w-5 md:w-6 lg:w-7 xl:w-8"></div>{" "}
         {/* 星期标签的空间 */}
         <div className="relative ml-1 h-4 flex-1 overflow-hidden">
-          {months.map((month, index) => {
-            const leftPercent = (month.startWeek * 100) / weeks.length;
+          {(() => {
+            // 左右两侧固定，中间平均分配的显示逻辑
+            const displayMonths: { name: string; position: number }[] = [];
 
-            // 过滤逻辑：考虑到要显示13个月，适当放宽条件
-            const prevMonth = months[index - 1];
-            const shouldShow =
-              !prevMonth || month.startWeek - prevMonth.startWeek >= 3;
+            if (months.length > 0) {
+              // 左侧：第一个月份（去年同月）
+              displayMonths.push({
+                name: months[0]!.name,
+                position: 0, // 固定在左侧0%
+              });
 
-            if (!shouldShow) return null;
+              // 右侧：最后一个月份（当前月份）
+              if (months.length > 1) {
+                displayMonths.push({
+                  name: months[months.length - 1]!.name,
+                  position: 97, // 固定在右侧97%
+                });
+              }
 
-            // 简单的位置处理：最后一个月份放在100%，其他正常计算
-            let finalLeftPercent;
+              // 中间：选择关键月份平均分配
+              if (months.length > 2) {
+                const middleMonths = months.slice(1, -1);
+                const availableSpace = 97 - 0; // 可用空间97%
+                const maxMiddleMonths = 6; // 最多显示6个中间月份
 
-            if (index === months.length - 1) {
-              // 最后一个月份放在97%位置，平衡显示效果和可见性
-              finalLeftPercent = 97;
-            } else {
-              // 其他月份使用正常计算的位置
-              finalLeftPercent = leftPercent;
+                // 选择要显示的中间月份（平均间隔选择）
+                const step = Math.max(1, Math.floor(middleMonths.length / maxMiddleMonths));
+                const selectedMiddle = middleMonths.filter((_, index) => index % step === 0);
+
+                selectedMiddle.forEach((month, index) => {
+                  const position = 0 + ((index + 1) * availableSpace) / (selectedMiddle.length + 1);
+                  displayMonths.push({
+                    name: month.name,
+                    position: Math.min(position, 92), // 确保不超过92%
+                  });
+                });
+              }
             }
 
-            return (
+            return displayMonths.map((month, index) => (
               <div
-                key={index}
+                key={`${month.name}-${index}`}
                 className="absolute text-xs whitespace-nowrap text-gray-500"
                 style={{
-                  left: `${finalLeftPercent}%`,
+                  left: `${month.position}%`,
                   top: "0px",
                 }}
               >
                 {month.name}
               </div>
-            );
-          })}
+            ));
+          })()}
         </div>
       </div>
 

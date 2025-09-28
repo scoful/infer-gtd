@@ -733,29 +733,7 @@ function NoteCard({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
-  // 获取显示的预览内容
-  const getDisplayPreview = (maxLength = 150) => {
-    // 优先显示摘要
-    if (note.summary?.trim()) {
-      return note.summary.length > maxLength
-        ? note.summary.substring(0, maxLength) + "..."
-        : note.summary;
-    }
-
-    // 如果没有摘要，则从内容生成预览
-    const plainText = note.content
-      .replace(/#{1,6}\s+/g, "") // 移除标题
-      .replace(/\*\*(.*?)\*\*/g, "$1") // 移除粗体
-      .replace(/\*(.*?)\*/g, "$1") // 移除斜体
-      .replace(/`(.*?)`/g, "$1") // 移除行内代码
-      .replace(/\[(.*?)\]\(.*?\)/g, "$1") // 移除链接
-      .replace(/\n+/g, " ") // 替换换行为空格
-      .trim();
-
-    return plainText.length > maxLength
-      ? plainText.substring(0, maxLength) + "..."
-      : plainText;
-  };
+  // 移除getDisplayPreview函数，现在只显示摘要
 
   // 格式化日期
   const formatDate = (date: Date) => {
@@ -799,62 +777,21 @@ function NoteCard({
   if (viewMode === "list") {
     return (
       <div
-        className={`rounded-lg border bg-white p-6 transition-shadow hover:shadow-md ${
+        className={`flex h-full min-h-[200px] flex-col rounded-lg border bg-white p-6 transition-shadow hover:shadow-md ${
           isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
         }`}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            {/* 选择框 */}
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={(e) => {
-                e.stopPropagation();
-                onSelect(e.target.checked);
-              }}
-              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <div className="min-w-0 flex-1 cursor-pointer" onClick={onView}>
-              {/* 标题和状态 */}
-              <div className="mb-2 flex items-center gap-2">
-                <h3 className="truncate text-lg font-medium text-gray-900">
-                  {note.title}
-                </h3>
-                {note.isPinned && (
-                  <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                    <BookmarkSolidIcon className="mr-1 h-3 w-3" />
-                    置顶
-                  </span>
-                )}
-                {note.isArchived && (
-                  <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
-                    <ArchiveBoxIcon className="mr-1 h-3 w-3" />
-                    已归档
-                  </span>
-                )}
-              </div>
-
-              {/* 内容预览 */}
-              <p className="mb-3 line-clamp-2 text-sm text-gray-600">
-                {getDisplayPreview(200)}
-              </p>
-
-              {/* 元数据 */}
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <div className="flex items-center">
-                  <CalendarIcon className="mr-1 h-3 w-3" />
-                  更新于 {formatDate(note.updatedAt)}
-                </div>
-                {note._count.linkedTasks > 0 && (
-                  <div className="flex items-center">
-                    <LinkIcon className="mr-1 h-3 w-3" />
-                    {note._count.linkedTasks} 个关联任务
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        {/* 顶部区域：选择框和操作按钮 */}
+        <div className="mb-4 flex items-start justify-between">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onSelect(e.target.checked);
+            }}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
 
           {/* 操作按钮 */}
           <div className="ml-4 flex items-center gap-2">
@@ -913,35 +850,85 @@ function NoteCard({
           </div>
         </div>
 
-        {/* 项目和标签 */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {note.project && (
-            <span
-              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-              style={{
-                backgroundColor: note.project.color
-                  ? `${note.project.color}20`
-                  : "#f3f4f6",
-                color: note.project.color || "#6b7280",
-              }}
-            >
-              <FolderIcon className="mr-1 h-3 w-3" />
-              {note.project.name}
-            </span>
+        {/* 中间内容区域 - 可伸缩 */}
+        <div className="flex-1 cursor-pointer" onClick={onView}>
+          {/* 标题和状态 */}
+          <div className="mb-3">
+            <div className="flex items-start justify-between">
+              <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
+                {note.title}
+              </h3>
+              <div className="ml-2 flex flex-col gap-1">
+                {note.isPinned && (
+                  <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                    <BookmarkSolidIcon className="mr-1 h-3 w-3" />
+                    置顶
+                  </span>
+                )}
+                {note.isArchived && (
+                  <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
+                    已归档
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 摘要预览 - 只在有摘要时显示 */}
+          {note.summary?.trim() && (
+            <p className="mb-4 line-clamp-3 text-sm text-gray-600">
+              {note.summary.length > 150
+                ? note.summary.substring(0, 150) + "..."
+                : note.summary}
+            </p>
           )}
-          {note.tags.map(({ tag }) => (
-            <span
-              key={tag.id}
-              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-              style={{
-                backgroundColor: tag.color ? `${tag.color}20` : "#f3f4f6",
-                color: tag.color || "#6b7280",
-              }}
-            >
-              <TagIcon className="mr-1 h-3 w-3" />
-              {tag.name}
-            </span>
-          ))}
+
+          {/* 项目和标签 */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            {note.project && (
+              <span
+                className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                style={{
+                  backgroundColor: note.project.color
+                    ? `${note.project.color}20`
+                    : "#f3f4f6",
+                  color: note.project.color || "#6b7280",
+                }}
+              >
+                <FolderIcon className="mr-1 h-3 w-3" />
+                {note.project.name}
+              </span>
+            )}
+            {note.tags.map(({ tag }) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                style={{
+                  backgroundColor: tag.color ? `${tag.color}20` : "#f3f4f6",
+                  color: tag.color || "#6b7280",
+                }}
+              >
+                <TagIcon className="mr-1 h-3 w-3" />
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* 底部信息 - 时间固定左下角，其他信息右侧 */}
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center">
+            <CalendarIcon className="mr-1 h-3 w-3" />
+            {formatDate(note.updatedAt)}
+          </div>
+          <div className="flex items-center gap-3">
+            {note._count.linkedTasks > 0 && (
+              <div className="flex items-center">
+                <LinkIcon className="mr-1 h-3 w-3" />
+                {note._count.linkedTasks}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -950,7 +937,7 @@ function NoteCard({
   // 网格视图
   return (
     <div
-      className={`rounded-lg border bg-white p-6 transition-shadow hover:shadow-md ${
+      className={`flex h-full min-h-[280px] flex-col rounded-lg border bg-white p-6 transition-shadow hover:shadow-md ${
         isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
       }`}
     >
@@ -1043,81 +1030,90 @@ function NoteCard({
         </div>
       </div>
 
-      {/* 标题和状态 */}
-      <div className="mb-3 cursor-pointer" onClick={onView}>
-        <div className="flex items-start justify-between">
-          <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
-            {note.title}
-          </h3>
-          <div className="ml-2 flex flex-col gap-1">
-            {note.isPinned && (
-              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-                <BookmarkSolidIcon className="mr-1 h-3 w-3" />
-                置顶
-              </span>
-            )}
-            {note.isArchived && (
-              <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
-                已归档
-              </span>
-            )}
+      {/* 中间内容区域 - 可伸缩 */}
+      <div className="flex-1 cursor-pointer" onClick={onView}>
+        {/* 标题和状态 */}
+        <div className="mb-3">
+          <div className="flex items-start justify-between">
+            <h3 className="line-clamp-2 flex-1 text-lg font-medium text-gray-900">
+              {note.title}
+            </h3>
+            <div className="ml-2 flex flex-col gap-1">
+              {note.isPinned && (
+                <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+                  <BookmarkSolidIcon className="mr-1 h-3 w-3" />
+                  置顶
+                </span>
+              )}
+              {note.isArchived && (
+                <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
+                  已归档
+                </span>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* 摘要预览 - 只在有摘要时显示 */}
+        {note.summary?.trim() && (
+          <p className="mb-4 line-clamp-3 text-sm text-gray-600">
+            {note.summary.length > 150
+              ? note.summary.substring(0, 150) + "..."
+              : note.summary}
+          </p>
+        )}
+
+        {/* 项目和标签 */}
+        <div className="mb-4 flex flex-wrap gap-1">
+          {note.project && (
+            <span
+              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+              style={{
+                backgroundColor: note.project.color
+                  ? `${note.project.color}20`
+                  : "#f3f4f6",
+                color: note.project.color || "#6b7280",
+              }}
+            >
+              <FolderIcon className="mr-1 h-3 w-3" />
+              {note.project.name}
+            </span>
+          )}
+          {note.tags.slice(0, 3).map(({ tag }) => (
+            <span
+              key={tag.id}
+              className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+              style={{
+                backgroundColor: tag.color ? `${tag.color}20` : "#f3f4f6",
+                color: tag.color || "#6b7280",
+              }}
+            >
+              <TagIcon className="mr-1 h-3 w-3" />
+              {tag.name}
+            </span>
+          ))}
+          {note.tags.length > 3 && (
+            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              +{note.tags.length - 3}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* 内容预览 */}
-      <p className="mb-4 line-clamp-3 text-sm text-gray-600">
-        {getDisplayPreview()}
-      </p>
-
-      {/* 项目和标签 */}
-      <div className="mb-4 flex flex-wrap gap-1">
-        {note.project && (
-          <span
-            className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-            style={{
-              backgroundColor: note.project.color
-                ? `${note.project.color}20`
-                : "#f3f4f6",
-              color: note.project.color || "#6b7280",
-            }}
-          >
-            <FolderIcon className="mr-1 h-3 w-3" />
-            {note.project.name}
-          </span>
-        )}
-        {note.tags.slice(0, 3).map(({ tag }) => (
-          <span
-            key={tag.id}
-            className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
-            style={{
-              backgroundColor: tag.color ? `${tag.color}20` : "#f3f4f6",
-              color: tag.color || "#6b7280",
-            }}
-          >
-            <TagIcon className="mr-1 h-3 w-3" />
-            {tag.name}
-          </span>
-        ))}
-        {note.tags.length > 3 && (
-          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-            +{note.tags.length - 3}
-          </span>
-        )}
-      </div>
-
-      {/* 底部信息 */}
+      {/* 底部信息 - 时间固定左下角，其他信息右侧 */}
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div className="flex items-center">
           <CalendarIcon className="mr-1 h-3 w-3" />
           {formatDate(note.updatedAt)}
         </div>
-        {note._count.linkedTasks > 0 && (
-          <div className="flex items-center">
-            <LinkIcon className="mr-1 h-3 w-3" />
-            {note._count.linkedTasks}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {note._count.linkedTasks > 0 && (
+            <div className="flex items-center">
+              <LinkIcon className="mr-1 h-3 w-3" />
+              {note._count.linkedTasks}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

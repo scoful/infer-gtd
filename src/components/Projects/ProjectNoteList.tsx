@@ -32,24 +32,7 @@ interface NoteCardProps {
 }
 
 function NoteCard({ note, onView, onEdit, onPin }: NoteCardProps) {
-  const truncateContent = (content: string, maxLength = 150) => {
-    if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + "...";
-  };
-
-  const getContentPreview = (content: string) => {
-    // 移除 Markdown 语法，只保留纯文本
-    const plainText = content
-      .replace(/#{1,6}\s+/g, "") // 移除标题
-      .replace(/\*\*(.*?)\*\*/g, "$1") // 移除粗体
-      .replace(/\*(.*?)\*/g, "$1") // 移除斜体
-      .replace(/`(.*?)`/g, "$1") // 移除行内代码
-      .replace(/\[(.*?)\]\(.*?\)/g, "$1") // 移除链接，保留文本
-      .replace(/\n+/g, " ") // 将换行符替换为空格
-      .trim();
-
-    return truncateContent(plainText);
-  };
+  // 移除内容预览相关函数，现在只显示摘要
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
@@ -98,11 +81,13 @@ function NoteCard({ note, onView, onEdit, onPin }: NoteCardProps) {
         </div>
       </div>
 
-      {/* 内容预览 */}
-      {note.content && (
+      {/* 摘要预览 - 只在有摘要时显示 */}
+      {note.summary?.trim() && (
         <div className="mb-4">
           <p className="line-clamp-3 text-sm text-gray-600">
-            {getContentPreview(note.content)}
+            {note.summary.length > 150
+              ? note.summary.substring(0, 150) + "..."
+              : note.summary}
           </p>
         </div>
       )}
@@ -146,9 +131,15 @@ function NoteCard({ note, onView, onEdit, onPin }: NoteCardProps) {
           )}
         </div>
 
-        <div className="flex items-center space-x-2">
-          <CalendarIcon className="h-4 w-4" />
-          <span>{new Date(note.updatedAt).toLocaleDateString()}</span>
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center">
+            <CalendarIcon className="mr-1 h-3 w-3" />
+            {new Date(note.updatedAt).toLocaleDateString("zh-CN", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })}
+          </div>
         </div>
       </div>
     </div>

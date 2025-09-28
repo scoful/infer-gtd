@@ -640,13 +640,7 @@ function JournalCard({
     return `${year}-${month}-${day}`;
   };
 
-  const getPreview = () => {
-    if (journal.preview) return journal.preview;
-    return (
-      journal.content.substring(0, 150) +
-      (journal.content.length > 150 ? "..." : "")
-    );
-  };
+  // 移除getPreview函数，日记卡片不再显示内容预览
 
   const getWordCount = () => {
     return journal.wordCount || journal.content.length;
@@ -679,9 +673,7 @@ function JournalCard({
                   </span>
                 )}
               </div>
-              <p className="line-clamp-2 text-sm text-gray-600">
-                {getPreview()}
-              </p>
+              {/* 日记不显示内容预览，保持简洁 */}
               <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
                 <span className="flex items-center">
                   <DocumentTextIcon className="mr-1 h-3 w-3" />
@@ -802,7 +794,7 @@ function JournalCard({
           </span>
         )}
 
-        <p className="line-clamp-3 text-sm text-gray-600">{getPreview()}</p>
+        {/* 日记不显示内容预览，保持简洁 */}
 
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span className="flex items-center">
