@@ -204,9 +204,9 @@ const JournalDetailPage: NextPage = () => {
             </div>
           </div>
         ) : (
-          <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="space-y-6">
             {/* 页面标题和操作 */}
-            <div className="mb-8 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => router.back()}
@@ -291,13 +291,13 @@ function JournalContentWithTOC({ content }: { content: string }) {
     <div className="flex gap-6">
       {/* TOC 侧边栏（桌面端显示） */}
       {tocItems.length > 0 && (
-        <div className="hidden lg:block w-48 flex-shrink-0 pt-6">
+        <div className="hidden w-48 flex-shrink-0 pt-6 lg:block">
           <TOC items={tocItems} />
         </div>
       )}
 
       {/* 内容区域 */}
-      <div className="flex-1 min-w-0 p-6">
+      <div className="min-w-0 flex-1 p-6">
         <MarkdownRenderer content={content} />
       </div>
     </div>

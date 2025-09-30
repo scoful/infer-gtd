@@ -7,6 +7,30 @@ import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
 
 const ListDepthContext = React.createContext(0);
 
+// 无序列表组件
+function UnorderedList({ children, ...props }: React.ComponentProps<"ul">) {
+  const depth = React.useContext(ListDepthContext);
+  return (
+    <ListDepthContext.Provider value={depth + 1}>
+      <ul className="mb-4 ml-4 space-y-2" {...props}>
+        {children}
+      </ul>
+    </ListDepthContext.Provider>
+  );
+}
+
+// 有序列表组件
+function OrderedList({ children, ...props }: React.ComponentProps<"ol">) {
+  const depth = React.useContext(ListDepthContext);
+  return (
+    <ListDepthContext.Provider value={depth + 1}>
+      <ol className="mb-4 ml-4 space-y-2" {...props}>
+        {children}
+      </ol>
+    </ListDepthContext.Provider>
+  );
+}
+
 interface MarkdownRendererProps {
   content: string;
   className?: string;
@@ -38,15 +62,15 @@ export default function MarkdownRenderer({
 
   // 为一级列表项添加 HTML 锚点
   const processedContent = React.useMemo(() => {
-    if (!content) return '';
+    if (!content) return "";
 
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     let tocIndex = 0;
     let inCodeBlock = false;
 
     const processedLines = lines.map((line) => {
       // 检查是否进入/退出代码块
-      if (line.trim().startsWith('```')) {
+      if (line.trim().startsWith("```")) {
         inCodeBlock = !inCodeBlock;
         return line;
       }
@@ -56,11 +80,23 @@ export default function MarkdownRenderer({
         return line;
       }
 
-      // 匹配一级列表项：行首无空格，以 - 或 * 开头
-      const match = line.match(/^([-*])\s+(.+)$/);
-      if (match) {
-        const marker = match[1];
-        const text = match[2];
+      // 优先匹配标题（# 标题）
+      const headingMatch = /^(#{1,6})\s+(.+)$/.exec(line);
+      if (headingMatch) {
+        const hashes = headingMatch[1];
+        const text = headingMatch[2];
+        const id = `toc-item-${tocIndex}`;
+        tocIndex++;
+
+        // 添加 HTML 锚点
+        return `${hashes} <span id="${id}"></span>${text}`;
+      }
+
+      // 降级匹配一级列表项：行首无空格，以 - 或 * 开头
+      const listMatch = /^([-*])\s+(.+)$/.exec(line);
+      if (listMatch) {
+        const marker = listMatch[1];
+        const text = listMatch[2];
         const id = `toc-item-${tocIndex}`;
         tocIndex++;
 
@@ -71,7 +107,7 @@ export default function MarkdownRenderer({
       return line;
     });
 
-    return processedLines.join('\n');
+    return processedLines.join("\n");
   }, [content]);
 
   return (
@@ -119,13 +155,16 @@ export default function MarkdownRenderer({
             </p>
           ),
           a: ({ href, children, ...props }) => {
-            const isExternal = typeof href === 'string' && /^https?:\/\//.test(href);
+            const isExternal =
+              typeof href === "string" && /^https?:\/\//.test(href);
             return (
               <a
                 href={href}
                 {...props}
                 className="text-blue-600 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-800 hover:decoration-blue-500"
-                {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                {...(isExternal
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
               >
                 {children}
               </a>
@@ -158,11 +197,11 @@ export default function MarkdownRenderer({
                   onClick={() => handleInlineCodeCopy(codeText)}
                   title="点击复制"
                   style={{
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
-                    whiteSpace: 'pre-wrap',
-                    maxWidth: '100%',
-                    display: 'inline-block',
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    whiteSpace: "pre-wrap",
+                    maxWidth: "100%",
+                    display: "inline-block",
                   }}
                   {...props}
                 >
@@ -237,26 +276,8 @@ export default function MarkdownRenderer({
               </div>
             </blockquote>
           ),
-          ul: ({ children, ...props }) => {
-            const depth = React.useContext(ListDepthContext);
-            return (
-              <ListDepthContext.Provider value={depth + 1}>
-                <ul className="mb-4 ml-4 space-y-2" {...props}>
-                  {children}
-                </ul>
-              </ListDepthContext.Provider>
-            );
-          },
-          ol: ({ children, ...props }) => {
-            const depth = React.useContext(ListDepthContext);
-            return (
-              <ListDepthContext.Provider value={depth + 1}>
-                <ol className="mb-4 ml-4 space-y-2" {...props}>
-                  {children}
-                </ol>
-              </ListDepthContext.Provider>
-            );
-          },
+          ul: UnorderedList,
+          ol: OrderedList,
           li: ({ children, ...props }) => {
             // 检查是否是任务列表项
             const isTaskList = props.className?.includes("task-list-item");

@@ -1639,9 +1639,6 @@ export const taskRouter = createTRPCRouter({
       }
     }),
 
-
-
-
   // 邻接插入 + 稀疏整数排序：仅更新目标任务及极少数邻域
   updatePosition: protectedProcedure
     .input(updateTaskPositionSchema)
@@ -1661,7 +1658,10 @@ export const taskRouter = createTRPCRouter({
           select: { id: true, title: true, status: true, createdById: true },
         });
         if (!existing || existing.createdById !== ctx.session.user.id) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "任务不存在或无权限修改" });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "任务不存在或无权限修改",
+          });
         }
 
         const targetStatus = toStatus ?? existing.status;
@@ -1739,11 +1739,16 @@ export const taskRouter = createTRPCRouter({
               const t = windowTasks[i]!;
               const desired = i * GAP;
               if (t.sortOrder !== desired) {
-                await tx.task.update({ where: { id: t.id }, data: { sortOrder: desired } });
+                await tx.task.update({
+                  where: { id: t.id },
+                  data: { sortOrder: desired },
+                });
               }
             }
             // 重算 newOrder（窗口中 before 在 right 左侧）
-            newOrder = middleInt(GAP * (left.length - 1), GAP * left.length) ?? GAP * left.length - 1;
+            newOrder =
+              middleInt(GAP * (left.length - 1), GAP * left.length) ??
+              GAP * left.length - 1;
           }
 
           // 5) 组装更新数据（状态切换副作用）
@@ -1778,10 +1783,18 @@ export const taskRouter = createTRPCRouter({
           return updated;
         });
 
-        return { success: true, message: `任务 "${existing.title}" 位置已更新`, task: result };
+        return {
+          success: true,
+          message: `任务 "${existing.title}" 位置已更新`,
+          task: result,
+        };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "更新任务位置失败", cause: error });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "更新任务位置失败",
+          cause: error,
+        });
       }
     }),
 

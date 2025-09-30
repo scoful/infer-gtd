@@ -130,28 +130,37 @@ export default function ToastUIEditor({
     });
 
     // 5. 格式化：中文 + 英文/数字（避免重复添加空格）
-    text = text.replace(/([\u4e00-\u9fa5])([a-zA-Z0-9@&=\[\$\%\^])/g, (match, p1, p2) => {
-      // 检查是否已经有空格
-      return p1 + ' ' + p2;
-    });
+    text = text.replace(
+      /([\u4e00-\u9fa5])([a-zA-Z0-9@&=\[\$\%\^])/g,
+      (match, p1, p2) => {
+        // 检查是否已经有空格
+        return p1 + " " + p2;
+      },
+    );
 
     // 6. 格式化：英文/数字 + 中文（避免重复添加空格）
-    text = text.replace(/([a-zA-Z0-9!&;=\]\,\.\:\?\$\%\^])([\u4e00-\u9fa5])/g, (match, p1, p2) => {
-      return p1 + ' ' + p2;
-    });
+    text = text.replace(
+      /([a-zA-Z0-9!&;=\]\,\.\:\?\$\%\^])([\u4e00-\u9fa5])/g,
+      (match, p1, p2) => {
+        return p1 + " " + p2;
+      },
+    );
 
     // 7. 清理多余空格（只清理行中间的多余空格，保留换行符和行首缩进）
     // 逐行处理，保护行首空格（用于列表缩进等）
-    text = text.split('\n').map(line => {
-      // 提取行首空格
-      const leadingSpaces = line.match(/^[ \t]*/)?.[0] || '';
-      // 提取行尾内容
-      const content = line.slice(leadingSpaces.length);
-      // 只清理内容中的多余空格（不包括换行符）
-      const cleanedContent = content.replace(/[^\S\r\n]{2,}/g, ' ');
-      // 重新组合
-      return leadingSpaces + cleanedContent;
-    }).join('\n');
+    text = text
+      .split("\n")
+      .map((line) => {
+        // 提取行首空格
+        const leadingSpaces = /^[ \t]*/.exec(line)?.[0] || "";
+        // 提取行尾内容
+        const content = line.slice(leadingSpaces.length);
+        // 只清理内容中的多余空格（不包括换行符）
+        const cleanedContent = content.replace(/[^\S\r\n]{2,}/g, " ");
+        // 重新组合
+        return leadingSpaces + cleanedContent;
+      })
+      .join("\n");
 
     // 8. 恢复保护的块
     protectedBlocks.forEach((block, index) => {
@@ -164,14 +173,14 @@ export default function ToastUIEditor({
 
     // 前面没有空格、换行符、标点符号时添加空格
     text = text.replace(
-      new RegExp(`([^\\s\\n${punctuation}])(\`[^\`]+\`)`, 'g'),
-      '$1 $2'
+      new RegExp(`([^\\s\\n${punctuation}])(\`[^\`]+\`)`, "g"),
+      "$1 $2",
     );
 
     // 后面没有空格、换行符、标点符号时添加空格
     text = text.replace(
-      new RegExp(`(\`[^\`]+\`)([^\\s\\n${punctuation}])`, 'g'),
-      '$1 $2'
+      new RegExp(`(\`[^\`]+\`)([^\\s\\n${punctuation}])`, "g"),
+      "$1 $2",
     );
 
     return text;
@@ -183,7 +192,7 @@ export default function ToastUIEditor({
 
     // 弹出确认框
     const confirmed = window.confirm(
-      '确定要格式化内容吗？\n\n将自动在中英文字符之间添加空格。\n（可以使用 Ctrl+Z 撤销）'
+      "确定要格式化内容吗？\n\n将自动在中英文字符之间添加空格。\n（可以使用 Ctrl+Z 撤销）",
     );
 
     if (!confirmed) return;
@@ -202,14 +211,14 @@ export default function ToastUIEditor({
 
         // 显示成功提示
         setTimeout(() => {
-          alert('✅ 格式化完成！');
+          alert("✅ 格式化完成！");
         }, 100);
       } else {
-        alert('ℹ️ 内容已经是格式化状态，无需再次格式化。');
+        alert("ℹ️ 内容已经是格式化状态，无需再次格式化。");
       }
     } catch (error) {
-      console.error('格式化失败:', error);
-      alert('❌ 格式化失败，请重试。');
+      console.error("格式化失败:", error);
+      alert("❌ 格式化失败，请重试。");
     } finally {
       setIsFormatting(false);
     }
@@ -323,13 +332,16 @@ export default function ToastUIEditor({
 
   // 更新已存在的格式化按钮状态
   const updateFormatButtonState = () => {
-    const existingButton =
-      containerRef.current?.querySelector(".format-btn") as HTMLButtonElement;
+    const existingButton = containerRef.current?.querySelector(".format-btn");
     if (existingButton) {
       existingButton.innerHTML = isFormatting ? "⏳" : "✨";
-      existingButton.disabled = isFormatting;
-      existingButton.style.opacity = isFormatting ? "0.5" : "1";
-      existingButton.style.cursor = isFormatting ? "wait" : "pointer";
+      (existingButton as HTMLButtonElement).disabled = isFormatting;
+      (existingButton as HTMLElement).style.opacity = isFormatting
+        ? "0.5"
+        : "1";
+      (existingButton as HTMLElement).style.cursor = isFormatting
+        ? "wait"
+        : "pointer";
     }
   };
 
@@ -386,7 +398,7 @@ export default function ToastUIEditor({
       box-sizing: border-box !important;
       color: #374151 !important;
       transition: all 0.2s ease !important;
-      ${isFormatting ? 'opacity: 0.5 !important; cursor: wait !important;' : ''}
+      ${isFormatting ? "opacity: 0.5 !important; cursor: wait !important;" : ""}
     `;
     button.innerHTML = isFormatting ? "⏳" : "✨";
     button.disabled = isFormatting;

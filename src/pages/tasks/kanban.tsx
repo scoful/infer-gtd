@@ -755,8 +755,6 @@ const KanbanPage: NextPage = () => {
     },
   });
 
-
-
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     // 立即进行乐观更新
     setOptimisticUpdates((prev) => ({
@@ -834,7 +832,8 @@ const KanbanPage: NextPage = () => {
       const firstTask = currentStatusTasks[0];
       await updatePosition.mutateAsync({
         id: taskId,
-        afterId: firstTask?.id !== taskId ? firstTask?.id : currentStatusTasks[1]?.id,
+        afterId:
+          firstTask?.id !== taskId ? firstTask?.id : currentStatusTasks[1]?.id,
         note: "开始计时，自动置顶",
       });
     } catch (error) {
@@ -1182,7 +1181,8 @@ const KanbanPage: NextPage = () => {
       const firstTask = currentStatusTasks[0];
       await updatePosition.mutateAsync({
         id: taskId,
-        afterId: firstTask?.id !== taskId ? firstTask?.id : currentStatusTasks[1]?.id,
+        afterId:
+          firstTask?.id !== taskId ? firstTask?.id : currentStatusTasks[1]?.id,
         note: "快速上浮到第一位",
       });
     } catch (error) {
@@ -1420,9 +1420,12 @@ const KanbanPage: NextPage = () => {
     if (!beforeId && !afterId) return;
 
     // 计算新的任务顺序用于乐观更新
-    const newIndex = over.data?.current?.type === "column"
-      ? statusTasks.length - 1
-      : statusTasks.findIndex((task: TaskWithRelations) => task.id === overId);
+    const newIndex =
+      over.data?.current?.type === "column"
+        ? statusTasks.length - 1
+        : statusTasks.findIndex(
+            (task: TaskWithRelations) => task.id === overId,
+          );
 
     if (currentIndex === newIndex) return;
 
