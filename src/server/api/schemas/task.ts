@@ -135,20 +135,17 @@ export const batchDeleteTasksSchema = z.object({
   taskIds: z.array(z.string().cuid("无效的任务ID")).min(1, "至少选择一个任务"),
 });
 
-// 任务排序 Schema
-export const reorderTasksSchema = z.object({
-  taskIds: z.array(z.string().cuid("无效的任务ID")),
-  projectId: z.string().cuid("无效的项目ID").optional(),
-  status: z.nativeEnum(TaskStatus).optional(),
-});
 
-// 带位置的状态更新 Schema
-export const updateTaskStatusWithPositionSchema = z.object({
+
+// 任务位置更新 Schema（邻接插入 + 稀疏排序）
+export const updateTaskPositionSchema = z.object({
   id: z.string().cuid("无效的任务ID"),
-  status: z.nativeEnum(TaskStatus),
-  insertIndex: z.number().int().min(0).optional(), // 插入位置，undefined表示放到末尾
+  toStatus: z.nativeEnum(TaskStatus).optional(),
+  beforeId: z.string().cuid("无效的任务ID").optional(),
+  afterId: z.string().cuid("无效的任务ID").optional(),
   note: z.string().max(500, "备注过长").optional(),
 });
+
 
 // 任务反馈 Schema
 export const updateTaskFeedbackSchema = z.object({
@@ -183,12 +180,10 @@ export type TaskIdInput = z.infer<typeof taskIdSchema>;
 export type SetRecurringInput = z.infer<typeof setRecurringSchema>;
 export type TimeTrackingInput = z.infer<typeof timeTrackingSchema>;
 export type GetTimeEntriesInput = z.infer<typeof getTimeEntriesSchema>;
+export type UpdateTaskPositionInput = z.infer<typeof updateTaskPositionSchema>;
+
 export type GetTaskStatsInput = z.infer<typeof getTaskStatsSchema>;
 export type GetDailyActivityInput = z.infer<typeof getDailyActivitySchema>;
 export type BatchUpdateTasksInput = z.infer<typeof batchUpdateTasksSchema>;
 export type BatchDeleteTasksInput = z.infer<typeof batchDeleteTasksSchema>;
-export type ReorderTasksInput = z.infer<typeof reorderTasksSchema>;
-export type UpdateTaskStatusWithPositionInput = z.infer<
-  typeof updateTaskStatusWithPositionSchema
->;
 export type UpdateTaskFeedbackInput = z.infer<typeof updateTaskFeedbackSchema>;

@@ -671,14 +671,56 @@ const KanbanPage: NextPage = () => {
     },
   });
 
-  // 重新排序任务
-  const reorderTasks = api.task.reorder.useMutation({
-    onSuccess: () => {
-      void refetchAll();
-      showSuccess("任务排序已更新");
+  // 更新任务位置（新方案：邻接插入 + 稀疏排序）
+  const updatePosition = api.task.updatePosition.useMutation({
+    onSuccess: (_, variables) => {
+      // 立即清理更新状态
+      setUpdatingTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(variables.id);
+        return newSet;
+      });
+
+      // 刷新数据并清理乐观更新
+      void refetchAll().then(() => {
+        setOptimisticUpdates((prev) => {
+          const newState = { ...prev };
+          delete newState[variables.id];
+          return newState;
+        });
+
+        setOptimisticTaskOrder({
+          [TaskStatus.IDEA]: [],
+          [TaskStatus.TODO]: [],
+          [TaskStatus.IN_PROGRESS]: [],
+          [TaskStatus.WAITING]: [],
+          [TaskStatus.DONE]: [],
+          [TaskStatus.ARCHIVED]: [],
+        });
+      });
+
+      // 如果状态变为已完成，触发反馈收集
+      if (variables.toStatus === TaskStatus.DONE) {
+        let task = Object.values(tasksByStatus)
+          .flat()
+          .find((t) => t.id === variables.id);
+
+        if (!task) {
+          const allTasksData = utils.task.getAll.getData({ limit: 100 });
+          task = allTasksData?.tasks.find((t) => t.id === variables.id);
+        }
+
+        if (task) {
+          setFeedbackTaskId(variables.id);
+          setFeedbackTaskTitle(task.title);
+          setIsFeedbackModalOpen(true);
+        }
+      }
+
+      showSuccess("任务位置已更新");
     },
     onError: (error) => {
-      showError(error.message ?? "更新任务排序失败");
+      showError(error.message ?? "更新任务位置失败");
       // 回滚乐观更新
       setOptimisticTaskOrder({
         [TaskStatus.IDEA]: [],
@@ -713,96 +755,7 @@ const KanbanPage: NextPage = () => {
     },
   });
 
-  // 带位置的状态更新
-  const updateStatusWithPosition =
-    api.task.updateStatusWithPosition.useMutation({
-      onSuccess: (_, variables) => {
-        // 立即清理更新状态，但保持乐观更新直到数据刷新
-        setUpdatingTasks((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(variables.id);
-          return newSet;
-        });
 
-        // 刷新数据并清理乐观更新
-        void refetchAll().then(() => {
-          // 数据更新完成后清理乐观更新
-          setOptimisticUpdates((prev) => {
-            const newState = { ...prev };
-            delete newState[variables.id];
-            return newState;
-          });
-
-          setOptimisticTaskOrder({
-            [TaskStatus.IDEA]: [],
-            [TaskStatus.TODO]: [],
-            [TaskStatus.IN_PROGRESS]: [],
-            [TaskStatus.WAITING]: [],
-            [TaskStatus.DONE]: [],
-            [TaskStatus.ARCHIVED]: [],
-          });
-        });
-
-        // 如果状态变为已完成，触发反馈收集
-        if (variables.status === TaskStatus.DONE) {
-          // 从所有任务数据中查找任务信息，优先从tasksByStatus中查找
-          let task = Object.values(tasksByStatus)
-            .flat()
-            .find((t) => t.id === variables.id);
-
-          // 如果在tasksByStatus中找不到，再从getAllTasks中查找
-          task ??= getAllTasks().find((t) => t.id === variables.id);
-
-          console.log("拖拽完成查找任务反馈信息:", {
-            taskId: variables.id,
-            task: task,
-            taskTitle: task?.title,
-            allTasksCount: getAllTasks().length,
-            tasksByStatusCount: Object.values(tasksByStatus).flat().length,
-          });
-
-          if (task) {
-            setFeedbackTaskId(variables.id);
-            setFeedbackTaskTitle(task.title);
-            setIsFeedbackModalOpen(true);
-          } else {
-            // 如果找不到任务，使用默认标题
-            console.warn("拖拽完成未找到任务，使用默认标题:", variables.id);
-            setFeedbackTaskId(variables.id);
-            setFeedbackTaskTitle("任务");
-            setIsFeedbackModalOpen(true);
-          }
-        }
-
-        showSuccess("任务状态和位置已更新");
-      },
-      onError: (error, variables) => {
-        showError(error.message ?? "更新任务状态和位置失败");
-
-        // 清理更新状态
-        setUpdatingTasks((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(variables.id);
-          return newSet;
-        });
-
-        // 回滚乐观更新
-        setOptimisticUpdates((prev) => {
-          const newState = { ...prev };
-          delete newState[variables.id];
-          return newState;
-        });
-
-        setOptimisticTaskOrder({
-          [TaskStatus.IDEA]: [],
-          [TaskStatus.TODO]: [],
-          [TaskStatus.IN_PROGRESS]: [],
-          [TaskStatus.WAITING]: [],
-          [TaskStatus.DONE]: [],
-          [TaskStatus.ARCHIVED]: [],
-        });
-      },
-    });
 
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     // 立即进行乐观更新
@@ -877,11 +830,11 @@ const KanbanPage: NextPage = () => {
         description: "开始工作",
       });
 
-      // 然后移动到第一位
-      await updateStatusWithPosition.mutateAsync({
+      // 然后移动到第一位（使用新方案：只传 afterId）
+      const firstTask = currentStatusTasks[0];
+      await updatePosition.mutateAsync({
         id: taskId,
-        status: task.status,
-        insertIndex: 0, // 插入到第一位
+        afterId: firstTask?.id !== taskId ? firstTask?.id : currentStatusTasks[1]?.id,
         note: "开始计时，自动置顶",
       });
     } catch (error) {
@@ -1010,11 +963,26 @@ const KanbanPage: NextPage = () => {
     setUpdatingTasks((prev) => new Set(prev).add(taskId));
 
     try {
-      // 执行状态更新
-      await updateStatusWithPosition.mutateAsync({
+      // 使用新方案：计算 beforeId 和 afterId
+      const targetStatusTasks = tasksByStatus[targetStatus] ?? [];
+      let beforeId: string | undefined;
+      let afterId: string | undefined;
+
+      if (insertIndex !== undefined && insertIndex >= 0) {
+        // 根据 insertIndex 计算邻居任务
+        if (insertIndex > 0) {
+          beforeId = targetStatusTasks[insertIndex - 1]?.id;
+        }
+        if (insertIndex < targetStatusTasks.length) {
+          afterId = targetStatusTasks[insertIndex]?.id;
+        }
+      }
+
+      await updatePosition.mutateAsync({
         id: taskId,
-        status: targetStatus,
-        insertIndex,
+        toStatus: targetStatus,
+        beforeId,
+        afterId,
         note: `拖拽到${KANBAN_COLUMNS.find((col) => col.status === targetStatus)?.title}`,
       });
     } catch (error) {
@@ -1210,10 +1178,11 @@ const KanbanPage: NextPage = () => {
     }));
 
     try {
-      await updateStatusWithPosition.mutateAsync({
+      // 使用新方案：获取第一个任务作为 afterId
+      const firstTask = currentStatusTasks[0];
+      await updatePosition.mutateAsync({
         id: taskId,
-        status: task.status,
-        insertIndex: 0, // 插入到第一位
+        afterId: firstTask?.id !== taskId ? firstTask?.id : currentStatusTasks[1]?.id,
         note: "快速上浮到第一位",
       });
     } catch (error) {
@@ -1372,11 +1341,26 @@ const KanbanPage: NextPage = () => {
       setUpdatingTasks((prev) => new Set(prev).add(draggedTaskId));
 
       try {
-        // 使用新的 API 一次性更新状态和位置
-        await updateStatusWithPosition.mutateAsync({
+        // 使用新方案：计算 beforeId 和 afterId
+        const targetStatusTasks = tasksByStatus[targetStatus] ?? [];
+        let beforeId: string | undefined;
+        let afterId: string | undefined;
+
+        if (targetInsertIndex !== undefined && targetInsertIndex >= 0) {
+          // 根据 insertIndex 计算邻居任务
+          if (targetInsertIndex > 0) {
+            beforeId = targetStatusTasks[targetInsertIndex - 1]?.id;
+          }
+          if (targetInsertIndex < targetStatusTasks.length) {
+            afterId = targetStatusTasks[targetInsertIndex]?.id;
+          }
+        }
+
+        await updatePosition.mutateAsync({
           id: draggedTaskId,
-          status: targetStatus,
-          insertIndex: targetInsertIndex,
+          toStatus: targetStatus,
+          beforeId,
+          afterId,
           note: `拖拽到${KANBAN_COLUMNS.find((col) => col.status === targetStatus)?.title}`,
         });
       } catch (error) {
@@ -1393,11 +1377,17 @@ const KanbanPage: NextPage = () => {
 
     if (currentIndex === -1) return;
 
-    let newIndex: number;
+    let beforeId: string | undefined;
+    let afterId: string | undefined;
 
     if (over.data?.current?.type === "column") {
       // 拖拽到列的空白区域，放到末尾
-      newIndex = statusTasks.length - 1;
+      const lastTask = statusTasks[statusTasks.length - 1];
+      if (lastTask && lastTask.id !== draggedTaskId) {
+        beforeId = lastTask.id;
+      } else if (statusTasks.length > 1) {
+        beforeId = statusTasks[statusTasks.length - 2]?.id;
+      }
     } else {
       // 拖拽到具体任务上
       const targetTaskIndex = statusTasks.findIndex(
@@ -1413,15 +1403,29 @@ const KanbanPage: NextPage = () => {
         statusTasks: statusTasks.map((t) => ({ id: t.id, title: t.title })),
       });
 
-      // 简化逻辑：直接使用目标任务的索引作为新位置
-      // arrayMove 会自动处理元素移动的细节
-      newIndex = targetTaskIndex;
+      // 计算 beforeId 和 afterId
+      // 注意：需要考虑拖拽方向（向上还是向下）
+      if (currentIndex < targetTaskIndex) {
+        // 向下拖拽：插入到目标任务之后
+        beforeId = statusTasks[targetTaskIndex]?.id;
+        afterId = statusTasks[targetTaskIndex + 1]?.id;
+      } else {
+        // 向上拖拽：插入到目标任务之前
+        beforeId = statusTasks[targetTaskIndex - 1]?.id;
+        afterId = statusTasks[targetTaskIndex]?.id;
+      }
     }
 
-    // 如果位置没有变化，不执行操作
+    // 如果位置没有实际变化，不执行操作
+    if (!beforeId && !afterId) return;
+
+    // 计算新的任务顺序用于乐观更新
+    const newIndex = over.data?.current?.type === "column"
+      ? statusTasks.length - 1
+      : statusTasks.findIndex((task: TaskWithRelations) => task.id === overId);
+
     if (currentIndex === newIndex) return;
 
-    // 计算新的任务顺序
     const reorderedTasks = arrayMove(statusTasks, currentIndex, newIndex);
     const taskIds = reorderedTasks.map((task: TaskWithRelations) => task.id);
 
@@ -1432,9 +1436,11 @@ const KanbanPage: NextPage = () => {
     }));
 
     try {
-      await reorderTasks.mutateAsync({
-        taskIds,
-        status: currentStatus,
+      await updatePosition.mutateAsync({
+        id: draggedTaskId,
+        beforeId,
+        afterId,
+        note: "拖拽排序",
       });
     } catch (error) {
       console.error("拖拽排序失败:", error);
@@ -1485,10 +1491,10 @@ const KanbanPage: NextPage = () => {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">任务看板</h1>
-                {(isDataRefreshing || reorderTasks.isPending) && (
+                {(isDataRefreshing || updatePosition.isPending) && (
                   <div className="flex items-center text-sm text-blue-600">
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                    {reorderTasks.isPending ? "更新排序中..." : "刷新中..."}
+                    {updatePosition.isPending ? "更新位置中..." : "刷新中..."}
                   </div>
                 )}
               </div>
