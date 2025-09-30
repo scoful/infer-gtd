@@ -41,6 +41,7 @@ export default function ToastUIEditor({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [previewStyle] = useState<"vertical" | "tab">("vertical");
   const [hideSwitch] = useState(false);
+  const [isFormatting, setIsFormatting] = useState(false);
 
   const [suppressInitialLeak] = useState(true);
   const firstChangeRef = useRef<string | null>(null);
@@ -98,6 +99,122 @@ export default function ToastUIEditor({
     setIsFullscreen((prev) => !prev);
   };
 
+  // 格式化中英文空格的函数
+  const formatChineseEnglish = (markdown: string): string => {
+    // 保护代码块和特殊语法
+    const protectedBlocks: string[] = [];
+    let text = markdown;
+
+    // 1. 保护代码块（```...```）
+    text = text.replace(/```[\s\S]*?```/g, (match) => {
+      protectedBlocks.push(match);
+      return `__PROTECTED_BLOCK_${protectedBlocks.length - 1}__`;
+    });
+
+    // 2. 保护行内代码（`...`）
+    text = text.replace(/`[^`]+`/g, (match) => {
+      protectedBlocks.push(match);
+      return `__PROTECTED_BLOCK_${protectedBlocks.length - 1}__`;
+    });
+
+    // 3. 保护链接（[text](url)）
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match) => {
+      protectedBlocks.push(match);
+      return `__PROTECTED_BLOCK_${protectedBlocks.length - 1}__`;
+    });
+
+    // 4. 保护图片（![alt](url)）
+    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match) => {
+      protectedBlocks.push(match);
+      return `__PROTECTED_BLOCK_${protectedBlocks.length - 1}__`;
+    });
+
+    // 5. 格式化：中文 + 英文/数字（避免重复添加空格）
+    text = text.replace(/([\u4e00-\u9fa5])([a-zA-Z0-9@&=\[\$\%\^])/g, (match, p1, p2) => {
+      // 检查是否已经有空格
+      return p1 + ' ' + p2;
+    });
+
+    // 6. 格式化：英文/数字 + 中文（避免重复添加空格）
+    text = text.replace(/([a-zA-Z0-9!&;=\]\,\.\:\?\$\%\^])([\u4e00-\u9fa5])/g, (match, p1, p2) => {
+      return p1 + ' ' + p2;
+    });
+
+    // 7. 清理多余空格（只清理行中间的多余空格，保留换行符和行首缩进）
+    // 逐行处理，保护行首空格（用于列表缩进等）
+    text = text.split('\n').map(line => {
+      // 提取行首空格
+      const leadingSpaces = line.match(/^[ \t]*/)?.[0] || '';
+      // 提取行尾内容
+      const content = line.slice(leadingSpaces.length);
+      // 只清理内容中的多余空格（不包括换行符）
+      const cleanedContent = content.replace(/[^\S\r\n]{2,}/g, ' ');
+      // 重新组合
+      return leadingSpaces + cleanedContent;
+    }).join('\n');
+
+    // 8. 恢复保护的块
+    protectedBlocks.forEach((block, index) => {
+      text = text.replace(`__PROTECTED_BLOCK_${index}__`, block);
+    });
+
+    // 9. 确保行内代码前后有空格（排除标点符号和行首行尾）
+    // 定义中英文标点符号（使用模板字符串避免引号冲突）
+    const punctuation = `，。！？；：、""''（）《》【】,\\.!?;:"\\'\\(\\)\\[\\]<>`;
+
+    // 前面没有空格、换行符、标点符号时添加空格
+    text = text.replace(
+      new RegExp(`([^\\s\\n${punctuation}])(\`[^\`]+\`)`, 'g'),
+      '$1 $2'
+    );
+
+    // 后面没有空格、换行符、标点符号时添加空格
+    text = text.replace(
+      new RegExp(`(\`[^\`]+\`)([^\\s\\n${punctuation}])`, 'g'),
+      '$1 $2'
+    );
+
+    return text;
+  };
+
+  // 格式化按钮点击处理
+  const handleFormat = async () => {
+    if (!editorRef.current || isFormatting) return;
+
+    // 弹出确认框
+    const confirmed = window.confirm(
+      '确定要格式化内容吗？\n\n将自动在中英文字符之间添加空格。\n（可以使用 Ctrl+Z 撤销）'
+    );
+
+    if (!confirmed) return;
+
+    setIsFormatting(true);
+
+    try {
+      const editor = editorRef.current.getInstance();
+      const currentContent = editor.getMarkdown();
+      const formattedContent = formatChineseEnglish(currentContent);
+
+      // 只有内容发生变化时才更新
+      if (currentContent !== formattedContent) {
+        editor.setMarkdown(formattedContent);
+        onChange(formattedContent);
+
+        // 显示成功提示
+        setTimeout(() => {
+          alert('✅ 格式化完成！');
+        }, 100);
+      } else {
+        alert('ℹ️ 内容已经是格式化状态，无需再次格式化。');
+      }
+    } catch (error) {
+      console.error('格式化失败:', error);
+      alert('❌ 格式化失败，请重试。');
+    } finally {
+      setIsFormatting(false);
+    }
+  };
+
   // 键盘快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -107,12 +224,16 @@ export default function ToastUIEditor({
       } else if (e.key === "Escape" && isFullscreen) {
         e.preventDefault();
         setIsFullscreen(false);
+      } else if (e.ctrlKey && e.shiftKey && e.key === "F") {
+        // Ctrl+Shift+F 格式化快捷键
+        e.preventDefault();
+        void handleFormat();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen]);
+  }, [isFullscreen, isFormatting]);
 
   // 编辑器加载完成后添加全屏按钮和内容清理（仅初始化时）
   useEffect(() => {
@@ -175,6 +296,13 @@ export default function ToastUIEditor({
     updateFullscreenButtonState();
   }, [isFullscreen]); // 仅监听 isFullscreen 变化
 
+  // 格式化状态变化时更新按钮样式
+  useEffect(() => {
+    if (!Editor || !mounted) return;
+
+    updateFormatButtonState();
+  }, [isFormatting]); // 监听 isFormatting 变化
+
   // 更新已存在的全屏按钮状态（立即更新，无延迟）
   const updateFullscreenButtonState = () => {
     const existingButton =
@@ -193,7 +321,19 @@ export default function ToastUIEditor({
     }
   };
 
-  // 添加全屏按钮到编辑器的函数
+  // 更新已存在的格式化按钮状态
+  const updateFormatButtonState = () => {
+    const existingButton =
+      containerRef.current?.querySelector(".format-btn") as HTMLButtonElement;
+    if (existingButton) {
+      existingButton.innerHTML = isFormatting ? "⏳" : "✨";
+      existingButton.disabled = isFormatting;
+      existingButton.style.opacity = isFormatting ? "0.5" : "1";
+      existingButton.style.cursor = isFormatting ? "wait" : "pointer";
+    }
+  };
+
+  // 添加全屏按钮和格式化按钮到编辑器的函数
   const addFullscreenButtonToEditor = () => {
     // 查找最后一个可见的工具栏组
     const allToolbarGroups = containerRef.current?.querySelectorAll(
@@ -209,8 +349,63 @@ export default function ToastUIEditor({
     });
 
     if (lastVisibleToolbar) {
+      addFormatButton(lastVisibleToolbar);
       addFullscreenButton(lastVisibleToolbar);
     }
+  };
+
+  // 添加格式化按钮的函数
+  const addFormatButton = (toolbar: Element) => {
+    // 移除已存在的格式化按钮
+    const existingButton = toolbar.querySelector(".format-btn");
+    if (existingButton) {
+      existingButton.remove();
+    }
+
+    // 创建新的格式化按钮
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "toastui-editor-toolbar-icons format-btn";
+    button.setAttribute("aria-label", "格式化中英文空格 (Ctrl+Shift+F)");
+    button.setAttribute("title", "格式化中英文空格 (Ctrl+Shift+F)");
+    button.style.cssText = `
+      background-image: none !important;
+      margin: 7px 5px !important;
+      padding: 0px !important;
+      border: none !important;
+      border-radius: 3px !important;
+      background: transparent !important;
+      cursor: pointer !important;
+      font-size: 14px !important;
+      line-height: 25.5px !important;
+      display: inline-block !important;
+      text-align: center !important;
+      vertical-align: baseline !important;
+      width: 32px !important;
+      height: 32px !important;
+      box-sizing: border-box !important;
+      color: #374151 !important;
+      transition: all 0.2s ease !important;
+      ${isFormatting ? 'opacity: 0.5 !important; cursor: wait !important;' : ''}
+    `;
+    button.innerHTML = isFormatting ? "⏳" : "✨";
+    button.disabled = isFormatting;
+    button.addEventListener("click", () => void handleFormat());
+
+    // 添加hover效果
+    button.addEventListener("mouseenter", () => {
+      if (!isFormatting) {
+        button.style.backgroundColor = "#f3f4f6 !important";
+        button.style.borderRadius = "4px !important";
+      }
+    });
+    button.addEventListener("mouseleave", () => {
+      button.style.backgroundColor = "transparent !important";
+      button.style.borderRadius = "3px !important";
+    });
+
+    // 直接添加到传入的工具栏（应该是工具栏组）
+    toolbar.appendChild(button);
   };
 
   // 添加全屏按钮的函数
