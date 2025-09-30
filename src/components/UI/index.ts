@@ -31,6 +31,9 @@ export { default as ToastUIEditor } from "./ToastUIEditor";
 // MarkdownRenderer组件导出
 export { default as MarkdownRenderer } from "./MarkdownRenderer";
 
+// TOC组件导出
+export { default as TOC } from "./TOC";
+
 // 快捷键组件导出
 export {
   default as ShortcutIndicator,

@@ -14,11 +14,12 @@ import MainLayout from "@/components/Layout/MainLayout";
 import AuthGuard from "@/components/Layout/AuthGuard";
 import MarkdownRenderer from "@/components/UI/MarkdownRenderer";
 import JournalEditor from "@/components/Journal/JournalEditor";
-import { ConfirmModal } from "@/components/UI";
+import { ConfirmModal, TOC } from "@/components/UI";
 import { api } from "@/utils/api";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useConfirm } from "@/hooks/useConfirm";
+import { useTOC } from "@/hooks/useTOC";
 
 const JournalDetailPage: NextPage = () => {
   const router = useRouter();
@@ -259,8 +260,8 @@ const JournalDetailPage: NextPage = () => {
             </div>
 
             {/* 日记内容 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <MarkdownRenderer content={journal.content} />
+            <div className="rounded-lg border border-gray-200 bg-white">
+              <JournalContentWithTOC content={journal.content} />
             </div>
           </div>
         )}
@@ -281,5 +282,26 @@ const JournalDetailPage: NextPage = () => {
     </AuthGuard>
   );
 };
+
+// 日记内容 + TOC 组件
+function JournalContentWithTOC({ content }: { content: string }) {
+  const tocItems = useTOC(content);
+
+  return (
+    <div className="flex gap-6">
+      {/* TOC 侧边栏（桌面端显示） */}
+      {tocItems.length > 0 && (
+        <div className="hidden lg:block w-48 flex-shrink-0 pt-6">
+          <TOC items={tocItems} />
+        </div>
+      )}
+
+      {/* 内容区域 */}
+      <div className="flex-1 min-w-0 p-6">
+        <MarkdownRenderer content={content} />
+      </div>
+    </div>
+  );
+}
 
 export default JournalDetailPage;

@@ -23,11 +23,13 @@ import {
   SectionLoading,
   MarkdownRenderer,
   ConfirmModal,
+  TOC,
 } from "@/components/UI";
 import { usePageRefresh } from "@/hooks/usePageRefresh";
 import { useGlobalNotifications } from "@/components/Layout/NotificationProvider";
 import { useConfirm } from "@/hooks/useConfirm";
 import { NoteModal } from "@/components/Notes";
+import { useTOC } from "@/hooks/useTOC";
 
 const NoteDetailPage: NextPage = () => {
   const router = useRouter();
@@ -299,10 +301,8 @@ const NoteDetailPage: NextPage = () => {
                     </div>
                   </div>
 
-                  {/* 笔记内容 */}
-                  <div className="px-6 py-6">
-                    <MarkdownRenderer content={note.content} />
-                  </div>
+                  {/* 笔记内容 + TOC */}
+                  <NoteContentWithTOC content={note.content} />
                 </div>
 
                 {/* 关联任务 */}
@@ -365,5 +365,26 @@ const NoteDetailPage: NextPage = () => {
     </AuthGuard>
   );
 };
+
+// 笔记内容 + TOC 组件
+function NoteContentWithTOC({ content }: { content: string }) {
+  const tocItems = useTOC(content);
+
+  return (
+    <div className="flex gap-6">
+      {/* TOC 侧边栏（桌面端显示） */}
+      {tocItems.length > 0 && (
+        <div className="hidden lg:block w-48 flex-shrink-0 pt-6">
+          <TOC items={tocItems} />
+        </div>
+      )}
+
+      {/* 内容区域 */}
+      <div className="flex-1 min-w-0 px-6 py-6">
+        <MarkdownRenderer content={content} />
+      </div>
+    </div>
+  );
+}
 
 export default NoteDetailPage;

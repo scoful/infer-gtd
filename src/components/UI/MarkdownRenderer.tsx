@@ -1,8 +1,11 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import oneLight from "react-syntax-highlighter/dist/esm/styles/prism/one-light";
+
+const ListDepthContext = React.createContext(0);
 
 interface MarkdownRendererProps {
   content: string;
@@ -32,12 +35,52 @@ export default function MarkdownRenderer({
       setTimeout(() => setCopiedText(null), 1500);
     }
   };
+
+  // 为一级列表项添加 HTML 锚点
+  const processedContent = React.useMemo(() => {
+    if (!content) return '';
+
+    const lines = content.split('\n');
+    let tocIndex = 0;
+    let inCodeBlock = false;
+
+    const processedLines = lines.map((line) => {
+      // 检查是否进入/退出代码块
+      if (line.trim().startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        return line;
+      }
+
+      // 如果在代码块中，不处理
+      if (inCodeBlock) {
+        return line;
+      }
+
+      // 匹配一级列表项：行首无空格，以 - 或 * 开头
+      const match = line.match(/^([-*])\s+(.+)$/);
+      if (match) {
+        const marker = match[1];
+        const text = match[2];
+        const id = `toc-item-${tocIndex}`;
+        tocIndex++;
+
+        // 添加 HTML 锚点（使用 span 避免破坏列表结构）
+        return `${marker} <span id="${id}"></span>${text}`;
+      }
+
+      return line;
+    });
+
+    return processedLines.join('\n');
+  }, [content]);
+
   return (
     <div
       className={`prose prose-sm prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 prose-blockquote:pl-4 prose-ul:list-disc prose-ol:list-decimal prose-li:text-gray-700 max-w-none ${className}`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
         components={{
           // 自定义组件样式
           h1: ({ children }) => (
@@ -75,16 +118,19 @@ export default function MarkdownRenderer({
               {children}
             </p>
           ),
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              className="text-blue-600 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-800 hover:decoration-blue-500"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {children}
-            </a>
-          ),
+          a: ({ href, children, ...props }) => {
+            const isExternal = typeof href === 'string' && /^https?:\/\//.test(href);
+            return (
+              <a
+                href={href}
+                {...props}
+                className="text-blue-600 underline decoration-blue-300 underline-offset-2 transition-colors hover:text-blue-800 hover:decoration-blue-500"
+                {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {children}
+              </a>
+            );
+          },
           strong: ({ children }) => (
             <strong className="font-semibold text-gray-900">{children}</strong>
           ),
@@ -108,9 +154,16 @@ export default function MarkdownRenderer({
 
               return (
                 <code
-                  className="group relative inline-flex cursor-pointer items-center rounded border bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-pink-600 transition-all duration-200 hover:bg-gray-200 hover:shadow-sm"
+                  className="group relative inline cursor-pointer rounded border bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-pink-600 transition-all duration-200 hover:bg-gray-200 hover:shadow-sm"
                   onClick={() => handleInlineCodeCopy(codeText)}
                   title="点击复制"
+                  style={{
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    whiteSpace: 'pre-wrap',
+                    maxWidth: '100%',
+                    display: 'inline-block',
+                  }}
                   {...props}
                 >
                   <span className={isCopied ? "text-green-600" : ""}>
@@ -184,15 +237,30 @@ export default function MarkdownRenderer({
               </div>
             </blockquote>
           ),
-          ul: ({ children }) => (
-            <ul className="mb-4 ml-4 space-y-2">{children}</ul>
-          ),
-          ol: ({ children }) => (
-            <ol className="mb-4 ml-4 space-y-2">{children}</ol>
-          ),
+          ul: ({ children, ...props }) => {
+            const depth = React.useContext(ListDepthContext);
+            return (
+              <ListDepthContext.Provider value={depth + 1}>
+                <ul className="mb-4 ml-4 space-y-2" {...props}>
+                  {children}
+                </ul>
+              </ListDepthContext.Provider>
+            );
+          },
+          ol: ({ children, ...props }) => {
+            const depth = React.useContext(ListDepthContext);
+            return (
+              <ListDepthContext.Provider value={depth + 1}>
+                <ol className="mb-4 ml-4 space-y-2" {...props}>
+                  {children}
+                </ol>
+              </ListDepthContext.Provider>
+            );
+          },
           li: ({ children, ...props }) => {
             // 检查是否是任务列表项
             const isTaskList = props.className?.includes("task-list-item");
+
             if (isTaskList) {
               return (
                 <li
@@ -258,7 +326,7 @@ export default function MarkdownRenderer({
           },
         }}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );
