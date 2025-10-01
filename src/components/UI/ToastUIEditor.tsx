@@ -197,12 +197,12 @@ export default function ToastUIEditor({
   };
 
   // 确认格式化
-  const handleConfirmFormat = async () => {
+  const handleConfirmFormat = () => {
     setShowFormatConfirm(false);
     setIsFormatting(true);
 
     // 使用 setTimeout 让 React 有机会渲染 Loading
-    setTimeout(async () => {
+    setTimeout(() => {
       const startTime = Date.now();
 
       try {
@@ -378,20 +378,23 @@ export default function ToastUIEditor({
         const [startLine, startCh] = start;
         const [endLine, endCh] = end;
 
-        const lines = markdown.split('\n');
+        const lines = markdown.split("\n");
 
         // 单行选中
         if (startLine === endLine) {
-          const line = lines[startLine - 1] || '';
+          const line = lines[startLine - 1] || "";
 
           // 查找 <mark> 标签的位置
-          const markStartIndex = line.lastIndexOf('<mark>', startCh - 1);
-          const markEndIndex = line.indexOf('</mark>', endCh - 1);
+          const markStartIndex = line.lastIndexOf("<mark>", startCh - 1);
+          const markEndIndex = line.indexOf("</mark>", endCh - 1);
 
           // 检查选中文本是否被 <mark> 标签包围
           // Toast UI Editor 的选区索引可能有偏移，需要容错检查（允许±1的偏差）
-          const hasMarkBefore = markStartIndex !== -1 && Math.abs((markStartIndex + 6) - startCh) <= 1;
-          const hasMarkAfter = markEndIndex !== -1 && Math.abs(markEndIndex - endCh) <= 1;
+          const hasMarkBefore =
+            markStartIndex !== -1 &&
+            Math.abs(markStartIndex + 6 - startCh) <= 1;
+          const hasMarkAfter =
+            markEndIndex !== -1 && Math.abs(markEndIndex - endCh) <= 1;
 
           if (hasMarkBefore && hasMarkAfter) {
             // 已高亮，取消高亮：扩展选区删除标签
@@ -1071,7 +1074,7 @@ export default function ToastUIEditor({
 
       {/* 格式化 Loading 遮罩 */}
       {isFormatting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
           <div className="rounded-lg bg-white p-8 shadow-xl">
             <div className="flex flex-col items-center gap-4">
               <LoadingSpinner size="xl" />
@@ -1106,9 +1109,7 @@ export default function ToastUIEditor({
           className="flex w-full items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
         >
           <span>⌨️ 快捷键说明</span>
-          <span className="text-gray-500">
-            {showShortcuts ? '▲' : '▼'}
-          </span>
+          <span className="text-gray-500">{showShortcuts ? "▲" : "▼"}</span>
         </button>
 
         {showShortcuts && (
@@ -1118,35 +1119,100 @@ export default function ToastUIEditor({
               <div>
                 <h4 className="mb-2 font-semibold text-gray-900">编辑器功能</h4>
                 <ul className="space-y-1 text-gray-600">
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">F11</kbd> 全屏/退出全屏</li>
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Esc</kbd> 退出全屏</li>
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+F</kbd> 格式化中英文空格</li>
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+H</kbd> 高亮文本</li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">F11</kbd>{" "}
+                    全屏/退出全屏
+                  </li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">Esc</kbd>{" "}
+                    退出全屏
+                  </li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                      Ctrl+Shift+F
+                    </kbd>{" "}
+                    格式化中英文空格
+                  </li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                      Ctrl+H
+                    </kbd>{" "}
+                    高亮文本
+                  </li>
                 </ul>
               </div>
 
               {/* JetBrains 风格 */}
               {enableJetBrainsShortcuts && (
                 <div>
-                  <h4 className="mb-2 font-semibold text-gray-900">JetBrains 风格</h4>
+                  <h4 className="mb-2 font-semibold text-gray-900">
+                    JetBrains 风格
+                  </h4>
                   <ul className="space-y-1 text-gray-600">
-                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Enter</kbd> 保存</li>
-                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+D</kbd> 复制当前行</li>
-                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Y</kbd> 删除当前行</li>
-                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+↑</kbd> 向上移动行</li>
-                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+↓</kbd> 向下移动行</li>
+                    <li>
+                      <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                        Ctrl+Enter
+                      </kbd>{" "}
+                      保存
+                    </li>
+                    <li>
+                      <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                        Ctrl+D
+                      </kbd>{" "}
+                      复制当前行
+                    </li>
+                    <li>
+                      <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                        Ctrl+Y
+                      </kbd>{" "}
+                      删除当前行
+                    </li>
+                    <li>
+                      <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                        Ctrl+Shift+↑
+                      </kbd>{" "}
+                      向上移动行
+                    </li>
+                    <li>
+                      <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                        Ctrl+Shift+↓
+                      </kbd>{" "}
+                      向下移动行
+                    </li>
                   </ul>
                 </div>
               )}
 
               {/* Toast UI 内置 */}
               <div>
-                <h4 className="mb-2 font-semibold text-gray-900">Toast UI 内置</h4>
+                <h4 className="mb-2 font-semibold text-gray-900">
+                  Toast UI 内置
+                </h4>
                 <ul className="space-y-1 text-gray-600">
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+B</kbd> 粗体</li>
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+I</kbd> 斜体</li>
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Z</kbd> 撤销</li>
-                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+Z</kbd> 重做</li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                      Ctrl+B
+                    </kbd>{" "}
+                    粗体
+                  </li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                      Ctrl+I
+                    </kbd>{" "}
+                    斜体
+                  </li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                      Ctrl+Z
+                    </kbd>{" "}
+                    撤销
+                  </li>
+                  <li>
+                    <kbd className="rounded bg-gray-200 px-1.5 py-0.5">
+                      Ctrl+Shift+Z
+                    </kbd>{" "}
+                    重做
+                  </li>
                 </ul>
               </div>
             </div>
