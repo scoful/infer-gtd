@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import ConfirmModal from "./ConfirmModal";
+import { LoadingSpinner, LoadingText } from "./Loading";
 
 interface ToastUIEditorProps {
   value: string;
@@ -42,6 +44,7 @@ export default function ToastUIEditor({
   const [previewStyle] = useState<"vertical" | "tab">("vertical");
   const [hideSwitch] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
+  const [showFormatConfirm, setShowFormatConfirm] = useState(false);
 
   const [suppressInitialLeak] = useState(true);
   const firstChangeRef = useRef<string | null>(null);
@@ -189,39 +192,41 @@ export default function ToastUIEditor({
   // 格式化按钮点击处理
   const handleFormat = async () => {
     if (!editorRef.current || isFormatting) return;
+    setShowFormatConfirm(true);
+  };
 
-    // 弹出确认框
-    const confirmed = window.confirm(
-      "确定要格式化内容吗？\n\n将自动在中英文字符之间添加空格。\n（可以使用 Ctrl+Z 撤销）",
-    );
-
-    if (!confirmed) return;
-
+  // 确认格式化
+  const handleConfirmFormat = async () => {
+    setShowFormatConfirm(false);
     setIsFormatting(true);
 
-    try {
-      const editor = editorRef.current.getInstance();
-      const currentContent = editor.getMarkdown();
-      const formattedContent = formatChineseEnglish(currentContent);
+    // 使用 setTimeout 让 React 有机会渲染 Loading
+    setTimeout(async () => {
+      const startTime = Date.now();
 
-      // 只有内容发生变化时才更新
-      if (currentContent !== formattedContent) {
-        editor.setMarkdown(formattedContent);
-        onChange(formattedContent);
+      try {
+        const editor = editorRef.current.getInstance();
+        const currentContent = editor.getMarkdown();
+        const formattedContent = formatChineseEnglish(currentContent);
 
-        // 显示成功提示
-        setTimeout(() => {
-          alert("✅ 格式化完成！");
-        }, 100);
-      } else {
-        alert("ℹ️ 内容已经是格式化状态，无需再次格式化。");
+        // 只有内容发生变化时才更新
+        if (currentContent !== formattedContent) {
+          editor.setMarkdown(formattedContent);
+          onChange(formattedContent);
+        }
+      } catch (error) {
+        console.error("格式化失败:", error);
       }
-    } catch (error) {
-      console.error("格式化失败:", error);
-      alert("❌ 格式化失败，请重试。");
-    } finally {
-      setIsFormatting(false);
-    }
+
+      // 确保 Loading 至少显示 500ms
+      const elapsed = Date.now() - startTime;
+      const minDisplayTime = 500;
+      const remainingTime = Math.max(0, minDisplayTime - elapsed);
+
+      setTimeout(() => {
+        setIsFormatting(false);
+      }, remainingTime);
+    }, 100);
   };
 
   // 键盘快捷键支持
@@ -949,6 +954,31 @@ export default function ToastUIEditor({
             callback(url, "image");
           },
         }}
+      />
+
+      {/* 格式化 Loading 遮罩 */}
+      {isFormatting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="rounded-lg bg-white p-8 shadow-xl">
+            <div className="flex flex-col items-center gap-4">
+              <LoadingSpinner size="xl" />
+              <LoadingText size="lg">正在格式化内容...</LoadingText>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 格式化确认模态框 */}
+      <ConfirmModal
+        isOpen={showFormatConfirm}
+        onClose={() => setShowFormatConfirm(false)}
+        onConfirm={handleConfirmFormat}
+        title="格式化内容"
+        message="确定要格式化内容吗？&#10;&#10;将自动在中英文字符之间添加空格。&#10;（可以使用 Ctrl+Z 撤销）"
+        confirmText="确认格式化"
+        cancelText="取消"
+        type="info"
+        isLoading={isFormatting}
       />
     </div>
   );
