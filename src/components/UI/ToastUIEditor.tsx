@@ -45,6 +45,7 @@ export default function ToastUIEditor({
   const [hideSwitch] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
   const [showFormatConfirm, setShowFormatConfirm] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const [suppressInitialLeak] = useState(true);
   const firstChangeRef = useRef<string | null>(null);
@@ -242,6 +243,10 @@ export default function ToastUIEditor({
         // Ctrl+Shift+F 格式化快捷键
         e.preventDefault();
         void handleFormat();
+      } else if (e.ctrlKey && e.key === "h") {
+        // Ctrl+H 高亮快捷键
+        e.preventDefault();
+        handleHighlight();
       }
     };
 
@@ -350,6 +355,70 @@ export default function ToastUIEditor({
     }
   };
 
+  // 高亮按钮点击处理
+  const handleHighlight = () => {
+    if (!editorRef.current) return;
+
+    try {
+      const editor = editorRef.current.getInstance();
+      const selection = editor.getSelection();
+
+      // 获取完整的 Markdown 源码
+      const markdown = editor.getMarkdown();
+
+      // 获取实际选中的文本（渲染后的纯文本）
+      const selectedText = editor.getSelectedText();
+
+      if (!selectedText) return;
+
+      // 检查是否在 Markdown 模式
+      if (Array.isArray(selection) && selection.length === 2) {
+        // Markdown 模式：selection = [[startLine, startCh], [endLine, endCh]]
+        const [start, end] = selection;
+        const [startLine, startCh] = start;
+        const [endLine, endCh] = end;
+
+        const lines = markdown.split('\n');
+
+        // 单行选中
+        if (startLine === endLine) {
+          const line = lines[startLine - 1] || '';
+
+          // 查找 <mark> 标签的位置
+          const markStartIndex = line.lastIndexOf('<mark>', startCh - 1);
+          const markEndIndex = line.indexOf('</mark>', endCh - 1);
+
+          // 检查选中文本是否被 <mark> 标签包围
+          // Toast UI Editor 的选区索引可能有偏移，需要容错检查（允许±1的偏差）
+          const hasMarkBefore = markStartIndex !== -1 && Math.abs((markStartIndex + 6) - startCh) <= 1;
+          const hasMarkAfter = markEndIndex !== -1 && Math.abs(markEndIndex - endCh) <= 1;
+
+          if (hasMarkBefore && hasMarkAfter) {
+            // 已高亮，取消高亮：扩展选区删除标签
+            // Toast UI Editor 使用 1-based 索引，JavaScript 使用 0-based 索引
+            // 需要将 JavaScript 的索引转换为 Toast UI 的索引（+1）
+            const newStart: [number, number] = [startLine, markStartIndex + 1];
+            const newEnd: [number, number] = [endLine, markEndIndex + 7 + 1];
+
+            editor.setSelection(newStart, newEnd);
+            editor.replaceSelection(selectedText);
+          } else {
+            // 未高亮，添加高亮
+            editor.replaceSelection(`<mark>${selectedText}</mark>`);
+          }
+        } else {
+          // 多行选中：简化处理，直接添加高亮
+          editor.replaceSelection(`<mark>${selectedText}</mark>`);
+        }
+      } else {
+        // WYSIWYG 模式：直接添加高亮
+        editor.replaceSelection(`<mark>${selectedText}</mark>`);
+      }
+    } catch (error) {
+      console.error("高亮失败:", error);
+    }
+  };
+
   // 添加全屏按钮和格式化按钮到编辑器的函数
   const addFullscreenButtonToEditor = () => {
     // 查找最后一个可见的工具栏组
@@ -366,9 +435,53 @@ export default function ToastUIEditor({
     });
 
     if (lastVisibleToolbar) {
+      addHighlightButton(lastVisibleToolbar);
       addFormatButton(lastVisibleToolbar);
       addFullscreenButton(lastVisibleToolbar);
     }
+  };
+
+  // 添加高亮按钮的函数
+  const addHighlightButton = (toolbar: Element) => {
+    // 移除已存在的高亮按钮
+    const existingButton = toolbar.querySelector(".highlight-btn");
+    if (existingButton) {
+      existingButton.remove();
+    }
+
+    // 创建新的高亮按钮
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "toastui-editor-toolbar-icons highlight-btn";
+    button.setAttribute("aria-label", "高亮文本 (Ctrl+H)");
+    button.setAttribute("title", "高亮文本 (Ctrl+H)");
+    button.style.cssText = `
+      background-image: none !important;
+      margin: 7px 5px !important;
+      padding: 0px !important;
+      border: none !important;
+      width: 24px !important;
+      height: 24px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 16px !important;
+      cursor: pointer !important;
+      border-radius: 4px !important;
+      transition: all 0.2s ease !important;
+    `;
+    button.innerHTML = "🖍️";
+    button.addEventListener("click", handleHighlight);
+
+    // 添加hover效果
+    button.addEventListener("mouseenter", () => {
+      button.style.backgroundColor = "#f3f4f6 !important";
+    });
+    button.addEventListener("mouseleave", () => {
+      button.style.backgroundColor = "transparent !important";
+    });
+
+    toolbar.appendChild(button);
   };
 
   // 添加格式化按钮的函数
@@ -980,6 +1093,66 @@ export default function ToastUIEditor({
         type="info"
         isLoading={isFormatting}
       />
+
+      {/* 快捷键说明面板 */}
+      <div className="mt-2 rounded-md border border-gray-200 bg-gray-50">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowShortcuts(!showShortcuts);
+          }}
+          className="flex w-full items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+        >
+          <span>⌨️ 快捷键说明</span>
+          <span className="text-gray-500">
+            {showShortcuts ? '▲' : '▼'}
+          </span>
+        </button>
+
+        {showShortcuts && (
+          <div className="border-t border-gray-200 px-4 py-3 text-sm">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* 编辑器功能 */}
+              <div>
+                <h4 className="mb-2 font-semibold text-gray-900">编辑器功能</h4>
+                <ul className="space-y-1 text-gray-600">
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">F11</kbd> 全屏/退出全屏</li>
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Esc</kbd> 退出全屏</li>
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+F</kbd> 格式化中英文空格</li>
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+H</kbd> 高亮文本</li>
+                </ul>
+              </div>
+
+              {/* JetBrains 风格 */}
+              {enableJetBrainsShortcuts && (
+                <div>
+                  <h4 className="mb-2 font-semibold text-gray-900">JetBrains 风格</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Enter</kbd> 保存</li>
+                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+D</kbd> 复制当前行</li>
+                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Y</kbd> 删除当前行</li>
+                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+↑</kbd> 向上移动行</li>
+                    <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+↓</kbd> 向下移动行</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Toast UI 内置 */}
+              <div>
+                <h4 className="mb-2 font-semibold text-gray-900">Toast UI 内置</h4>
+                <ul className="space-y-1 text-gray-600">
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+B</kbd> 粗体</li>
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+I</kbd> 斜体</li>
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Z</kbd> 撤销</li>
+                  <li><kbd className="rounded bg-gray-200 px-1.5 py-0.5">Ctrl+Shift+Z</kbd> 重做</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
