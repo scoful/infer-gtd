@@ -70,7 +70,7 @@ export default function TOC({ items, className = "" }: TOCProps) {
 
       window.scrollTo({
         top: scrollTarget,
-        behavior: "smooth",
+        behavior: "auto", // 瞬间跳转，无动画
       });
 
       setActiveId(id);
@@ -82,7 +82,7 @@ export default function TOC({ items, className = "" }: TOCProps) {
     // 1. 右边内容区域滚动到顶部
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: "auto", // 瞬间跳转，无动画
     });
 
     // 2. 目录列表本身也滚动到顶部
@@ -90,7 +90,7 @@ export default function TOC({ items, className = "" }: TOCProps) {
     if (tocListContainer) {
       tocListContainer.scrollTo({
         top: 0,
-        behavior: "smooth",
+        behavior: "auto", // 瞬间跳转，无动画
       });
     }
 

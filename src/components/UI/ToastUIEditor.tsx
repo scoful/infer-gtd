@@ -49,6 +49,7 @@ export default function ToastUIEditor({
 
   const [suppressInitialLeak] = useState(true);
   const firstChangeRef = useRef<string | null>(null);
+  const isInternalChangeRef = useRef(false); // 标记是否为内部变化
 
   // 自动保存相关
   const [lastSavedValue, setLastSavedValue] = useState(value);
@@ -617,6 +618,12 @@ export default function ToastUIEditor({
   }, [mounted]);
 
   useEffect(() => {
+    // 跳过内部变化（用户输入导致的 value 变化）
+    if (isInternalChangeRef.current) {
+      return;
+    }
+
+    // 只处理外部变化（如从服务器加载数据、应用模板等）
     if (
       editorRef.current &&
       value !== editorRef.current.getInstance().getMarkdown()
@@ -986,7 +993,14 @@ export default function ToastUIEditor({
       }
 
       changeTimeoutRef.current = setTimeout(() => {
+        // 标记为内部变化，避免触发 useEffect
+        isInternalChangeRef.current = true;
         onChange(markdown);
+
+        // 100ms 后清除标志
+        setTimeout(() => {
+          isInternalChangeRef.current = false;
+        }, 100);
       }, 50); // 50ms 防抖
     }
   };
