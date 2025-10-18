@@ -1,0 +1,10 @@
+# Browsers that we support
+
+# iOS 14+
+iOS >= 14
+
+# Modern browsers
+last 2 versions
+> 0.5%
+not dead
+
