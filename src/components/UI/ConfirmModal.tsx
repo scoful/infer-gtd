@@ -76,7 +76,7 @@ export default function ConfirmModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black" />
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -106,12 +106,12 @@ export default function ConfirmModal({
                   <div className="ml-4 flex-1">
                     <Dialog.Title
                       as="h3"
-                      className="text-lg leading-6 font-medium text-gray-900"
+                      className="text-lg font-medium leading-6 text-gray-900"
                     >
                       {title}
                     </Dialog.Title>
                     <div className="mt-2">
-                      <p className="text-sm whitespace-pre-line text-gray-500">
+                      <p className="whitespace-pre-line text-sm text-gray-500">
                         {message}
                       </p>
                     </div>
@@ -131,7 +131,7 @@ export default function ConfirmModal({
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
-                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     onClick={onClose}
                     disabled={isLoading}
                   >
@@ -139,7 +139,7 @@ export default function ConfirmModal({
                   </button>
                   <button
                     type="button"
-                    className={`flex items-center gap-2 rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${styles.confirmButton}`}
+                    className={`flex items-center gap-2 rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${styles.confirmButton}`}
                     onClick={handleConfirm}
                     disabled={isLoading}
                   >

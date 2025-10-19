@@ -71,20 +71,22 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
  * errors on the backend.
  */
 
-// ✅ v10.0.0 语法: 使用 ReturnType 而不是 typeof
-const t = initTRPC.context<ReturnType<typeof createTRPCContext>>().create({
-  transformer: superjson,
-  errorFormatter({ shape, error }) {
-    return {
-      ...shape,
-      data: {
-        ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
-      },
-    };
-  },
-});
+// ✅ v10.0.0 语法: 使用 Awaited<ReturnType<...>> 因为createTRPCContext是async
+const t = initTRPC
+  .context<Awaited<ReturnType<typeof createTRPCContext>>>()
+  .create({
+    transformer: superjson,
+    errorFormatter({ shape, error }) {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          zodError:
+            error.cause instanceof ZodError ? error.cause.flatten() : null,
+        },
+      };
+    },
+  });
 
 // ❌ v10.0.0 不支持 createCallerFactory
 // export const createCallerFactory = t.createCallerFactory;

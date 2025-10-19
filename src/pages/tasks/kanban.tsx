@@ -1017,18 +1017,18 @@ const KanbanPage: NextPage = () => {
   };
 
   // 获取特定状态是否有更多任务
-  const getHasMoreTasksForStatus = (status: TaskStatus) => {
+  const getHasMoreTasksForStatus = (status: TaskStatus): boolean => {
     switch (status) {
       case TaskStatus.IDEA:
-        return ideaTasks.hasNextPage;
+        return ideaTasks.hasNextPage ?? false;
       case TaskStatus.TODO:
-        return todoTasks.hasNextPage;
+        return todoTasks.hasNextPage ?? false;
       case TaskStatus.IN_PROGRESS:
-        return inProgressTasks.hasNextPage;
+        return inProgressTasks.hasNextPage ?? false;
       case TaskStatus.WAITING:
-        return waitingTasks.hasNextPage;
+        return waitingTasks.hasNextPage ?? false;
       case TaskStatus.DONE:
-        return doneTasks.hasNextPage;
+        return doneTasks.hasNextPage ?? false;
       default:
         return false;
     }
@@ -1484,7 +1484,7 @@ const KanbanPage: NextPage = () => {
         >
           {/* 拖拽状态指示器 */}
           {activeId && (
-            <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 transform rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
+            <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 transform rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
               正在拖拽任务 - 拖拽到目标位置释放
             </div>
           )}
@@ -1512,7 +1512,7 @@ const KanbanPage: NextPage = () => {
               onClick={handleCreateTask}
               className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
-              <PlusIcon className="mr-1.5 -ml-0.5 h-5 w-5" />
+              <PlusIcon className="-ml-0.5 mr-1.5 h-5 w-5" />
               新建任务
             </button>
           </div>
@@ -1563,7 +1563,7 @@ const KanbanPage: NextPage = () => {
             {/* 拖拽覆盖层 */}
             <DragOverlay>
               {activeTask ? (
-                <div className="scale-105 rotate-2 transform opacity-95 shadow-2xl">
+                <div className="rotate-2 scale-105 transform opacity-95 shadow-2xl">
                   <TaskCard
                     task={activeTask}
                     onStatusChange={() => {}}
@@ -2081,7 +2081,7 @@ function TaskCard({
     <div
       className={`group relative rounded-lg border p-4 shadow-sm transition-all duration-200 ${
         isDragging
-          ? "z-50 scale-105 rotate-1 cursor-grabbing border-blue-400 bg-blue-50 shadow-xl"
+          ? "z-50 rotate-1 scale-105 cursor-grabbing border-blue-400 bg-blue-50 shadow-xl"
           : isUpdating
             ? "animate-pulse cursor-pointer border-blue-200 bg-blue-50"
             : isTimerActive
@@ -2098,7 +2098,7 @@ function TaskCard({
     >
       {/* 正在计时的视觉标识 */}
       {isTimerActive && (
-        <div className="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full border-2 border-white bg-green-500 shadow-sm"></div>
+        <div className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full border-2 border-white bg-green-500 shadow-sm"></div>
       )}
 
       {/* 任务标题和菜单 */}
@@ -2136,7 +2136,7 @@ function TaskCard({
 
               {/* 下拉菜单 */}
               {showMenu && (
-                <div className="absolute top-full right-0 z-50 mt-1 w-32 rounded-md border border-gray-200 bg-white shadow-xl">
+                <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-md border border-gray-200 bg-white shadow-xl">
                   <div className="py-1">
                     <button
                       type="button"
@@ -2473,7 +2473,7 @@ function TaskCard({
         deadlineInfo &&
         !deadlineInfo.isOverdue &&
         task.status !== TaskStatus.DONE && (
-          <div className="absolute right-0 bottom-0 left-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
             <div
               className={`h-full transition-all duration-300 ${
                 deadlineInfo.urgencyLevel === "critical"

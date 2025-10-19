@@ -562,7 +562,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           sidebarOpen ? "block" : "hidden"
         }`}
       >
-        <div className="bg-opacity-75 fixed inset-0 bg-gray-600" />
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" />
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center gap-2">
@@ -641,7 +641,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                   {/* 子导航项 */}
                   {hasChildren && isExpanded && (
-                    <div className="mt-1 ml-6 space-y-1">
+                    <div className="ml-6 mt-1 space-y-1">
                       {item.children!.map((child) => {
                         const ChildIcon = child.icon;
                         const isChildActive = isActivePath(child.href);
@@ -758,7 +758,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                             )}
                             {/* 收缩状态下的多级菜单指示器 */}
                             {isCollapsed && (
-                              <div className="absolute -top-0.5 -right-0.5 rounded-full bg-blue-500 p-0.5">
+                              <div className="absolute -right-0.5 -top-0.5 rounded-full bg-blue-500 p-0.5">
                                 {isCollapsedExpanded ? (
                                   <ChevronDownIcon className="h-2.5 w-2.5 text-white" />
                                 ) : (
@@ -777,7 +777,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                         {/* 子导航项 - 展开状态下显示 */}
                         {hasChildren && isExpanded && !isCollapsed && (
-                          <div className="mt-1 ml-6 space-y-1">
+                          <div className="ml-6 mt-1 space-y-1">
                             {item.children!.map((child) => {
                               const ChildIcon = child.icon;
                               const isChildActive = isActivePath(child.href);
@@ -815,7 +815,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
                         {/* 收缩状态下的展开子菜单 */}
                         {hasChildren && isCollapsed && isCollapsedExpanded && (
-                          <div className="mt-1 ml-2 space-y-0.5 border-l-2 border-blue-200">
+                          <div className="ml-2 mt-1 space-y-0.5 border-l-2 border-blue-200">
                             {item.children!.map((child) => {
                               const ChildIcon = child.icon;
                               const isChildActive = isActivePath(child.href);

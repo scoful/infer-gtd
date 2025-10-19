@@ -114,13 +114,13 @@ export default function DateNavigation({
 
           {/* 日期选择器 */}
           {showDatePicker && (
-            <div className="absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 transform">
+            <div className="absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 transform">
               <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-lg">
                 <input
                   type="date"
                   value={currentDate.toISOString().split("T")[0]}
                   onChange={handleDateSelect}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <div className="mt-2 flex justify-end">
                   <button

@@ -232,7 +232,7 @@ export default function TagModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black" />
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -250,7 +250,7 @@ export default function TagModal({
                 <div className="mb-6 flex items-center justify-between">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg leading-6 font-medium text-gray-900"
+                    className="text-lg font-medium leading-6 text-gray-900"
                   >
                     {isEditing ? "编辑标签" : "创建新标签"}
                   </Dialog.Title>
@@ -446,7 +446,7 @@ export default function TagModal({
                   <div className="flex justify-end space-x-3 pt-4">
                     <button
                       type="button"
-                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       onClick={handleClose}
                     >
                       取消
@@ -454,7 +454,7 @@ export default function TagModal({
                     <button
                       type="submit"
                       disabled={createTag.isPending || updateTag.isPending}
-                      className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+                      className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                     >
                       {createTag.isPending || updateTag.isPending ? (
                         <ButtonLoading message="保存中..." size="sm" />

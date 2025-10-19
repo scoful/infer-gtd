@@ -390,7 +390,7 @@ const TagManagementPage: NextPage = () => {
               {/* 新建标签按钮 */}
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
                 新建标签
@@ -410,7 +410,7 @@ const TagManagementPage: NextPage = () => {
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`border-t border-b px-3 py-2 text-sm font-medium ${
+                  className={`border-b border-t px-3 py-2 text-sm font-medium ${
                     viewMode === "grid"
                       ? "border-blue-200 bg-blue-50 text-blue-700"
                       : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -447,7 +447,7 @@ const TagManagementPage: NextPage = () => {
 
               {/* 搜索框 */}
               <div className="relative max-w-md">
-                <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                 <input
                   type="text"
                   placeholder="搜索标签..."
@@ -455,7 +455,7 @@ const TagManagementPage: NextPage = () => {
                   onChange={(e) =>
                     handleFilterUpdate({ search: e.target.value })
                   }
-                  className="block w-full rounded-md border border-gray-300 py-2 pr-3 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -477,7 +477,7 @@ const TagManagementPage: NextPage = () => {
                         type: e.target.value as TagType | "ALL",
                       })
                     }
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="ALL">所有类型</option>
                     <option value={TagType.CONTEXT}>上下文</option>
@@ -499,7 +499,7 @@ const TagManagementPage: NextPage = () => {
                         includeSystem: e.target.value === "all",
                       })
                     }
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="all">全部标签</option>
                     <option value="custom">仅自定义</option>
@@ -514,7 +514,7 @@ const TagManagementPage: NextPage = () => {
                   <select
                     value={sortField}
                     onChange={(e) => setSortField(e.target.value as SortField)}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="name">名称</option>
                     <option value="type">类型</option>
@@ -533,7 +533,7 @@ const TagManagementPage: NextPage = () => {
                     onChange={(e) =>
                       setSortDirection(e.target.value as SortDirection)
                     }
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="asc">升序</option>
                     <option value="desc">降序</option>

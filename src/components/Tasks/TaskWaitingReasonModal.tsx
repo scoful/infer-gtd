@@ -168,7 +168,7 @@ export default function TaskWaitingReasonModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black" />
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -186,13 +186,13 @@ export default function TaskWaitingReasonModal({
                 <div className="flex items-center justify-between">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg leading-6 font-medium text-gray-900"
+                    className="text-lg font-medium leading-6 text-gray-900"
                   >
                     等待原因
                   </Dialog.Title>
                   <button
                     type="button"
-                    className="rounded-md text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                    className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     onClick={handleClose}
                   >
                     <span className="sr-only">关闭</span>
@@ -251,7 +251,7 @@ export default function TaskWaitingReasonModal({
                     <div className="flex justify-end space-x-3 pt-4">
                       <button
                         type="button"
-                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         onClick={handleClose}
                       >
                         取消
@@ -259,7 +259,7 @@ export default function TaskWaitingReasonModal({
                       <button
                         type="submit"
                         disabled={updateTask.isPending}
-                        className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                       >
                         {updateTask.isPending ? (
                           <ButtonLoading message="保存中..." size="sm" />

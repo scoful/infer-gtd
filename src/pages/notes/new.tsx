@@ -284,7 +284,7 @@ const NewNotePage: NextPage = () => {
                     关联项目
                   </label>
                   <div className="relative mt-1">
-                    <FolderIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <FolderIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <select
                       id="project"
                       value={formData.projectId || ""}
@@ -329,7 +329,7 @@ const NewNotePage: NextPage = () => {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   取消
                 </button>
@@ -340,7 +340,7 @@ const NewNotePage: NextPage = () => {
                     !formData.title.trim() ||
                     !formData.content.trim()
                   }
-                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

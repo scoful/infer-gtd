@@ -622,7 +622,7 @@ const TaskListPage: NextPage = () => {
               {/* 新建任务按钮 */}
               <button
                 onClick={() => setIsTaskModalOpen(true)}
-                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
                 新建任务
@@ -643,7 +643,7 @@ const TaskListPage: NextPage = () => {
                 </button>
                 <button
                   onClick={() => setViewMode("compact")}
-                  className={`border-t border-b px-3 py-2 text-sm font-medium ${
+                  className={`border-b border-t px-3 py-2 text-sm font-medium ${
                     viewMode === "compact"
                       ? "border-blue-200 bg-blue-50 text-blue-700"
                       : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -654,7 +654,7 @@ const TaskListPage: NextPage = () => {
                 </button>
                 <button
                   onClick={() => setViewMode("timeTracking")}
-                  className={`border-t border-b px-3 py-2 text-sm font-medium ${
+                  className={`border-b border-t px-3 py-2 text-sm font-medium ${
                     viewMode === "timeTracking"
                       ? "border-blue-200 bg-blue-50 text-blue-700"
                       : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -699,7 +699,7 @@ const TaskListPage: NextPage = () => {
                     搜索
                   </label>
                   <div className="relative">
-                    <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                     <input
                       type="text"
                       placeholder="搜索任务标题或描述..."
@@ -707,7 +707,7 @@ const TaskListPage: NextPage = () => {
                       onChange={(e) =>
                         handleFilterUpdate({ search: e.target.value })
                       }
-                      className="block w-full rounded-md border border-gray-300 py-2 pr-3 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -863,7 +863,7 @@ const TaskListPage: NextPage = () => {
                       onChange={(e) =>
                         setSortField(e.target.value as SortField)
                       }
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="sortOrder">自定义顺序</option>
                       <option value="dueDate">截止日期</option>
@@ -1532,7 +1532,7 @@ function TaskListCard({
         deadlineInfo &&
         !deadlineInfo.isOverdue &&
         task.status !== TaskStatus.DONE && (
-          <div className="absolute right-0 bottom-0 left-4 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
+          <div className="absolute bottom-0 left-4 right-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
             <div
               className={`h-full transition-all duration-300 ${
                 deadlineInfo.urgencyLevel === "critical"
@@ -1788,7 +1788,7 @@ function TimeTrackingTaskCard({
         <div className="ml-4 flex items-center gap-2">
           <button
             onClick={onViewTimeEntries}
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             <ChartBarIcon className="mr-1 h-3 w-3" />
             查看明细

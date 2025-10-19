@@ -932,14 +932,14 @@ const SearchPage: NextPage = () => {
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
                   <input
                     type="text"
                     placeholder="搜索任务、笔记、项目、日记... "
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                    className="block w-full rounded-md border border-gray-300 py-3 pr-3 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="block w-full rounded-md border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -1709,7 +1709,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                   e.target.value ? new Date(e.target.value) : null,
                 )
               }
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="开始日期"
             />
             <input
@@ -1722,7 +1722,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                   e.target.value ? new Date(e.target.value) : null,
                 )
               }
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="结束日期"
             />
           </div>
@@ -1777,7 +1777,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="relevance">相关性</option>
               <option value="createdAt">创建时间</option>
@@ -1794,7 +1794,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="desc">降序</option>
               <option value="asc">升序</option>

@@ -208,7 +208,7 @@ export default function ProjectModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black" />
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -227,7 +227,7 @@ export default function ProjectModal({
                 <div className="flex items-center justify-between">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg leading-6 font-medium text-gray-900"
+                    className="text-lg font-medium leading-6 text-gray-900"
                   >
                     {isEditing ? "编辑项目" : "新建项目"}
                   </Dialog.Title>
@@ -271,7 +271,7 @@ export default function ProjectModal({
                         onChange={(e) =>
                           setFormData({ ...formData, name: e.target.value })
                         }
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="输入项目名称"
                         maxLength={100}
                         required
@@ -296,7 +296,7 @@ export default function ProjectModal({
                           })
                         }
                         rows={3}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="输入项目描述（可选）"
                         maxLength={500}
                       />
@@ -333,14 +333,14 @@ export default function ProjectModal({
                         type="button"
                         onClick={handleClose}
                         disabled={isLoading}
-                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                       >
                         取消
                       </button>
                       <button
                         type="submit"
                         disabled={isLoading || !formData.name.trim()}
-                        className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+                        className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                       >
                         {isLoading && (
                           <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

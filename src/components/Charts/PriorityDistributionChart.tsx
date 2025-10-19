@@ -15,6 +15,7 @@ interface PriorityDistributionData {
   percentage: number;
   color: string;
   originalCount?: number; // 原始数量，用于显示
+  [key: string]: string | number | undefined; // 添加索引签名以兼容recharts
 }
 
 interface PriorityDistributionChartProps {
@@ -94,9 +95,13 @@ const PriorityDistributionChart: React.FC<PriorityDistributionChartProps> = ({
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ priority, percentage }) =>
-                percentage > 5 ? `${priority} ${percentage.toFixed(0)}%` : ""
-              }
+              label={(props: any) => {
+                const percentage = props.percentage as number;
+                const priority = props.priority as string;
+                return percentage > 5
+                  ? `${priority} ${percentage.toFixed(0)}%`
+                  : "";
+              }}
               outerRadius={100}
               fill="#8884d8"
               dataKey="count"

@@ -277,13 +277,13 @@ const JournalListPage: NextPage = () => {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-1 items-center space-x-2">
                   <div className="relative max-w-md flex-1">
-                    <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="搜索日记内容..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full rounded-md border-gray-300 py-2 pr-3 pl-10 text-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="block w-full rounded-md border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                   <button
@@ -740,7 +740,7 @@ function JournalCard({
             </svg>
           </button>
           {isMenuOpen && (
-            <div className="absolute top-8 right-0 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-8 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
               <button
                 onClick={() => {
                   onView();

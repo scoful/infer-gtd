@@ -472,11 +472,14 @@ const AnalyticsPage: NextPage = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, value, percent }) =>
-                            value && value > 0
-                              ? `${name}: ${value} (${((percent || 0) * 100).toFixed(1)}%)`
-                              : ""
-                          }
+                          label={(props: any) => {
+                            const name = props.name as string;
+                            const value = props.value as number;
+                            const percent = props.percent as number;
+                            return value && value > 0
+                              ? `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`
+                              : "";
+                          }}
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="value"
@@ -530,11 +533,14 @@ const AnalyticsPage: NextPage = () => {
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={({ name, value, percent }) =>
-                                  value && value > 0
-                                    ? `${name}: ${value} (${((percent || 0) * 100).toFixed(1)}%)`
-                                    : ""
-                                }
+                                label={(props: any) => {
+                                  const name = props.name as string;
+                                  const value = props.value as number;
+                                  const percent = props.percent as number;
+                                  return value && value > 0
+                                    ? `${name}: ${value} (${((percent ?? 0) * 100).toFixed(1)}%)`
+                                    : "";
+                                }}
                                 outerRadius={80}
                                 fill="#8884d8"
                                 dataKey="value"

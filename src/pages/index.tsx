@@ -44,7 +44,7 @@ function TaskTitleHover({ title, textColor }: TaskTitleHoverProps) {
 
       {/* hover时显示完整标题 */}
       {shouldShowTooltip && (
-        <div className="pointer-events-none absolute -top-1 left-0 z-50 max-w-xs rounded bg-gray-800 px-2 py-1 text-xs break-words whitespace-normal text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+        <div className="pointer-events-none absolute -top-1 left-0 z-50 max-w-xs whitespace-normal break-words rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
           {title}
         </div>
       )}
@@ -457,11 +457,11 @@ const Home: NextPage = () => {
                         className={`group relative ${action.color} transform rounded-lg p-4 text-left text-white transition-colors hover:scale-105`}
                       >
                         <div className="flex flex-col items-center text-center">
-                          <span className="bg-opacity-20 mb-3 inline-flex rounded-lg bg-white p-3">
+                          <span className="mb-3 inline-flex rounded-lg bg-white bg-opacity-20 p-3">
                             <Icon className="h-6 w-6 text-gray-700" />
                           </span>
                           <h3 className="text-sm font-medium">{action.name}</h3>
-                          <p className="text-opacity-90 mt-1 text-xs text-white">
+                          <p className="mt-1 text-xs text-white text-opacity-90">
                             {action.description}
                           </p>
                         </div>
@@ -477,11 +477,11 @@ const Home: NextPage = () => {
                       className={`group relative ${action.color} transform rounded-lg p-4 text-white transition-colors hover:scale-105`}
                     >
                       <div className="flex flex-col items-center text-center">
-                        <span className="bg-opacity-20 mb-3 inline-flex rounded-lg bg-white p-3">
+                        <span className="mb-3 inline-flex rounded-lg bg-white bg-opacity-20 p-3">
                           <Icon className="h-6 w-6 text-gray-700" />
                         </span>
                         <h3 className="text-sm font-medium">{action.name}</h3>
-                        <p className="text-opacity-90 mt-1 text-xs text-white">
+                        <p className="mt-1 text-xs text-white text-opacity-90">
                           {action.description}
                         </p>
                       </div>
