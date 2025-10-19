@@ -27,8 +27,8 @@ export default function JournalEditor({
   const [template, setTemplate] = useState<string | undefined>();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // 获取 tRPC utils 用于缓存失效
-  const utils = api.useUtils();
+  // 获取 tRPC utils 用于缓存失效 (v10使用useContext)
+  const utils = api.useContext();
 
   // 获取指定日期的日记
   const { data: existingJournal, isLoading } = api.journal.getByDate.useQuery({

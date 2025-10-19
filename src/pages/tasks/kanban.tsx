@@ -505,8 +505,8 @@ const KanbanPage: NextPage = () => {
     optimisticTaskOrder,
   ]);
 
-  // 获取tRPC utils用于缓存操作
-  const utils = api.useUtils();
+  // 获取tRPC utils用于缓存操作 (v10使用useContext)
+  const utils = api.useContext();
 
   // 任务状态更新
   const updateTaskStatus = api.task.updateStatus.useMutation({

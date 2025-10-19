@@ -71,8 +71,8 @@ export default function TaskWaitingReasonModal({
     }
   }, [taskDetail, taskError]);
 
-  // 更新任务（包含等待原因）
-  const utils = api.useUtils();
+  // 更新任务（包含等待原因） - v10使用useContext
+  const utils = api.useContext();
 
   const updateTask = api.task.update.useMutation({
     onSuccess: (result) => {
