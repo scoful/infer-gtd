@@ -24,11 +24,5 @@ CREATE INDEX "MagicLinkToken_token_idx" ON "MagicLinkToken"("token");
 -- CreateIndex
 CREATE INDEX "MagicLinkToken_expiresAt_idx" ON "MagicLinkToken"("expiresAt");
 
--- CreateIndex
-CREATE INDEX "Tag_createdById_isSystem_type_name_idx" ON "Tag"("createdById", "isSystem", "type", "name");
-
--- CreateIndex
-CREATE INDEX "Tag_createdById_name_idx" ON "Tag"("createdById", "name");
-
 -- AddForeignKey
 ALTER TABLE "MagicLinkToken" ADD CONSTRAINT "MagicLinkToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
