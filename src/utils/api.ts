@@ -22,13 +22,6 @@ export const api = createTRPCNext<AppRouter>({
   config() {
     return {
       /**
-       * Transformer used for data de-serialization from the server.
-       * ✅ v10 语法: transformer 在 config() 返回对象的顶层
-       *
-       * @see https://trpc.io/docs/v10/data-transformers
-       */
-      transformer: superjson,
-      /**
        * Links used to determine request flow from client to server.
        *
        * @see https://trpc.io/docs/links
@@ -40,8 +33,13 @@ export const api = createTRPCNext<AppRouter>({
             (opts.direction === "down" && opts.result instanceof Error),
         }),
         httpBatchLink({
+          /**
+           * Transformer used for data de-serialization from the server.
+           *
+           * @see https://trpc.io/docs/data-transformers
+           */
+          transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
-          // ❌ v10 不在这里配置 transformer (这是 v11 语法)
         }),
       ],
     };
@@ -52,6 +50,7 @@ export const api = createTRPCNext<AppRouter>({
    * @see https://trpc.io/docs/nextjs#ssr-boolean-default-false
    */
   ssr: false,
+  transformer: superjson,
 });
 
 /**
