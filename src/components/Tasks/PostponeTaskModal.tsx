@@ -226,7 +226,7 @@ export default function PostponeTaskModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black" />
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -245,14 +245,14 @@ export default function PostponeTaskModal({
                 <div className="mb-4 flex items-center justify-between">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg leading-6 font-medium text-gray-900"
+                    className="text-lg font-medium leading-6 text-gray-900"
                   >
                     调整任务时间
                   </Dialog.Title>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-md text-gray-400 hover:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -292,7 +292,7 @@ export default function PostponeTaskModal({
                             key={index}
                             type="button"
                             onClick={() => handleQuickPostpone(option, index)}
-                            className={`rounded-md border px-3 py-2 text-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                            className={`rounded-md border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                               isSelected
                                 ? isAdvance
                                   ? "border-orange-500 bg-orange-100 text-orange-800 shadow-sm"
@@ -322,7 +322,7 @@ export default function PostponeTaskModal({
                       id="dueDate"
                       value={selectedDate}
                       onChange={(e) => handleManualDateChange(e.target.value)}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -340,7 +340,7 @@ export default function PostponeTaskModal({
                       id="dueTime"
                       value={selectedTime}
                       onChange={(e) => handleManualTimeChange(e.target.value)}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -359,7 +359,7 @@ export default function PostponeTaskModal({
                       rows={3}
                       maxLength={500}
                       placeholder="记录时间调整的原因..."
-                      className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       {note.length}/500
@@ -371,14 +371,14 @@ export default function PostponeTaskModal({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       取消
                     </button>
                     <button
                       type="submit"
                       disabled={postponeTask.isPending || !selectedDate}
-                      className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {postponeTask.isPending ? "调整中..." : "确认调整"}
                     </button>

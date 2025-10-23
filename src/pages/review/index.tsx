@@ -1033,7 +1033,7 @@ const TaskReviewPage: NextPage = () => {
                         <div className="space-y-3">
                           {detailedStats.insights.map((insight, index) => (
                             <div key={index} className="flex items-start">
-                              <div className="mt-0.5 mr-3 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                              <div className="mr-3 mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
                                 <span className="text-xs font-medium text-blue-600">
                                   {index + 1}
                                 </span>
@@ -1059,13 +1059,13 @@ const TaskReviewPage: NextPage = () => {
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                               <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                   优先级
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                   任务数量
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                   占比
                                 </th>
                               </tr>
@@ -1087,7 +1087,7 @@ const TaskReviewPage: NextPage = () => {
                                     : 0;
                                 return (
                                   <tr key={priority}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4">
                                       <div className="flex items-center">
                                         <div
                                           className="mr-3 h-3 w-3 rounded-full"
@@ -1100,10 +1100,10 @@ const TaskReviewPage: NextPage = () => {
                                         </span>
                                       </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                       {count}
                                     </td>
-                                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                       {percentage.toFixed(1)}%
                                     </td>
                                   </tr>
@@ -1124,13 +1124,13 @@ const TaskReviewPage: NextPage = () => {
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                               <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                   状态
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                   任务数量
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                   占比
                                 </th>
                               </tr>
@@ -1157,7 +1157,7 @@ const TaskReviewPage: NextPage = () => {
                                     : 0;
                                 return (
                                   <tr key={status}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4">
                                       <div className="flex items-center">
                                         <div
                                           className="mr-3 h-3 w-3 rounded-full"
@@ -1170,10 +1170,10 @@ const TaskReviewPage: NextPage = () => {
                                         </span>
                                       </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                       {count}
                                     </td>
-                                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                                       {percentage.toFixed(1)}%
                                     </td>
                                   </tr>
@@ -1259,7 +1259,7 @@ const TaskReviewPage: NextPage = () => {
                                   <div className="pt-4 text-center">
                                     <button
                                       onClick={() => setShowAllCompleted(true)}
-                                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                     >
                                       加载更多 (
                                       {completedTasks.tasks.length - 10} 个)
@@ -1271,7 +1271,7 @@ const TaskReviewPage: NextPage = () => {
                                   <div className="pt-4 text-center">
                                     <button
                                       onClick={() => setShowAllCompleted(false)}
-                                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                     >
                                       收起
                                     </button>

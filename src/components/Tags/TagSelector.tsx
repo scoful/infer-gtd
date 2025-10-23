@@ -84,7 +84,7 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="输入标签名称"
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             autoFocus
             disabled={isLoading}
           />
@@ -98,7 +98,7 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
             <select
               value={type}
               onChange={(e) => setType(e.target.value as TagType)}
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               disabled={isLoading}
             >
               <option value={TagType.CUSTOM}>自定义</option>
@@ -116,7 +116,7 @@ const TagCreateForm: React.FC<TagCreateFormProps> = ({
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="block h-10 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="block h-10 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               disabled={isLoading}
             />
           </div>
@@ -453,13 +453,13 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           {/* 搜索和筛选 */}
           <div className="border-b border-gray-200 p-3">
             <div className="relative mb-2">
-              <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索标签..."
-                className="w-full rounded-md border border-gray-300 py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -469,7 +469,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               onChange={(e) =>
                 setSelectedType(e.target.value as TagType | "ALL")
               }
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="ALL">所有类型</option>
               <option value={TagType.CONTEXT}>上下文</option>
@@ -491,7 +491,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 <SectionLoading />
               </div>
             ) : unselectedTags.length > 0 ? (
-              <div className="px-3 pt-2 pb-6">
+              <div className="px-3 pb-6 pt-2">
                 {gridLayout ? (
                   // 网格布局
                   <div
@@ -505,7 +505,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none active:scale-95 active:bg-blue-100 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
+                        className={`flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 active:scale-95 active:bg-blue-100 ${maxTags && selectedTagIds.length >= maxTags ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:shadow-none" : ""} `}
                         style={{ alignItems: "center", minHeight: "42px" }}
                         title={
                           maxTags && selectedTagIds.length >= maxTags
@@ -542,7 +542,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       <div
                         key={tag.id}
                         onClick={() => handleTagSelect(tag)}
-                        className="flex cursor-pointer items-center justify-between rounded-md border border-transparent p-3 transition-colors hover:border-blue-200 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:outline-none"
+                        className="flex cursor-pointer items-center justify-between rounded-md border border-transparent p-3 transition-colors hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                         style={{ alignItems: "center" }}
                         tabIndex={
                           maxTags && selectedTagIds.length >= maxTags ? -1 : 0

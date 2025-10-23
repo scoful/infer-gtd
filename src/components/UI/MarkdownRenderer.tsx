@@ -120,32 +120,32 @@ export default function MarkdownRenderer({
         components={{
           // 自定义组件样式
           h1: ({ children }) => (
-            <h1 className="mt-8 mb-4 border-b border-gray-200 pb-2 text-3xl font-bold text-gray-900 first:mt-0">
+            <h1 className="mb-4 mt-8 border-b border-gray-200 pb-2 text-3xl font-bold text-gray-900 first:mt-0">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mt-6 mb-4 border-b border-gray-100 pb-1 text-2xl font-semibold text-gray-900">
+            <h2 className="mb-4 mt-6 border-b border-gray-100 pb-1 text-2xl font-semibold text-gray-900">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mt-5 mb-3 text-xl font-medium text-gray-900">
+            <h3 className="mb-3 mt-5 text-xl font-medium text-gray-900">
               {children}
             </h3>
           ),
           h4: ({ children }) => (
-            <h4 className="mt-4 mb-2 text-lg font-medium text-gray-900">
+            <h4 className="mb-2 mt-4 text-lg font-medium text-gray-900">
               {children}
             </h4>
           ),
           h5: ({ children }) => (
-            <h5 className="mt-3 mb-2 text-base font-medium text-gray-900">
+            <h5 className="mb-2 mt-3 text-base font-medium text-gray-900">
               {children}
             </h5>
           ),
           h6: ({ children }) => (
-            <h6 className="mt-2 mb-1 text-sm font-medium text-gray-700">
+            <h6 className="mb-1 mt-2 text-sm font-medium text-gray-700">
               {children}
             </h6>
           ),
@@ -174,7 +174,7 @@ export default function MarkdownRenderer({
             <strong className="font-semibold text-gray-900">{children}</strong>
           ),
           em: ({ children }) => (
-            <em className="text-gray-700 italic">{children}</em>
+            <em className="italic text-gray-700">{children}</em>
           ),
           code: ({ children, className, ...props }) => {
             const match = /language-(\w+)/.exec(className ?? "");
@@ -221,7 +221,7 @@ export default function MarkdownRenderer({
             return (
               <div className="my-4 overflow-hidden rounded-lg border border-gray-200 shadow-sm">
                 <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2">
-                  <span className="text-xs font-medium text-gray-600 uppercase">
+                  <span className="text-xs font-medium uppercase text-gray-600">
                     {language ?? "text"}
                   </span>
                   <button
@@ -267,9 +267,9 @@ export default function MarkdownRenderer({
           },
 
           blockquote: ({ children }) => (
-            <blockquote className="mb-6 rounded-r-lg border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent py-4 pr-4 pl-6 text-gray-700 italic shadow-sm">
+            <blockquote className="mb-6 rounded-r-lg border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent py-4 pl-6 pr-4 italic text-gray-700 shadow-sm">
               <div className="relative">
-                <span className="absolute -top-1 -left-2 text-2xl text-blue-400 opacity-50">
+                <span className="absolute -left-2 -top-1 text-2xl text-blue-400 opacity-50">
                   &ldquo;
                 </span>
                 {children}
@@ -294,7 +294,7 @@ export default function MarkdownRenderer({
             }
             return (
               <li className="relative pl-2 leading-relaxed text-gray-700">
-                <span className="absolute top-0 left-0 font-bold text-blue-500">
+                <span className="absolute left-0 top-0 font-bold text-blue-500">
                   •
                 </span>
                 <div className="ml-3">{children}</div>
@@ -321,12 +321,12 @@ export default function MarkdownRenderer({
             <tr className="transition-colors hover:bg-gray-50">{children}</tr>
           ),
           th: ({ children }) => (
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-700">
+            <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
               {children}
             </td>
           ),

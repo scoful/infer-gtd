@@ -282,7 +282,7 @@ export default function QuickSearch({
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           onKeyPress={handleKeyPress}
-          className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-12 pl-10 text-sm placeholder-gray-500 shadow-sm transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:shadow-md focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+          className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-12 text-sm placeholder-gray-500 shadow-sm transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         />
 
         {/* 快捷键提示 */}

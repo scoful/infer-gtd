@@ -115,7 +115,7 @@ export default function SavedSearchCard({
       className="group relative cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
     >
       {/* 操作按钮 */}
-      <div className="absolute top-3 right-3 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+      <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <button
           onClick={(e) => {
             e.stopPropagation();

@@ -85,7 +85,7 @@ export default function SavedSearchModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div
-          className="bg-opacity-25 fixed inset-0 bg-black"
+          className="fixed inset-0 bg-black bg-opacity-25"
           onClick={onClose}
         />
 
@@ -114,7 +114,7 @@ export default function SavedSearchModal({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="输入搜索名称"
                 required
               />
@@ -134,7 +134,7 @@ export default function SavedSearchModal({
                   }))
                 }
                 rows={3}
-                className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="输入搜索描述（可选）"
               />
             </div>

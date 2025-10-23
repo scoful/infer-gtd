@@ -204,23 +204,23 @@ export default function PinnedNotesCarousel({
         }}
       >
         {/* 顶部装饰条 - 增强动画效果 */}
-        <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 group-hover:h-1.5"></div>
+        <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 group-hover:h-1.5"></div>
 
         {/* 背景光晕效果 */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
 
         {/* 引号装饰 - 增强动画和质感 */}
-        <div className="pointer-events-none absolute top-2 left-2 font-serif text-4xl leading-none text-blue-400/70 transition-all duration-300 select-none group-hover:scale-110 group-hover:text-blue-500/90">
+        <div className="pointer-events-none absolute left-2 top-2 select-none font-serif text-4xl leading-none text-blue-400/70 transition-all duration-300 group-hover:scale-110 group-hover:text-blue-500/90">
           &ldquo;
         </div>
-        <div className="pointer-events-none absolute right-2 bottom-6 font-serif text-4xl leading-none text-blue-400/70 transition-all duration-300 select-none group-hover:scale-110 group-hover:text-blue-500/90">
+        <div className="pointer-events-none absolute bottom-6 right-2 select-none font-serif text-4xl leading-none text-blue-400/70 transition-all duration-300 group-hover:scale-110 group-hover:text-blue-500/90">
           &rdquo;
         </div>
 
         {/* 主要文字内容 - 增强动画效果 */}
         <div className="clickable-content relative z-10 flex h-full flex-col justify-center px-6 py-3">
           <p
-            className={`text-center text-sm leading-relaxed font-medium break-words text-gray-800 transition-all duration-300 ease-in-out group-hover:text-gray-900 lg:text-base ${
+            className={`break-words text-center text-sm font-medium leading-relaxed text-gray-800 transition-all duration-300 ease-in-out group-hover:text-gray-900 lg:text-base ${
               isTransitioning
                 ? "translate-y-3 scale-95 transform opacity-0"
                 : "translate-y-0 scale-100 transform opacity-100"
@@ -242,7 +242,7 @@ export default function PinnedNotesCarousel({
                 }
               }}
               disabled={isTransitioning}
-              className="absolute top-1/2 left-2 z-20 flex h-8 w-8 -translate-y-1/2 transform items-center justify-center rounded-full border border-gray-200/50 bg-white/80 text-gray-600 opacity-0 shadow-md backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 hover:border-blue-200 hover:bg-white hover:text-blue-600 hover:shadow-lg disabled:opacity-50"
+              className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 transform items-center justify-center rounded-full border border-gray-200/50 bg-white/80 text-gray-600 opacity-0 shadow-md backdrop-blur-sm transition-all duration-300 hover:border-blue-200 hover:bg-white hover:text-blue-600 hover:shadow-lg disabled:opacity-50 group-hover:opacity-100"
             >
               <ChevronLeftIcon className="pointer-events-none h-4 w-4" />
             </button>
@@ -255,7 +255,7 @@ export default function PinnedNotesCarousel({
                 }
               }}
               disabled={isTransitioning}
-              className="absolute top-1/2 right-2 z-20 flex h-8 w-8 -translate-y-1/2 transform items-center justify-center rounded-full border border-gray-200/50 bg-white/80 text-gray-600 opacity-0 shadow-md backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 hover:border-blue-200 hover:bg-white hover:text-blue-600 hover:shadow-lg disabled:opacity-50"
+              className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 transform items-center justify-center rounded-full border border-gray-200/50 bg-white/80 text-gray-600 opacity-0 shadow-md backdrop-blur-sm transition-all duration-300 hover:border-blue-200 hover:bg-white hover:text-blue-600 hover:shadow-lg disabled:opacity-50 group-hover:opacity-100"
             >
               <ChevronRightIcon className="pointer-events-none h-4 w-4" />
             </button>

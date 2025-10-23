@@ -269,7 +269,7 @@ export default function SearchFilters({
               <select
                 value={sortBy}
                 onChange={(e) => onSortByChange(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="relevance">相关性</option>
                 <option value="createdAt">创建时间</option>
@@ -288,7 +288,7 @@ export default function SearchFilters({
                 onChange={(e) =>
                   onSortOrderChange(e.target.value as "asc" | "desc")
                 }
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="desc">降序</option>
                 <option value="asc">升序</option>

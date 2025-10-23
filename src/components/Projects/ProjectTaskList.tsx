@@ -325,7 +325,7 @@ function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
         deadlineInfo &&
         !deadlineInfo.isOverdue &&
         task.status !== TaskStatus.DONE && (
-          <div className="absolute right-0 bottom-0 left-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-lg bg-gray-200">
             <div
               className={`h-full transition-all duration-300 ${
                 deadlineInfo.urgencyLevel === "critical"
@@ -444,17 +444,17 @@ export default function ProjectTaskList({
   return (
     <div className="space-y-6">
       {/* 搜索和筛选 */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-4">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-x-4 sm:space-y-0">
         <div className="flex flex-1 items-center space-x-4">
           {/* 搜索框 */}
           <div className="relative max-w-md flex-1">
-            <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="搜索任务..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -466,7 +466,7 @@ export default function ProjectTaskList({
               onChange={(e) =>
                 setStatusFilter(e.target.value as TaskStatus | "")
               }
-              className="min-w-[120px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="min-w-[120px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">所有状态</option>
               {Object.entries(TASK_STATUS_CONFIG).map(([status, config]) => (
@@ -482,7 +482,7 @@ export default function ProjectTaskList({
               onChange={(e) =>
                 setPriorityFilter(e.target.value as Priority | "")
               }
-              className="min-w-[120px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="min-w-[120px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">所有优先级</option>
               {Object.entries(PRIORITY_CONFIG).map(([priority, config]) => (
@@ -533,7 +533,7 @@ export default function ProjectTaskList({
                 <button
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
-                  className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+                  className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "加载中..." : "加载更多"}
                 </button>

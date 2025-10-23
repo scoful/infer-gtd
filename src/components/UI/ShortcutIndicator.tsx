@@ -146,7 +146,7 @@ export function ShortcutTooltip({
 
       {isVisible && (
         <div className={`absolute z-50 ${positionClasses[position]}`}>
-          <div className="rounded bg-gray-900 px-3 py-2 text-xs whitespace-nowrap text-white">
+          <div className="whitespace-nowrap rounded bg-gray-900 px-3 py-2 text-xs text-white">
             <div className="font-medium">{shortcut.description}</div>
             <div className="mt-1 text-gray-300">{getShortcutKeys()}</div>
           </div>

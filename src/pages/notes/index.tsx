@@ -380,7 +380,7 @@ const NotesPage: NextPage = () => {
 
               {/* 新建笔记按钮 */}
               <button
-                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 onClick={handleCreateNote}
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
@@ -401,7 +401,7 @@ const NotesPage: NextPage = () => {
                 placeholder="搜索笔记标题或内容..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="block w-full rounded-md border-gray-300 py-2 pr-3 pl-10 text-sm placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                className="block w-full rounded-md border-gray-300 py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -412,7 +412,7 @@ const NotesPage: NextPage = () => {
                 <select
                   value={selectedProject ?? ""}
                   onChange={(e) => setSelectedProject(e.target.value || null)}
-                  className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">所有项目</option>
                   {projectsData?.projects.map((project) => (
@@ -431,7 +431,7 @@ const NotesPage: NextPage = () => {
                 <select
                   value={selectedTag || ""}
                   onChange={(e) => setSelectedTag(e.target.value || null)}
-                  className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">所有标签</option>
                   {tagsData?.tags.map((tag) => (
@@ -456,7 +456,7 @@ const NotesPage: NextPage = () => {
                     setSortBy(newSortBy);
                     setSortOrder(newSortOrder);
                   }}
-                  className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="updatedAt-desc">最近更新</option>
                   <option value="createdAt-desc">最近创建</option>
@@ -620,7 +620,7 @@ const NotesPage: NextPage = () => {
                 {!hasActiveFilters && (
                   <div className="mt-6">
                     <button
-                      className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                      className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       onClick={handleCreateNote}
                     >
                       <PlusIcon className="mr-2 h-4 w-4" />
@@ -968,7 +968,7 @@ function NoteCard({
 
           {/* 下拉菜单 */}
           {isMenuOpen && (
-            <div className="absolute top-6 right-0 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-6 z-10 w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

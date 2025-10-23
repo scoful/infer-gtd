@@ -263,7 +263,7 @@ export default function SearchResultItem({
           <div className="relative">
             {getItemIcon()}
             {/* 类型标识 */}
-            <div className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full border border-gray-200 bg-white">
+            <div className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full border border-gray-200 bg-white">
               <div
                 className={`h-1.5 w-1.5 rounded-full ${getTypeColor()}`}
               ></div>

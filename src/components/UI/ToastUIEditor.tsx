@@ -1088,7 +1088,7 @@ export default function ToastUIEditor({
 
       {/* 格式化 Loading 遮罩 */}
       {isFormatting && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="rounded-lg bg-white p-8 shadow-xl">
             <div className="flex flex-col items-center gap-4">
               <LoadingSpinner size="xl" />

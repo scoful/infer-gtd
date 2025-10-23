@@ -199,7 +199,7 @@ export default function ActivityHeatmap({
             return displayMonths.map((month, index) => (
               <div
                 key={`${month.name}-${index}`}
-                className="absolute text-xs whitespace-nowrap text-gray-500"
+                className="absolute whitespace-nowrap text-xs text-gray-500"
                 style={{
                   left: `${month.position}%`,
                   top: "0px",

@@ -268,7 +268,7 @@ export default function SearchSuggestions({
   return (
     <div
       ref={suggestionsRef}
-      className="absolute top-full right-0 left-0 z-50 mt-2 max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-xl ring-1 ring-black/5"
+      className="absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-xl ring-1 ring-black/5"
     >
       {isLoading || isLoadingTags ? (
         <div className="p-4 text-center text-sm text-gray-500">
