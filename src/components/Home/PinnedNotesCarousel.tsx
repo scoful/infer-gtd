@@ -164,7 +164,7 @@ export default function PinnedNotesCarousel({
     smoothTransition(prevIndex);
   };
 
-  if (!notes || notes.length === 0 || contentLines.length === 0) {
+  if (notes?.length === 0 || contentLines.length === 0) {
     return (
       <div className="relative flex h-full items-center justify-center overflow-hidden rounded-xl border border-gray-200/60 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-sm">
         {/* 背景装饰 */}

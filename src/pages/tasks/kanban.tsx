@@ -1017,18 +1017,18 @@ const KanbanPage: NextPage = () => {
   };
 
   // 获取特定状态是否有更多任务
-  const getHasMoreTasksForStatus = (status: TaskStatus) => {
+  const getHasMoreTasksForStatus = (status: TaskStatus): boolean => {
     switch (status) {
       case TaskStatus.IDEA:
-        return ideaTasks.hasNextPage;
+        return ideaTasks.hasNextPage ?? false;
       case TaskStatus.TODO:
-        return todoTasks.hasNextPage;
+        return todoTasks.hasNextPage ?? false;
       case TaskStatus.IN_PROGRESS:
-        return inProgressTasks.hasNextPage;
+        return inProgressTasks.hasNextPage ?? false;
       case TaskStatus.WAITING:
-        return waitingTasks.hasNextPage;
+        return waitingTasks.hasNextPage ?? false;
       case TaskStatus.DONE:
-        return doneTasks.hasNextPage;
+        return doneTasks.hasNextPage ?? false;
       default:
         return false;
     }
