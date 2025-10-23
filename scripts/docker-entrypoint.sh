@@ -128,15 +128,16 @@ MIGRATION_EXIT_CODE=$?
 
 if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
     if echo "$MIGRATION_OUTPUT" | grep -q "P3005"; then
-        echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Database schema exists but no migration history found"
-        echo "$(date -Iseconds) [INFO] [DOCKER] 🔄 Resetting database and applying migrations..."
-        echo "RESETTING_DB" > /tmp/app-status/startup.status
-        npx $NPX_REGISTRY prisma migrate reset --force || {
-            echo "$(date -Iseconds) [ERROR] [DOCKER] ❌ Database reset failed"
-            echo "MIGRATION_FAILED" > /tmp/app-status/startup.status
-            exit 1
-        }
-        echo "$(date -Iseconds) [INFO] [DOCKER] ✅ Database reset and migrations completed"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] ❌ Database schema exists but no migration history found (P3005)"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] This usually means:"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] 1. Database was created with 'prisma db push' instead of migrations"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] 2. Migration history is missing or incomplete"
+        echo "$(date -Iseconds) [ERROR] [DOCKER]"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] ⚠️ MANUAL INTERVENTION REQUIRED ⚠️"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] Please create a baseline migration or fix migration history"
+        echo "$(date -Iseconds) [ERROR] [DOCKER] See: https://www.prisma.io/docs/guides/database/developing-with-prisma-migrate/troubleshooting-development"
+        echo "MIGRATION_FAILED" > /tmp/app-status/startup.status
+        exit 1
     elif echo "$MIGRATION_OUTPUT" | grep -q "P3018"; then
         echo "$(date -Iseconds) [WARN] [DOCKER] ⚠️ Migration conflict detected - schema changes already applied"
         echo "$(date -Iseconds) [INFO] [DOCKER] 🔧 Attempting to resolve migration state..."

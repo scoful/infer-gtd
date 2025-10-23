@@ -51,6 +51,9 @@ model User {
     emailVerified DateTime?
     image         String?
 
+    // Mobile app authentication
+    password      String?   // bcrypt hashed password (optional)
+
     // User settings (JSON)
     settings      String?   // JSON string for user preferences
 
@@ -67,6 +70,7 @@ model User {
     timeEntries   TimeEntry[]
     taskStatusHistory TaskStatusHistory[]
     savedSearches SavedSearch[]
+    magicLinkTokens MagicLinkToken[]
 }
 
 model VerificationToken {
@@ -357,4 +361,19 @@ model SavedSearch {
     @@unique([name, createdById]) // Unique search name per user
     @@index([createdById])
     @@index([isPublic])
+}
+
+// Magic Link authentication for mobile app
+model MagicLinkToken {
+    id        String   @id @default(cuid())
+    token     String   @unique
+    userId    String
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([token])
+    @@index([expiresAt])
 }
